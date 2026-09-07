@@ -35,6 +35,14 @@ const parseArgs = (source: string, target: ActionTarget): string[] => {
   }) as string[];
 };
 
+const provincialCapitals: Record<number, string> = {
+  1: "تبریز", 2: "ارومیه", 3: "اردبیل", 4: "اصفهان", 5: "کرج", 6: "ایلام", 7: "بوشهر",
+  8: "تهران", 9: "شهرکرد", 10: "بیرجند", 11: "مشهد", 12: "بجنورد", 13: "اهواز",
+  14: "زنجان", 15: "سمنان", 16: "زاهدان", 17: "شیراز", 18: "قزوین", 19: "قم",
+  20: "سنندج", 21: "کرمان", 22: "کرمانشاه", 23: "یاسوج", 24: "گرگان", 25: "رشت",
+  26: "خرم آباد", 27: "ساری", 28: "اراک", 29: "بندرعباس", 30: "همدان", 31: "یزد"
+};
+
 const mapLocations: Record<string, { label: string; cities: Record<string, { label: string; lat: number; lon: number }> }> = { tehran: { label: "تهران", cities: { tehran: { label: "تهران", lat: 35.6892, lon: 51.389 }, rey: { label: "ری", lat: 35.6009, lon: 51.4371 }, tajrish: { label: "تجریش", lat: 35.805, lon: 51.429 } } }, isfahan: { label: "اصفهان", cities: { isfahan: { label: "اصفهان", lat: 32.6546, lon: 51.668 }, najafabad: { label: "نجف‌آباد", lat: 32.6344, lon: 51.3668 }, khomeinishahr: { label: "خمینی‌شهر", lat: 32.7001, lon: 51.5369 } } }, fars: { label: "فارس", cities: { shiraz: { label: "شیراز", lat: 29.5918, lon: 52.5837 }, marvdasht: { label: "مرودشت", lat: 29.8747, lon: 52.8025 } } }, qom: { label: "قم", cities: { qom: { label: "قم", lat: 34.6416, lon: 50.8746 } } }, "khorasan-razavi": { label: "خراسان رضوی", cities: { mashhad: { label: "مشهد", lat: 36.2605, lon: 59.6168 }, neyshabur: { label: "نیشابور", lat: 36.2141, lon: 58.7961 } } } };
 
 const viewRoutes: Record<string, string> = { "view-feed": "/home", "view-content": "/content", "view-speakers": "/speakers", "view-map": "/map", "view-chat": "/chat", "view-combined-profile": "/profile", "view-full-compose": "/compose", "view-full-post": "/post", "view-direct-chat": "/direct-chat", "view-all-podcasts": "/podcasts" };
@@ -119,7 +127,7 @@ export default function MeydanApp() {
         case "submitPostComment": alert("نظر شما با موفقیت ثبت شد."); break;
         case "attachChatMedia": alert(`پیوست ${args[0]} انتخاب شد.`); break;
         case "openFullPostPage": text("fullPostAuthor", args[0]); text("fullPostHandle", args[1]); text("fullPostContent", args[2]); text("fullPostOutlet", `انتشار در: ${args[3]}`); show("view-full-post"); break;
-        case "selectProvinceFromDropdown": { const provinceId = Number(args[0]); const province = iranCitiesData.ostan.find((item) => item.id === provinceId); const citySelect = root.querySelector<HTMLSelectElement>("#mapCitySelect"); const cities = iranCitiesData.shahr.filter((city) => city.ostan === provinceId); if (province && citySelect) { citySelect.innerHTML = cities.map((city) => `<option value="${city.id}">${city.name}</option>`).join(""); const firstCity = cities[0]; text("currentProvinceName", province.name); if (firstCity) { citySelect.value = String(firstCity.id); void updateMap(firstCity.name, province.name); } } } break;
+        case "selectProvinceFromDropdown": { const provinceId = Number(args[0]); const province = iranCitiesData.ostan.find((item) => item.id === provinceId); const citySelect = root.querySelector<HTMLSelectElement>("#mapCitySelect"); const cities = iranCitiesData.shahr.filter((city) => city.ostan === provinceId); if (province && citySelect) { citySelect.innerHTML = cities.map((city) => `<option value="${city.id}">${city.name}</option>`).join(""); const capitalName = provincialCapitals[provinceId]; const firstCity = cities.find((city) => city.name === capitalName) ?? cities[0]; text("currentProvinceName", province.name); if (firstCity) { citySelect.value = String(firstCity.id); void updateMap(firstCity.name, province.name); } } } break;
         case "filterSquaresByCity": { const city = iranCitiesData.shahr.find((item) => item.id === Number(args[0])); const province = iranCitiesData.ostan.find((item) => item.id === city?.ostan); if (city && province) { text("currentProvinceName", `${province.name} · ${city.name}`); void updateMap(city.name, province.name); } } break;
         case "sendDirectChatMessage": { const input = root.querySelector<HTMLInputElement>("#directChatMessageInput"); if (input?.value.trim()) { const area = root.querySelector("#directChatMessagesArea"); if (area) area.insertAdjacentHTML("beforeend", `<div class=\"flex justify-end\"><div class=\"bg-brand-red text-white p-3 rounded-2xl max-w-[82%]\">${input.value}</div></div>`); input.value = ""; } } break;
         default: break;
