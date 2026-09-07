@@ -294,7 +294,7 @@ export default function MeydanApp() {
         </span>
         <button data-action="toggleSearchModal()" className="text-slate-400 hover:text-white"><Icon name="x" className="w-5 h-5"  /></button>
       </div>
-      <input type="text" id="ajaxSearchInput" autoComplete="off" data-input-action="handleAjaxSearch(this.value)" placeholder="نام میدان، شهر، هشتگ یا سخنران..." className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-red" />
+      <div className="search-input-shell"><Icon name="search" className="w-4 h-4 text-slate-400 shrink-0" /><input type="text" id="ajaxSearchInput" autoComplete="off" data-input-action="handleAjaxSearch(this.value)" placeholder="نام میدان، شهر، هشتگ یا سخنران..." className="flex-1 bg-transparent border-0 px-1 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none" /></div>
       <div id="searchResultsContainer" className="space-y-2 max-h-60 overflow-y-auto no-scrollbar text-xs"><div id="searchStatus" className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/70 rounded-xl px-3 py-2">نام میدان، شهر، هشتگ یا سخنران را جستجو کنید</div>
         <div className="text-[10px] text-slate-400 font-bold">داغ‌ترین جستجوها:</div>
         <div className="flex flex-wrap gap-1.5">
