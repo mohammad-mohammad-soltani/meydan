@@ -697,3 +697,27 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .mobile-app-header,
   #mainAppShell.header-returned > main { transition: none !important; }
 }
+
+
+/* Keep header, sticky tabs, and feed movement perfectly synchronized */
+@media (max-width: 1023px) {
+  #mainAppShell {
+    --header-motion-duration: 180ms;
+    --header-motion-ease: cubic-bezier(.22,.61,.36,1);
+  }
+  #mainAppShell .mobile-app-header,
+  #mainAppShell.header-returned > main,
+  #mainAppShell #homeSubTabs,
+  #mainAppShell #subTabs {
+    transition-duration: var(--header-motion-duration) !important;
+    transition-timing-function: var(--header-motion-ease) !important;
+  }
+  #mainAppShell #homeSubTabs,
+  #mainAppShell #subTabs {
+    transition-property: top !important;
+  }
+  #mainAppShell.header-visible #homeSubTabs { top: 64px; }
+  #mainAppShell.header-visible #subTabs { top: 112px; }
+  #mainAppShell:not(.header-visible) #homeSubTabs { top: 0; }
+  #mainAppShell:not(.header-visible) #subTabs { top: 48px; }
+}
