@@ -1200,3 +1200,9 @@ html:not(.dark) #view-chat .bg-slate-100 {
   background: transparent !important;
   box-shadow: none !important;
 }
+
+
+/* Search filtering must override the option flex layout */
+.map-custom-select-option.hidden {
+  display: none !important;
+}
