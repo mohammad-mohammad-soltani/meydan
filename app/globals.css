@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-iran-sans), sans-serif;
+  --color-brand-red: #dc2626;
+  --color-brand-gold: #f59e0b;
+  --color-brand-emerald: #10b981;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   color-scheme: dark;
   background: #070a0f;
@@ -7,7 +16,24 @@
 
 * {
   box-sizing: border-box;
+  font-family: var(--font-iran-sans), sans-serif !important;
 }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-lahzeh), var(--font-iran-sans), sans-serif !important;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 html,
 body {
@@ -18,20 +44,42 @@ body {
   background: #070a0f;
 }
 
-.prototype-shell,
-.prototype-frame {
-  width: 100%;
-  height: 100dvh;
-  margin: 0;
-  border: 0;
+.pill-tab {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
 }
 
-.prototype-shell {
-  display: block;
-  overflow: hidden;
+.dark .pill-tab {
+  background-color: #0b0f17;
+  border-color: #1e293b;
+  color: #94a3b8;
 }
 
-.prototype-frame {
-  display: block;
-  background: #070a0f;
+.pill-tab.active-pill {
+  background-color: #fff7ed !important;
+  border-color: #ea580c !important;
+  color: #ea580c !important;
 }
+
+.dark .pill-tab.active-pill {
+  background-color: #1c1917 !important;
+  border-color: #ea580c !important;
+  color: #f97316 !important;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.4); }
+  70% { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+
+.heart-active svg { animation: heartPop 0.4s ease-in-out; }
+.heart-active span { color: #dc2626 !important; font-weight: bold; }
+.tab-active { color: #dc2626 !important; border-bottom: 2px solid #dc2626 !important; }
+.subtab-active { background-color: #dc2626 !important; color: #fff !important; font-weight: bold; }
+.home-subtab-active { color: #dc2626 !important; border-bottom: 2px solid #dc2626 !important; }
+.dark .home-subtab-active { color: #fff !important; }
