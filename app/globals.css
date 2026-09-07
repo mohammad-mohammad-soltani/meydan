@@ -406,3 +406,16 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     transition-duration: .01ms !important;
   }
 }
+
+
+@keyframes homePanelEnter {
+  from { opacity: 0; transform: translateY(10px); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.home-panel-enter { animation: homePanelEnter 260ms cubic-bezier(.2,.8,.2,1) both; }
+#homeSubTabs button {
+  transition: color 220ms ease, background-color 220ms ease, box-shadow 220ms ease, opacity 220ms ease;
+}
+#homeSubTabs button:not(.home-subtab-active) { opacity: .7; }
+#homeSubTabs button.home-subtab-active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .home-panel-enter { animation: none; } }
