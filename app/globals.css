@@ -783,3 +783,48 @@ html, body { background: var(--app-bg); color: var(--app-text); }
 @supports not (background: color-mix(in srgb, white, black)) {
   #mainAppShell > header, #homeSubTabs, #subTabs { background-color: var(--app-surface); }
 }
+
+
+/* Final light/dark color contract */
+:root {
+  color-scheme: light;
+  --surface-0: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --line-subtle: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+}
+.dark {
+  color-scheme: dark;
+  --surface-0: #070a0f;
+  --surface-1: #0b0f17;
+  --surface-2: #111827;
+  --line-subtle: #1e293b;
+  --line-strong: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+}
+html, body, #mainAppShell { background-color: var(--surface-0); color: var(--text-primary); }
+#mainAppShell > header, #homeSubTabs, #subTabs, #bottomNavBar { border-color: var(--line-subtle); }
+.app-view { color: var(--text-primary); }
+
+html:not(.dark) .bg-slate-950,
+html:not(.dark) .bg-slate-900,
+html:not(.dark) .bg-\\[\\#070a0f\\],
+html:not(.dark) .bg-\\[\\#0b0f17\\] {
+  background-color: var(--surface-2) !important;
+}
+html:not(.dark) .border-slate-800,
+html:not(.dark) .border-slate-700 {
+  border-color: var(--line-subtle) !important;
+}
+html:not(.dark) .text-slate-400 { color: var(--text-muted) !important; }
+html:not(.dark) .text-slate-500 { color: var(--text-secondary) !important; }
+html:not(.dark) .bg-white { background-color: var(--surface-1); }
+html:not(.dark) .dark\\:bg-\\[\\#070a0f\\] { background-color: var(--surface-1) !important; }
+
+.dark html, .dark body { background-color: var(--surface-0); }
