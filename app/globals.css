@@ -482,3 +482,71 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 }
 #view-combined-profile button[id^="btn-subtab-"] svg { opacity: .75; transition: opacity 180ms ease; }
 #view-combined-profile button[id^="btn-subtab-"].subtab-active svg { opacity: 1; }
+
+
+/* Mobile responsive polish from real-device layout */
+@media (max-width: 639px) {
+  #mainAppShell > header {
+    min-height: 64px;
+    gap: .5rem;
+    padding-inline: .75rem;
+  }
+  #mainAppShell > header > div:first-child {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  #mainAppShell > header > div:first-child > div:last-child {
+    min-width: 0;
+  }
+  #mainAppShell > header h1,
+  #mainAppShell > header p {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #mainAppShell > header > div:last-child {
+    flex: 0 0 auto;
+  }
+  #mainAppShell > header > div:last-child > button:first-child span {
+    display: none;
+  }
+  #homeSubTabs {
+    min-height: 48px;
+  }
+  #homeSubTabs button {
+    min-width: 0;
+    padding-inline: .5rem;
+    white-space: nowrap;
+  }
+  #subTabs {
+    min-height: 58px;
+    padding-inline: .75rem;
+  }
+  #subTabs > div {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-block: .15rem;
+  }
+  #subTabs > div::-webkit-scrollbar { display: none; }
+  #subTabs .pill-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  #mainAppShell > main {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+  #bottomNavBar {
+    min-height: 64px;
+  }
+}
+
+@media (max-width: 380px) {
+  #mainAppShell > header { padding-inline: .5rem; }
+  #mainAppShell > header > div:last-child > button { padding: .45rem; }
+  #homeSubTabs button { font-size: .7rem; }
+  #subTabs { padding-inline: .5rem; }
+}
