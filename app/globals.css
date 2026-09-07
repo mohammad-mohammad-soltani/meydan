@@ -884,3 +884,15 @@ html:not(.dark) .search-panel { background: #ffffff; border-color: var(--line-su
 html:not(.dark) .search-input-shell { background: #f1f5f9; border-color: var(--line-strong); }
 html:not(.dark) #searchResultsContainer > div:first-child { background: #f8fafc; color: var(--text-secondary); }
 html:not(.dark) #bottomNavBar { box-shadow: 0 -10px 28px rgb(15 23 42 / .1); }
+
+
+/* Light mode: readable active home tab */
+html:not(.dark) #homeSubTabs button.home-subtab-active {
+  color: #9f1239 !important;
+  background: #ffe4e6 !important;
+  box-shadow: inset 0 -2px 0 #e11d48;
+}
+html:not(.dark) #homeSubTabs button:not(.home-subtab-active) {
+  color: #64748b !important;
+  background: transparent !important;
+}
