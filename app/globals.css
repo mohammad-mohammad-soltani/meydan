@@ -148,3 +148,18 @@ select {
     overflow-wrap: anywhere;
   }
 }
+
+
+.tab-panel-enter {
+  animation: viewEnter 220ms ease-out both;
+}
+
+.subtab-active,
+.home-subtab-active,
+.active-pill {
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-panel-enter { animation: none; }
+}
