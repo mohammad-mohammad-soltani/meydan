@@ -20,11 +20,31 @@ export function ViewMap() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <label className="block text-slate-500 dark:text-slate-400 text-[10px] mb-1">استان:</label>
-                <select id="mapProvinceSelect" defaultValue={defaultProvinceId} data-change-action="selectProvinceFromDropdown(this.value)" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-red">
+                <select id="mapProvinceSelect" defaultValue={defaultProvinceId} data-change-action="selectProvinceFromDropdown(this.value)" tabIndex={-1} aria-hidden="true" className="sr-only">
                   {iranCitiesData.ostan.map((province) => (
                     <option key={province.id} value={province.id}>{province.name}</option>
                   ))}
                 </select>
+                <div className="map-custom-select" data-map-select="province">
+                  <button type="button" id="mapProvinceTrigger" data-action="toggleProvinceDropdown" aria-haspopup="listbox" aria-expanded="false" className="map-custom-select-trigger">
+                    <span id="mapProvinceLabel">تهران</span>
+                    <Icon name="chevron-down" className="w-4 h-4 shrink-0" />
+                  </button>
+                  <div id="mapProvinceMenu" className="map-custom-select-menu hidden" role="listbox" aria-label="استان‌ها">
+                    <div className="map-custom-select-search">
+                      <Icon name="search" className="w-4 h-4 shrink-0" />
+                      <input id="mapProvinceSearch" type="search" placeholder="جست‌وجوی استان..." data-input-action="filterProvinceOptions" aria-label="جست‌وجوی استان" />
+                    </div>
+                    <div id="mapProvinceOptions" className="map-custom-select-options">
+                      {iranCitiesData.ostan.map((province) => (
+                        <button type="button" key={province.id} value={province.id} data-province-id={province.id} data-action={`chooseProvince(this.value)`} className={province.id === defaultProvinceId ? "map-custom-select-option is-selected" : "map-custom-select-option"} role="option" aria-selected={province.id === defaultProvinceId}>
+                          <span>{province.name}</span>
+                          <Icon name="check" className="map-custom-select-check w-4 h-4" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-slate-500 dark:text-slate-400 text-[10px] mb-1">شهر / میدان:</label>
