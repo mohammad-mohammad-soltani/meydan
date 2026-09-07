@@ -17,7 +17,7 @@ export function ViewFeed() {
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-sm text-slate-900 dark:text-white">پایگاه میدان انقلاب تهران</span>
-                      <Icon name="badge-check" className="w-3.5 h-3.5 text-blue-500 fill-blue-500"  />
+                      <Icon name="badge-check" className="w-3.5 h-3.5 text-blue-500 stroke-2"  />
                       <span className="text-[11px] text-slate-500 dark:text-slate-400">@tehran_enghelab · ۲۰ دقیقه پیش</span>
                     </div>
                     <span className="text-[10px] bg-red-500/10 text-brand-red px-1.5 py-0.5 rounded font-medium">روایت شب دوازدهم</span>
