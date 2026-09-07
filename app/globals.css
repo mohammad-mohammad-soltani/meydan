@@ -174,7 +174,7 @@ select {
 #ajaxSearchInput:focus { box-shadow: 0 0 0 3px rgb(220 38 38 / .14); }
 #searchResultsContainer { overscroll-behavior: contain; }
 .tab-panel-enter { animation: viewEnter 260ms cubic-bezier(.2,.8,.2,1) both; }
-@media (prefers-reduced-motion: reduce) { .search-backdrop:not(.hidden), .search-backdrop:not(.hidden) .search-panel, .tab-panel-enter, .subtab-active::after, .home-subtab-active::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .search-backdrop:not(.hidden), .search-backdrop:not(.hidden) .search-panel, .tab-panel-enter { animation: none; } }
 
 
 .search-panel {
