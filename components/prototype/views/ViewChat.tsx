@@ -3,8 +3,8 @@ export function ViewChat() {
   return (
         <section id="view-chat" className="app-view hidden p-4 space-y-4 pb-20">
           <div className="flex border-b border-slate-200 dark:border-slate-800 text-xs font-bold">
-            <button data-action="switchChatSection('messages')" id="chat-tab-messages" className="flex-1 py-2.5 text-center tab-active transition">گفتگوها</button>
-            <button data-action="switchChatSection('notifs')" id="chat-tab-notifs" className="flex-1 py-2.5 text-center text-slate-500 dark:text-slate-400 transition flex items-center justify-center gap-1">
+            <button data-action="switchChatSection('messages')" data-chat-section="messages" id="chat-tab-messages" className="flex-1 py-2.5 text-center subtab-active transition">گفتگوها</button>
+            <button data-action="switchChatSection('notifs')" data-chat-section="notifs" id="chat-tab-notifs" className="flex-1 py-2.5 text-center text-slate-500 dark:text-slate-400 transition flex items-center justify-center gap-1">
               <span>اعلان‌ها</span>
               <span className="w-2 h-2 rounded-full bg-brand-red" />
             </button>
