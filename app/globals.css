@@ -1170,3 +1170,21 @@ html:not(.dark) #view-chat .bg-slate-100 {
   background: #111c30;
   box-shadow: 0 0 0 3px rgb(239 68 68 / .16);
 }
+
+
+/* Search input itself remains a rounded, comfortable control */
+.map-custom-select-search input {
+  height: 2.35rem;
+  border: 1px solid transparent;
+  border-radius: .58rem;
+  background: var(--surface-1);
+  padding: 0 .7rem;
+  box-shadow: inset 0 0 0 1px rgb(15 23 42 / .025);
+}
+.map-custom-select-search:focus-within input {
+  border-color: color-mix(in srgb, var(--app-brand) 55%, var(--line-strong));
+}
+.dark .map-custom-select-search input {
+  background: #0b1220;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .035);
+}
