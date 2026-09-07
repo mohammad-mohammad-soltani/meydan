@@ -286,7 +286,7 @@ export default function MeydanApp() {
     </aside>
   </div>
   {/* مودال جستجو */}
-  <div id="searchModal" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center hidden p-4 pt-16">
+  <div id="searchModal" className="search-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center hidden p-4 pt-16">
     <div className="search-panel bg-white dark:bg-[#0b0f17] border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-2xl p-4 relative shadow-2xl space-y-3">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
         <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
