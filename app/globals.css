@@ -632,3 +632,17 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   height: auto;
   min-height: 0;
 }
+
+
+.mobile-app-header {
+  transition: transform 220ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease;
+  will-change: transform;
+}
+.mobile-app-header.header-hidden {
+  transform: translateY(-100%);
+  opacity: .02;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-app-header { transition: none; }
+}
