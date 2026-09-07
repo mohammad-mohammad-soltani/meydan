@@ -172,7 +172,7 @@ export default function MeydanApp() {
             <span>جستجو</span>
           </button>
           <button data-action="toggleTheme()" className="p-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-amber-400 transition">
-            <i id="theme-icon" data-lucide="sun" className="w-4 h-4" />
+            <Icon name="sun" className="w-4 h-4" />
           </button>
         </div>
       </header>
