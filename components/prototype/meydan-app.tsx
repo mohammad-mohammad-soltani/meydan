@@ -47,6 +47,7 @@ export default function MeydanApp() {
         case "switchView": show(args[0]); break;
         case "switchHomeTab": { const on = args[0] === "foryou"; root.querySelector("#feed-content-foryou")?.classList.toggle("hidden", !on); root.querySelector("#feed-content-following")?.classList.toggle("hidden", on); root.querySelector("#home-tab-foryou")?.classList.toggle("home-subtab-active", on); root.querySelector("#home-tab-following")?.classList.toggle("home-subtab-active", !on); } break;
         case "filterFeed": { root.querySelectorAll(".pill-tab").forEach((item) => item.classList.remove("active-pill")); root.querySelector(`#pill-${args[0]}`)?.classList.add("active-pill"); root.querySelectorAll<HTMLElement>(".feed-item").forEach((item) => item.classList.toggle("hidden", args[0] !== "all" && !item.classList.contains(`feed-${args[0]}`))); } break;
+        case "handleAjaxSearch": { const query = (args[0] ?? "").trim().toLocaleLowerCase("fa-IR"); const items = Array.from(root.querySelectorAll<HTMLElement>(".feed-item, .speaker-card")); const matches = query ? items.filter((item) => item.textContent?.toLocaleLowerCase("fa-IR").includes(query)).length : 0; text("searchStatus", query ? `${matches} نتیجه در روایت‌ها و سخنرانان` : "نام میدان، شهر، هشتگ یا سخنران را جستجو کنید"); } break;
         case "toggleTheme": document.documentElement.classList.toggle("dark"); break;
         case "toggleSearchModal": toggle("searchModal"); break;
         case "closeModal": root.querySelector<HTMLElement>(`#${args[0]}`)?.classList.add("hidden"); break;
@@ -77,7 +78,7 @@ export default function MeydanApp() {
       }
     };
     const click = (event: Event) => { const target = (event.target as HTMLElement).closest<HTMLElement>("[data-action]"); if (!target) return; const element = target as ActionTarget; (element.dataset.action ?? "").split(";").map((command) => command.trim()).forEach((command) => { const match = command.match(/^([\w$]+)\(/); if (match) action(match[1], parseArgs(command, element), element); }); };
-    const input = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.inputAction; if (!raw) return; if (raw.includes("filterSpeakersList")) root.querySelectorAll<HTMLElement>(".speaker-card").forEach((card) => card.style.display = card.textContent?.toLowerCase().includes((target.value ?? "").toLowerCase()) ? "flex" : "none"); if (raw.includes("autoExpandTextarea")) { target.style.height = "auto"; target.style.height = `${target.scrollHeight}px`; } };
+    let searchTimer: ReturnType<typeof setTimeout> | undefined; const input = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.inputAction; if (!raw) return; if (raw.includes("handleAjaxSearch")) { if (searchTimer) clearTimeout(searchTimer); searchTimer = setTimeout(() => action("handleAjaxSearch", [target.value ?? ""], target), 120); } if (raw.includes("filterSpeakersList")) root.querySelectorAll<HTMLElement>(".speaker-card").forEach((card) => card.style.display = card.textContent?.toLocaleLowerCase("fa-IR").includes((target.value ?? "").toLocaleLowerCase("fa-IR")) ? "flex" : "none"); if (raw.includes("autoExpandTextarea")) { target.style.height = "auto"; target.style.height = `${target.scrollHeight}px`; } };
     const change = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.changeAction; if (!raw) return; const match = raw.match(/^([\w$]+)\(/); if (match) action(match[1], [target.value ?? ""], target); };
     root.addEventListener("click", click); root.addEventListener("input", input); root.addEventListener("change", change);
     show("view-feed");
@@ -286,15 +287,15 @@ export default function MeydanApp() {
   </div>
   {/* مودال جستجو */}
   <div id="searchModal" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center hidden p-4 pt-16">
-    <div className="bg-white dark:bg-[#0b0f17] border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-2xl p-4 relative shadow-2xl space-y-3">
+    <div className="search-panel bg-white dark:bg-[#0b0f17] border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-2xl p-4 relative shadow-2xl space-y-3">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
         <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
           <Icon name="search" className="w-4 h-4 text-brand-red"  /> جستجوی هوشمند در میادین و روایت‌ها
         </span>
         <button data-action="toggleSearchModal()" className="text-slate-400 hover:text-white"><Icon name="x" className="w-5 h-5"  /></button>
       </div>
-      <input type="text" id="ajaxSearchInput" data-input-action="handleAjaxSearch(this.value)" placeholder="نام میدان، شهر، هشتگ یا سخنران..." className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-red" />
-      <div id="searchResultsContainer" className="space-y-2 max-h-60 overflow-y-auto no-scrollbar text-xs">
+      <input type="text" id="ajaxSearchInput" autoComplete="off" data-input-action="handleAjaxSearch(this.value)" placeholder="نام میدان، شهر، هشتگ یا سخنران..." className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-red" />
+      <div id="searchResultsContainer" className="space-y-2 max-h-60 overflow-y-auto no-scrollbar text-xs"><div id="searchStatus" className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/70 rounded-xl px-3 py-2">نام میدان، شهر، هشتگ یا سخنران را جستجو کنید</div>
         <div className="text-[10px] text-slate-400 font-bold">داغ‌ترین جستجوها:</div>
         <div className="flex flex-wrap gap-1.5">
           <span data-action="triggerSearchTag('#میدان_انقلاب')" className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-brand-red hover:text-white transition">#میدان_انقلاب</span>
