@@ -431,3 +431,11 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 }
 #subTabs .pill-tab.active-pill { box-shadow: 0 4px 12px rgb(220 38 38 / .14); transform: translateY(-1px); }
 @media (prefers-reduced-motion: reduce) { .feed-item-enter { animation: none; } }
+
+
+#homeSubTabs { padding-top: .35rem; }
+#subTabs { padding-top: .65rem; }
+@media (max-width: 639px) {
+  #homeSubTabs { padding-top: .45rem; }
+  #subTabs { padding-top: .75rem; }
+}
