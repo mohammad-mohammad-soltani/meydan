@@ -1117,3 +1117,56 @@ html:not(.dark) #view-chat .bg-slate-100 {
   from { opacity: 0; transform: translateY(-5px) scale(.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+
+/* Elevated search treatment for map dropdowns */
+.map-custom-select-menu {
+  border-color: color-mix(in srgb, var(--line-strong) 78%, var(--app-brand));
+  backdrop-filter: blur(14px);
+}
+.map-custom-select-search {
+  margin: .45rem;
+  gap: .6rem;
+  border: 1px solid var(--line-subtle);
+  border-radius: .7rem;
+  background: var(--surface-2);
+  padding: .25rem .65rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+.map-custom-select-search:focus-within {
+  border-color: var(--app-brand);
+  background: var(--surface-1);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / .12);
+}
+.map-custom-select-search svg {
+  color: var(--app-brand);
+  opacity: .9;
+}
+.map-custom-select-search input {
+  height: 2rem;
+  font-size: .78rem;
+  font-weight: 600;
+}
+.map-custom-select-search input::placeholder {
+  color: var(--text-muted);
+  opacity: .85;
+}
+.map-custom-select-options {
+  padding: .15rem .45rem .45rem;
+}
+.map-custom-select-option {
+  min-height: 2.5rem;
+  border: 1px solid transparent;
+}
+.map-custom-select-option:hover {
+  border-color: rgb(220 38 38 / .18);
+}
+.dark .map-custom-select-search {
+  border-color: #263448;
+  background: #0f172a;
+}
+.dark .map-custom-select-search:focus-within {
+  border-color: #ef4444;
+  background: #111c30;
+  box-shadow: 0 0 0 3px rgb(239 68 68 / .16);
+}
