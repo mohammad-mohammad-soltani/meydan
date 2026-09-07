@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Icon } from "./icon";
+import iranCitiesData from "../../data/iran-cities.json";
 import { ViewAllPodcasts } from "./views/ViewAllPodcasts";
 import { ViewChat } from "./views/ViewChat";
 import { ViewCombinedProfile } from "./views/ViewCombinedProfile";
@@ -76,8 +77,8 @@ export default function MeydanApp() {
         case "submitPostComment": alert("نظر شما با موفقیت ثبت شد."); break;
         case "attachChatMedia": alert(`پیوست ${args[0]} انتخاب شد.`); break;
         case "openFullPostPage": text("fullPostAuthor", args[0]); text("fullPostHandle", args[1]); text("fullPostContent", args[2]); text("fullPostOutlet", `انتشار در: ${args[3]}`); show("view-full-post"); break;
-        case "selectProvinceFromDropdown": { const province = mapLocations[args[0]]; const citySelect = root.querySelector<HTMLSelectElement>("#mapCitySelect"); if (province && citySelect) { citySelect.innerHTML = Object.entries(province.cities).map(([key, city]) => `<option value="${key}">${city.label}</option>`).join(""); const firstCity = Object.entries(province.cities)[0]; if (firstCity) { citySelect.value = firstCity[0]; const city = firstCity[1]; const frame = root.querySelector<HTMLIFrameElement>("#liveMapFrame"); if (frame) frame.src = `https://www.openstreetmap.org/export/embed.html?bbox=${city.lon - .12}%2C${city.lat - .1}%2C${city.lon + .12}%2C${city.lat + .1}&layer=mapnik&marker=${city.lat}%2C${city.lon}`; } text("currentProvinceName", province.label); } } break;
-        case "filterSquaresByCity": { const province = mapLocations[(root.querySelector<HTMLSelectElement>("#mapProvinceSelect")?.value ?? "")]; const city = province?.cities[args[0]]; if (city) { const frame = root.querySelector<HTMLIFrameElement>("#liveMapFrame"); if (frame) frame.src = `https://www.openstreetmap.org/export/embed.html?bbox=${city.lon - .12}%2C${city.lat - .1}%2C${city.lon + .12}%2C${city.lat + .1}&layer=mapnik&marker=${city.lat}%2C${city.lon}`; text("currentProvinceName", `${province.label} · ${city.label}`); } } break;
+        case "selectProvinceFromDropdown": { const provinceId = Number(args[0]); const province = iranCitiesData.ostan.find((item) => item.id === provinceId); const citySelect = root.querySelector<HTMLSelectElement>("#mapCitySelect"); const cities = iranCitiesData.shahr.filter((city) => city.ostan === provinceId); if (province && citySelect) { citySelect.innerHTML = cities.map((city) => `<option value="${city.id}">${city.name}</option>`).join(""); text("currentProvinceName", province.name); } } break;
+        case "filterSquaresByCity": { const city = iranCitiesData.shahr.find((item) => item.id === Number(args[0])); const province = iranCitiesData.ostan.find((item) => item.id === city?.ostan); if (city && province) text("currentProvinceName", `${province.name} · ${city.name}`); } break;
         case "sendDirectChatMessage": { const input = root.querySelector<HTMLInputElement>("#directChatMessageInput"); if (input?.value.trim()) { const area = root.querySelector("#directChatMessagesArea"); if (area) area.insertAdjacentHTML("beforeend", `<div class=\"flex justify-end\"><div class=\"bg-brand-red text-white p-3 rounded-2xl max-w-[82%]\">${input.value}</div></div>`); input.value = ""; } } break;
         default: break;
       }
