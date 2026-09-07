@@ -48,7 +48,7 @@ export function ViewFeed() {
                     منتشر شده در: <b className="text-slate-900 dark:text-white">روزنامه عصر ایرانیان</b> و <b className="text-slate-900 dark:text-white">عصر آنلاین</b>
                   </span>
                 </div>
-                <button data-action="openMediaModal('طومار ۵۰ متری تجدید بیعت در میدان انقلاب', 'عصر ایرانیان و عصر آنلاین')" className="text-blue-600 dark:text-blue-400 text-[11px] font-bold hover:underline flex items-center gap-0.5">
+                <button data-action="openMediaModal('طومار ۵۰ متری تجدید بیعت در میدان انقلاب', 'عصر ایرانیان و عصر آنلاین')" className="text-blue-600 dark:text-blue-400 text-[11px] font-bold hover:underline flex items-center gap-0.5 whitespace-nowrap shrink-0">
                   مشاهده خبر <Icon name="chevron-left" className="w-3 h-3"  />
                 </button>
               </div>
