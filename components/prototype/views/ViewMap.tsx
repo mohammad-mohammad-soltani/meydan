@@ -48,11 +48,32 @@ export function ViewMap() {
               </div>
               <div>
                 <label className="block text-slate-500 dark:text-slate-400 text-[10px] mb-1">شهر / میدان:</label>
-                <select id="mapCitySelect" defaultValue={defaultCity?.id} data-change-action="filterSquaresByCity(this.value)" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-red">
+                <select id="mapCitySelect" defaultValue={defaultCity?.id} data-change-action="filterSquaresByCity(this.value)" tabIndex={-1} aria-hidden="true" className="sr-only">
                   {defaultCities.map((city) => (
                     <option key={city.id} value={city.id}>{city.name}</option>
                   ))}
                 </select>
+                <div className="map-custom-select" data-map-select="city">
+                  <button type="button" id="mapCityTrigger" data-action="toggleCityDropdown()" aria-haspopup="listbox" aria-expanded="false" className="map-custom-select-trigger map-custom-select-trigger-city">
+                    <span className="map-custom-select-trigger-icon"><Icon name="map-pin" className="w-3.5 h-3.5" /></span>
+                    <span id="mapCityLabel" className="truncate flex-1">تهران</span>
+                    <Icon name="chevron-down" className="map-custom-select-chevron w-4 h-4 shrink-0" />
+                  </button>
+                  <div id="mapCityMenu" className="map-custom-select-menu hidden" role="listbox" aria-label="شهرها">
+                    <div className="map-custom-select-search">
+                      <Icon name="search" className="w-4 h-4 shrink-0" />
+                      <input id="mapCitySearch" type="search" placeholder="جست‌وجوی شهر..." data-input-action="filterCityOptions" aria-label="جست‌وجوی شهر" />
+                    </div>
+                    <div id="mapCityOptions" className="map-custom-select-options">
+                      {defaultCities.map((city) => (
+                        <button type="button" key={city.id} value={city.id} data-city-id={city.id} data-action={`chooseCity(this.value)`} className={city.id === defaultCity?.id ? "map-custom-select-option is-selected" : "map-custom-select-option"} role="option" aria-selected={city.id === defaultCity?.id}>
+                          <span>{city.name}</span>
+                          <Icon name="check" className="map-custom-select-check w-4 h-4" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
