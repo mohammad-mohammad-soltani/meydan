@@ -97,3 +97,14 @@ body {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+
+@keyframes viewEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.view-enter { animation: viewEnter 220ms ease-out both; }
+[data-nav-view] { transition: color 180ms ease, transform 180ms ease; }
+[data-nav-view].nav-active { color: #dc2626 !important; font-weight: 800; transform: translateY(-1px); }
+[data-nav-view].nav-active svg { stroke-width: 2.5; }
+@media (prefers-reduced-motion: reduce) { .view-enter { animation: none; } [data-nav-view] { transition: none; } }
