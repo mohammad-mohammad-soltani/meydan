@@ -814,8 +814,8 @@ html, body, #mainAppShell { background-color: var(--surface-0); color: var(--tex
 
 html:not(.dark) .bg-slate-950,
 html:not(.dark) .bg-slate-900,
-html:not(.dark) .bg-\\[\\#070a0f\\],
-html:not(.dark) .bg-\\[\\#0b0f17\\] {
+html:not(.dark) .bg-\[\#070a0f\],
+html:not(.dark) .bg-\[\#0b0f17\] {
   background-color: var(--surface-2) !important;
 }
 html:not(.dark) .border-slate-800,
@@ -825,6 +825,6 @@ html:not(.dark) .border-slate-700 {
 html:not(.dark) .text-slate-400 { color: var(--text-muted) !important; }
 html:not(.dark) .text-slate-500 { color: var(--text-secondary) !important; }
 html:not(.dark) .bg-white { background-color: var(--surface-1); }
-html:not(.dark) .dark\\:bg-\\[\\#070a0f\\] { background-color: var(--surface-1) !important; }
+html:not(.dark) .dark\:bg-\[\#070a0f\] { background-color: var(--surface-1) !important; }
 
 .dark html, .dark body { background-color: var(--surface-0); }
