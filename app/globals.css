@@ -108,3 +108,43 @@ body {
 [data-nav-view].nav-active { color: #dc2626 !important; font-weight: 800; transform: translateY(-1px); }
 [data-nav-view].nav-active svg { stroke-width: 2.5; }
 @media (prefers-reduced-motion: reduce) { .view-enter { animation: none; } [data-nav-view] { transition: none; } }
+
+
+#mainAppShell,
+#mainAppShell > main,
+.app-view {
+  min-width: 0;
+}
+
+#mainAppShell > main {
+  width: 100%;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+.app-view img,
+.app-view video,
+.app-view iframe,
+.app-view svg {
+  max-width: 100%;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+
+@media (max-width: 639px) {
+  #mainAppShell {
+    width: 100vw;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .app-view {
+    overflow-wrap: anywhere;
+  }
+}
