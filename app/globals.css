@@ -174,7 +174,49 @@ select {
 #ajaxSearchInput:focus { box-shadow: 0 0 0 3px rgb(220 38 38 / .14); }
 #searchResultsContainer { overscroll-behavior: contain; }
 .tab-panel-enter { animation: viewEnter 260ms cubic-bezier(.2,.8,.2,1) both; }
-.subtab-active, .home-subtab-active, .active-pill { transform: translateY(-1px); }
-.subtab-active::after, .home-subtab-active::after { content: ""; display: block; height: 2px; border-radius: 999px; background: currentColor; margin: 4px auto -6px; width: 34%; animation: tabIndicatorIn 220ms ease-out both; }
-@keyframes tabIndicatorIn { from { opacity: 0; width: 0; } to { opacity: 1; width: 34%; } }
 @media (prefers-reduced-motion: reduce) { .search-backdrop:not(.hidden), .search-backdrop:not(.hidden) .search-panel, .tab-panel-enter, .subtab-active::after, .home-subtab-active::after { animation: none; } }
+
+
+.search-panel {
+  border-radius: 1.5rem;
+  padding: 1rem;
+  background: rgb(11 15 23 / .96);
+  box-shadow: 0 24px 70px rgb(0 0 0 / .38), 0 0 0 1px rgb(255 255 255 / .04);
+}
+.search-input-shell {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 46px;
+  padding: .25rem .75rem;
+  border: 1px solid rgb(100 116 139 / .35);
+  border-radius: .9rem;
+  background: rgb(30 41 59 / .58);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.search-input-shell:focus-within {
+  border-color: #dc2626;
+  background: rgb(30 41 59 / .8);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / .14);
+}
+#searchResultsContainer {
+  padding-top: .25rem;
+}
+#searchResultsContainer > div:first-child {
+  border: 1px solid rgb(100 116 139 / .2);
+}
+#searchResultsContainer .flex.flex-wrap span {
+  border: 1px solid rgb(100 116 139 / .22);
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+#searchResultsContainer .flex.flex-wrap span:hover {
+  transform: translateY(-1px);
+  border-color: rgb(220 38 38 / .7);
+}
+@media (max-width: 639px) {
+  .search-backdrop { padding: .75rem; padding-top: 4.5rem; }
+  .search-panel { max-width: none; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #searchResultsContainer .flex.flex-wrap span { transition: none; }
+}
