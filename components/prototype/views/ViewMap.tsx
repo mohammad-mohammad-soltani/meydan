@@ -1,4 +1,5 @@
 import { Icon } from "../icon";
+import iranCitiesData from "../../../data/iran-cities.json";
 export function ViewMap() {
   return (
         <section id="view-map" className="app-view hidden p-4 space-y-4">
@@ -15,13 +16,7 @@ export function ViewMap() {
               <div>
                 <label className="block text-slate-500 dark:text-slate-400 text-[10px] mb-1">استان:</label>
                 <select id="mapProvinceSelect" data-change-action="selectProvinceFromDropdown(this.value)" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-red">
-                  <option value="tehran">تهران</option>
-                  <option value="khorasan-razavi">خراسان رضوی</option>
-                  <option value="isfahan">اصفهان</option>
-                  <option value="fars">فارس</option>
-                  <option value="qom">قم</option>
-                  <option value="khuzestan">خوزستان</option>
-                  <option value="azerbaijan-east">آذربایجان شرقی</option>
+                  {iranCitiesData.ostan.map((province) => (\n                    <option key={province.id} value={province.id}>{province.name}</option>\n                  ))}
                 </select>
               </div>
               <div>
