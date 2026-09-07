@@ -277,3 +277,132 @@ select {
 @media (min-width: 1024px) {
   #mainAppShell { width: 36rem; }
 }
+
+
+/* Design system refinement */
+:root {
+  --surface-0: #070a0f;
+  --surface-1: #0b0f17;
+  --surface-2: #111827;
+  --line-subtle: rgb(148 163 184 / .16);
+  --line-strong: rgb(148 163 184 / .28);
+  --text-muted: #94a3b8;
+  --brand: #ef4444;
+  --brand-strong: #dc2626;
+  --focus-ring: rgb(239 68 68 / .28);
+}
+
+html { text-rendering: optimizeLegibility; }
+body { color: #f8fafc; font-feature-settings: "kern" 1, "liga" 1; }
+
+button,
+a,
+input,
+textarea,
+select { -webkit-tap-highlight-color: transparent; }
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+button:not(:disabled),
+a[href],
+[role="button"] { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+
+#mainAppShell {
+  background: var(--surface-0);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .025);
+}
+
+#mainAppShell > header,
+#homeSubTabs,
+#subTabs {
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-color: var(--line-subtle);
+}
+
+#homeSubTabs button,
+#subTabs button,
+#view-chat > div:first-child button,
+#view-combined-profile button[id^="btn-subtab-"] {
+  position: relative;
+  min-height: 40px;
+  color: var(--text-muted);
+  transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+#homeSubTabs button:hover,
+#subTabs button:hover,
+#view-chat > div:first-child button:hover,
+#view-combined-profile button[id^="btn-subtab-"]:hover {
+  color: #f8fafc;
+  background: rgb(148 163 184 / .08);
+}
+#homeSubTabs button.home-subtab-active,
+#view-chat > div:first-child button.subtab-active,
+#view-combined-profile button[id^="btn-subtab-"].subtab-active {
+  color: #fff !important;
+  background: rgb(239 68 68 / .12) !important;
+  box-shadow: inset 0 -2px 0 var(--brand);
+}
+
+.app-view > div,
+.app-view article,
+.app-view section {
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+.app-view article:hover,
+.app-view [class*="border-slate"]:hover {
+  border-color: var(--line-strong);
+}
+
+.app-view input,
+.app-view textarea,
+.app-view select {
+  color-scheme: dark;
+  border-color: var(--line-strong);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.app-view input::placeholder,
+.app-view textarea::placeholder { color: #64748b; }
+.app-view input:focus,
+.app-view textarea:focus,
+.app-view select:focus {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+#bottomNavBar {
+  border-top-color: var(--line-subtle);
+  box-shadow: 0 -10px 30px rgb(0 0 0 / .18);
+}
+#bottomNavBar button {
+  min-height: 42px;
+  border-radius: .9rem;
+  transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+#bottomNavBar button:hover,
+#bottomNavBar button.nav-active { background: rgb(239 68 68 / .1); }
+#bottomNavBar button.nav-active { color: var(--brand) !important; }
+
+.search-panel { border-color: var(--line-strong); }
+.search-input-shell { background: rgb(15 23 42 / .72); }
+#searchResultsContainer { scrollbar-width: thin; scrollbar-color: rgb(148 163 184 / .35) transparent; }
+
+@media (min-width: 1024px) {
+  #mainAppShell { box-shadow: 0 0 0 1px rgb(255 255 255 / .04), 0 20px 60px rgb(0 0 0 / .16); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
