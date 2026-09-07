@@ -27,6 +27,7 @@ export function ViewMap() {
               <div>
                 <label className="block text-slate-500 dark:text-slate-400 text-[10px] mb-1">شهر / میدان:</label>
                 <select id="mapCitySelect" data-change-action="filterSquaresByCity(this.value)" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-red">
+                  <option value="tehran">تهران</option>
                 </select>
               </div>
             </div>
