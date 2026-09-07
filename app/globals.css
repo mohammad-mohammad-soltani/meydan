@@ -676,3 +676,24 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 @media (prefers-reduced-motion: reduce) {
   #mainAppShell.header-returned > main { transition: none; }
 }
+
+
+/* Final smart-header motion: translate only, no fade or visual jump */
+.mobile-app-header {
+  opacity: 1 !important;
+  transition: transform 180ms cubic-bezier(.22,.61,.36,1) !important;
+}
+.mobile-app-header.header-hidden {
+  opacity: 1 !important;
+  transform: translate3d(0, -100%, 0);
+}
+@media (max-width: 1023px) {
+  #mainAppShell.header-returned > main {
+    margin-top: 64px;
+    transition: margin-top 180ms cubic-bezier(.22,.61,.36,1) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-app-header,
+  #mainAppShell.header-returned > main { transition: none !important; }
+}
