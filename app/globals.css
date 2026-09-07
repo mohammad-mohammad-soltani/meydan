@@ -449,3 +449,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   #homeSubTabs { top: 56px; }
   #subTabs { top: 105px; }
 }
+
+
+/* Keep the selected filter pill fully inside its tab bar */
+#subTabs {
+  overflow: visible;
+}
+#subTabs .pill-tab,
+#subTabs .pill-tab.active-pill {
+  transform: none !important;
+}
