@@ -459,3 +459,26 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 #subTabs .pill-tab.active-pill {
   transform: none !important;
 }
+
+
+/* Profile tabs: calm segmented control */
+#view-combined-profile button[id^="btn-subtab-"] {
+  border: 1px solid transparent;
+  border-radius: .7rem;
+  background: transparent;
+  color: #94a3b8 !important;
+  box-shadow: none;
+  transform: none !important;
+}
+#view-combined-profile button[id^="btn-subtab-"]:hover {
+  background: rgb(148 163 184 / .08);
+  color: #e2e8f0 !important;
+}
+#view-combined-profile button[id^="btn-subtab-"].subtab-active {
+  background: rgb(239 68 68 / .14) !important;
+  border-color: rgb(239 68 68 / .35);
+  color: #f87171 !important;
+  box-shadow: 0 3px 10px rgb(0 0 0 / .16);
+}
+#view-combined-profile button[id^="btn-subtab-"] svg { opacity: .75; transition: opacity 180ms ease; }
+#view-combined-profile button[id^="btn-subtab-"].subtab-active svg { opacity: 1; }
