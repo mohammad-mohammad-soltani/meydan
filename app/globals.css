@@ -734,3 +734,16 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     will-change: top;
   }
 }
+
+
+/* Non-home pages keep a permanently visible sticky header */
+@media (max-width: 1023px) {
+  #mainAppShell:not(.feed-smart-header) .mobile-app-header {
+    position: sticky !important;
+    top: 0 !important;
+    transform: translate3d(0, 0, 0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 40 !important;
+  }
+}
