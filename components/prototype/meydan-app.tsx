@@ -39,13 +39,13 @@ export default function MeydanApp() {
 
   useEffect(() => {
     const root = rootRef.current; if (!root) return;
-    const show = (id: string) => { root.querySelectorAll<HTMLElement>(".app-view").forEach((item) => item.classList.add("hidden")); root.querySelector<HTMLElement>(`#${id}`)?.classList.remove("hidden"); root.querySelector<HTMLElement>("#subTabs")?.style.setProperty("display", id === "view-feed" ? "block" : "none"); root.querySelector<HTMLElement>("#homeSubTabs")?.style.setProperty("display", id === "view-feed" ? "flex" : "none"); root.querySelector<HTMLElement>("#bottomNavBar")?.classList.toggle("hidden", ["view-direct-chat", "view-full-post", "view-full-compose"].includes(id)); root.querySelector<HTMLElement>("#floatingComposeBtn")?.classList.toggle("hidden", ["view-direct-chat", "view-full-post", "view-full-compose"].includes(id)); };
+    const show = (id: string) => { root.querySelectorAll<HTMLElement>(".app-view").forEach((item) => item.classList.add("hidden")); const next = root.querySelector<HTMLElement>("#" + id); if (next) { next.classList.remove("hidden"); next.classList.remove("view-enter"); void next.offsetWidth; next.classList.add("view-enter"); } root.querySelectorAll<HTMLElement>("[data-nav-view]").forEach((item) => item.classList.toggle("nav-active", item.dataset.navView === id)); root.querySelector<HTMLElement>("#subTabs")?.style.setProperty("display", id === "view-feed" ? "block" : "none"); root.querySelector<HTMLElement>("#homeSubTabs")?.style.setProperty("display", id === "view-feed" ? "flex" : "none"); root.querySelector<HTMLElement>("#bottomNavBar")?.classList.toggle("hidden", ["view-direct-chat", "view-full-post", "view-full-compose"].includes(id)); root.querySelector<HTMLElement>("#floatingComposeBtn")?.classList.toggle("hidden", ["view-direct-chat", "view-full-post", "view-full-compose"].includes(id)); };
     const toggle = (id: string) => root.querySelector<HTMLElement>(`#${id}`)?.classList.toggle("hidden");
     const text = (id: string, value: string) => { const node = root.querySelector<HTMLElement>(`#${id}`); if (node) node.textContent = value; };
     const action = (name: string, args: string[], target: ActionTarget) => {
       switch (name) {
         case "switchView": show(args[0]); break;
-        case "switchHomeTab": { const on = args[0] === "foryou"; root.querySelector("#feed-content-foryou")?.classList.toggle("hidden", !on); root.querySelector("#feed-content-following")?.classList.toggle("hidden", on); } break;
+        case "switchHomeTab": { const on = args[0] === "foryou"; root.querySelector("#feed-content-foryou")?.classList.toggle("hidden", !on); root.querySelector("#feed-content-following")?.classList.toggle("hidden", on); root.querySelector("#home-tab-foryou")?.classList.toggle("home-subtab-active", on); root.querySelector("#home-tab-following")?.classList.toggle("home-subtab-active", !on); } break;
         case "filterFeed": { root.querySelectorAll(".pill-tab").forEach((item) => item.classList.remove("active-pill")); root.querySelector(`#pill-${args[0]}`)?.classList.add("active-pill"); root.querySelectorAll<HTMLElement>(".feed-item").forEach((item) => item.classList.toggle("hidden", args[0] !== "all" && !item.classList.contains(`feed-${args[0]}`))); } break;
         case "toggleTheme": document.documentElement.classList.toggle("dark"); break;
         case "toggleSearchModal": toggle("searchModal"); break;
@@ -218,23 +218,23 @@ export default function MeydanApp() {
       </div>
       {/* نوار ناوبری پایین صفحه (موبایل) */}
       <nav id="bottomNavBar" className="fixed bottom-0 w-full max-w-xl bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 py-2 px-3 flex items-center justify-between text-slate-400 z-50 lg:hidden">
-        <button data-action="switchView('view-feed')" id="nav-feed" className="flex flex-col items-center gap-1 text-brand-red font-bold transition">
+        <button data-action="switchView('view-feed')" data-nav-view="view-feed" id="nav-feed" className="flex flex-col items-center gap-1 text-brand-red font-bold transition">
           <Icon name="home" className="w-5 h-5"  />
           <span className="text-[9px]">خانه</span>
         </button>
-        <button data-action="switchView('view-content')" id="nav-content" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
+        <button data-action="switchView('view-content')" data-nav-view="view-content" id="nav-content" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
           <Icon name="folder-kanban" className="w-5 h-5"  />
           <span className="text-[9px]">محتوا</span>
         </button>
-        <button data-action="switchView('view-map')" id="nav-map" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
+        <button data-action="switchView('view-map')" data-nav-view="view-map" id="nav-map" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
           <Icon name="map" className="w-5 h-5"  />
           <span className="text-[9px]">نقشه زنده</span>
         </button>
-        <button data-action="switchView('view-chat')" id="nav-chat" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
+        <button data-action="switchView('view-chat')" data-nav-view="view-chat" id="nav-chat" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
           <Icon name="message-square" className="w-5 h-5"  />
           <span className="text-[9px]">گفتگو</span>
         </button>
-        <button data-action="switchView('view-combined-profile')" id="nav-combined-profile" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
+        <button data-action="switchView('view-combined-profile')" data-nav-view="view-combined-profile" id="nav-combined-profile" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
           <Icon name="user-check" className="w-5 h-5"  />
           <span className="text-[9px]">هویت و پایگاه</span>
         </button>
