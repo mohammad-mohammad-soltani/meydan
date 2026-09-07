@@ -34,7 +34,7 @@ const parseArgs = (source: string, target: ActionTarget): string[] => {
   }) as string[];
 };
 
-export default function MeydanApp() {
+const mapLocations: Record<string, { label: string; cities: Record<string, { label: string; lat: number; lon: number }> }> = { tehran: { label: "تهران", cities: { tehran: { label: "تهران", lat: 35.6892, lon: 51.389 }, rey: { label: "ری", lat: 35.6009, lon: 51.4371 }, tajrish: { label: "تجریش", lat: 35.805, lon: 51.429 } } }, isfahan: { label: "اصفهان", cities: { isfahan: { label: "اصفهان", lat: 32.6546, lon: 51.668 }, najafabad: { label: "نجف‌آباد", lat: 32.6344, lon: 51.3668 }, khomeinishahr: { label: "خمینی‌شهر", lat: 32.7001, lon: 51.5369 } } }, fars: { label: "فارس", cities: { shiraz: { label: "شیراز", lat: 29.5918, lon: 52.5837 }, marvdasht: { label: "مرودشت", lat: 29.8747, lon: 52.8025 } } }, qom: { label: "قم", cities: { qom: { label: "قم", lat: 34.6416, lon: 50.8746 } } }, khorasan: { label: "خراسان رضوی", cities: { mashhad: { label: "مشهد", lat: 36.2605, lon: 59.6168 }, neyshabur: { label: "نیشابور", lat: 36.2141, lon: 58.7961 } } } };\n\nexport default function MeydanApp() {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,8 +71,8 @@ export default function MeydanApp() {
         case "submitPostComment": alert("نظر شما با موفقیت ثبت شد."); break;
         case "attachChatMedia": alert(`پیوست ${args[0]} انتخاب شد.`); break;
         case "openFullPostPage": text("fullPostAuthor", args[0]); text("fullPostHandle", args[1]); text("fullPostContent", args[2]); text("fullPostOutlet", `انتشار در: ${args[3]}`); show("view-full-post"); break;
-        case "selectProvinceFromDropdown": text("currentProvinceName", args[0]); break;
-        case "filterSquaresByCity": alert(`رادار بر روی «${args[0]}» متمرکز شد.`); break;
+        case "selectProvinceFromDropdown": { const province = mapLocations[args[0]]; const citySelect = root.querySelector<HTMLSelectElement>("#mapCitySelect"); if (province && citySelect) { citySelect.innerHTML = Object.entries(province.cities).map(([key, city]) => `<option value="${key}">${city.label}</option>`).join(""); const firstCity = Object.entries(province.cities)[0]; if (firstCity) { citySelect.value = firstCity[0]; const city = firstCity[1]; const frame = root.querySelector<HTMLIFrameElement>("#liveMapFrame"); if (frame) frame.src = `https://www.openstreetmap.org/export/embed.html?bbox=${city.lon - .12}%2C${city.lat - .1}%2C${city.lon + .12}%2C${city.lat + .1}&layer=mapnik&marker=${city.lat}%2C${city.lon}`; } text("currentProvinceName", province.label); } } break;
+        case "filterSquaresByCity": { const province = mapLocations[(root.querySelector<HTMLSelectElement>("#mapProvinceSelect")?.value ?? "")]; const city = province?.cities[args[0]]; if (city) { const frame = root.querySelector<HTMLIFrameElement>("#liveMapFrame"); if (frame) frame.src = `https://www.openstreetmap.org/export/embed.html?bbox=${city.lon - .12}%2C${city.lat - .1}%2C${city.lon + .12}%2C${city.lat + .1}&layer=mapnik&marker=${city.lat}%2C${city.lon}`; text("currentProvinceName", `${province.label} · ${city.label}`); } } break;
         case "sendDirectChatMessage": { const input = root.querySelector<HTMLInputElement>("#directChatMessageInput"); if (input?.value.trim()) { const area = root.querySelector("#directChatMessagesArea"); if (area) area.insertAdjacentHTML("beforeend", `<div class=\"flex justify-end\"><div class=\"bg-brand-red text-white p-3 rounded-2xl max-w-[82%]\">${input.value}</div></div>`); input.value = ""; } } break;
         default: break;
       }
