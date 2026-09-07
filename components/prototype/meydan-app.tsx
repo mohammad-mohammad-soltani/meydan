@@ -146,7 +146,7 @@ export default function MeydanApp() {
     {/* ستون مرکزی اصلی */}
     <div className="w-full max-w-xl bg-white dark:bg-[#070a0f] min-h-screen h-[100dvh] flex flex-col border-x border-slate-200 dark:border-slate-800/80 relative transition-colors duration-150" id="mainAppShell">
       {/* نوار هدر: مخفی در دسکتاپ و سیستم با کلاس lg:hidden و فقط فعال در موبایل */}
-      <header className="lg:hidden sticky top-0 bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur-md z-30 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+      <header className="lg:hidden bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur-md z-30 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-brand-red flex items-center justify-center text-white font-black text-sm">
             <Icon name="flame" className="w-4 h-4"  />
