@@ -41,16 +41,19 @@ export function ViewFeed() {
                   <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">صفحه ۵ عصر</span>
                 </div>
               </div>
-              <div className="p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon name="newspaper" className="w-4 h-4 text-blue-500"  />
-                  <span className="text-slate-600 dark:text-slate-300 text-[11px]">
+              <div className="media-reflection-card p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs">
+                <div className="flex items-start gap-2 min-w-0">
+                  <Icon name="newspaper" className="w-4 h-4 text-blue-500 shrink-0 mt-0.5"  />
+                  <span className="min-w-0 flex-1 text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
                     منتشر شده در: <b className="text-slate-900 dark:text-white">روزنامه عصر ایرانیان</b> و <b className="text-slate-900 dark:text-white">عصر آنلاین</b>
                   </span>
                 </div>
-                <button data-action="openMediaModal('طومار ۵۰ متری تجدید بیعت در میدان انقلاب', 'عصر ایرانیان و عصر آنلاین')" className="text-blue-600 dark:text-blue-400 text-[11px] font-bold hover:underline flex items-center gap-0.5 whitespace-nowrap shrink-0">
-                  مشاهده خبر <Icon name="chevron-left" className="w-3 h-3"  />
-                </button>
+                <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 min-w-0">
+                  <span className="min-w-0 flex-1 text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">انعکاس رسانه‌ای · خبر رسمی</span>
+                  <button data-action="openMediaModal('طومار ۵۰ متری تجدید بیعت در میدان انقلاب', 'عصر ایرانیان و عصر آنلاین')" className="text-blue-600 dark:text-blue-400 text-[11px] font-bold hover:underline flex items-center gap-0.5 whitespace-nowrap shrink-0">
+                    مشاهده خبر <Icon name="chevron-left" className="w-3 h-3"  />
+                  </button>
+                </div>
               </div>
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs pt-1 border-t border-slate-100 dark:border-slate-800/60">
                 <button data-action="toggleTweetAction(this, 'like')" className="flex items-center gap-1 hover:text-brand-red transition"><Icon name="heart" className="w-4 h-4"  /> <span>۱.۱k</span></button>
