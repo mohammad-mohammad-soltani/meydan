@@ -619,3 +619,16 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   #homeSubTabs { top: 0; }
   #subTabs { top: 48px; }
 }
+
+
+/* Scroll the shell so the header can leave while feed tabs remain sticky */
+#mainAppShell {
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: block;
+}
+#mainAppShell > main {
+  overflow: visible;
+  height: auto;
+  min-height: 0;
+}
