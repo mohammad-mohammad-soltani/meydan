@@ -1188,3 +1188,15 @@ html:not(.dark) #view-chat .bg-slate-100 {
   background: #0b1220;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / .035);
 }
+
+
+/* Keep focus treatment on the search shell, never on the input itself */
+.map-custom-select-search input,
+.map-custom-select-search input:focus,
+.map-custom-select-search:focus-within input,
+.dark .map-custom-select-search input {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
