@@ -163,3 +163,18 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .tab-panel-enter { animation: none; }
 }
+
+
+@keyframes searchBackdropIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes searchPanelIn { from { opacity: 0; transform: translateY(-14px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.search-backdrop:not(.hidden) { animation: searchBackdropIn 160ms ease-out both; }
+.search-panel { transform-origin: top center; }
+.search-backdrop:not(.hidden) .search-panel { animation: searchPanelIn 220ms cubic-bezier(.2,.8,.2,1) both; }
+#ajaxSearchInput { min-height: 44px; transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease; }
+#ajaxSearchInput:focus { box-shadow: 0 0 0 3px rgb(220 38 38 / .14); }
+#searchResultsContainer { overscroll-behavior: contain; }
+.tab-panel-enter { animation: viewEnter 260ms cubic-bezier(.2,.8,.2,1) both; }
+.subtab-active, .home-subtab-active, .active-pill { transform: translateY(-1px); }
+.subtab-active::after, .home-subtab-active::after { content: ""; display: block; height: 2px; border-radius: 999px; background: currentColor; margin: 4px auto -6px; width: 34%; animation: tabIndicatorIn 220ms ease-out both; }
+@keyframes tabIndicatorIn { from { opacity: 0; width: 0; } to { opacity: 1; width: 34%; } }
+@media (prefers-reduced-motion: reduce) { .search-backdrop:not(.hidden), .search-backdrop:not(.hidden) .search-panel, .tab-panel-enter, .subtab-active::after, .home-subtab-active::after { animation: none; } }
