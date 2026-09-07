@@ -80,9 +80,10 @@ export default function MeydanApp() {
     const click = (event: Event) => { const target = (event.target as HTMLElement).closest<HTMLElement>("[data-action]"); if (!target) return; const element = target as ActionTarget; (element.dataset.action ?? "").split(";").map((command) => command.trim()).forEach((command) => { const match = command.match(/^([\w$]+)\(/); if (match) action(match[1], parseArgs(command, element), element); }); };
     let searchTimer: ReturnType<typeof setTimeout> | undefined; const input = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.inputAction; if (!raw) return; if (raw.includes("handleAjaxSearch")) { if (searchTimer) clearTimeout(searchTimer); searchTimer = setTimeout(() => action("handleAjaxSearch", [target.value ?? ""], target), 120); } if (raw.includes("filterSpeakersList")) root.querySelectorAll<HTMLElement>(".speaker-card").forEach((card) => card.style.display = card.textContent?.toLocaleLowerCase("fa-IR").includes((target.value ?? "").toLocaleLowerCase("fa-IR")) ? "flex" : "none"); if (raw.includes("autoExpandTextarea")) { target.style.height = "auto"; target.style.height = `${target.scrollHeight}px`; } };
     const change = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.changeAction; if (!raw) return; const match = raw.match(/^([\w$]+)\(/); if (match) action(match[1], [target.value ?? ""], target); };
+    const shell = root.querySelector<HTMLElement>("#mainAppShell"); let lastScrollTop = 0; const handleShellScroll = () => { if (!shell) return; const current = shell.scrollTop; const header = root.querySelector<HTMLElement>(".mobile-app-header"); if (header) { header.classList.toggle("header-hidden", current > lastScrollTop && current > 24); if (current <= 0) header.classList.remove("header-hidden"); } lastScrollTop = current; }; if (shell) shell.addEventListener("scroll", handleShellScroll, { passive: true });
     root.addEventListener("click", click); root.addEventListener("input", input); root.addEventListener("change", change);
     show("view-feed");
-    return () => { root.removeEventListener("click", click); root.removeEventListener("input", input); root.removeEventListener("change", change); };
+    return () => { root.removeEventListener("click", click); root.removeEventListener("input", input); root.removeEventListener("change", change); if (shell) shell.removeEventListener("scroll", handleShellScroll); };
   }, []);
 
   return (
@@ -146,7 +147,7 @@ export default function MeydanApp() {
     {/* ستون مرکزی اصلی */}
     <div className="w-full max-w-xl bg-white dark:bg-[#070a0f] min-h-screen h-[100dvh] flex flex-col border-x border-slate-200 dark:border-slate-800/80 relative transition-colors duration-150" id="mainAppShell">
       {/* نوار هدر: مخفی در دسکتاپ و سیستم با کلاس lg:hidden و فقط فعال در موبایل */}
-      <header className="lg:hidden bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur-md z-30 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+      <header className="mobile-app-header lg:hidden sticky top-0 bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur-md z-30 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-brand-red flex items-center justify-center text-white font-black text-sm">
             <Icon name="flame" className="w-4 h-4"  />
