@@ -33,7 +33,7 @@ export function ViewMap() {
           </div>
           <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-2 flex flex-col items-center">
             <div className="w-full flex justify-center items-center overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-1">
-              <iframe id="liveMapFrame" title="نقشه زنده میادین ایران" className="w-full h-72 max-h-80 rounded-lg border-0" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=44.0%2C25.0%2C63.5%2C40.5%26layer=mapnik%26marker=35.7%2C51.4" />
+              <iframe id="liveMapFrame" title="نقشه زنده میادین ایران" className="w-full h-72 max-h-80 rounded-lg border-0" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=44.0%2C25.0%2C63.5%2C40.5&layer=mapnik&marker=35.7%2C51.4" />
               <a href="https://www.openstreetmap.org/" target="_blank" rel="noreferrer" className="mt-2 text-[10px] text-blue-500 hover:underline">نمایش نقشه در OpenStreetMap</a>
             </div>
           </div>
