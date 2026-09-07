@@ -80,6 +80,7 @@ export default function MeydanApp() {
     const input = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.inputAction; if (!raw) return; if (raw.includes("filterSpeakersList")) root.querySelectorAll<HTMLElement>(".speaker-card").forEach((card) => card.style.display = card.textContent?.toLowerCase().includes((target.value ?? "").toLowerCase()) ? "flex" : "none"); if (raw.includes("autoExpandTextarea")) { target.style.height = "auto"; target.style.height = `${target.scrollHeight}px`; } };
     const change = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.changeAction; if (!raw) return; const match = raw.match(/^([\w$]+)\(/); if (match) action(match[1], [target.value ?? ""], target); };
     root.addEventListener("click", click); root.addEventListener("input", input); root.addEventListener("change", change);
+    show("view-feed");
     return () => { root.removeEventListener("click", click); root.removeEventListener("input", input); root.removeEventListener("change", change); };
   }, []);
 
@@ -100,11 +101,11 @@ export default function MeydanApp() {
           </div>
         </div>
         <nav className="space-y-1.5 text-sm font-bold">
-          <button data-action="switchView('view-feed')" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-brand-red transition">
+          <button data-action="switchView('view-feed')" data-nav-view="view-feed" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
             <Icon name="home" className="w-5 h-5"  />
             <span>خانه و روایت‌ها</span>
           </button>
-          <button data-action="switchView('view-content')" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
+          <button data-action="switchView('view-content')" data-nav-view="view-content" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
             <Icon name="folder-kanban" className="w-5 h-5"  />
             <span>بسته محتوا و منابر</span>
           </button>
@@ -112,15 +113,15 @@ export default function MeydanApp() {
             <Icon name="mic" className="w-5 h-5"  />
             <span>اعزام سخنران</span>
           </button>
-          <button data-action="switchView('view-map')" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
+          <button data-action="switchView('view-map')" data-nav-view="view-map" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
             <Icon name="map" className="w-5 h-5"  />
             <span>نقشه زنده و رادار میادین</span>
           </button>
-          <button data-action="switchView('view-chat')" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
+          <button data-action="switchView('view-chat')" data-nav-view="view-chat" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
             <Icon name="message-square" className="w-5 h-5"  />
             <span>پیام‌ها و اعلان‌ها</span>
           </button>
-          <button data-action="switchView('view-combined-profile')" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
+          <button data-action="switchView('view-combined-profile')" data-nav-view="view-combined-profile" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
             <Icon name="user-check" className="w-5 h-5"  />
             <span>هویت و پایگاه من</span>
           </button>
@@ -218,7 +219,7 @@ export default function MeydanApp() {
       </div>
       {/* نوار ناوبری پایین صفحه (موبایل) */}
       <nav id="bottomNavBar" className="fixed bottom-0 w-full max-w-xl bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 py-2 px-3 flex items-center justify-between text-slate-400 z-50 lg:hidden">
-        <button data-action="switchView('view-feed')" data-nav-view="view-feed" id="nav-feed" className="flex flex-col items-center gap-1 text-brand-red font-bold transition">
+        <button data-action="switchView('view-feed')" data-nav-view="view-feed" id="nav-feed" className="flex flex-col items-center gap-1 text-slate-700 dark:text-slate-300 font-bold transition">
           <Icon name="home" className="w-5 h-5"  />
           <span className="text-[9px]">خانه</span>
         </button>
