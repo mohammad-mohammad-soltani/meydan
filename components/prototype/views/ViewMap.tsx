@@ -26,7 +26,7 @@ export function ViewMap() {
                   ))}
                 </select>
                 <div className="map-custom-select" data-map-select="province">
-                  <button type="button" id="mapProvinceTrigger" data-action="toggleProvinceDropdown" aria-haspopup="listbox" aria-expanded="false" className="map-custom-select-trigger">
+                  <button type="button" id="mapProvinceTrigger" data-action="toggleProvinceDropdown()" aria-haspopup="listbox" aria-expanded="false" className="map-custom-select-trigger">
                     <span id="mapProvinceLabel">تهران</span>
                     <Icon name="chevron-down" className="w-4 h-4 shrink-0" />
                   </button>
