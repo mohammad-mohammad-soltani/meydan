@@ -747,3 +747,39 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     z-index: 40 !important;
   }
 }
+
+
+/* Shared semantic theme tokens */
+:root {
+  color-scheme: light;
+  --app-bg: #f8fafc;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f1f5f9;
+  --app-border: #e2e8f0;
+  --app-text: #0f172a;
+  --app-text-muted: #64748b;
+  --app-brand: #dc2626;
+}
+.dark {
+  color-scheme: dark;
+  --app-bg: #070a0f;
+  --app-surface: #0b0f17;
+  --app-surface-muted: #111827;
+  --app-border: #1e293b;
+  --app-text: #f8fafc;
+  --app-text-muted: #94a3b8;
+  --app-brand: #ef4444;
+}
+html, body { background: var(--app-bg); color: var(--app-text); }
+#mainAppShell { background: var(--app-bg); }
+#mainAppShell > header,
+#homeSubTabs,
+#subTabs { background-color: color-mix(in srgb, var(--app-surface) 94%, transparent); border-color: var(--app-border); }
+.app-view input,
+.app-view textarea,
+.app-view select { border-color: var(--app-border); color: var(--app-text); }
+.search-panel { background: var(--app-surface); border-color: var(--app-border); }
+.search-input-shell { background: var(--app-surface-muted); border-color: var(--app-border); }
+@supports not (background: color-mix(in srgb, white, black)) {
+  #mainAppShell > header, #homeSubTabs, #subTabs { background-color: var(--app-surface); }
+}
