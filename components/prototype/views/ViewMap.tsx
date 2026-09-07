@@ -26,8 +26,8 @@ export function ViewMap() {
                   ))}
                 </select>
                 <div className="map-custom-select" data-map-select="province">
-                  <button type="button" id="mapProvinceTrigger" data-action="toggleProvinceDropdown()" aria-haspopup="listbox" aria-expanded="false" className="map-custom-select-trigger">
-                    <span id="mapProvinceLabel">تهران</span>
+                  <button type="button" id="mapProvinceTrigger" data-action="toggleProvinceDropdown()" aria-haspopup="listbox" aria-expanded="false" className="map-custom-select-trigger flex w-full min-h-10 items-center justify-between gap-2 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-right text-xs font-bold text-slate-800 shadow-sm transition hover:border-brand-red focus:outline-none focus:ring-2 focus:ring-red-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                    <span id="mapProvinceLabel" className="truncate">تهران</span>
                     <Icon name="chevron-down" className="w-4 h-4 shrink-0" />
                   </button>
                   <div id="mapProvinceMenu" className="map-custom-select-menu hidden" role="listbox" aria-label="استان‌ها">
