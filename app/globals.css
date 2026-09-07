@@ -40,7 +40,8 @@ body {
   width: 100%;
   min-height: 100%;
   margin: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: #070a0f;
 }
 
@@ -83,3 +84,16 @@ body {
 .subtab-active { background-color: #dc2626 !important; color: #fff !important; font-weight: bold; }
 .home-subtab-active { color: #dc2626 !important; border-bottom: 2px solid #dc2626 !important; }
 .dark .home-subtab-active { color: #fff !important; }
+
+
+#mainAppShell {
+  height: 100dvh;
+  min-height: 100svh;
+  max-height: 100dvh;
+}
+
+#mainAppShell > main {
+  min-height: 0;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
