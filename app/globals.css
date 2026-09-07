@@ -646,3 +646,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 @media (prefers-reduced-motion: reduce) {
   .mobile-app-header { transition: none; }
 }
+
+
+/* Smart header must overlay sticky feed tabs when it returns */
+.mobile-app-header {
+  z-index: 40 !important;
+  position: sticky;
+  isolation: isolate;
+}
+#homeSubTabs,
+#subTabs { z-index: 30; }
