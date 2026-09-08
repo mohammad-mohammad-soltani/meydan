@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Icon } from "./icon";
+import { LegacySearchModal } from "./LegacySearchModal";
 import iranCitiesData from "../../data/iran-cities.json";
 import { ViewAllPodcasts } from "./views/ViewAllPodcasts";
 import { ViewChat } from "./views/ViewChat";
@@ -201,25 +202,7 @@ export default function MeydanApp({ initialView }: MeydanAppProps) {
         <ViewDirectChat />
 
       </div>
-  {/* مودال جستجو */}
-  <div id="searchModal" className="search-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center hidden p-4 pt-16">
-    <div className="search-panel bg-white dark:bg-[#0b0f17] border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-2xl p-4 relative shadow-2xl space-y-3">
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-        <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-          <Icon name="search" className="w-4 h-4 text-brand-red"  /> جستجوی هوشمند در میادین و روایت‌ها
-        </span>
-        <button data-action="toggleSearchModal()" className="text-slate-400 hover:text-white"><Icon name="x" className="w-5 h-5"  /></button>
-      </div>
-      <div className="search-input-shell"><Icon name="search" className="w-4 h-4 text-slate-400 shrink-0" /><input type="text" id="ajaxSearchInput" autoComplete="off" data-input-action="handleAjaxSearch(this.value)" placeholder="نام میدان، شهر، هشتگ یا سخنران..." className="flex-1 bg-transparent border-0 px-1 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none" /></div>
-      <div id="searchResultsContainer" className="space-y-2 max-h-60 overflow-y-auto no-scrollbar text-xs"><div id="searchStatus" className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/70 rounded-xl px-3 py-2">نام میدان، شهر، هشتگ یا سخنران را جستجو کنید</div>
-        <div className="text-[10px] text-slate-400 font-bold">داغ‌ترین جستجوها:</div>
-        <div className="flex flex-wrap gap-1.5">
-          <span data-action="triggerSearchTag('#میدان_انقلاب')" className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-brand-red hover:text-white transition">#میدان_انقلاب</span>
-          <span data-action="triggerSearchTag('حاج میثم مطیعی')" className="bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-brand-red hover:text-white transition">حاج میثم مطیعی</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  <LegacySearchModal />
   {/* مودال جزئیات محتوا */}
   <div id="detailModal" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div className="bg-white dark:bg-[#0b0f17] border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-2xl p-5 relative max-h-[88vh] overflow-y-auto">

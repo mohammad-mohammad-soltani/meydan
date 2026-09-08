@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { FolderKanban, Home, Map, MessageSquare, Mic, UserCheck } from "lucide-react";
+import { SearchProvider } from "@/components/providers/SearchProvider";
 import { BottomNavigation } from "./BottomNavigation";
 import { MobileHeader } from "./MobileHeader";
 
@@ -9,7 +10,8 @@ type AppShellProps = { children: ReactNode };
 /** Shared application chrome. Feature state stays inside route features. */
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="mx-auto flex min-h-screen w-full justify-center">
+    <SearchProvider>
+      <div className="mx-auto flex min-h-screen w-full justify-center">
       <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between border-l border-slate-200 bg-white p-4 dark:border-slate-800/80 dark:bg-[#070a0f] lg:flex">
         <div className="space-y-6">
           <Link href="/home" className="flex items-center gap-3 px-2">
@@ -36,6 +38,7 @@ export function AppShell({ children }: AppShellProps) {
       <aside className="hidden h-screen w-72 shrink-0 space-y-4 overflow-y-auto border-r border-slate-200 bg-white p-4 dark:border-slate-800/80 dark:bg-[#070a0f] lg:flex lg:flex-col">
         <div className="rounded-2xl border border-slate-200 p-3.5 text-xs dark:border-slate-800"><h2 className="font-black">ترندهای داغ میادین</h2><p className="mt-2 text-slate-500">نمای مشترک اطلاعات و روندهای میدانی</p></div>
       </aside>
-    </div>
+      </div>
+    </SearchProvider>
   );
 }
