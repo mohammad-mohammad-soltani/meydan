@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { ConversationView } from "@/features/chat/components/ConversationView";
 
 export const metadata: Metadata = { title: "گفتگو | میدانِ خیابان" };
 
-export default function ConversationPage() { return <LegacyRouteApp initialView="view-direct-chat" />; }
+type ConversationPageProps = {
+  params: Promise<{ conversationId: string }>;
+};
+
+export default async function ConversationPage({ params }: ConversationPageProps) {
+  const { conversationId } = await params;
+  return <ConversationView conversationId={conversationId} />;
+}
