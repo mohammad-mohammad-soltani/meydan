@@ -1511,3 +1511,102 @@ html:not(.dark) .direct-chat-bubble-incoming {
   height: 100dvh !important;
   overflow: hidden !important;
 }
+
+
+/* Feed reference alignment: light controls and full-bleed live bar */
+.feed-tabs {
+  background: var(--surface-0);
+}
+.feed-filter-strip {
+  background: var(--surface-0);
+}
+.feed-filter-pill {
+  min-height: 3.25rem;
+  box-shadow: none;
+}
+.feed-live-banner {
+  border-color: rgb(217 119 6 / .2);
+  background: rgb(245 158 11 / .1);
+  color: #fbbf24;
+}
+.feed-live-badge {
+  background: rgb(245 158 11 / .16);
+  color: #fbbf24;
+}
+
+html:not(.dark) .feed-tabs {
+  background: #fff;
+  border-color: #e7ebf0;
+}
+html:not(.dark) #homeSubTabs.feed-tabs button {
+  color: #718096 !important;
+  background: transparent !important;
+  opacity: 1;
+}
+html:not(.dark) #homeSubTabs.feed-tabs button:hover {
+  color: #475569 !important;
+  background: #f8fafc !important;
+}
+html:not(.dark) #homeSubTabs.feed-tabs button.home-subtab-active {
+  color: #cf3438 !important;
+  background: #fff !important;
+  box-shadow: inset 0 -3px 0 #d9363e !important;
+}
+
+html:not(.dark) .feed-filter-strip {
+  background: #fff;
+  border-color: #e7ebf0;
+}
+html:not(.dark) .feed-filter-pill {
+  border-color: #e0e6ee !important;
+  background: #f3f5f8 !important;
+  color: #566477 !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .82);
+}
+html:not(.dark) .feed-filter-pill:hover {
+  border-color: #cbd5e1 !important;
+  background: #eef2f6 !important;
+  color: #3f4b5b !important;
+}
+html:not(.dark) .feed-filter-pill.active-pill {
+  border-color: #cb6a2d !important;
+  background: #fffaf2 !important;
+  color: #b95c24 !important;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgb(154 77 26 / .08) !important;
+}
+html:not(.dark) .feed-filter-pill.active-pill svg:not(.fill-amber-400) {
+  color: #b95c24 !important;
+}
+html:not(.dark) .feed-live-banner {
+  border-color: #f1dfbe;
+  background: #fff7e8;
+  color: #ad621e;
+}
+html:not(.dark) .feed-live-badge {
+  background: #ffe7b7;
+  color: #ab641f;
+}
+
+html:not(.dark) .mobile-app-header {
+  background: rgb(255 255 255 / .96);
+  border-color: #e8ecf1;
+}
+html:not(.dark) .header-search-control,
+html:not(.dark) .header-theme-control {
+  border-color: #e1e7ef;
+  background: #f3f5f8;
+  color: #526174;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .78);
+}
+html:not(.dark) .header-search-control:hover,
+html:not(.dark) .header-theme-control:hover {
+  border-color: #d3dce7;
+  background: #edf1f5;
+}
+
+@media (max-width: 520px) {
+  .feed-live-banner {
+    width: calc(100% + 1.5rem);
+    margin-inline: -.75rem;
+  }
+}
