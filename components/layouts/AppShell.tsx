@@ -34,7 +34,7 @@ export function AppShell({ children }: AppShellProps) {
 
       <div id="mainAppShell" className="relative flex h-[100dvh] min-h-screen w-full max-w-xl flex-col border-x border-slate-200 bg-white transition-colors duration-150 dark:border-slate-800/80 dark:bg-[#070a0f]">
         <MobileHeader />
-        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto no-scrollbar">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] no-scrollbar lg:pb-0">{children}</main>
         <BottomNavigation />
       </div>
 
