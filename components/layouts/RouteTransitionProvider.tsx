@@ -20,7 +20,7 @@ export function RouteTransitionProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
-  const transitionTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const transitionTimerRef = useRef<number | null>(null);
 
   const clearTransition = useCallback(() => {
     if (transitionTimerRef.current) window.clearTimeout(transitionTimerRef.current);
