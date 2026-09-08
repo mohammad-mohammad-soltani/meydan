@@ -29,7 +29,7 @@ export function BottomNavigation() {
   useEffect(() => {
     if (!pendingHref || pathname !== pendingHref) return;
 
-    const timer = window.setTimeout(() => setPendingHref(null), 120);
+    const timer = window.setTimeout(() => setPendingHref(null), 260);
     return () => window.clearTimeout(timer);
   }, [pathname, pendingHref]);
 
