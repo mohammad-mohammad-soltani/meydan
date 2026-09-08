@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { BellRing, X } from "lucide-react";
 import { FeedFilters } from "./FeedFilters";
 import { FeedTabs } from "./FeedTabs";
 import { FollowSuggestions } from "./FollowSuggestions";
@@ -17,7 +17,10 @@ export function FeedView() {
       {feed.activeTab === "for-you" ? (
         <>
           <FeedFilters activeFilter={feed.activeFilter} onChange={feed.setActiveFilter} />
-          <div className="mx-5 flex items-center gap-2 border-y border-amber-400/20 bg-amber-400/10 px-3 py-3 text-xs font-black text-amber-600"><span className="rounded-md bg-amber-400/15 px-2 py-1 text-[10px]">زنده</span>پژواک‌ها و روایت‌های برگزیده میادین</div>
+          <section className="feed-live-banner flex w-full items-center justify-between border-y px-4 py-3 text-xs font-black" aria-label="روایت‌های برگزیده میادین">
+            <span className="inline-flex min-w-0 items-center gap-2"><BellRing className="h-5 w-5 shrink-0" aria-hidden="true" /><span>پژواک‌ها و روایت‌های برگزیده میادین</span></span>
+            <span className="feed-live-badge shrink-0 rounded-md px-2 py-1 text-[10px]">زنده</span>
+          </section>
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {feed.posts.map((post) => <PostCard key={post.id} post={post} liked={feed.likedPostIds.has(post.id)} reposted={feed.repostedPostIds.has(post.id)} joined={feed.joinedPostIds.has(post.id)} onLike={() => feed.toggleLike(post.id)} onRepost={() => feed.toggleRepost(post.id)} onShare={() => void feed.sharePost(post)} onJoin={() => feed.joinInitiative(post.id)} onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)} />)}
           </div>
