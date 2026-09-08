@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { FolderKanban, Home, Map, MessageSquare, Mic, UserCheck } from "lucide-react";
 import { SearchProvider } from "@/components/providers/SearchProvider";
+import { LegacySearchModal } from "@/components/prototype/LegacySearchModal";
 import { BottomNavigation } from "./BottomNavigation";
 import { MobileHeader } from "./MobileHeader";
 
@@ -39,6 +40,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className="rounded-2xl border border-slate-200 p-3.5 text-xs dark:border-slate-800"><h2 className="font-black">ترندهای داغ میادین</h2><p className="mt-2 text-slate-500">نمای مشترک اطلاعات و روندهای میدانی</p></div>
       </aside>
       </div>
+      <LegacySearchModal />
     </SearchProvider>
   );
 }
