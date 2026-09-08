@@ -1,5 +1,5 @@
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { SpeakersView } from "@/features/speakers/components/SpeakersView";
 
 export default function SpeakersPage() {
-  return <LegacyRouteApp initialView="view-speakers" />;
+  return <SpeakersView />;
 }
