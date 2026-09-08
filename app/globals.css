@@ -1937,3 +1937,59 @@ html:not(.dark) #view-combined-profile .profile-follow-button:hover {
     pointer-events: none;
   }
 }
+
+/* Home tabs use one shared underline that travels between the two choices. */
+#homeSubTabs.feed-tabs {
+  isolation: isolate;
+}
+#homeSubTabs.feed-tabs::after {
+  position: absolute;
+  z-index: 1;
+  inset-inline-start: 0;
+  bottom: -1px;
+  width: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: #d9363e;
+  content: "";
+  pointer-events: none;
+  transform: translateX(0);
+  will-change: transform;
+  transition: transform 140ms ease-out;
+}
+#homeSubTabs.feed-tabs[data-active-tab="following"]::after {
+  transform: translateX(-100%);
+}
+#homeSubTabs.feed-tabs button,
+#homeSubTabs.feed-tabs button:hover,
+#homeSubTabs.feed-tabs button.home-subtab-active {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: color 180ms ease;
+}
+html:not(.dark) #homeSubTabs.feed-tabs button.home-subtab-active {
+  color: #cf3438 !important;
+}
+html.dark #homeSubTabs.feed-tabs button.home-subtab-active {
+  color: #f87171 !important;
+}
+#view-feed .feed-item:hover {
+  border-color: var(--line-subtle) !important;
+}
+@keyframes feedTabPanelEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.feed-tab-panel-enter {
+  animation: feedTabPanelEnter 180ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  #homeSubTabs.feed-tabs::after,
+  .feed-tab-panel-enter {
+    transition: none;
+    animation: none;
+  }
+}
