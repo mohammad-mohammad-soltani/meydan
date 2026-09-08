@@ -1,3 +1,4 @@
+import { generatedMedia } from "@/components/shared/generated-media";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 import type { PostAuthor } from "../types";
@@ -9,5 +10,5 @@ export function PostHeader({ author, outlet }: PostHeaderProps) {
 }
 
 export function PostAuthorInfo({ author }: { author: PostAuthor }) {
-  return <div className="flex items-center gap-2.5"><div className="grid h-11 w-11 place-items-center rounded-full bg-brand-red text-xs font-black text-white">{author.initials}</div><div><div className="flex items-center gap-1"><strong className="text-sm text-slate-950 dark:text-white">{author.name}</strong>{author.verified ? <BadgeCheck className="h-4 w-4 fill-blue-500 text-white" /> : null}</div><span dir="ltr" className="text-[11px] text-slate-400">@{author.handle}</span></div></div>;
+  return <div className="flex items-center gap-2.5"><img src={generatedMedia.avatarCoordinator} alt="" className="h-11 w-11 rounded-full object-cover" /><div><div className="flex items-center gap-1"><strong className="text-sm text-slate-950 dark:text-white">{author.name}</strong>{author.verified ? <BadgeCheck className="h-4 w-4 fill-blue-500 text-white" /> : null}</div><span dir="ltr" className="text-[11px] text-slate-400">@{author.handle}</span></div></div>;
 }
