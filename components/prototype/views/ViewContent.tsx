@@ -1,10 +1,11 @@
+import { generatedMedia } from "@/components/shared/generated-media";
 import { Icon } from "../icon";
 export function ViewContent() {
   return (
         <section id="view-content" className="app-view hidden p-4 space-y-6">
           <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 cursor-pointer" data-action="openDetailModal('شرح نهج‌البلاغه؛ جهاد اجتماعی و سیاسی', 'صوت و متن بیانات پیرامون پایداری در نبرد تبیین.')">
             <div className="relative h-52 w-full">
-              <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80" alt="محتوا" className="w-full h-full object-cover opacity-35" />
+              <img src={generatedMedia.contentHero} alt="محتوا" className="w-full h-full object-cover opacity-35" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
               <div className="absolute bottom-4 right-4 left-4 text-right space-y-1">
                 <span className="inline-block bg-brand-red text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1">
@@ -89,7 +90,7 @@ export function ViewContent() {
             <div className="space-y-2">
               <div className="border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center font-bold text-xs text-brand-red shrink-0">پ.ع</div>
+                  <img src={generatedMedia.avatarSpeaker} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
                   <div>
                     <h4 className="font-bold text-xs text-slate-900 dark:text-white">حجت‌الاسلام علیرضا پناهیان</h4>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">مفهوم «میدانِ خیابان» در دفاع اجتماعی</p>
@@ -101,7 +102,7 @@ export function ViewContent() {
               </div>
               <div className="border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center font-bold text-xs text-amber-500 shrink-0">ر.ن</div>
+                  <img src={generatedMedia.avatarCoordinator} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
                   <div>
                     <h4 className="font-bold text-xs text-slate-900 dark:text-white">استاد ناصر رفیعی</h4>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">سیره اهل‌بیت در مواجهه با محاصره و بحران</p>
