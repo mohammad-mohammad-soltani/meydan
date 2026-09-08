@@ -19,6 +19,19 @@ html.dark {
   background: #070a0f;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes post-detail-enter {
+  from { opacity: 0; transform: translateY(.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.post-detail-enter {
+  animation: post-detail-enter 240ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
 * {
   box-sizing: border-box;
   font-family: var(--font-iran-sans), sans-serif !important;
@@ -571,9 +584,6 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     flex: 0 0 auto;
     white-space: nowrap;
   }
-  #mainAppShell > main {
-    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
-  }
   #bottomNavBar {
     min-height: 64px;
   }
@@ -591,7 +601,6 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   #mainAppShell > header { min-height: 64px; height: 64px; }
   #homeSubTabs { top: 64px; min-height: 48px; }
   #subTabs { top: 112px; min-height: 58px; }
-  #mainAppShell > main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
 }
 
 
@@ -1926,13 +1935,6 @@ html:not(.dark) #view-combined-profile .profile-follow-button:hover {
     scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
   }
 
-  #mainAppShell > main::after {
-    content: "";
-    display: block;
-    flex: 0 0 calc(5.5rem + env(safe-area-inset-bottom));
-    height: calc(5.5rem + env(safe-area-inset-bottom));
-    pointer-events: none;
-  }
 }
 
 /* Home tabs use one shared underline that travels between the two choices. */

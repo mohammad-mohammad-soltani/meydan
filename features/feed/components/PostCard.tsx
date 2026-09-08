@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { BadgeCheck, BellRing, Bolt, Camera, FileText, Image as ImageIcon, Mic, Play, Video } from "lucide-react";
+import { BadgeCheck, BellRing, Bolt, FileText, Image as ImageIcon, Mic, Play, Video } from "lucide-react";
 import { PostActions } from "./PostActions";
 import type { FeedAttachment, FeedPost } from "../types";
 
@@ -123,9 +123,8 @@ export function PostCard({ post, variant = "timeline", liked, reposted, joined, 
           <div dir="rtl" className={"flex min-w-0 items-center gap-2 text-sm leading-5 " + (isDetail ? "justify-start pr-[4.5rem]" : "")}>
             <span className={"font-black text-slate-950 dark:text-white " + (isDetail ? "whitespace-nowrap" : "truncate")}>{post.squareName}</span>
             <BadgeCheck aria-label="حساب تأییدشده" className="h-4 w-4 shrink-0 fill-blue-500 text-white" />
-            {!isDetail ? <><span className="inline-flex shrink-0 rounded-md bg-brand-red/10 px-2 py-1 text-[10px] font-bold text-brand-red">{post.badge}</span><span className="shrink-0 text-xs text-slate-400">· {post.timeAgo}</span></> : null}
           </div>
-          {isDetail ? <div dir="rtl" className="mt-1 flex items-center justify-start gap-2 pr-[4.5rem] text-xs"><span className="inline-flex rounded-md bg-brand-red/10 px-2 py-1 text-[10px] font-bold text-brand-red">{post.badge}</span><span className="text-slate-400">· {post.timeAgo}</span></div> : null}
+          <div dir="rtl" className={"flex items-center gap-2 text-xs " + (isDetail ? "mt-1 justify-start pr-[4.5rem]" : "mt-1")}><span className="inline-flex rounded-md bg-brand-red/10 px-2 py-1 text-[10px] font-bold text-brand-red">{post.badge}</span><span className="text-slate-400">· {post.timeAgo}</span></div>
 
           <div className="mt-2 px-3 sm:px-0">{post.title !== post.squareName ? <h2 className={"text-[15px] font-black leading-7 text-slate-950 dark:text-white " + (isDetail ? "sr-only" : "")}>{post.title}</h2> : null}<p className={(post.title !== post.squareName ? "mt-0.5 " : "") + "text-[14px] leading-7 text-slate-700 dark:text-slate-300"}>{post.body}</p></div>
 
@@ -138,7 +137,7 @@ export function PostCard({ post, variant = "timeline", liked, reposted, joined, 
             </p>
           ) : null}
 
-          {post.mediaReflection ? <button type="button" onClick={onOpenMedia} className="pointer-events-auto relative z-10 mt-2 flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-right transition-colors hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900"><span className="flex min-w-0 items-center gap-2"><Camera aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-red" /><span className="truncate text-xs text-slate-600 dark:text-slate-300">{post.mediaReflection.headline}</span></span><span className="shrink-0 whitespace-nowrap text-xs font-black text-blue-500">مشاهده خبر</span></button> : null}
+          {post.mediaReflection ? isDetail ? <button type="button" onClick={onOpenMedia} className="pointer-events-auto relative z-10 mt-2 flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-right transition-colors hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900"><span className="flex min-w-0 items-center gap-2"><BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0 fill-amber-500 text-amber-600" /><span className="truncate text-xs text-slate-600 dark:text-slate-300">{post.mediaReflection.headline}</span></span><span className="shrink-0 whitespace-nowrap text-xs font-black text-blue-500">مشاهده خبر</span></button> : <div className="relative z-10 mt-2 flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-right dark:border-slate-800"><BadgeCheck aria-hidden="true" className="h-4 w-4 shrink-0 fill-amber-500 text-amber-600" /><span className="truncate text-xs text-slate-600 dark:text-slate-300">{post.mediaReflection.headline}</span></div> : null}
 
           {post.callToAction ? <button type="button" onClick={onJoin} className={"pointer-events-auto relative z-10 mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 py-2 text-xs font-black transition-colors " + (joined ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" : "border-amber-400/30 bg-amber-400/10 text-amber-600")}><BellRing aria-hidden="true" className="h-4 w-4" />{joined ? "به این ابتکار پیوستید" : post.callToAction}</button> : null}
 
