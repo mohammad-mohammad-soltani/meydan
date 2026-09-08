@@ -1253,3 +1253,9 @@ html:not(.dark) #view-direct-chat > div:last-child > button:first-child {
   border-color: #dbe3ee !important;
   color: #475569 !important;
 }
+
+
+/* Chat starts directly with its own content, without the global app header */
+#mainAppShell.chat-headerless > .mobile-app-header {
+  display: none !important;
+}
