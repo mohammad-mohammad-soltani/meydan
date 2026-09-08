@@ -19,10 +19,10 @@ export function BottomNavigation() {
   if (isConversationRoute) return null;
 
   return (
-    <nav id="bottomNavBar" aria-label="ناوبری اصلی" className="fixed bottom-0 z-50 flex w-full max-w-xl items-center justify-between border-t border-slate-200 bg-white/95 px-3 py-2 text-slate-400 backdrop-blur dark:border-slate-800 dark:bg-[#070a0f]/95 lg:hidden">
+    <nav id="bottomNavBar" aria-label="ناوبری اصلی" className="fixed bottom-0 z-50 grid w-full max-w-xl grid-cols-5 items-center gap-1.5 border-t border-slate-200 bg-white/95 px-3 py-2 text-slate-400 backdrop-blur dark:border-slate-800 dark:bg-[#070a0f]/95 lg:hidden">
       {items.map(({ href, label, icon: Icon, match }) => {
         const active = match(pathname);
-        return <Link key={href} href={href} className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-2 py-1 font-bold transition ${active ? "nav-active bg-red-500/10 text-brand-red" : "text-slate-500 dark:text-slate-400"}`}><Icon className="h-5 w-5" /><span className="text-[9px]">{label}</span></Link>;
+        return <Link key={href} href={href} className={`flex w-full min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-1 font-bold transition ${active ? "nav-active bg-red-500/10 text-brand-red" : "text-slate-500 dark:text-slate-400"}`}><Icon className="h-5 w-5 shrink-0" /><span className="whitespace-nowrap text-[9px]">{label}</span></Link>;
       })}
     </nav>
   );
