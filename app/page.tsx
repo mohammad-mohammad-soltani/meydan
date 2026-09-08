@@ -1,5 +1,5 @@
-import MeydanApp from "../components/prototype/meydan-app";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return <MeydanApp />;
+export default function RootPage() {
+  redirect("/home");
 }
