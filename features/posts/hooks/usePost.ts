@@ -16,7 +16,7 @@ export function usePost(post: PostDetail) {
   const submitComment = () => {
     const content = commentDraft.trim();
     if (!content) return;
-    setComments((current) => [...current, { id: "comment-" + Date.now(), author: "شما", initials: "ش", timeAgo: "همین حالا", content, likes: 0 }]);
+    setComments((current) => [{ id: "comment-" + Date.now(), author: "شما", initials: "ش", timeAgo: "همین حالا", content }, ...current]);
     setCommentDraft("");
   };
 

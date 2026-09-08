@@ -27,7 +27,6 @@ export type PostComment = {
   initials: string;
   timeAgo: string;
   content: string;
-  likes: number;
   isAuthor?: boolean;
 };
 
