@@ -1755,3 +1755,23 @@ html:not(.dark) #homeSubTabs.feed-tabs button.home-subtab-active {
   #bottomNavBar .bottom-nav-item svg,
   #bottomNavBar .bottom-nav-item span { transition: none; }
 }
+
+
+/* Exit before navigation, then bring the incoming route into view. */
+@keyframes routePageExit {
+  from { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  to { opacity: 0; transform: translateY(-7px) scale(.992); filter: blur(1.5px); }
+}
+.route-page-enter {
+  will-change: opacity, transform;
+  animation: routePageEnter 280ms cubic-bezier(.2, .8, .2, 1) both;
+}
+.route-page-exit {
+  pointer-events: none;
+  will-change: opacity, transform, filter;
+  animation: routePageExit 220ms cubic-bezier(.4, 0, 1, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-page-enter,
+  .route-page-exit { animation: none; }
+}
