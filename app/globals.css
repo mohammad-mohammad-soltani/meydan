@@ -10,6 +10,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  color-scheme: light;
+  background: #ffffff;
+}
+
+html.dark {
   color-scheme: dark;
   background: #070a0f;
 }
@@ -42,6 +47,11 @@ body {
   margin: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  background: #ffffff;
+}
+
+html.dark,
+html.dark body {
   background: #070a0f;
 }
 
