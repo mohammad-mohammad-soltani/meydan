@@ -1285,3 +1285,197 @@ html:not(.dark) #view-direct-chat > div:last-child > button:first-child {
   flex: 0 0 auto;
   padding-bottom: max(.75rem, env(safe-area-inset-bottom));
 }
+
+
+/* Direct conversation — self-contained mobile chat surface */
+#mainAppShell.chat-headerless {
+  overflow: hidden !important;
+}
+#mainAppShell.chat-headerless > main {
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+}
+#mainAppShell.chat-headerless > #bottomNavBar,
+#mainAppShell.chat-headerless > #floatingComposeBtn {
+  display: none !important;
+}
+#mainAppShell.chat-headerless .direct-chat-view {
+  height: 100dvh;
+  min-height: 100dvh !important;
+  max-height: 100dvh;
+  overflow: hidden !important;
+  background:
+    radial-gradient(circle at 88% 0%, rgb(220 38 38 / .07), transparent 22rem),
+    var(--surface-0);
+}
+.direct-chat-header {
+  min-height: 4.5rem;
+  background: color-mix(in srgb, var(--surface-1) 93%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+.direct-chat-avatar {
+  display: grid;
+  width: 2.55rem;
+  height: 2.55rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, #fff 70%, transparent);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f04444, #b91c1c);
+  box-shadow: 0 4px 14px rgb(220 38 38 / .22);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 900;
+}
+.dark .direct-chat-avatar {
+  border-color: rgb(255 255 255 / .12);
+}
+.direct-chat-status-dot {
+  width: .48rem;
+  height: .48rem;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--surface-1);
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgb(16 185 129 / .12);
+}
+.direct-chat-icon-button {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: .75rem;
+  transition: color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+.direct-chat-icon-button:hover { background: rgb(220 38 38 / .08); }
+.direct-chat-icon-button:active { transform: scale(.94); }
+
+#mainAppShell.chat-headerless .direct-chat-messages {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.direct-chat-day-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: .1rem 0 .4rem;
+}
+.direct-chat-day-label span {
+  border: 1px solid var(--line-subtle);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-1) 82%, transparent);
+  padding: .28rem .65rem;
+  color: var(--text-muted);
+  font-size: .62rem;
+  font-weight: 700;
+}
+.direct-chat-bubble {
+  width: fit-content;
+  max-width: min(82%, 25rem);
+  padding: .72rem .85rem .56rem;
+  border-radius: 1.1rem;
+  font-size: .79rem;
+  line-height: 1.85;
+}
+.direct-chat-bubble p { margin: 0; }
+.direct-chat-bubble-incoming {
+  border: 1px solid var(--line-subtle);
+  border-top-right-radius: .3rem;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  box-shadow: 0 3px 12px rgb(15 23 42 / .045);
+}
+.dark .direct-chat-bubble-incoming {
+  background: #111827;
+  box-shadow: 0 3px 14px rgb(0 0 0 / .18);
+}
+.direct-chat-bubble-outgoing {
+  border-top-left-radius: .3rem;
+  background: linear-gradient(135deg, #ef4444, #c81e3a);
+  color: #fff;
+  box-shadow: 0 5px 16px rgb(220 38 38 / .20);
+}
+.direct-chat-time {
+  display: block;
+  direction: ltr;
+  color: color-mix(in srgb, currentColor 58%, transparent);
+  font-family: ui-monospace, monospace !important;
+  font-size: .58rem;
+  line-height: 1;
+  text-align: left;
+}
+.direct-chat-bubble-incoming .direct-chat-time { color: var(--text-muted); }
+
+.direct-chat-composer {
+  padding-bottom: max(.75rem, env(safe-area-inset-bottom)) !important;
+  background: color-mix(in srgb, var(--surface-1) 94%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+.direct-chat-input-shell {
+  min-height: 3.25rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 1rem;
+  background: var(--surface-2);
+  padding: .28rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.direct-chat-input-shell:focus-within {
+  border-color: var(--app-brand);
+  background: var(--surface-1);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / .12);
+}
+.direct-chat-attach-button,
+.direct-chat-send-button {
+  display: grid;
+  width: 2.45rem;
+  height: 2.45rem;
+  place-items: center;
+  border-radius: .78rem;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+.direct-chat-attach-button {
+  background: transparent;
+  color: var(--text-muted);
+}
+.direct-chat-attach-button:hover { background: rgb(148 163 184 / .12); color: var(--app-brand); }
+.direct-chat-send-button {
+  background: var(--app-brand);
+  color: #fff;
+  box-shadow: 0 4px 10px rgb(220 38 38 / .2);
+}
+.direct-chat-send-button:hover { background: #b91c1c; }
+.direct-chat-attach-button:active,
+.direct-chat-send-button:active { transform: scale(.93); }
+#directChatMessageInput {
+  box-shadow: none !important;
+}
+#directChatMessageInput:focus {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+#directChatMessageInput::placeholder { color: var(--text-muted); }
+.direct-chat-media-menu {
+  border-color: var(--line-subtle) !important;
+  background: var(--surface-1) !important;
+}
+html:not(.dark) #view-direct-chat {
+  background:
+    radial-gradient(circle at 88% 0%, rgb(220 38 38 / .055), transparent 22rem),
+    #f5f7fb !important;
+}
+html:not(.dark) .direct-chat-header,
+html:not(.dark) .direct-chat-composer {
+  background: rgb(255 255 255 / .93) !important;
+  border-color: #dbe3ee !important;
+}
+html:not(.dark) .direct-chat-bubble-incoming {
+  background: #fff;
+  border-color: #dbe3ee;
+  color: #263449;
+}
