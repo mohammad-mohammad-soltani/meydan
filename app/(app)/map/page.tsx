@@ -1,5 +1,5 @@
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { MapView } from "@/features/map/components/MapView";
 
 export default function MapPage() {
-  return <LegacyRouteApp initialView="view-map" />;
+  return <MapView />;
 }
