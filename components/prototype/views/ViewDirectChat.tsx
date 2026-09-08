@@ -1,21 +1,24 @@
 import { Icon } from "../icon";
 export function ViewDirectChat() {
   return (
-        <section id="view-direct-chat" className="app-view hidden bg-white dark:bg-[#070a0f] min-h-screen flex flex-col flex-1 relative">
-          <div className="sticky top-0 bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur z-20 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button data-action="switchView('view-chat')" className="text-slate-500 hover:text-brand-red">
+        <section id="view-direct-chat" className="app-view direct-chat-view hidden bg-white dark:bg-[#070a0f] min-h-screen flex flex-col flex-1 relative">
+          <div className="direct-chat-header sticky top-0 bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur z-20 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <button type="button" aria-label="بازگشت به گفتگوها" data-action="switchView('view-chat')" className="text-slate-500 hover:text-brand-red shrink-0 p-1">
                 <Icon name="arrow-right" className="w-5 h-5" />
               </button>
-              <div>
-                <h3 id="directChatTitle" className="font-bold text-xs text-slate-900 dark:text-white">پایگاه میدان انقلاب</h3>
+              <div id="directChatAvatar" aria-hidden="true" className="w-9 h-9 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[10px] shrink-0 shadow-sm">
+                م.ا
+              </div>
+              <div className="min-w-0">
+                <h3 id="directChatTitle" className="font-bold text-xs text-slate-900 dark:text-white truncate">پایگاه میدان انقلاب</h3>
                 <span id="directChatHandle" className="text-[10px] text-emerald-500 font-bold">● آنلاین</span>
               </div>
             </div>
             <button data-action="alert('اتصال صوتی برقرار نشد.')" className="text-slate-400 hover:text-brand-red p-1"><Icon name="phone" className="w-4 h-4" /></button>
           </div>
           {/* لیست پیام‌ها */}
-          <div id="directChatMessagesArea" className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 text-xs">
+          <div id="directChatMessagesArea" className="direct-chat-messages flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 text-xs">
             <div className="flex justify-start">
               <div className="bg-slate-100 dark:bg-slate-900 p-3 rounded-2xl rounded-tr-none max-w-[82%] space-y-1">
                 <p className="text-slate-800 dark:text-slate-200">سلام علیکم، سیستم صوتی میدان انقلاب وصل شد و آماده پخش صوت دم رأس ساعت ۲۱:۳۰ هستیم.</p>
@@ -51,7 +54,7 @@ export function ViewDirectChat() {
             </div>
           </div>
           {/* نوار ارسال پیام */}
-          <div className="sticky bottom-0 w-full bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-3 z-30 flex items-center gap-2">
+          <div className="direct-chat-composer sticky bottom-0 w-full bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-3 z-30 flex items-center gap-2">
             <button type="button" data-action="toggleChatMediaMenu()" className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-brand-red flex items-center justify-center shrink-0 transition">
               <Icon name="plus" className="w-5 h-5"  />
             </button>
