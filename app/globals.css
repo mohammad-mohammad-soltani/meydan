@@ -1506,3 +1506,8 @@ html:not(.dark) .direct-chat-bubble-incoming {
   flex: 1 1 auto;
   overflow-y: auto !important;
 }
+
+#mainAppShell:has(#view-direct-chat:not(.hidden)) > main {
+  height: 100dvh !important;
+  overflow: hidden !important;
+}
