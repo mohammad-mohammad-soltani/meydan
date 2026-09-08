@@ -1846,3 +1846,14 @@ html:not(.dark) #homeSubTabs.feed-tabs button.home-subtab-active {
     margin-inline: calc(var(--page-inline) * -1);
   }
 }
+
+
+/* Profile follow action must retain readable contrast in light mode. */
+html:not(.dark) #view-combined-profile .profile-follow-button {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+html:not(.dark) #view-combined-profile .profile-follow-button:hover {
+  background-color: #1e293b !important;
+}
