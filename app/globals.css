@@ -1857,3 +1857,20 @@ html:not(.dark) #view-combined-profile .profile-follow-button {
 html:not(.dark) #view-combined-profile .profile-follow-button:hover {
   background-color: #1e293b !important;
 }
+
+
+/* Mobile application owns the scroll container; avoid a second document scroll from browser chrome. */
+@media (max-width: 1023px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  #mainAppShell {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+  }
+}
