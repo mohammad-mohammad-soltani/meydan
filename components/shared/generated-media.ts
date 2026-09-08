@@ -1,0 +1,14 @@
+export const generatedMedia = {
+  contentHero: "/images/generated/content-hero.svg",
+  avatarCoordinator: "/images/generated/avatar-coordinator.svg",
+  avatarJournalist: "/images/generated/avatar-journalist.svg",
+  avatarSpeaker: "/images/generated/avatar-speaker.svg"
+} as const;
+
+export function chatAvatar(tone: "red" | "amber") {
+  return tone === "amber" ? generatedMedia.avatarSpeaker : generatedMedia.avatarJournalist;
+}
+
+export function speakerAvatar(accent: "slate" | "blue" | "amber" | "emerald") {
+  return accent === "amber" || accent === "slate" ? generatedMedia.avatarSpeaker : generatedMedia.avatarCoordinator;
+}
