@@ -57,7 +57,7 @@ export default function MeydanApp({ initialView }: MeydanAppProps) {
 
   useEffect(() => {
     const root = rootRef.current; if (!root) return; const storage = window.localStorage;
-    const show = (id: string) => { const route = viewRoutes[id] || "/home"; const isDynamicInitialRoute = initialView === id && ((id === "view-direct-chat" && window.location.pathname.startsWith("/chat/")) || (id === "view-full-post" && window.location.pathname.startsWith("/posts/"))); if (!isDynamicInitialRoute && window.location.pathname !== route) window.history.pushState({ view: id }, "", route); root.querySelectorAll<HTMLElement>(".app-view").forEach((item) => item.classList.add("hidden")); const next = root.querySelector<HTMLElement>("#" + id); if (next) { next.classList.remove("hidden"); next.classList.remove("view-enter"); void next.offsetWidth; next.classList.add("view-enter"); } const feedMode = id === "view-feed"; const chatView = id === "view-direct-chat"; const shell = root.querySelector<HTMLElement>("#mainAppShell"); const header = root.querySelector<HTMLElement>(".mobile-app-header"); shell?.classList.toggle("feed-smart-header", feedMode); shell?.classList.toggle("chat-headerless", chatView); if (!feedMode) { shell?.classList.remove("header-visible", "header-returned"); header?.classList.remove("header-hidden"); } else { shell?.classList.add("header-visible"); } root.querySelectorAll<HTMLElement>("[data-nav-view]").forEach((item) => item.classList.toggle("nav-active", item.dataset.navView === id)); root.querySelector<HTMLElement>("#subTabs")?.style.setProperty("display", id === "view-feed" ? "block" : "none"); root.querySelector<HTMLElement>("#homeSubTabs")?.style.setProperty("display", id === "view-feed" ? "flex" : "none"); root.querySelector<HTMLElement>("#bottomNavBar")?.classList.toggle("hidden", ["view-direct-chat", "view-full-post", "view-full-compose"].includes(id)); root.querySelector<HTMLElement>("#floatingComposeBtn")?.classList.toggle("hidden", ["view-direct-chat", "view-full-post", "view-full-compose"].includes(id)); };
+    const show = (id: string) => { const route = viewRoutes[id] || "/home"; const isDynamicInitialRoute = initialView === id && ((id === "view-direct-chat" && window.location.pathname.startsWith("/chat/")) || (id === "view-full-post" && window.location.pathname.startsWith("/posts/"))); if (!isDynamicInitialRoute && window.location.pathname !== route) window.history.pushState({ view: id }, "", route); root.querySelectorAll<HTMLElement>(".app-view").forEach((item) => item.classList.add("hidden")); const next = root.querySelector<HTMLElement>("#" + id); if (next) { next.classList.remove("hidden"); next.classList.remove("view-enter"); void next.offsetWidth; next.classList.add("view-enter"); } root.querySelector<HTMLElement>("#subTabs")?.style.setProperty("display", id === "view-feed" ? "block" : "none"); root.querySelector<HTMLElement>("#homeSubTabs")?.style.setProperty("display", id === "view-feed" ? "flex" : "none");};
     const toggle = (id: string) => root.querySelector<HTMLElement>(`#${id}`)?.classList.toggle("hidden");
     const text = (id: string, value: string) => { const node = root.querySelector<HTMLElement>(`#${id}`); if (node) node.textContent = value; };
     const updateMap = async (cityName: string, provinceName: string) => {
@@ -146,98 +146,15 @@ export default function MeydanApp({ initialView }: MeydanAppProps) {
     const click = (event: Event) => { const clicked = event.target as HTMLElement; const target = clicked.closest<HTMLElement>("[data-action]"); if (!target) { if (!clicked.closest("[data-map-select]")) { root.querySelector<HTMLElement>("#mapProvinceMenu")?.classList.add("hidden"); root.querySelector<HTMLElement>("#mapProvinceTrigger")?.setAttribute("aria-expanded", "false"); root.querySelector<HTMLElement>("#mapCityMenu")?.classList.add("hidden"); root.querySelector<HTMLElement>("#mapCityTrigger")?.setAttribute("aria-expanded", "false"); } return; } const element = target as ActionTarget; (element.dataset.action ?? "").split(";").map((command) => command.trim()).forEach((command) => { const match = command.match(/^([\w$]+)\(/); if (match) action(match[1], parseArgs(command, element), element); }); };
     let searchTimer: ReturnType<typeof setTimeout> | undefined; const input = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.inputAction; if (!raw) return; if (raw.includes("handleAjaxSearch")) { if (searchTimer) clearTimeout(searchTimer); searchTimer = setTimeout(() => action("handleAjaxSearch", [target.value ?? ""], target), 120); } if (raw.includes("filterProvinceOptions")) action("filterProvinceOptions", [target.value ?? ""], target); if (raw.includes("filterCityOptions")) action("filterCityOptions", [target.value ?? ""], target); if (raw.includes("filterSpeakersList")) root.querySelectorAll<HTMLElement>(".speaker-card").forEach((card) => card.style.display = card.textContent?.toLocaleLowerCase("fa-IR").includes((target.value ?? "").toLocaleLowerCase("fa-IR")) ? "flex" : "none"); if (raw.includes("autoExpandTextarea")) { target.style.height = "auto"; target.style.height = `${target.scrollHeight}px`; } };
     const change = (event: Event) => { const target = event.target as ActionTarget; const raw = target.dataset.changeAction; if (!raw) return; const match = raw.match(/^([\w$]+)\(/); if (match) action(match[1], [target.value ?? ""], target); };
-    const shell = root.querySelector<HTMLElement>("#mainAppShell"); let lastScrollTop = 0; const handleShellScroll = () => { if (!shell) return; const current = shell.scrollTop; const header = root.querySelector<HTMLElement>(".mobile-app-header"); if (!shell.classList.contains("feed-smart-header")) { header?.classList.remove("header-hidden"); shell.classList.remove("header-returned"); lastScrollTop = current; return; } if (header) { if (current <= 0 || current < lastScrollTop) { header.classList.remove("header-hidden"); shell.classList.add("header-visible"); if (current > 0) shell.classList.add("header-returned"); } else if (current > lastScrollTop) { header.classList.add("header-hidden"); shell.classList.remove("header-visible"); shell.classList.remove("header-returned"); } } lastScrollTop = Math.max(0, current); }; if (shell) { shell.classList.add("header-visible"); shell.addEventListener("scroll", handleShellScroll, { passive: true }); }
     const handlePopState = () => { const view = routeViews[window.location.pathname] || (window.location.hash.startsWith("#view-") ? window.location.hash.slice(1) : "view-feed"); show(view); }; window.addEventListener("popstate", handlePopState);
     root.addEventListener("click", click); root.addEventListener("input", input); root.addEventListener("change", change);
     const savedTheme = storage.getItem("meydan-theme"); if (savedTheme === "light") document.documentElement.classList.remove("dark"); else if (savedTheme === "dark") document.documentElement.classList.add("dark");
     const savedView = storage.getItem("meydan-view") || "view-feed"; const pathView = routeViews[window.location.pathname]; const hashView = window.location.hash.slice(1); const resolvedInitialView = initialView || pathView || (hashView.startsWith("view-") ? hashView : savedView); show(resolvedInitialView); action("switchHomeTab", [storage.getItem("meydan-home-tab") || "foryou"], root as ActionTarget); action("filterFeed", [storage.getItem("meydan-feed-filter") || "all"], root as ActionTarget); if (savedView === "view-combined-profile") action("switchProfileSubtab", [storage.getItem("meydan-profile-tab") || "square"], root as ActionTarget); if (savedView === "view-chat") action("switchChatSection", [storage.getItem("meydan-chat-tab") || "messages"], root as ActionTarget);
-    return () => { root.removeEventListener("click", click); root.removeEventListener("input", input); root.removeEventListener("change", change); if (shell) shell.removeEventListener("scroll", handleShellScroll); window.removeEventListener("popstate", handlePopState); };
+    return () => { root.removeEventListener("click", click); root.removeEventListener("input", input); root.removeEventListener("change", change); window.removeEventListener("popstate", handlePopState); };
   }, []);
 
   return (
-<div ref={rootRef}>
-  {/* کانتینر اصلی */}
-  <div className="w-full min-h-screen flex justify-center mx-auto">
-    {/* ستون ناوبری راست (دسکتاپ) */}
-    <aside className="hidden lg:flex flex-col w-64 p-4 sticky top-0 h-screen border-l border-slate-200 dark:border-slate-800/80 justify-between shrink-0 bg-white dark:bg-[#070a0f]">
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 rounded-2xl bg-brand-red flex items-center justify-center text-white font-black text-lg">
-            <Icon name="flame" className="w-6 h-6"  />
-          </div>
-          <div>
-            <h1 className="text-base font-black text-slate-900 dark:text-white leading-tight">میدانِ خیابان</h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">شبکه سراسری میادین ایران</p>
-          </div>
-        </div>
-        <nav className="space-y-1.5 text-sm font-bold">
-          <button data-action="switchView('view-feed')" data-nav-view="view-feed" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
-            <Icon name="home" className="w-5 h-5"  />
-            <span>خانه و روایت‌ها</span>
-          </button>
-          <button data-action="switchView('view-content')" data-nav-view="view-content" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
-            <Icon name="folder-kanban" className="w-5 h-5"  />
-            <span>بسته محتوا و منابر</span>
-          </button>
-          <button data-action="switchView('view-speakers')" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
-            <Icon name="mic" className="w-5 h-5"  />
-            <span>اعزام سخنران</span>
-          </button>
-          <button data-action="switchView('view-map')" data-nav-view="view-map" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
-            <Icon name="map" className="w-5 h-5"  />
-            <span>نقشه زنده و رادار میادین</span>
-          </button>
-          <button data-action="switchView('view-chat')" data-nav-view="view-chat" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
-            <Icon name="message-square" className="w-5 h-5"  />
-            <span>پیام‌ها و اعلان‌ها</span>
-          </button>
-          <button data-action="switchView('view-combined-profile')" data-nav-view="view-combined-profile" className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition">
-            <Icon name="user-check" className="w-5 h-5"  />
-            <span>هویت و پایگاه من</span>
-          </button>
-        </nav>
-        <button data-action="switchView('view-full-compose')" className="w-full bg-brand-red hover:bg-red-700 text-white font-black py-3 rounded-2xl transition flex items-center justify-center gap-2">
-          <Icon name="pen-tool" className="w-4 h-4"  />
-          <span>ثبت روایت جدید</span>
-        </button>
-      </div>
-      <div className="p-3 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-black text-xs">م.ر</div>
-          <div>
-            <div className="font-bold text-xs">محمدصادق رضایی</div>
-            <div className="text-[10px] text-slate-400">میدان انقلاب تهران</div>
-          </div>
-        </div>
-        <button data-action="toggleTheme()" className="p-2 rounded-xl text-slate-500 hover:text-amber-500"><Icon name="sun" className="w-4 h-4"  /></button>
-      </div>
-    </aside>
-    {/* ستون مرکزی اصلی */}
-    <div className="w-full max-w-xl bg-white dark:bg-[#070a0f] min-h-screen h-[100dvh] flex flex-col border-x border-slate-200 dark:border-slate-800/80 relative transition-colors duration-150" id="mainAppShell">
-      {/* نوار هدر: مخفی در دسکتاپ و سیستم با کلاس lg:hidden و فقط فعال در موبایل */}
-      <header className="mobile-app-header lg:hidden sticky top-0 bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur-md z-30 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-brand-red flex items-center justify-center text-white font-black text-sm">
-            <Icon name="flame" className="w-4 h-4"  />
-          </div>
-          <div>
-            <h1 className="text-sm font-black text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
-              میدانِ خیابان
-              <span className="w-2 h-2 rounded-full bg-brand-red animate-ping" />
-            </h1>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">شبکه همبستگی و روایت میادین ایران</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button data-action="toggleSearchModal()" className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-brand-red transition flex items-center gap-1 text-xs font-bold">
-            <Icon name="search" className="w-4 h-4"  />
-            <span>جستجو</span>
-          </button>
-          <button data-action="toggleTheme()" className="p-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-amber-400 transition">
-            <Icon name="sun" className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
+    <div ref={rootRef} className="legacy-feature-controller min-w-0">
       {/* تب‌های فید: موقعیت در دسکتاپ top-0 و در موبایل top-[53px] */}
       <div id="homeSubTabs" className="flex border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070a0f]/95 text-xs font-bold sticky top-0 lg:top-0 z-30">
         <button data-action="switchHomeTab('foryou')" id="home-tab-foryou" className="flex-1 py-3 text-center home-subtab-active transition">برای شما</button>
@@ -259,7 +176,9 @@ export default function MeydanApp({ initialView }: MeydanAppProps) {
         </div>
       </div>
       {/* محتوای اسکرول‌شونده فید و صفحات */}
-      <main className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
+
+      <div className="legacy-view-stack flex min-w-0 flex-col">
+
         {/* ================= ۱. فید اصلی خانه ================= */}
         <ViewFeed />
         {/* ================= ۲. بخش محتوا ================= */}
@@ -280,80 +199,8 @@ export default function MeydanApp({ initialView }: MeydanAppProps) {
         <ViewFullCompose />
         {/* ================= صفحه گفتگو تکی ================= */}
         <ViewDirectChat />
-      </main>
-      {/* دکمه شناور ارسال روایت در موبایل */}
-      <div id="floatingComposeBtn" className="fixed bottom-20 z-40 max-w-xl w-full pointer-events-none px-4 flex justify-end lg:hidden">
-        <button data-action="switchView('view-full-compose')" className="pointer-events-auto w-12 h-12 rounded-full bg-brand-red hover:bg-red-700 text-white flex items-center justify-center shadow-lg transition transform active:scale-95">
-          <Icon name="pen-tool" className="w-5 h-5"  />
-        </button>
+
       </div>
-      {/* نوار ناوبری پایین صفحه (موبایل) */}
-      <nav id="bottomNavBar" className="fixed bottom-0 w-full max-w-xl bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 py-2 px-3 flex items-center justify-between text-slate-400 z-50 lg:hidden">
-        <button data-action="switchView('view-feed')" data-nav-view="view-feed" id="nav-feed" className="flex flex-col items-center gap-1 text-slate-700 dark:text-slate-300 font-bold transition">
-          <Icon name="home" className="w-5 h-5"  />
-          <span className="text-[9px]">خانه</span>
-        </button>
-        <button data-action="switchView('view-content')" data-nav-view="view-content" id="nav-content" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
-          <Icon name="folder-kanban" className="w-5 h-5"  />
-          <span className="text-[9px]">محتوا</span>
-        </button>
-        <button data-action="switchView('view-map')" data-nav-view="view-map" id="nav-map" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
-          <Icon name="map" className="w-5 h-5"  />
-          <span className="text-[9px]">نقشه زنده</span>
-        </button>
-        <button data-action="switchView('view-chat')" data-nav-view="view-chat" id="nav-chat" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
-          <Icon name="message-square" className="w-5 h-5"  />
-          <span className="text-[9px]">گفتگو</span>
-        </button>
-        <button data-action="switchView('view-combined-profile')" data-nav-view="view-combined-profile" id="nav-combined-profile" className="flex flex-col items-center gap-1 hover:text-brand-red transition">
-          <Icon name="user-check" className="w-5 h-5"  />
-          <span className="text-[9px]">هویت و پایگاه</span>
-        </button>
-      </nav>
-    </div>
-    {/* ستون ترندهای چپ (دسکتاپ) */}
-    <aside className="hidden lg:flex flex-col w-72 p-4 sticky top-0 h-screen border-r border-slate-200 dark:border-slate-800/80 space-y-4 shrink-0 overflow-y-auto no-scrollbar bg-white dark:bg-[#070a0f]">
-      <div className="relative">
-        <Icon name="search" className="w-4 h-4 text-slate-400 absolute right-3 top-3"  />
-        <input type="text" placeholder="جستجو در ترندها..." className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full pr-9 pl-3 py-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none" />
-      </div>
-      <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 space-y-2.5 text-xs">
-        <div className="flex items-center justify-between">
-          <h3 className="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-            <Icon name="trending-up" className="w-4 h-4 text-brand-red"  />
-            ترندهای داغ میادین
-          </h3>
-          <span className="text-[10px] text-slate-400">زنده</span>
-        </div>
-        <div className="space-y-3 pt-1 text-[11px] divide-y divide-slate-100 dark:divide-slate-800/60">
-          <div className="pt-2">
-            <div className="text-slate-400 text-[10px]">۱ · موضوع روز</div>
-            <div className="font-bold text-slate-900 dark:text-white text-xs">#فرمانده_کل_قوا</div>
-            <div className="text-slate-400 text-[10px]">۱۲۸ هزار روایت</div>
-          </div>
-          <div className="pt-2">
-            <div className="text-slate-400 text-[10px]">۲ · میدان انقلاب تهران</div>
-            <div className="font-bold text-slate-900 dark:text-white text-xs">طومار ۵۰ متری تجدید بیعت</div>
-            <div className="text-slate-400 text-[10px]">۴۵ هزار امضا</div>
-          </div>
-          <div className="pt-2">
-            <div className="text-slate-400 text-[10px]">۳ · ابتکار میدانی یزد</div>
-            <div className="font-bold text-slate-900 dark:text-white text-xs">ایستگاه شارژ اضطراری موبایل</div>
-            <div className="text-slate-400 text-[10px]">۲۱ میدان مجری</div>
-          </div>
-        </div>
-      </div>
-      <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
-        <div className="flex items-center gap-1.5 text-blue-500 font-bold">
-          <Icon name="newspaper" className="w-4 h-4"  />
-          <span>روزنامه عصر ایرانیان</span>
-        </div>
-        <p className="text-[11px] text-slate-500 leading-relaxed">
-          صفحه نخست شماره فردا به حماسه خروش شب دوازدهم میادین و هم‌نوایی یکدست سراسری اختصاص یافت[cite: 1].
-        </p>
-      </div>
-    </aside>
-  </div>
   {/* مودال جستجو */}
   <div id="searchModal" className="search-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center hidden p-4 pt-16">
     <div className="search-panel bg-white dark:bg-[#0b0f17] border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-2xl p-4 relative shadow-2xl space-y-3">
@@ -419,8 +266,6 @@ export default function MeydanApp({ initialView }: MeydanAppProps) {
       </div>
     </div>
   </div>
-</div>
-
-
+    </div>
   );
 }

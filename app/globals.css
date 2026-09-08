@@ -1479,3 +1479,17 @@ html:not(.dark) .direct-chat-bubble-incoming {
   border-color: #dbe3ee;
   color: #263449;
 }
+
+
+/* App shell compatibility while legacy feature views migrate. */
+#mainAppShell:has(#view-direct-chat:not(.hidden)) > .mobile-app-header,
+#mainAppShell:has(#view-direct-chat:not(.hidden)) > #bottomNavBar {
+  display: none !important;
+}
+#mainAppShell:has(#view-direct-chat:not(.hidden)),
+#mainAppShell:has(#view-direct-chat:not(.hidden)) > main {
+  overflow: hidden !important;
+}
+#mainAppShell:has(#view-direct-chat:not(.hidden)) > main {
+  height: 100dvh;
+}
