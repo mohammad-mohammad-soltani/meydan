@@ -19,22 +19,31 @@ export function BottomNavigation() {
   const pathname = usePathname();
   const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const [showSkeleton, setShowSkeleton] = useState(false);
+  const skeletonTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const isConversationRoute = pathname.startsWith("/chat/");
+
+  const clearNavigationFeedback = () => {
+    if (skeletonTimerRef.current) window.clearTimeout(skeletonTimerRef.current);
+    if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
+    skeletonTimerRef.current = null;
+    fallbackTimerRef.current = null;
+    setShowSkeleton(false);
+    setPendingHref(null);
+  };
 
   useEffect(() => {
     items.forEach(({ href }) => router.prefetch(href));
   }, [router]);
 
   useEffect(() => {
-    if (!pendingHref || pathname !== pendingHref) return;
-
-    const timer = window.setTimeout(() => setPendingHref(null), 260);
-    return () => window.clearTimeout(timer);
+    if (pendingHref && pathname === pendingHref) clearNavigationFeedback();
   }, [pathname, pendingHref]);
 
   useEffect(() => () => {
-    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    if (skeletonTimerRef.current) window.clearTimeout(skeletonTimerRef.current);
+    if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
   }, []);
 
   const handleNavigate = (event: MouseEvent<HTMLAnchorElement>, href: string, active: boolean) => {
@@ -45,9 +54,11 @@ export function BottomNavigation() {
       return;
     }
 
+    // The selected control reacts immediately; the skeleton appears only when the route is slow.
     setPendingHref(href);
-    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    timeoutRef.current = window.setTimeout(() => setPendingHref(null), 5000);
+    setShowSkeleton(false);
+    skeletonTimerRef.current = window.setTimeout(() => setShowSkeleton(true), 120);
+    fallbackTimerRef.current = window.setTimeout(clearNavigationFeedback, 5000);
   };
 
   if (isConversationRoute) return null;
@@ -55,10 +66,10 @@ export function BottomNavigation() {
   return (
     <nav id="bottomNavBar" aria-label="ناوبری اصلی" className="fixed bottom-0 z-50 grid w-full max-w-xl grid-cols-5 items-center gap-1.5 border-t border-slate-200 bg-white/95 px-3 py-2 text-slate-400 backdrop-blur dark:border-slate-800 dark:bg-[#070a0f]/95 lg:hidden">
       {items.map(({ href, label, icon: Icon, match }) => {
-        const active = match(pathname);
-        return <Link key={href} href={href} prefetch onClick={(event) => handleNavigate(event, href, active)} aria-current={active ? "page" : undefined} className={`flex w-full min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-1 font-bold transition ${active ? "nav-active bg-red-500/10 text-brand-red" : "text-slate-500 dark:text-slate-400"}`}><Icon className="h-5 w-5 shrink-0" /><span className="whitespace-nowrap text-[9px]">{label}</span></Link>;
+        const active = pendingHref ? href === pendingHref : match(pathname);
+        return <Link key={href} href={href} prefetch onClick={(event) => handleNavigate(event, href, active)} aria-current={active ? "page" : undefined} className={`bottom-nav-item flex w-full min-w-0 flex-col items-center gap-1 px-1 py-1 font-bold ${active ? "bottom-nav-item-active text-brand-red" : "text-slate-500 dark:text-slate-400"}`}><Icon className="h-5 w-5 shrink-0" /><span className="whitespace-nowrap text-[9px]">{label}</span></Link>;
       })}
-      {pendingHref ? <NavigationSkeleton className="pointer-events-none fixed inset-x-0 top-[4rem] bottom-[4.5rem] z-40" /> : null}
+      {showSkeleton ? <NavigationSkeleton className="pointer-events-none fixed inset-x-0 top-[4rem] bottom-[4.5rem] z-40" /> : null}
     </nav>
   );
 }
