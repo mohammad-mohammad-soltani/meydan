@@ -7,6 +7,22 @@ import type { FeedFilter, FeedPost, FeedTab, MediaReflection } from "../types";
 const initialPosts = getFeedPosts();
 const initialSuggestions = getFollowSuggestions();
 
+function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
+  switch (filter) {
+    case "all":
+      return true;
+    case "ideas":
+    case "media":
+      return post.kind === filter;
+    case "visual":
+      return post.attachments.some((attachment) => attachment.icon === "image" || attachment.icon === "video");
+    case "audio":
+      return post.attachments.some((attachment) => attachment.icon === "microphone");
+    case "initiatives":
+      return Boolean(post.callToAction);
+  }
+}
+
 export function useFeed() {
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
@@ -16,10 +32,7 @@ export function useFeed() {
   const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set());
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
 
-  const posts = useMemo(() => {
-    if (activeFilter === "all") return initialPosts;
-    return initialPosts.filter((post) => post.kind === activeFilter);
-  }, [activeFilter]);
+  const posts = useMemo(() => initialPosts.filter((post) => matchesFilter(post, activeFilter)), [activeFilter]);
 
   const toggleLike = useCallback((postId: string) => {
     setLikedPostIds((current) => {
