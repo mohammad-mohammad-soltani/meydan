@@ -1624,3 +1624,16 @@ html:not(.dark) .header-theme-control:hover {
     margin-inline: -.75rem;
   }
 }
+
+
+/* Feed filter carousel: six concise, horizontally scrollable controls */
+.feed-filter-strip {
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.feed-filter-pill {
+  min-width: 7.75rem;
+  min-height: 2.25rem;
+  scroll-snap-align: start;
+}
