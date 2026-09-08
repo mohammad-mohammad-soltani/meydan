@@ -13,6 +13,7 @@ export function MobileHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const isConversationRoute = pathname.startsWith("/chat/");
+  const isPostRoute = pathname.startsWith("/posts/");
   const results = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("fa-IR");
     return normalized ? searchCatalog.filter((item) => item.toLocaleLowerCase("fa-IR").includes(normalized)) : [];
@@ -32,7 +33,7 @@ export function MobileHeader() {
     setIsDark(next);
   };
 
-  if (isConversationRoute) return null;
+  if (isConversationRoute || isPostRoute) return null;
 
   return (
     <header className="mobile-app-header sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-[#070a0f]/95 lg:hidden">

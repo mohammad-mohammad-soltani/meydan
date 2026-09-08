@@ -7,6 +7,8 @@ export type FeedAttachment = {
   label: string;
   detail: string;
   icon: "image" | "video" | "article" | "microphone" | "bolt";
+  previewSrc?: string;
+  previewAlt?: string;
 };
 
 export type MediaReflection = {

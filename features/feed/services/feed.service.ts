@@ -12,9 +12,16 @@ const feedPosts: FeedPost[] = [
     title: "پایگاه میدان انقلاب تهران",
     body: "امشب تجمع مردم با هم‌خوانی یکدست سرود «فرمانده کل قوا» برگزار شد. طومار ۵۰ متری تجدید بیعت نیز توسط بیش از ۲۰ هزار نفر از حاضرین امضا شد.",
     attachments: [
-      { id: "enghelab-photo", label: "۱ عکس طومار", detail: "گزارش تصویری", icon: "image" },
+      {
+        id: "enghelab-photo",
+        label: "۱ عکس طومار",
+        detail: "گزارش تصویری",
+        icon: "image",
+        previewSrc: "/images/generated/feed/enghelab-gathering.png",
+        previewAlt: "مردم در تجمع شبانه میدان انقلاب در حال هم‌خوانی و امضای طومار"
+      },
       { id: "enghelab-video", label: "ویدیو هم‌نوایی", detail: "ویدیو", icon: "video" },
-      { id: "enghelab-press", label: "صفحه ۵ عصر", detail: "روزنامه", icon: "article" }
+      { id: "enghelab-press", label: "برای مشاهده کامل کلیک کنید", detail: "روزنامه", icon: "article" }
     ],
     mediaReflection: {
       outlet: "روزنامه عصر ایرانیان",

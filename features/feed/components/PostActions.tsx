@@ -12,17 +12,18 @@ type PostActionsProps = {
   onLike: () => void;
   onRepost: () => void;
   onShare: () => void;
+  className?: string;
 };
 
 const formatCount = (value: number) => value >= 1000 ? (value / 1000).toFixed(1) + "k" : String(value);
 
-export function PostActions({ postId, likes, comments, reposts, liked, reposted, onLike, onRepost, onShare }: PostActionsProps) {
+export function PostActions({ postId, likes, comments, reposts, liked, reposted, onLike, onRepost, onShare, className = "" }: PostActionsProps) {
   return (
-    <div className="feed-post-actions relative z-10 mt-2 flex flex-row-reverse items-center justify-around border-y border-slate-100 py-2 text-slate-400 dark:border-slate-800 dark:text-slate-500">
-      <button type="button" onClick={onShare} aria-label="اشتراک‌گذاری روایت" className="transition hover:text-brand-red"><Share2 className="h-5 w-5" /></button>
-      <Link href={("/posts/" + postId) as Route} aria-label="مشاهده نظرها" className="inline-flex items-center gap-1 transition hover:text-brand-red"><MessageCircle className="h-5 w-5" /><span className="text-xs">{comments}</span></Link>
-      <button type="button" onClick={onRepost} aria-pressed={reposted} className={"inline-flex items-center gap-1 transition " + (reposted ? "text-emerald-500" : "hover:text-emerald-500")}><Repeat2 className="h-5 w-5" /><span className="text-xs">{reposts}</span></button>
-      <button type="button" onClick={onLike} aria-pressed={liked} className={"inline-flex items-center gap-1 transition " + (liked ? "text-brand-red" : "hover:text-brand-red")}><Heart className={"h-5 w-5 " + (liked ? "fill-current" : "")} /><span className="text-xs">{formatCount(likes + (liked ? 1 : 0))}</span></button>
+    <div dir="ltr" className={"feed-post-actions pointer-events-auto relative z-20 mt-3 grid h-10 grid-cols-4 items-center rounded-2xl border border-slate-200 bg-white/70 px-1 text-slate-400 shadow-sm shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-500 dark:shadow-none " + className}>
+      <button type="button" onClick={(event) => { event.stopPropagation(); onShare(); }} aria-label="اشتراک‌گذاری روایت" className="pointer-events-auto grid h-8 w-full place-items-center rounded-full transition-colors hover:bg-blue-500/10 hover:text-blue-500"><Share2 className="h-[17px] w-[17px]" /></button>
+      <Link onClick={(event) => event.stopPropagation()} href={("/posts/" + postId) as Route} aria-label="مشاهده نظرها" className="pointer-events-auto inline-flex h-8 w-full items-center justify-center gap-1 rounded-full transition-colors hover:bg-blue-500/10 hover:text-blue-500"><MessageCircle className="h-[17px] w-[17px]" /><span className="text-xs">{comments}</span></Link>
+      <button type="button" onClick={(event) => { event.stopPropagation(); onRepost(); }} aria-label="بازنشر روایت" aria-pressed={reposted} className={"pointer-events-auto inline-flex h-8 w-full items-center justify-center gap-1 rounded-full transition-colors hover:bg-emerald-500/10 " + (reposted ? "text-emerald-500" : "hover:text-emerald-500")}><Repeat2 className="h-[17px] w-[17px]" /><span className="text-xs">{reposts + (reposted ? 1 : 0)}</span></button>
+      <button type="button" onClick={(event) => { event.stopPropagation(); onLike(); }} aria-label="پسندیدن روایت" aria-pressed={liked} className={"pointer-events-auto inline-flex h-8 w-full items-center justify-center gap-1 rounded-full transition-colors hover:bg-brand-red/10 " + (liked ? "text-brand-red" : "hover:text-brand-red")}><Heart className={"h-[17px] w-[17px] " + (liked ? "fill-current" : "")} /><span className="text-xs">{formatCount(likes + (liked ? 1 : 0))}</span></button>
     </div>
   );
 }

@@ -1656,12 +1656,9 @@ html:not(.dark) .header-theme-control:hover {
 @media (max-width: 1023px) {
   #view-feed > .divide-y,
   #view-feed .feed-post-actions {
-    width: 100vw;
+    width: auto;
     max-width: none !important;
-    margin-inline: calc(50% - 50vw);
-  }
-  #view-feed .feed-post-actions {
-    padding-inline: 1.5rem;
+    margin-inline: 0;
   }
 }
 

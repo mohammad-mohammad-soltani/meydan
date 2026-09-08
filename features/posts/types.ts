@@ -12,6 +12,9 @@ export type PostMedia = {
   id: string;
   label: string;
   kind: PostMediaKind;
+  detail?: string;
+  previewSrc?: string;
+  previewAlt?: string;
 };
 
 export type MediaReflection = {
@@ -35,6 +38,7 @@ export type PostDetail = {
   author: PostAuthor;
   outlet: string;
   badge: string;
+  timeAgo: string;
   body: string;
   media: PostMedia[];
   reflections: MediaReflection[];
