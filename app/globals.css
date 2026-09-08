@@ -1259,3 +1259,29 @@ html:not(.dark) #view-direct-chat > div:last-child > button:first-child {
 #mainAppShell.chat-headerless > .mobile-app-header {
   display: none !important;
 }
+
+
+/* Direct messages own the viewport: only the message list scrolls. */
+#mainAppShell.chat-headerless {
+  overflow: hidden !important;
+}
+#mainAppShell.chat-headerless > main {
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden !important;
+}
+#mainAppShell.chat-headerless .direct-chat-view {
+  height: 100%;
+  min-height: 0 !important;
+  max-height: 100%;
+  overflow: hidden;
+}
+#mainAppShell.chat-headerless .direct-chat-messages {
+  min-height: 0;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+#mainAppShell.chat-headerless .direct-chat-composer {
+  flex: 0 0 auto;
+  padding-bottom: max(.75rem, env(safe-area-inset-bottom));
+}
