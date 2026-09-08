@@ -1,14 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { getContentItems, getContentQuickActions, getScheduleItems } from "../services/content.service";
-import type { ContentCategory, ContentFilter, ContentItem } from "../types";
+import type { ContentCategory, ContentFilter, ContentItem, ContentQuickAction, ScheduleItem } from "../types";
 
-const initialItems = getContentItems();
-const initialSchedule = getScheduleItems();
-const initialQuickActions = getContentQuickActions();
-
-export function useContent() {
+export function useContent(initialItems: ContentItem[], initialSchedule: ScheduleItem[], initialQuickActions: ContentQuickAction[]) {
   const [selectedCategory, setSelectedCategory] = useState<ContentCategory>("featured");
   const [selectedFilter, setSelectedFilter] = useState<ContentFilter>("all");
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
@@ -19,7 +14,7 @@ export function useContent() {
     const categoryMatches = selectedCategory === "schedule" ? false : selectedCategory === "featured" ? item.category === "featured" : item.category === selectedCategory;
     const filterMatches = selectedFilter === "all" || item.status === selectedFilter;
     return categoryMatches && filterMatches;
-  }), [selectedCategory, selectedFilter]);
+  }), [initialItems, selectedCategory, selectedFilter]);
 
   return {
     selectedCategory,

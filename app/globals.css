@@ -147,6 +147,31 @@ select {
   touch-action: manipulation;
 }
 
+/* Consistent tactile feedback for every active control. */
+button:not(:disabled) {
+  transition: transform 140ms ease, color 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+button:not(:disabled):active {
+  transform: scale(1.045);
+}
+
+.comment-composer textarea:focus,
+.comment-composer textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled) {
+    transition: none;
+  }
+
+  button:not(:disabled):active {
+    transform: none;
+  }
+}
+
 @media (max-width: 639px) {
   #mainAppShell {
     width: 100vw;
@@ -519,7 +544,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     flex: 0 0 auto;
   }
   #mainAppShell > header > div:last-child > button:first-child span {
-    display: none;
+    display: inline;
   }
   #homeSubTabs {
     min-height: 48px;
@@ -1625,6 +1650,19 @@ html:not(.dark) .header-theme-control:hover {
 /* Compact feed filters and true edge-to-edge live banner on mobile */
 .feed-filter-pill {
   min-height: 2.7rem;
+}
+
+/* Keep both feed dividers flush with the mobile application edges. */
+@media (max-width: 1023px) {
+  #view-feed > .divide-y,
+  #view-feed .feed-post-actions {
+    width: 100vw;
+    max-width: none !important;
+    margin-inline: calc(50% - 50vw);
+  }
+  #view-feed .feed-post-actions {
+    padding-inline: 1.5rem;
+  }
 }
 
 @media (max-width: 520px) {

@@ -1,13 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { getSpeakers } from "../services/speakers.service";
 import type { ReservationRequest, ReservationResult, Speaker, SpeakerFilter } from "../types";
 
-const initialSpeakers = getSpeakers();
 const initialRequest: ReservationRequest = { venue: "میدان انقلاب تهران", timeSlot: "امشب - ساعت ۲۱:۰۰" };
 
-export function useSpeakers() {
+export function useSpeakers(initialSpeakers: Speaker[]) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<SpeakerFilter>("all");
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
@@ -22,7 +20,7 @@ export function useSpeakers() {
       const haystack = [speaker.name, speaker.handle, speaker.cities.join(" "), speaker.expertise].join(" ").toLocaleLowerCase("fa-IR");
       return matchesFilter && (!normalized || haystack.includes(normalized));
     });
-  }, [filter, query]);
+  }, [filter, initialSpeakers, query]);
 
   const openSpeaker = (speaker: Speaker) => { setSelectedSpeaker(speaker); setReservation(null); };
   const closeProfile = () => { setSelectedSpeaker(null); setReservation(null); };

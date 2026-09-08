@@ -1,5 +1,5 @@
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { PodcastsView } from "@/features/podcasts/components/PodcastsView";
 
 export default function PodcastsPage() {
-  return <LegacyRouteApp initialView="view-all-podcasts" />;
+  return <PodcastsView />;
 }

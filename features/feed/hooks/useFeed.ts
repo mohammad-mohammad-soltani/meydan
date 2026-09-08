@@ -1,11 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { getFeedPosts, getFollowSuggestions } from "../services/feed.service";
-import type { FeedFilter, FeedPost, FeedTab, MediaReflection } from "../types";
-
-const initialPosts = getFeedPosts();
-const initialSuggestions = getFollowSuggestions();
+import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
 
 function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
   switch (filter) {
@@ -23,7 +19,7 @@ function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
   }
 }
 
-export function useFeed() {
+export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSuggestion[]) {
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => new Set());
@@ -32,7 +28,7 @@ export function useFeed() {
   const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set());
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
 
-  const posts = useMemo(() => initialPosts.filter((post) => matchesFilter(post, activeFilter)), [activeFilter]);
+  const posts = useMemo(() => initialPosts.filter((post) => matchesFilter(post, activeFilter)), [activeFilter, initialPosts]);
 
   const toggleLike = useCallback((postId: string) => {
     setLikedPostIds((current) => {

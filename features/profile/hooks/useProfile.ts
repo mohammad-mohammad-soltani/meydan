@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { getProfileDetails } from "../services/profile.service";
-import type { ProfileSection, ProfileTab } from "../types";
+import type { ProfileDetails, ProfileSection, ProfileTab } from "../types";
 
-const profile = getProfileDetails();
-
-export function useProfile() {
+export function useProfile(profile: ProfileDetails) {
   const [selectedTab, setSelectedTab] = useState<ProfileTab>("square");
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);

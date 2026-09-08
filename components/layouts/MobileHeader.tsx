@@ -1,22 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Moon, Search, Sun } from "lucide-react";
-import { useSearchModal } from "@/components/providers/SearchProvider";
+import { Moon, Search, Sun, X } from "lucide-react";
+
+const searchCatalog = ["پایگاه میدان انقلاب تهران", "میدان امیرچخماق یزد", "حاج میثم مطیعی", "حجت‌الاسلام مهدی ماندگاری", "روایت میدان انقلاب"];
 
 export function MobileHeader() {
   const pathname = usePathname();
   const [isDark, setIsDark] = useState(true);
-  const { openSearch } = useSearchModal();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const isConversationRoute = pathname.startsWith("/chat/");
+  const results = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase("fa-IR");
+    return normalized ? searchCatalog.filter((item) => item.toLocaleLowerCase("fa-IR").includes(normalized)) : [];
+  }, [query]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("meydan-theme");
     const dark = saved !== "light";
     document.documentElement.classList.toggle("dark", dark);
-    setIsDark(dark);
+    queueMicrotask(() => setIsDark(dark));
   }, []);
 
   const toggleTheme = () => {
@@ -35,9 +41,10 @@ export function MobileHeader() {
         <span className="min-w-0"><span className="block truncate text-sm font-black leading-tight text-slate-900 dark:text-white">میدانِ خیابان</span><span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">شبکه همبستگی و روایت میادین ایران</span></span>
       </Link>
       <div className="flex shrink-0 items-center gap-2">
-        <button type="button" onClick={openSearch} aria-label="جستجو" className="header-search-control flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-600 transition hover:text-brand-red dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"><span className="whitespace-nowrap text-xs font-bold">جستجو</span><Search className="h-4 w-4" /></button>
+        <button type="button" onClick={() => setIsSearchOpen(true)} aria-label="جستجو" className="header-search-control flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-600 transition hover:text-brand-red dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"><span className="whitespace-nowrap text-xs font-bold">جستجو</span><Search className="h-4 w-4" /></button>
         <button type="button" onClick={toggleTheme} aria-label={isDark ? "فعال‌کردن حالت روشن" : "فعال‌کردن حالت تیره"} className="header-theme-control rounded-full border border-slate-200 bg-slate-100 p-2 text-slate-600 transition hover:text-amber-500 dark:border-slate-800 dark:bg-slate-900 dark:text-amber-400">{isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
       </div>
+      {isSearchOpen ? <div role="dialog" aria-modal="true" aria-label="جستجو در میادین" className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 pt-20 backdrop-blur-sm"><div className="w-full max-w-sm space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-800 dark:bg-[#0b0f17]"><div className="flex items-center justify-between"><h2 className="flex items-center gap-1.5 text-sm font-black text-slate-900 dark:text-white"><Search className="h-4 w-4 text-brand-red" />جستجو در میدان</h2><button type="button" onClick={() => setIsSearchOpen(false)} aria-label="بستن جستجو" className="rounded-lg p-1 text-slate-500 hover:text-brand-red"><X className="h-5 w-5" /></button></div><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="نام میدان، شهر یا سخنران" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs outline-none focus:border-brand-red dark:border-slate-800 dark:bg-slate-900" /><div className="max-h-56 space-y-2 overflow-auto">{query.trim() ? results.length ? results.map((result) => <p key={result} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold dark:border-slate-800">{result}</p>) : <p className="text-xs text-slate-500">نتیجه‌ای پیدا نشد.</p> : <p className="text-xs text-slate-500">نام میدان، شهر یا سخنران را وارد کنید.</p>}</div></div></div> : null}
     </header>
   );
 }

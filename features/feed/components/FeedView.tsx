@@ -6,9 +6,10 @@ import { FeedTabs } from "./FeedTabs";
 import { FollowSuggestions } from "./FollowSuggestions";
 import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
+import type { FeedPost, FollowSuggestion } from "../types";
 
-export function FeedView() {
-  const feed = useFeed();
+export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestions: FollowSuggestion[] }) {
+  const feed = useFeed(posts, suggestions);
 
   return (
     <div id="view-feed" className="app-view min-h-full bg-white dark:bg-[#070a0f]">
@@ -21,7 +22,7 @@ export function FeedView() {
             <span className="inline-flex min-w-0 items-center gap-2"><BellRing className="h-5 w-5 shrink-0" aria-hidden="true" /><span>پژواک‌ها و روایت‌های برگزیده میادین</span></span>
             <span className="feed-live-badge shrink-0 rounded-md px-2 py-1 text-[10px]">زنده</span>
           </section>
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="w-full divide-y divide-slate-100 dark:divide-slate-800">
             {feed.posts.map((post) => <PostCard key={post.id} post={post} liked={feed.likedPostIds.has(post.id)} reposted={feed.repostedPostIds.has(post.id)} joined={feed.joinedPostIds.has(post.id)} onLike={() => feed.toggleLike(post.id)} onRepost={() => feed.toggleRepost(post.id)} onShare={() => void feed.sharePost(post)} onJoin={() => feed.joinInitiative(post.id)} onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)} />)}
           </div>
         </>

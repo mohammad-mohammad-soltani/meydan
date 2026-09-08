@@ -5,9 +5,10 @@ import { useConversation } from "../hooks/useConversation";
 import { ChatHeader } from "./ChatHeader";
 import { MessageInput } from "./MessageInput";
 import { MessageList } from "./MessageList";
+import type { ChatMessage, Conversation } from "../types";
 
-export function ConversationView({ conversationId }: { conversationId: string }) {
-  const chat = useConversation(conversationId);
+export function ConversationView({ conversationId, conversation, messages }: { conversationId: string; conversation: Conversation | null; messages: ChatMessage[] }) {
+  const chat = useConversation(conversationId, conversation, messages);
 
   if (chat.isLoading) return <section className="flex min-h-0 flex-1 items-center justify-center text-xs text-slate-500">در حال باز کردن گفتگو...</section>;
   if (!chat.conversation) return <section className="flex min-h-0 flex-1 items-center justify-center text-xs text-slate-500">این گفتگو پیدا نشد.</section>;

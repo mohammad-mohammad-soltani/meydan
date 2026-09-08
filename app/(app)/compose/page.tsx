@@ -1,5 +1,5 @@
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { ComposeView } from "@/features/compose/components/ComposeView";
 
 export default function ComposePage() {
-  return <LegacyRouteApp initialView="view-full-compose" />;
+  return <ComposeView />;
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { defaultProvince, getCitiesByProvinceId, getDefaultCityForProvince, getProvinceById, provinces } from "../data/iran-cities";
 import { geocodeLocation } from "../services/geocoding.service";
-import type { City, MapLocation, MapStatus } from "../types";
+import type { MapLocation, MapStatus } from "../types";
 
 export function useMap() {
   const initialProvince = defaultProvince;
@@ -25,9 +25,6 @@ export function useMap() {
   useEffect(() => {
     if (!selectedCity) return;
     let active = true;
-    setStatus("loading");
-    setError(null);
-
     void geocodeLocation({ city: selectedCity.name, province: selectedProvince.name })
       .then((nextLocation) => {
         if (!active) return;
@@ -42,7 +39,7 @@ export function useMap() {
       });
 
     return () => { active = false; };
-  }, [selectedCity?.id, selectedCity?.name, selectedProvince.name]);
+  }, [selectedCity, selectedProvince.name]);
 
   const selectProvince = (provinceId: number) => {
     const city = getDefaultCityForProvince(provinceId);

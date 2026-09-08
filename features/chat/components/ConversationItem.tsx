@@ -1,5 +1,7 @@
 import { chatAvatar } from "@/components/shared/generated-media";
+import Image from "next/image";
 import Link from "next/link";
+import type { Route } from "next";
 import { BadgeCheck } from "lucide-react";
 import type { Conversation } from "../types";
 
@@ -10,9 +12,9 @@ type ConversationItemProps = {
 export function ConversationItem({ conversation }: ConversationItemProps) {
   const { participant } = conversation;
   return (
-    <Link href={"/chat/" + conversation.id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 p-3 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40 dark:border-slate-800 dark:hover:bg-slate-900/60">
+    <Link href={("/chat/" + conversation.id) as Route} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 p-3 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40 dark:border-slate-800 dark:hover:bg-slate-900/60">
       <div className="flex min-w-0 items-center gap-3">
-        <img src={chatAvatar(participant.avatarTone)} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+        <Image src={chatAvatar(participant.avatarTone)} alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full object-cover" />
         <div className="min-w-0">
           <div className="flex items-center gap-1 text-xs font-bold text-slate-900 dark:text-white">
             <span className="truncate">{participant.name}</span>

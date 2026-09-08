@@ -1,32 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getConversationById, getCurrentUserId, getMessages, sendMessage } from "../services/chat.service";
+import { useState } from "react";
+import { getCurrentUserId, sendMessage } from "../services/chat.service";
 import type { ChatMessage, Conversation } from "../types";
 
-export function useConversation(conversationId: string) {
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function useConversation(conversationId: string, initialConversation: Conversation | null, initialMessages: ChatMessage[]) {
+  const [conversation] = useState(initialConversation);
+  const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attachmentNotice, setAttachmentNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    setIsLoading(true);
-    setError(null);
-
-    void Promise.all([getConversationById(conversationId), getMessages(conversationId)]).then(([nextConversation, nextMessages]) => {
-      if (!active) return;
-      setConversation(nextConversation);
-      setMessages(nextMessages);
-      setIsLoading(false);
-    });
-
-    return () => { active = false; };
-  }, [conversationId]);
 
   const send = async () => {
     const body = input.trim();

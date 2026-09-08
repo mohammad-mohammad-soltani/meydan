@@ -4,9 +4,10 @@ import { MessageSquare } from "lucide-react";
 import { useChat } from "../hooks/useChat";
 import { ConversationList } from "./ConversationList";
 import { NotificationsList } from "./NotificationsList";
+import type { ChatNotification, Conversation } from "../types";
 
-export function ChatView() {
-  const chat = useChat();
+export function ChatView({ conversations, notifications }: { conversations: Conversation[]; notifications: ChatNotification[] }) {
+  const chat = useChat(conversations, notifications);
 
   return (
     <section className="space-y-4 p-4 pb-20" aria-label="گفتگوها">
