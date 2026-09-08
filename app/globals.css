@@ -1493,3 +1493,16 @@ html:not(.dark) .direct-chat-bubble-incoming {
 #mainAppShell:has(#view-direct-chat:not(.hidden)) > main {
   height: 100dvh;
 }
+
+
+/* Phase 3 shell owns its layout and scroll container. */
+#mainAppShell {
+  display: flex !important;
+  flex-direction: column;
+}
+#mainAppShell > main {
+  height: auto !important;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto !important;
+}
