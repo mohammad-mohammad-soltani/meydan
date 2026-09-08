@@ -48,10 +48,10 @@ const followSuggestions: FollowSuggestion[] = [
 ];
 
 /** Data boundary for the feed. Replace these mock sources with an API client later. */
-export async function getFeedPosts(): Promise<FeedPost[]> {
+export function getFeedPosts(): FeedPost[] {
   return feedPosts;
 }
 
-export async function getFollowSuggestions(): Promise<FollowSuggestion[]> {
+export function getFollowSuggestions(): FollowSuggestion[] {
   return followSuggestions;
 }
