@@ -4,8 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import { getFeedPosts, getFollowSuggestions } from "../services/feed.service";
 import type { FeedFilter, FeedPost, FeedTab, MediaReflection } from "../types";
 
-const initialPosts = await getFeedPosts();
-const initialSuggestions = await getFollowSuggestions();
+const initialPosts = getFeedPosts();
+const initialSuggestions = getFollowSuggestions();
 
 export function useFeed() {
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
