@@ -1660,3 +1660,9 @@ html:not(.dark) .header-theme-control:hover {
 html:not(.dark) #homeSubTabs.feed-tabs button.home-subtab-active {
   box-shadow: inset 0 -2px 0 #d9363e !important;
 }
+
+
+/* Half-weight active feed tab indicator */
+html:not(.dark) #homeSubTabs.feed-tabs button.home-subtab-active {
+  box-shadow: inset 0 -1px 0 #d9363e !important;
+}
