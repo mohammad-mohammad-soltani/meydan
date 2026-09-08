@@ -13,7 +13,10 @@ const iranSans = localFont({
 export const metadata: Metadata = { title: "میدانِ خیابان | شبکه سراسری میادین ایران", description: "سامانه اجتماعی، رسانه‌ای و میدانی میدانِ خیابان" };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fa" dir="rtl" className={`dark ${iranSans.variable}`}>
+    <html lang="fa" dir="rtl" className={iranSans.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: "(() => {\n  try {\n    const theme = window.localStorage.getItem(\"meydan-theme\");\n    const isDark = theme !== \"light\";\n    document.documentElement.classList.toggle(\"dark\", isDark);\n    document.documentElement.style.colorScheme = isDark ? \"dark\" : \"light\";\n  } catch {\n    document.documentElement.classList.add(\"dark\");\n    document.documentElement.style.colorScheme = \"dark\";\n  }\n})();" }} />
+      </head>
       <body className="bg-white dark:bg-[#070a0f] min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-150">
         {children}
       </body>
