@@ -17,7 +17,7 @@ const formatCount = (value: number) => value >= 1000 ? (value / 1000).toFixed(1)
 
 export function PostActions({ postId, likes, comments, reposts, liked, reposted, onLike, onRepost, onShare }: PostActionsProps) {
   return (
-    <div className="mt-4 flex items-center justify-around border-t border-slate-100 pt-3 text-slate-400 dark:border-slate-800 dark:text-slate-500">
+    <div className="mt-4 flex flex-row-reverse items-center justify-around border-t border-slate-100 pt-3 text-slate-400 dark:border-slate-800 dark:text-slate-500">
       <button type="button" onClick={onShare} aria-label="اشتراک‌گذاری روایت" className="transition hover:text-brand-red"><Share2 className="h-5 w-5" /></button>
       <Link href={"/posts/" + postId} aria-label="مشاهده نظرها" className="inline-flex items-center gap-1 transition hover:text-brand-red"><MessageCircle className="h-5 w-5" /><span className="text-xs">{comments}</span></Link>
       <button type="button" onClick={onRepost} aria-pressed={reposted} className={"inline-flex items-center gap-1 transition " + (reposted ? "text-emerald-500" : "hover:text-emerald-500")}><Repeat2 className="h-5 w-5" /><span className="text-xs">{reposts}</span></button>
