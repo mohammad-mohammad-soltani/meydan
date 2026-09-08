@@ -1637,3 +1637,20 @@ html:not(.dark) .header-theme-control:hover {
   min-height: 2.25rem;
   scroll-snap-align: start;
 }
+
+
+/* Compact, edge-to-edge feed tabs on mobile */
+@media (max-width: 520px) {
+  #view-feed .feed-tabs {
+    width: calc(100% + 1.5rem);
+    max-width: none !important;
+    margin-inline: -.75rem;
+    padding: 0;
+  }
+  #view-feed .feed-tabs button {
+    min-height: 2.5rem;
+    padding-block: .5rem;
+    padding-inline: .25rem;
+    font-size: .72rem;
+  }
+}
