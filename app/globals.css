@@ -1874,3 +1874,19 @@ html:not(.dark) #view-combined-profile .profile-follow-button:hover {
     max-height: 100dvh;
   }
 }
+
+
+/* Keep the final scrollable content above the fixed mobile navigation. */
+@media (max-width: 1023px) {
+  #mainAppShell > main {
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  #mainAppShell > main::after {
+    content: "";
+    display: block;
+    flex: 0 0 calc(5.5rem + env(safe-area-inset-bottom));
+    height: calc(5.5rem + env(safe-area-inset-bottom));
+    pointer-events: none;
+  }
+}
