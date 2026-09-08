@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Moon, Search, Sun } from "lucide-react";
 import { useSearchModal } from "@/components/providers/SearchProvider";
 
 export function MobileHeader() {
+  const pathname = usePathname();
   const [isDark, setIsDark] = useState(true);
   const { openSearch } = useSearchModal();
+  const isConversationRoute = pathname.startsWith("/chat/");
 
   useEffect(() => {
     const saved = window.localStorage.getItem("meydan-theme");
@@ -23,6 +26,8 @@ export function MobileHeader() {
     setIsDark(next);
   };
 
+  if (isConversationRoute) return null;
+
   return (
     <header className="mobile-app-header sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-[#070a0f]/95 lg:hidden">
       <Link href="/home" className="flex items-center gap-2.5" aria-label="خانه میدان خیابان">
@@ -30,10 +35,8 @@ export function MobileHeader() {
         <span><span className="block text-sm font-black leading-tight text-slate-900 dark:text-white">میدانِ خیابان</span><span className="block text-[10px] text-slate-500 dark:text-slate-400">شبکه همبستگی و روایت میادین ایران</span></span>
       </Link>
       <div className="flex items-center gap-2">
-      <button type="button" onClick={openSearch} aria-label="جستجو" className="rounded-xl border border-slate-200 bg-slate-100 p-2 text-slate-600 transition hover:text-brand-red dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"><Search className="h-4 w-4" /></button>
-      <button type="button" onClick={toggleTheme} aria-label={isDark ? "فعال‌کردن حالت روشن" : "فعال‌کردن حالت تیره"} className="rounded-full border border-slate-200 bg-slate-100 p-2 text-slate-600 transition hover:text-amber-500 dark:border-slate-800 dark:bg-slate-900 dark:text-amber-400">
-        {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </button>
+        <button type="button" onClick={openSearch} aria-label="جستجو" className="rounded-xl border border-slate-200 bg-slate-100 p-2 text-slate-600 transition hover:text-brand-red dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"><Search className="h-4 w-4" /></button>
+        <button type="button" onClick={toggleTheme} aria-label={isDark ? "فعال‌کردن حالت روشن" : "فعال‌کردن حالت تیره"} className="rounded-full border border-slate-200 bg-slate-100 p-2 text-slate-600 transition hover:text-amber-500 dark:border-slate-800 dark:bg-slate-900 dark:text-amber-400">{isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
       </div>
     </header>
   );
