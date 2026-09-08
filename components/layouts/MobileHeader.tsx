@@ -35,7 +35,7 @@ export function MobileHeader() {
         <span className="min-w-0"><span className="block truncate text-sm font-black leading-tight text-slate-900 dark:text-white">میدانِ خیابان</span><span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">شبکه همبستگی و روایت میادین ایران</span></span>
       </Link>
       <div className="flex shrink-0 items-center gap-2">
-        <button type="button" onClick={openSearch} aria-label="جستجو" className="header-search-control inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-600 transition hover:text-brand-red dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"><span className="text-xs font-bold max-[350px]:hidden">جستجو</span><Search className="h-4 w-4" /></button>
+        <button type="button" onClick={openSearch} aria-label="جستجو" className="header-search-control flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-600 transition hover:text-brand-red dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"><span className="whitespace-nowrap text-xs font-bold">جستجو</span><Search className="h-4 w-4" /></button>
         <button type="button" onClick={toggleTheme} aria-label={isDark ? "فعال‌کردن حالت روشن" : "فعال‌کردن حالت تیره"} className="header-theme-control rounded-full border border-slate-200 bg-slate-100 p-2 text-slate-600 transition hover:text-amber-500 dark:border-slate-800 dark:bg-slate-900 dark:text-amber-400">{isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
       </div>
     </header>
