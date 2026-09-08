@@ -1610,3 +1610,17 @@ html:not(.dark) .header-theme-control:hover {
     margin-inline: -.75rem;
   }
 }
+
+
+/* Compact feed filters and true edge-to-edge live banner on mobile */
+.feed-filter-pill {
+  min-height: 2.7rem;
+}
+
+@media (max-width: 520px) {
+  #view-feed .feed-live-banner {
+    width: calc(100% + 1.5rem);
+    max-width: none !important;
+    margin-inline: -.75rem;
+  }
+}
