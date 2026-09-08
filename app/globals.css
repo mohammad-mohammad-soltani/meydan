@@ -1775,3 +1775,74 @@ html:not(.dark) #homeSubTabs.feed-tabs button.home-subtab-active {
   .route-page-enter,
   .route-page-exit { animation: none; }
 }
+
+
+/*
+ * Application page spacing contract
+ * - All regular page content follows the same inline gutter as the Content view.
+ * - Elements declared full-bleed deliberately cancel this gutter, so media, feed tabs
+ *   and live banners can still meet the viewport edge without per-page overrides.
+ */
+:root {
+  --page-inline: clamp(.75rem, 3.5vw, 1rem);
+}
+
+.page-layout {
+  --page-inline: clamp(.75rem, 3.5vw, 1rem);
+}
+
+.page-layout :where(.page-full-bleed) {
+  width: calc(100% + (var(--page-inline) * 2));
+  max-width: none;
+  margin-inline: calc(var(--page-inline) * -1);
+}
+
+/* Legacy views and all route roots with their own p-4 now share one gutter. */
+.page-layout > :is(#view-content, #view-speakers, #view-map, #view-feed, #view-chat),
+.page-layout > section[aria-label="گفتگوها"],
+.page-layout .legacy-feature-controller .app-view:not(#view-direct-chat) {
+  padding-inline: var(--page-inline) !important;
+}
+
+/* Profile keeps its cover edge-to-edge; only its readable content is aligned. */
+.page-layout #view-combined-profile > :is(.px-4, section) {
+  padding-inline: var(--page-inline) !important;
+}
+.page-layout #view-combined-profile > .mx-4 {
+  margin-inline: var(--page-inline) !important;
+}
+
+/* Full post keeps its header untouched and aligns its reading column with every page. */
+.page-layout #view-full-post > main {
+  padding-inline: var(--page-inline) !important;
+}
+
+/* Feed uses the same readable column while its control surfaces remain intentionally full-width. */
+.page-layout #view-feed > .feed-tabs,
+.page-layout #view-feed > .feed-filter-strip,
+.page-layout #view-feed > .feed-live-banner,
+.page-layout #view-feed > .divide-y,
+.page-layout #view-feed > section:not(.feed-live-banner) {
+  width: calc(100% + (var(--page-inline) * 2));
+  max-width: none !important;
+  margin-inline: calc(var(--page-inline) * -1);
+}
+.page-layout #view-feed > .feed-filter-strip,
+.page-layout #view-feed > section:not(.feed-live-banner) {
+  padding-inline: var(--page-inline);
+}
+
+/* Feature Content is currently kept behind the compatibility route, but stays aligned if enabled. */
+.page-layout #view-content > .overflow-x-auto {
+  margin-inline: calc(var(--page-inline) * -1);
+  padding-inline: var(--page-inline) !important;
+}
+
+@media (max-width: 520px) {
+  .page-layout #view-feed .feed-tabs,
+  .page-layout #view-feed .feed-filter-strip,
+  .page-layout #view-feed .feed-live-banner {
+    width: calc(100% + (var(--page-inline) * 2));
+    margin-inline: calc(var(--page-inline) * -1);
+  }
+}
