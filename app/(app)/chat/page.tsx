@@ -1,5 +1,5 @@
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { ChatView } from "@/features/chat/components/ChatView";
 
 export default function ChatPage() {
-  return <LegacyRouteApp initialView="view-chat" />;
+  return <ChatView />;
 }
