@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { Icon } from "./icon";
-import { LegacySearchModal } from "./LegacySearchModal";
 import iranCitiesData from "../../data/iran-cities.json";
 import { ViewAllPodcasts } from "./views/ViewAllPodcasts";
 import { ViewChat } from "./views/ViewChat";
@@ -202,7 +201,6 @@ export default function MeydanApp({ initialView }: MeydanAppProps) {
         <ViewDirectChat />
 
       </div>
-  <LegacySearchModal />
   {/* مودال جزئیات محتوا */}
   <div id="detailModal" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div className="bg-white dark:bg-[#0b0f17] border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-2xl p-5 relative max-h-[88vh] overflow-y-auto">
