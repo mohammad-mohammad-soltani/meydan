@@ -14,6 +14,10 @@ const items = [
 
 export function BottomNavigation() {
   const pathname = usePathname();
+  const isConversationRoute = pathname.startsWith("/chat/");
+
+  if (isConversationRoute) return null;
+
   return (
     <nav id="bottomNavBar" aria-label="ناوبری اصلی" className="fixed bottom-0 z-50 flex w-full max-w-xl items-center justify-between border-t border-slate-200 bg-white/95 px-3 py-2 text-slate-400 backdrop-blur dark:border-slate-800 dark:bg-[#070a0f]/95 lg:hidden">
       {items.map(({ href, label, icon: Icon, match }) => {
