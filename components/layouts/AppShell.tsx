@@ -14,7 +14,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <SearchProvider>
       <RouteTransitionProvider>
-      <div className="mx-auto flex min-h-screen w-full justify-center">
+      <div className="mx-auto flex min-h-[100dvh] w-full justify-center">
       <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between border-l border-slate-200 bg-white p-4 dark:border-slate-800/80 dark:bg-[#070a0f] lg:flex">
         <div className="space-y-6">
           <Link href="/home" className="flex items-center gap-3 px-2">
@@ -32,7 +32,7 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </aside>
 
-      <div id="mainAppShell" className="relative flex h-[100dvh] min-h-screen w-full max-w-xl flex-col border-x border-slate-200 bg-white transition-colors duration-150 dark:border-slate-800/80 dark:bg-[#070a0f]">
+      <div id="mainAppShell" className="relative flex h-[100dvh] min-h-0 w-full max-w-xl flex-col border-x border-slate-200 bg-white transition-colors duration-150 dark:border-slate-800/80 dark:bg-[#070a0f]">
         <MobileHeader />
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] no-scrollbar lg:pb-0">{children}</main>
         <BottomNavigation />
