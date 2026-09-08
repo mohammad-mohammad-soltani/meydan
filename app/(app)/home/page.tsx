@@ -1,5 +1,5 @@
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { FeedView } from "@/features/feed/components/FeedView";
 
 export default function HomePage() {
-  return <LegacyRouteApp initialView="view-feed" />;
+  return <FeedView />;
 }
