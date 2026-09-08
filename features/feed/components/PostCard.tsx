@@ -1,3 +1,4 @@
+import { generatedMedia } from "@/components/shared/generated-media";
 import Link from "next/link";
 import { BadgeCheck, BellRing, Bolt, Camera, FileText, Image as ImageIcon, Mic, Video } from "lucide-react";
 import { PostActions } from "./PostActions";
@@ -32,7 +33,7 @@ export function PostCard({ post, liked, reposted, joined, onLike, onRepost, onSh
   return (
     <article className="feed-item px-3 py-4 sm:px-4 sm:py-5">
       <div className="flex items-start gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-red text-sm font-black text-white">{post.city.slice(0, 2)}</div>
+        <img src={post.city === "یزد" ? generatedMedia.avatarSpeaker : generatedMedia.avatarCoordinator} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-[#070a0f]" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link href="/profile" className="text-sm font-black text-slate-950 transition hover:text-brand-red dark:text-white">{post.squareName}</Link>
