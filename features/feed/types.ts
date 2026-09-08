@@ -1,6 +1,6 @@
 export type FeedTab = "for-you" | "following";
-export type FeedFilter = "all" | "ideas" | "media";
-export type PostKind = Exclude<FeedFilter, "all">;
+export type FeedFilter = "all" | "ideas" | "media" | "visual" | "audio" | "initiatives";
+export type PostKind = "ideas" | "media";
 
 export type FeedAttachment = {
   id: string;
