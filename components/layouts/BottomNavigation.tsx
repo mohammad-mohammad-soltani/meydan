@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { FolderKanban, Home, Map, MessageSquare, UserCheck } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,14 +24,14 @@ export function BottomNavigation() {
   const fallbackTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const isConversationRoute = pathname.startsWith("/chat/");
 
-  const clearNavigationFeedback = () => {
+  const clearNavigationFeedback = useCallback(() => {
     if (skeletonTimerRef.current) window.clearTimeout(skeletonTimerRef.current);
     if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
     skeletonTimerRef.current = null;
     fallbackTimerRef.current = null;
     setShowSkeleton(false);
     setPendingHref(null);
-  };
+  }, []);
 
   useEffect(() => {
     items.forEach(({ href }) => router.prefetch(href));
@@ -39,7 +39,7 @@ export function BottomNavigation() {
 
   useEffect(() => {
     if (pendingHref && pathname === pendingHref) clearNavigationFeedback();
-  }, [pathname, pendingHref]);
+  }, [pathname, pendingHref, clearNavigationFeedback]);
 
   useEffect(() => () => {
     if (skeletonTimerRef.current) window.clearTimeout(skeletonTimerRef.current);
