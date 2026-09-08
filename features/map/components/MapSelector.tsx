@@ -1,0 +1,8 @@
+import { MapPinned, Search } from "lucide-react";
+import type { Province } from "../types";
+
+type MapSelectorProps = { provinces: Province[]; selectedProvinceId: number; query: string; onQueryChange: (value: string) => void; onSelect: (provinceId: number) => void; };
+
+export function MapSelector({ provinces, selectedProvinceId, query, onQueryChange, onSelect }: MapSelectorProps) {
+  return <label className="block"><span className="mb-1 block text-[10px] text-slate-500 dark:text-slate-400">استان</span><div className="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900"><div className="flex items-center gap-1.5 border-b border-slate-200 pb-2 text-slate-400 dark:border-slate-800"><Search className="h-3.5 w-3.5" /><input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="جست‌وجوی استان..." className="min-w-0 flex-1 bg-transparent text-xs text-slate-800 outline-none dark:text-slate-100" /></div><div className="mt-2 flex items-center gap-1.5"><MapPinned className="h-4 w-4 text-brand-red" /><select value={selectedProvinceId} onChange={(event) => onSelect(Number(event.target.value))} className="min-w-0 flex-1 bg-transparent text-xs font-bold text-slate-800 outline-none dark:text-slate-100">{provinces.map((province) => <option key={province.id} value={province.id}>{province.name}</option>)}</select></div></div></label>;
+}
