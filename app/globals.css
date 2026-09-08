@@ -1697,3 +1697,61 @@ html:not(.dark) #homeSubTabs.feed-tabs button.home-subtab-active {
   .route-page-enter,
   .route-skeleton-enter { animation: none; }
 }
+
+
+/* Bottom navigation: immediate optimistic selection with a contained, tactile motion. */
+#bottomNavBar .bottom-nav-item {
+  position: relative;
+  isolation: isolate;
+  min-height: 2.75rem;
+  border-radius: .85rem;
+  transition: color 180ms ease, transform 220ms cubic-bezier(.2, .8, .2, 1);
+}
+#bottomNavBar .bottom-nav-item::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(220 38 38 / .1);
+  content: "";
+  opacity: 0;
+  transform: scale(.82);
+  transition: opacity 180ms ease, transform 240ms cubic-bezier(.2, .8, .2, 1);
+}
+#bottomNavBar .bottom-nav-item svg,
+#bottomNavBar .bottom-nav-item span {
+  transition: transform 220ms cubic-bezier(.2, .8, .2, 1), opacity 180ms ease;
+}
+#bottomNavBar .bottom-nav-item:hover {
+  color: var(--brand-strong);
+}
+#bottomNavBar .bottom-nav-item-active {
+  color: var(--brand-strong) !important;
+  transform: translateY(-2px);
+}
+#bottomNavBar .bottom-nav-item-active::before {
+  opacity: 1;
+  transform: scale(1);
+}
+#bottomNavBar .bottom-nav-item-active svg {
+  transform: scale(1.12);
+  stroke-width: 2.5;
+}
+#bottomNavBar .bottom-nav-item-active span {
+  transform: translateY(-.5px);
+}
+#bottomNavBar .bottom-nav-item:active {
+  transform: scale(.94);
+}
+#bottomNavBar .bottom-nav-item-active:active {
+  transform: translateY(-1px) scale(.94);
+}
+.dark #bottomNavBar .bottom-nav-item-active::before {
+  background: rgb(239 68 68 / .16);
+}
+@media (prefers-reduced-motion: reduce) {
+  #bottomNavBar .bottom-nav-item,
+  #bottomNavBar .bottom-nav-item::before,
+  #bottomNavBar .bottom-nav-item svg,
+  #bottomNavBar .bottom-nav-item span { transition: none; }
+}
