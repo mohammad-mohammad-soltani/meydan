@@ -1,5 +1,5 @@
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { ContentView } from "@/features/content/components/ContentView";
 
 export default function ContentPage() {
-  return <LegacyRouteApp initialView="view-content" />;
+  return <ContentView />;
 }
