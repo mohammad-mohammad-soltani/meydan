@@ -2,18 +2,6 @@ import { Icon } from "../icon";
 export function ViewDirectChat() {
   return (
         <section id="view-direct-chat" className="app-view hidden bg-white dark:bg-[#070a0f] min-h-screen flex flex-col flex-1 relative">
-          <div className="sticky top-0 bg-white/95 dark:bg-[#070a0f]/95 backdrop-blur z-20 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button data-action="switchView('view-chat')" className="text-slate-500 hover:text-brand-red">
-                <Icon name="arrow-right" className="w-5 h-5"  />
-              </button>
-              <div>
-                <h3 id="directChatTitle" className="font-bold text-xs text-slate-900 dark:text-white">پایگاه میدان انقلاب</h3>
-                <span id="directChatHandle" className="text-[10px] text-emerald-500 font-bold">● آنلاین</span>
-              </div>
-            </div>
-            <button data-action="alert('اتصال صوتی برقرار نشد.');" className="text-slate-400 hover:text-brand-red p-1"><Icon name="phone" className="w-4 h-4"  /></button>
-          </div>
           {/* لیست پیام‌ها */}
           <div id="directChatMessagesArea" className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 text-xs">
             <div className="flex justify-start">
