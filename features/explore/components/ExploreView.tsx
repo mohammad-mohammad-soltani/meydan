@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -15,6 +15,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { meydanClientApi } from "@/lib/meydan-client-api";
 
 type ExploreItem = {
   id: string;
@@ -26,88 +27,52 @@ type ExploreItem = {
   verified?: boolean;
 };
 
-const catalog: ExploreItem[] = [
-  {
-    id: "enghelab-square",
-    title: "میدان انقلاب تهران",
-    subtitle: "تهران · میدان و روایت‌های مرتبط",
-    kind: "place",
-    href: "/map",
-    keywords: ["تهران", "انقلاب", "میدان", "تجمع"],
-  },
-  {
-    id: "amir-chakhmaq",
-    title: "میدان امیرچخماق یزد",
-    subtitle: "یزد · میدان و رویدادهای محلی",
-    kind: "place",
-    href: "/map",
-    keywords: ["یزد", "امیرچخماق", "میدان"],
-  },
-  {
-    id: "panahian",
-    title: "حجت‌الاسلام علیرضا پناهیان",
-    subtitle: "سخنران · فیش‌ها و محتوای منتشرشده",
-    kind: "speaker",
-    href: "/speakers",
-    keywords: ["پناهیان", "سخنران", "منبر", "نهج البلاغه"],
-    verified: true,
-  },
-  {
-    id: "meysam-motiee",
-    title: "حاج میثم مطیعی",
-    subtitle: "مداح و تولیدکننده محتوای آیینی",
-    kind: "speaker",
-    href: "/content/farmandeh-song",
-    keywords: ["میثم", "مطیعی", "سرود", "صوت", "مداح"],
-    verified: true,
-  },
-  {
-    id: "nahj-jihad",
-    title: "شرح نهج‌البلاغه؛ جهاد اجتماعی و سیاسی",
-    subtitle: "بسته محتوایی · متن، پوستر و نسخه انتشار",
-    kind: "content",
-    href: "/content/nahj-jihad",
-    keywords: ["نهج البلاغه", "جهاد", "منبر", "محتوا"],
-  },
-  {
-    id: "farmandeh-song",
-    title: "دم هماهنگ: «فرمانده کل قوا»",
-    subtitle: "صوت منتخب · با نوای حاج میثم مطیعی",
-    kind: "content",
-    href: "/content/farmandeh-song",
-    keywords: ["فرمانده", "سرود", "صوت", "مطیعی"],
-  },
-  {
-    id: "profile",
-    title: "هویت و پایگاه",
-    subtitle: "پروفایل، فعالیت‌ها و اطلاعات پایگاه",
-    kind: "profile",
-    href: "/profile",
-    keywords: ["پروفایل", "هویت", "پایگاه"],
-  },
-  {
-    id: "street-square",
-    title: "#میدان_خیابان",
-    subtitle: "موضوع · روایت‌ها و محتوای مرتبط",
-    kind: "topic",
-    href: "/home",
-    keywords: ["میدان خیابان", "هشتگ", "روایت"],
-  },
-];
+type ApiActor = { id: string; display_name: string; verified?: boolean };
+type ApiSquare = { id: number; name: string; description?: string; verified?: boolean; location?: { address?: string } | null };
+type ApiContent = { id: number; title: string; excerpt?: string };
+type ApiCreator = { id: number; name: string; role?: string; verified?: boolean };
+type ApiTopic = { id: number; name: string; slug: string };
+type ApiNarrative = { id: number; body?: string; author?: ApiActor };
+type SearchResponse = {
+  sections: {
+    narratives?: ApiNarrative[];
+    squares?: ApiSquare[];
+    users?: ApiActor[];
+    content?: ApiContent[];
+    creators?: ApiCreator[];
+    topics?: ApiTopic[];
+  };
+};
+type SuggestionsResponse = {
+  nearby_squares?: ApiSquare[];
+  creators?: ApiCreator[];
+  content?: ApiContent[];
+  topics?: ApiTopic[];
+  recommended_actors?: ApiActor[];
+};
+type TrendsResponse = { items?: ApiNarrative[] };
 
-const trends = [
-  { id: "trend-1", label: "#میدان_خیابان", meta: "موضوع داغ در روایت‌ها", href: "/home" as Route },
-  { id: "trend-2", label: "روایت میدان انقلاب", meta: "محتوا و گزارش‌های تازه", href: "/content" as Route },
-  { id: "trend-3", label: "سخنرانان امشب", meta: "پیشنهادهای مرتبط با برنامه‌ها", href: "/speakers" as Route },
-];
+type TrendItem = { id: string; label: string; meta: string; href: Route };
 
-function normalize(value: string) {
-  return value
-    .trim()
-    .toLocaleLowerCase("fa-IR")
-    .replaceAll("ي", "ی")
-    .replaceAll("ك", "ک")
-    .replace(/\s+/g, " ");
+function toItems(response: SearchResponse): ExploreItem[] {
+  const s = response.sections || {};
+  return [
+    ...(s.squares || []).map((item): ExploreItem => ({ id: `square-${item.id}`, title: item.name, subtitle: item.location?.address || item.description || "پایگاه میدان", kind: "place", href: "/map", keywords: [], verified: item.verified })),
+    ...(s.creators || []).map((item): ExploreItem => ({ id: `creator-${item.id}`, title: item.name, subtitle: item.role || "سخنران و تولیدکننده محتوا", kind: "speaker", href: "/speakers", keywords: [], verified: item.verified })),
+    ...(s.content || []).map((item): ExploreItem => ({ id: `content-${item.id}`, title: item.title, subtitle: item.excerpt || "محتوای میدان", kind: "content", href: `/content/${item.id}`, keywords: [] })),
+    ...(s.users || []).map((item): ExploreItem => ({ id: `user-${item.id}`, title: item.display_name, subtitle: "کاربر میدان", kind: "profile", href: "/home", keywords: [], verified: item.verified })),
+    ...(s.topics || []).map((item): ExploreItem => ({ id: `topic-${item.id}`, title: `#${item.name}`, subtitle: "موضوع · روایت‌های مرتبط", kind: "topic", href: "/home", keywords: [item.slug] })),
+    ...(s.narratives || []).map((item): ExploreItem => ({ id: `narrative-${item.id}`, title: item.author?.display_name || "روایت میدان", subtitle: (item.body || "").replace(/<[^>]+>/g, "").slice(0, 90), kind: "content", href: `/posts/${item.id}`, keywords: [] })),
+  ];
+}
+
+function suggestionItems(response: SuggestionsResponse): ExploreItem[] {
+  return [
+    ...(response.nearby_squares || []).map((item): ExploreItem => ({ id: `suggest-square-${item.id}`, title: item.name, subtitle: item.location?.address || "پایگاه میدان", kind: "place", href: "/map", keywords: [], verified: item.verified })),
+    ...(response.creators || []).map((item): ExploreItem => ({ id: `suggest-creator-${item.id}`, title: item.name, subtitle: item.role || "سخنران", kind: "speaker", href: "/speakers", keywords: [], verified: item.verified })),
+    ...(response.content || []).map((item): ExploreItem => ({ id: `suggest-content-${item.id}`, title: item.title, subtitle: item.excerpt || "محتوای منتخب", kind: "content", href: `/content/${item.id}`, keywords: [] })),
+    ...(response.topics || []).map((item): ExploreItem => ({ id: `suggest-topic-${item.id}`, title: `#${item.name}`, subtitle: "موضوع پیشنهادی", kind: "topic", href: "/home", keywords: [item.slug] })),
+  ].slice(0, 8);
 }
 
 function ResultIcon({ kind }: { kind: ExploreItem["kind"] }) {
@@ -121,21 +86,33 @@ function ResultIcon({ kind }: { kind: ExploreItem["kind"] }) {
 
 export function ExploreView() {
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<ExploreItem[]>([]);
+  const [catalog, setCatalog] = useState<ExploreItem[]>([]);
+  const [trends, setTrends] = useState<TrendItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => inputRef.current?.focus());
+    void Promise.all([
+      meydanClientApi<SuggestionsResponse>("/explore/suggestions"),
+      meydanClientApi<TrendsResponse>("/explore/trends?window=24h"),
+    ]).then(([suggestions, trending]) => {
+      setCatalog(suggestionItems(suggestions));
+      setTrends((trending.items || []).slice(0, 6).map((item) => ({ id: `trend-${item.id}`, label: item.author?.display_name || "روایت میدان", meta: (item.body || "").replace(/<[^>]+>/g, "").slice(0, 80) || "روایت در حال رشد", href: `/posts/${item.id}` as Route })));
+    }).catch(() => undefined);
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  const results = useMemo(() => {
-    const needle = normalize(query);
-    if (!needle) return [];
-
-    return catalog.filter((item) => {
-      const haystack = normalize([item.title, item.subtitle, ...item.keywords].join(" "));
-      return haystack.includes(needle);
-    });
+  useEffect(() => {
+    const needle = query.trim();
+    if (!needle) { setResults([]); return; }
+    let active = true;
+    const timer = window.setTimeout(() => {
+      void meydanClientApi<SearchResponse>(`/explore/search?q=${encodeURIComponent(needle)}`)
+        .then((data) => { if (active) setResults(toItems(data)); })
+        .catch(() => { if (active) setResults([]); });
+    }, 250);
+    return () => { active = false; window.clearTimeout(timer); };
   }, [query]);
 
   const hasQuery = query.trim().length > 0;
@@ -181,14 +158,9 @@ export function ExploreView() {
             <div className="divide-y divide-divider">
               {results.map((item) => (
                 <Link key={item.id} href={item.href as Route} className="flex min-h-20 items-center gap-3 px-4 py-3 transition-colors hover:bg-hover">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-muted text-icon">
-                    <ResultIcon kind={item.kind} />
-                  </span>
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-muted text-icon"><ResultIcon kind={item.kind} /></span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5">
-                      <strong className="truncate text-sm text-foreground">{item.title}</strong>
-                      {item.verified ? <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" aria-label="تأییدشده" /> : null}
-                    </span>
+                    <span className="flex items-center gap-1.5"><strong className="truncate text-sm text-foreground">{item.title}</strong>{item.verified ? <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" aria-label="تأییدشده" /> : null}</span>
                     <span className="mt-1 block truncate text-xs text-muted-foreground">{item.subtitle}</span>
                   </span>
                   <ChevronLeft className="h-4 w-4 shrink-0 text-icon-muted" />
@@ -206,35 +178,18 @@ export function ExploreView() {
       ) : (
         <div>
           <section className="border-b border-divider px-4 py-5">
-            <div className="flex items-center justify-between">
-              <h1 className="text-lg font-black text-foreground">کاوش</h1>
-              <span className="text-[11px] font-bold text-muted-foreground">پیشنهاد برای شما</span>
-            </div>
+            <div className="flex items-center justify-between"><h1 className="text-lg font-black text-foreground">کاوش</h1><span className="text-[11px] font-bold text-muted-foreground">پیشنهاد برای شما</span></div>
             <div className="mt-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-              {catalog.slice(0, 5).map((item) => (
-                <button key={item.id} type="button" onClick={() => { setQuery(item.title.replace(/^#/, "")); inputRef.current?.focus(); }} className="shrink-0 rounded-pill border border-border bg-surface px-3 py-2 text-xs font-bold text-foreground transition-colors hover:bg-hover">
-                  {item.title}
-                </button>
-              ))}
+              {catalog.slice(0, 5).map((item) => <button key={item.id} type="button" onClick={() => { setQuery(item.title.replace(/^#/, "")); inputRef.current?.focus(); }} className="shrink-0 rounded-pill border border-border bg-surface px-3 py-2 text-xs font-bold text-foreground transition-colors hover:bg-hover">{item.title}</button>)}
             </div>
           </section>
 
           <section>
-            <div className="flex items-center gap-2 px-4 pb-2 pt-5">
-              <TrendingUp className="h-5 w-5 text-brand" />
-              <h2 className="text-base font-black text-foreground">موضوعات داغ</h2>
-            </div>
+            <div className="flex items-center gap-2 px-4 pb-2 pt-5"><TrendingUp className="h-5 w-5 text-brand" /><h2 className="text-base font-black text-foreground">موضوعات داغ</h2></div>
             <div className="divide-y divide-divider">
               {trends.map((trend, index) => (
                 <Link key={trend.id} href={trend.href} className="block px-4 py-4 transition-colors hover:bg-hover">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <span className="text-[11px] text-muted-foreground">{index + 1} · در حال رشد</span>
-                      <h3 className="mt-1 truncate text-sm font-black text-foreground">{trend.label}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{trend.meta}</p>
-                    </div>
-                    <ChevronLeft className="mt-2 h-4 w-4 shrink-0 text-icon-muted" />
-                  </div>
+                  <div className="flex items-start justify-between gap-3"><div className="min-w-0"><span className="text-[11px] text-muted-foreground">{index + 1} · در حال رشد</span><h3 className="mt-1 truncate text-sm font-black text-foreground">{trend.label}</h3><p className="mt-1 text-xs text-muted-foreground">{trend.meta}</p></div><ChevronLeft className="mt-2 h-4 w-4 shrink-0 text-icon-muted" /></div>
                 </Link>
               ))}
             </div>
