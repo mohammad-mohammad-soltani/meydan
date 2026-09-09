@@ -16,9 +16,8 @@ const items = [
 export function BottomNavigation() {
   const pathname = usePathname();
   const isConversationRoute = pathname.startsWith("/chat/");
-  const isComposeRoute = pathname === "/compose";
 
-  if (isConversationRoute || isComposeRoute) return null;
+  if (isConversationRoute) return null;
 
   return (
     <nav
