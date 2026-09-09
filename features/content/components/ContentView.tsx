@@ -11,6 +11,7 @@ import {
   Info,
   Mic,
   Music2,
+  Pause,
   PhoneCall,
   Play,
   Printer,
@@ -18,6 +19,8 @@ import {
   X,
 } from "lucide-react";
 import { generatedMedia } from "@/components/shared/generated-media";
+import { useAudio } from "@/features/audio/AudioProvider";
+import type { AudioTrack } from "@/features/audio/types";
 import type { ContentItem, ContentQuickAction, ScheduleItem } from "../types";
 
 const actionIcons = {
@@ -36,12 +39,25 @@ const actionStyles = {
 
 type DetailModal = { title: string; description: string } | null;
 
+function contentToAudioTrack(item: ContentItem): AudioTrack | null {
+  if (item.media.kind !== "audio" || !item.media.audioSrc) return null;
+  return {
+    id: `content:${item.apiId}`,
+    title: item.title,
+    artist: item.author,
+    cover: item.media.coverImage,
+    url: item.media.audioSrc,
+    sourceHref: `/content/${item.id}`,
+  };
+}
+
 export function ContentView({ items, scheduleItems, quickActions }: { items: ContentItem[]; scheduleItems: ScheduleItem[]; quickActions: ContentQuickAction[] }) {
   const [detailModal, setDetailModal] = useState<DetailModal>(null);
-  const [audioNotice, setAudioNotice] = useState(false);
+  const { currentTrack, isPlaying, playTrack, toggle } = useAudio();
   const featuredItem = items.find((item) => item.category === "featured") || items[0];
   const talkItems = items.filter((item) => item.category === "talks").slice(0, 2);
   const audioItem = items.find((item) => item.category === "audio");
+  const audioQueue = items.map(contentToAudioTrack).filter((track): track is AudioTrack => Boolean(track));
 
   const openQuickAction = (action: ContentQuickAction) => {
     const descriptions: Partial<Record<ContentQuickAction["id"], string>> = {
@@ -52,6 +68,23 @@ export function ContentView({ items, scheduleItems, quickActions }: { items: Con
     };
     setDetailModal({ title: action.label, description: descriptions[action.id] ?? action.detail });
   };
+
+  const handleAudioPlayback = async () => {
+    if (!audioItem) return;
+    const track = contentToAudioTrack(audioItem);
+    if (!track) return;
+
+    if (currentTrack?.id === track.id) {
+      await toggle();
+      return;
+    }
+
+    await playTrack(track, { queue: audioQueue });
+  };
+
+  const isAudioItemPlaying = Boolean(
+    audioItem && currentTrack?.id === `content:${audioItem.apiId}` && isPlaying,
+  );
 
   return (
     <section id="view-content" className="min-h-full space-y-6 bg-background p-4 pb-24 text-foreground">
@@ -113,7 +146,7 @@ export function ContentView({ items, scheduleItems, quickActions }: { items: Con
             return (
               <button key={item.id} type="button" onClick={() => setDetailModal({ title: `${item.night}: ${item.title}`, description: item.description })} className={classes}>
                 <span className={`text-[10px] ${item.current ? "rounded bg-on-solid/20 px-1.5 py-0.5 font-bold" : "text-foreground-subtle"}`}>{item.night}</span>
-                <span className="absolute -top-1 left-2 font-mono text-3xl font-black opacity-15">{item.number}</span>
+                <span className="absolute -top-1 left-2 text-3xl font-black opacity-15">{item.number}</span>
                 <div><div className="text-xs font-bold">{item.title}</div><div className="text-[10px] opacity-70">{item.description}</div></div>
               </button>
             );
@@ -145,7 +178,16 @@ export function ContentView({ items, scheduleItems, quickActions }: { items: Con
         {audioItem ? <div className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
           <Link href={`/content/${audioItem.id}` as Route} aria-label={`مشاهده جزئیات ${audioItem.title}`} className="p-2 text-icon-muted transition-colors hover:text-icon"><Info className="h-5 w-5" /></Link>
           <Link href={`/content/${audioItem.id}` as Route} className="flex-1 cursor-pointer pr-3 text-right"><h4 className="text-sm font-bold text-foreground">{audioItem.title}</h4><p className="mt-0.5 text-[11px] text-muted-foreground">{audioItem.author ? `با نوای ${audioItem.author}` : audioItem.subtitle} · {audioItem.media.duration || ""}</p></Link>
-          <button type="button" onClick={() => { setAudioNotice(true); window.setTimeout(() => setAudioNotice(false), 2200); }} aria-label={`پخش ${audioItem.title}`} className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-xs"><Play className="mr-0.5 h-5 w-5 fill-current" /></button>
+          <button
+            type="button"
+            onClick={() => void handleAudioPlayback()}
+            disabled={!audioItem.media.audioSrc}
+            aria-label={isAudioItemPlaying ? `توقف ${audioItem.title}` : `پخش ${audioItem.title}`}
+            aria-pressed={isAudioItemPlaying}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-xs outline-none transition hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground"
+          >
+            {isAudioItemPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="mr-0.5 h-5 w-5 fill-current" />}
+          </button>
         </div> : null}
       </div>
 
@@ -156,8 +198,6 @@ export function ContentView({ items, scheduleItems, quickActions }: { items: Con
           </section>
         </div>
       ) : null}
-
-      {audioNotice ? <div role="status" className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-pill bg-solid-dark px-4 py-2 text-xs font-bold text-on-solid shadow-floating">پخش صوت آماده است</div> : null}
     </section>
   );
 }
