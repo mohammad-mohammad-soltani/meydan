@@ -21,7 +21,7 @@ type ExploreItem = {
   title: string;
   subtitle: string;
   kind: "place" | "speaker" | "content" | "profile" | "topic";
-  href: Route;
+  href: string;
   keywords: string[];
   verified?: boolean;
 };
@@ -180,7 +180,7 @@ export function ExploreView() {
           {results.length ? (
             <div className="divide-y divide-divider">
               {results.map((item) => (
-                <Link key={item.id} href={item.href} className="flex min-h-20 items-center gap-3 px-4 py-3 transition-colors hover:bg-hover">
+                <Link key={item.id} href={item.href as Route} className="flex min-h-20 items-center gap-3 px-4 py-3 transition-colors hover:bg-hover">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-muted text-icon">
                     <ResultIcon kind={item.kind} />
                   </span>
