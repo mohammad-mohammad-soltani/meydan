@@ -4,6 +4,7 @@ import {
   REFRESH_COOKIE,
   sessionCookieOptions,
 } from "@/lib/meydan-session";
+import { getMeydanApiBaseUrl } from "@/lib/meydan-api";
 
 const routes: Record<string, string> = {
   "otp-request": "/auth/otp/request",
@@ -13,49 +14,85 @@ const routes: Record<string, string> = {
   logout: "/auth/logout",
 };
 
-function baseUrl() {
-  const value = process.env.MEYDAN_API_BASE_URL || process.env.NEXT_PUBLIC_MEYDAN_API_BASE_URL;
-  if (!value) throw new Error("MEYDAN_API_BASE_URL is not configured.");
-  return value.replace(/\/$/, "");
-}
-
 function refreshFromSetCookie(value: string | null): string | undefined {
   return value?.match(/(?:^|,\s*)meydan_refresh=([^;]+)/)?.[1];
+}
+
+function jsonError(code: string, message: string, status: number) {
+  return NextResponse.json({ error: { code, message } }, { status });
 }
 
 export async function POST(request: NextRequest, context: RouteContext<"/api/auth/[action]">) {
   const { action } = await context.params;
   const route = routes[action];
-  if (!route) return NextResponse.json({ error: { code: "not_found", message: "مسیر ورود پیدا نشد." } }, { status: 404 });
+  if (!route) {
+    return jsonError("not_found", "مسیر ورود پیدا نشد.", 404);
+  }
 
   const headers: HeadersInit = { accept: "application/json" };
   const access = request.cookies.get(ACCESS_COOKIE)?.value;
   if (access) headers.Authorization = `Bearer ${access}`;
   if (action !== "logout") headers["content-type"] = "application/json";
-  const response = await fetch(`${baseUrl()}${route}`, {
-    method: "POST",
-    headers,
-    body: action === "logout" ? undefined : await request.text(),
-    cache: "no-store",
-  });
+
+  let response: Response;
+  try {
+    response = await fetch(`${getMeydanApiBaseUrl()}${route}`, {
+      method: "POST",
+      headers,
+      body: action === "logout" ? undefined : await request.text(),
+      cache: "no-store",
+    });
+  } catch (error) {
+    console.error("[auth-proxy] upstream request failed", error);
+    return jsonError(
+      "auth_upstream_unavailable",
+      "ارتباط با سرور ورود برقرار نشد. دوباره تلاش کنید.",
+      502,
+    );
+  }
+
   const raw = await response.text();
-  const result = new NextResponse(raw, {
-    status: response.status,
-    headers: { "content-type": response.headers.get("content-type") || "application/json; charset=utf-8" },
-  });
-  const body = (() => {
-    try {
-      return JSON.parse(raw || "{}") as { data?: { access_token?: string } };
-    } catch {
-      return {};
-    }
-  })();
+  let parsed: { data?: { access_token?: string }; error?: { message?: string } } | null = null;
+  try {
+    parsed = raw ? (JSON.parse(raw) as typeof parsed) : null;
+  } catch {
+    parsed = null;
+  }
+
+  if (!parsed) {
+    console.error("[auth-proxy] upstream returned non-JSON response", {
+      status: response.status,
+      contentType: response.headers.get("content-type"),
+      preview: raw.slice(0, 180),
+    });
+    return jsonError(
+      "auth_upstream_invalid_response",
+      response.ok
+        ? "سرور ورود پاسخ نامعتبر برگرداند."
+        : "سرور ورود با خطای داخلی روبه‌رو شد. دوباره تلاش کنید.",
+      response.ok ? 502 : response.status,
+    );
+  }
+
+  const result = NextResponse.json(parsed, { status: response.status });
   const refresh = refreshFromSetCookie(response.headers.get("set-cookie"));
-  if (body.data?.access_token) result.cookies.set(ACCESS_COOKIE, body.data.access_token, { ...sessionCookieOptions, maxAge: 15 * 60 });
-  if (refresh) result.cookies.set(REFRESH_COOKIE, refresh, { ...sessionCookieOptions, maxAge: 30 * 24 * 60 * 60 });
+
+  if (parsed.data?.access_token) {
+    result.cookies.set(ACCESS_COOKIE, parsed.data.access_token, {
+      ...sessionCookieOptions,
+      maxAge: 15 * 60,
+    });
+  }
+  if (refresh) {
+    result.cookies.set(REFRESH_COOKIE, refresh, {
+      ...sessionCookieOptions,
+      maxAge: 30 * 24 * 60 * 60,
+    });
+  }
   if (action === "logout" && response.ok) {
     result.cookies.delete(ACCESS_COOKIE);
     result.cookies.delete(REFRESH_COOKIE);
   }
+
   return result;
 }
