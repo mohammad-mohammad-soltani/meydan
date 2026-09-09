@@ -64,7 +64,7 @@ async function readJson(response: Response): Promise<JsonObject | null> {
 async function callBackend(
   url: string,
   method: string,
-  body: Uint8Array | undefined,
+  body: ArrayBuffer | undefined,
   contentType: string | null,
   accessToken?: string | null,
 ): Promise<Response> {
@@ -119,33 +119,19 @@ async function handler(request: NextRequest, context: RouteContext) {
   const method = request.method.toUpperCase();
   const pathName = `/${path.join("/")}`;
   const isAuthEndpoint = pathName.startsWith("/auth/");
-  const body = method === "GET" || method === "HEAD"
-    ? undefined
-    : new Uint8Array(await request.arrayBuffer());
+  const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
   const contentType = request.headers.get("content-type");
 
   let accessToken = request.cookies.get(ACCESS_COOKIE)?.value || null;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value || null;
-  let backendResponse = await callBackend(
-    backendUrl(path, request),
-    method,
-    body,
-    contentType,
-    accessToken,
-  );
+  let backendResponse = await callBackend(backendUrl(path, request), method, body, contentType, accessToken);
 
   let refreshed: Awaited<ReturnType<typeof refreshAccessToken>> = null;
   if (backendResponse.status === 401 && !isAuthEndpoint && refreshToken) {
     refreshed = await refreshAccessToken(refreshToken);
     if (refreshed) {
       accessToken = refreshed.accessToken;
-      backendResponse = await callBackend(
-        backendUrl(path, request),
-        method,
-        body,
-        contentType,
-        accessToken,
-      );
+      backendResponse = await callBackend(backendUrl(path, request), method, body, contentType, accessToken);
     }
   }
 
@@ -161,21 +147,12 @@ async function handler(request: NextRequest, context: RouteContext) {
     { status: backendResponse.status },
   );
 
-  if (refreshed) {
-    setSessionCookies(response, refreshed.accessToken, refreshed.expiresIn, refreshed.refreshToken);
-  }
-  if (issuedAccessToken) {
-    setSessionCookies(response, issuedAccessToken, issuedExpiresIn, nextRefreshToken);
-  } else if (nextRefreshToken) {
-    setSessionCookies(response, null, ACCESS_MAX_AGE, nextRefreshToken);
-  }
+  if (refreshed) setSessionCookies(response, refreshed.accessToken, refreshed.expiresIn, refreshed.refreshToken);
+  if (issuedAccessToken) setSessionCookies(response, issuedAccessToken, issuedExpiresIn, nextRefreshToken);
+  else if (nextRefreshToken) setSessionCookies(response, null, ACCESS_MAX_AGE, nextRefreshToken);
 
-  if (pathName === "/auth/logout" || pathName === "/auth/logout-all") {
-    clearSessionCookies(response);
-  }
-  if (backendResponse.status === 401 && refreshToken && !refreshed && !isAuthEndpoint) {
-    clearSessionCookies(response);
-  }
+  if (pathName === "/auth/logout" || pathName === "/auth/logout-all") clearSessionCookies(response);
+  if (backendResponse.status === 401 && refreshToken && !refreshed && !isAuthEndpoint) clearSessionCookies(response);
 
   return response;
 }
