@@ -31,13 +31,14 @@ export function isUnauthenticated(error: unknown): boolean {
 
 export async function meydanClientApi<T>(path: string, init?: RequestInit): Promise<T> {
   const normalized = path.startsWith("/") ? path : `/${path}`;
+  const bodyIsJsonString = typeof init?.body === "string";
   const response = await fetch(`/api/meydan${normalized}`, {
     ...init,
     cache: init?.cache ?? "no-store",
     credentials: "same-origin",
     headers: {
       Accept: "application/json",
-      ...(init?.body && !(init.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+      ...(bodyIsJsonString ? { "Content-Type": "application/json" } : {}),
       ...(init?.headers || {}),
     },
   });
