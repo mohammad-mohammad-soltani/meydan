@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { ProfileDetails, ProfileSection, ProfileTab } from "../types";
+import type { ProfileDetails, ProfileSection } from "../types";
 
 export function useProfile(profile: ProfileDetails) {
-  const [selectedTab, setSelectedTab] = useState<ProfileTab>(profile.initialTab ?? "square");
+  const selectedTab = profile.initialTab ?? "square";
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
@@ -18,5 +18,5 @@ export function useProfile(profile: ProfileDetails) {
     return next;
   });
 
-  return { profile, selectedTab, expandedSections, isFollowing, isManagementOpen, likedActivity, repostedActivity, isLoading, setSelectedTab, toggleSection, toggleFollowing: () => setIsFollowing((current) => !current), openManagement: () => setIsManagementOpen(true), closeManagement: () => setIsManagementOpen(false), toggleLike: () => setLikedActivity((current) => !current), toggleRepost: () => setRepostedActivity((current) => !current) };
+  return { profile, selectedTab, expandedSections, isFollowing, isManagementOpen, likedActivity, repostedActivity, isLoading, toggleSection, toggleFollowing: () => setIsFollowing((current) => !current), openManagement: () => setIsManagementOpen(true), closeManagement: () => setIsManagementOpen(false), toggleLike: () => setLikedActivity((current) => !current), toggleRepost: () => setRepostedActivity((current) => !current) };
 }
