@@ -1,0 +1,22 @@
+/*
+ * IRANSansX Variable exposes Persian numeral glyphs through the ss02
+ * stylistic set. Applying it globally keeps the underlying values unchanged
+ * (important for forms/APIs) while every rendered digit, including typed
+ * input text, is displayed with Persian numerals.
+ */
+@layer base {
+  html,
+  body,
+  button,
+  input,
+  textarea,
+  select,
+  option {
+    font-feature-settings: "kern" 1, "liga" 1, "ss02" 1;
+  }
+
+  /* The phone submit button is RTL. Move only its arrow after the label. */
+  form:has(input[autocomplete="tel"]) > button > .lucide-arrow-left {
+    order: 2;
+  }
+}
