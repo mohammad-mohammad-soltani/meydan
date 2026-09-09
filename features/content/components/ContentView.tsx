@@ -41,7 +41,7 @@ export function ContentView({ scheduleItems, quickActions }: { items: ContentIte
   const [audioNotice, setAudioNotice] = useState(false);
 
   const openQuickAction = (action: ContentQuickAction) => {
-    const descriptions: Record<ContentQuickAction["id"], string> = {
+    const descriptions: Partial<Record<ContentQuickAction["id"], string>> = {
       speakers: "درخواست و پیگیری اعزام سخنران به میدان.",
       contact: "راه‌های ارتباط با ستاد مرکزی قرارگاه میدانِ خیابان.",
       print: "فایل‌های لایه‌باز آماده چاپ افست و سیلک.",
@@ -103,7 +103,7 @@ export function ContentView({ scheduleItems, quickActions }: { items: ContentIte
           {scheduleItems.map((item, index) => {
             const base = "relative flex h-28 w-36 shrink-0 cursor-pointer flex-col justify-between rounded-xl border p-3 text-right";
             const classes = item.current
-              ? `${base} border-brand-border bg-brand text-brand-foreground shadow-sm`
+              ? `${base} border-brand-border bg-brand text-brand-foreground shadow-xs`
               : index === 0
                 ? `${base} border-danger-border bg-solid-dark text-on-solid`
                 : `${base} border-border bg-surface text-foreground`;
@@ -149,7 +149,7 @@ export function ContentView({ scheduleItems, quickActions }: { items: ContentIte
         <div className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
           <Link href="/content/farmandeh-song" aria-label="مشاهده جزئیات دم هماهنگ فرمانده کل قوا" className="p-2 text-icon-muted transition-colors hover:text-icon"><Info className="h-5 w-5" /></Link>
           <Link href="/content/farmandeh-song" className="flex-1 cursor-pointer pr-3 text-right"><h4 className="text-sm font-bold text-foreground">دم هماهنگ: «فرمانده کل قوا»</h4><p className="mt-0.5 text-[11px] text-muted-foreground">با نوای حاج میثم مطیعی · ۳ دقیقه</p></Link>
-          <button type="button" onClick={() => { setAudioNotice(true); window.setTimeout(() => setAudioNotice(false), 2200); }} aria-label="پخش فرمانده کل قوا" className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-sm"><Play className="mr-0.5 h-5 w-5 fill-current" /></button>
+          <button type="button" onClick={() => { setAudioNotice(true); window.setTimeout(() => setAudioNotice(false), 2200); }} aria-label="پخش فرمانده کل قوا" className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-xs"><Play className="mr-0.5 h-5 w-5 fill-current" /></button>
         </div>
       </div>
 
@@ -161,7 +161,7 @@ export function ContentView({ scheduleItems, quickActions }: { items: ContentIte
         </div>
       ) : null}
 
-      {audioNotice ? <div role="status" className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-pill bg-inverse px-4 py-2 text-xs font-bold text-inverse-foreground shadow-floating">پخش صوت آماده است</div> : null}
+      {audioNotice ? <div role="status" className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-pill bg-solid-dark px-4 py-2 text-xs font-bold text-on-solid shadow-floating">پخش صوت آماده است</div> : null}
     </section>
   );
 }
