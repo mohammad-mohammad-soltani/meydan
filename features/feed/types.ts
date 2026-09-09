@@ -34,10 +34,14 @@ export type FeedPost = {
     reposts: number;
   };
   callToAction?: string;
+  initiativeId?: string;
+  actor?: { type: "user" | "square"; id: string };
+  viewerState?: { liked: boolean; reposted: boolean };
 };
 
 export type FollowSuggestion = {
   id: string;
+  actorType: "square";
   name: string;
   city: string;
   handle: string;
