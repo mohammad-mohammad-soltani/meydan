@@ -36,7 +36,6 @@ export function AppShell({ children }: AppShellProps) {
         <MobileHeader />
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
           {children}
-          <div aria-hidden="true" className="h-[calc(5.5rem+env(safe-area-inset-bottom))] w-full shrink-0 lg:hidden" />
         </main>
         <BottomNavigation />
       </div>
