@@ -23,7 +23,7 @@ export function BottomNavigation() {
     <nav
       id="bottomNavBar"
       aria-label="ناوبری اصلی"
-      className="fixed bottom-0 left-1/2 z-50 grid w-full max-w-xl -translate-x-1/2 grid-cols-5 items-center gap-1.5 border-t border-border bg-surface-glass px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-icon-muted backdrop-blur lg:hidden"
+      className="relative z-50 grid w-full shrink-0 grid-cols-5 items-center gap-1.5 border-t border-border bg-surface-glass px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-icon-muted backdrop-blur lg:hidden"
     >
       {items.map(({ href, label, icon: Icon, match }) => {
         const active = match(pathname);
