@@ -4,8 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CalendarClock,
-  ChevronDown,
-  Globe2,
   ImagePlus,
   ListChecks,
   MapPin,
@@ -13,16 +11,14 @@ import {
   Save,
   Smile,
   Trash2,
-  Users,
   X,
 } from "lucide-react";
-import type { FeedPost, FeedAttachment } from "@/features/feed/types";
+import { generatedMedia } from "@/components/shared/generated-media";
+import type { FeedAttachment, FeedPost } from "@/features/feed/types";
 
 const MAX_CHARACTERS = 280;
 const DRAFT_KEY = "meydan-compose-draft";
 const LOCAL_POSTS_KEY = "meydan-local-narratives";
-
-type Audience = "everyone" | "followers";
 
 type PollOption = { id: number; value: string };
 
@@ -43,10 +39,6 @@ export function ComposeView() {
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [audience, setAudience] = useState<Audience>("everyone");
-  const [audienceOpen, setAudienceOpen] = useState(false);
-  const [replyOpen, setReplyOpen] = useState(false);
-  const [replyMode, setReplyMode] = useState<Audience>("everyone");
   const [pollOptions, setPollOptions] = useState<PollOption[] | null>(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
@@ -71,6 +63,7 @@ export function ComposeView() {
       setPreviewUrl(null);
       return;
     }
+
     const url = URL.createObjectURL(attachment);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
@@ -105,10 +98,12 @@ export function ComposeView() {
   const insertEmoji = () => {
     const textarea = textareaRef.current;
     const emoji = "✨";
+
     if (!textarea) {
       setText((value) => `${value}${emoji}`);
       return;
     }
+
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     setText((value) => `${value.slice(0, start)}${emoji}${value.slice(end)}`);
@@ -119,7 +114,10 @@ export function ComposeView() {
   };
 
   const startPoll = () => {
-    setPollOptions((current) => current ?? [{ id: Date.now(), value: "" }, { id: Date.now() + 1, value: "" }]);
+    setPollOptions((current) => current ?? [
+      { id: Date.now(), value: "" },
+      { id: Date.now() + 1, value: "" },
+    ]);
   };
 
   const updatePollOption = (id: number, value: string) => {
@@ -127,7 +125,9 @@ export function ComposeView() {
   };
 
   const addPollOption = () => {
-    setPollOptions((current) => current && current.length < 4 ? [...current, { id: Date.now(), value: "" }] : current);
+    setPollOptions((current) => current && current.length < 4
+      ? [...current, { id: Date.now(), value: "" }]
+      : current);
   };
 
   const publish = () => {
@@ -163,7 +163,7 @@ export function ComposeView() {
       handle: "@you",
       timeAgo: scheduledAt ? "زمان‌بندی‌شده" : "همین حالا",
       city: locationEnabled ? "موقعیت فعلی" : "ایران",
-      badge: audience === "followers" ? "برای دنبال‌کنندگان" : "روایت تازه",
+      badge: "روایت تازه",
       title: firstLine.length > 64 ? `${firstLine.slice(0, 64)}…` : firstLine,
       body: trimmed,
       attachments,
@@ -203,29 +203,18 @@ export function ComposeView() {
         </button>
       </header>
 
-      <div className="flex flex-1 flex-col px-4 pb-3 pt-4">
+      <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
         <div className="flex items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-sm font-black text-brand-foreground shadow-xs">م</span>
+          <img
+            src={generatedMedia.avatarJournalist}
+            alt="آواتار کاربر"
+            className="h-12 w-12 shrink-0 rounded-full border border-border object-cover shadow-xs"
+          />
 
           <div className="min-w-0 flex-1">
-            <div className="relative mb-2 w-fit">
-              <button
-                type="button"
-                onClick={() => setAudienceOpen((open) => !open)}
-                aria-expanded={audienceOpen}
-                className="inline-flex min-h-8 items-center gap-1.5 rounded-pill border border-brand-border px-3 text-[11px] font-bold text-brand transition-colors hover:bg-brand-muted"
-              >
-                {audience === "everyone" ? <Globe2 className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
-                {audience === "everyone" ? "همه" : "دنبال‌کنندگان"}
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-
-              {audienceOpen ? (
-                <div role="menu" className="absolute right-0 top-10 z-40 w-52 rounded-card border border-border bg-popover p-1.5 text-popover-foreground shadow-popover">
-                  <button type="button" onClick={() => { setAudience("everyone"); setAudienceOpen(false); }} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-right text-xs font-bold hover:bg-hover"><Globe2 className="h-4 w-4 text-brand" />همه کاربران</button>
-                  <button type="button" onClick={() => { setAudience("followers"); setAudienceOpen(false); }} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-right text-xs font-bold hover:bg-hover"><Users className="h-4 w-4 text-brand" />فقط دنبال‌کنندگان</button>
-                </div>
-              ) : null}
+            <div className="mb-2 flex items-center gap-2">
+              <span className="text-sm font-black text-foreground">روایتگر میدان</span>
+              <span className="text-[11px] text-muted-foreground">@you</span>
             </div>
 
             <textarea
@@ -252,7 +241,14 @@ export function ComposeView() {
             ) : (
               <img src={previewUrl} alt="پیش‌نمایش تصویر انتخاب‌شده" className="max-h-80 w-full object-cover" />
             )}
-            <button type="button" onClick={() => setAttachment(null)} aria-label="حذف فایل پیوست" className="absolute left-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-scrim text-on-solid shadow-sm backdrop-blur"><X className="h-4 w-4" /></button>
+            <button
+              type="button"
+              onClick={() => setAttachment(null)}
+              aria-label="حذف فایل پیوست"
+              className="absolute left-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-scrim text-on-solid shadow-sm backdrop-blur"
+            >
+              <X className="h-4 w-4" />
+            </button>
             <div className="border-t border-divider px-3 py-2 text-[10px] text-muted-foreground">{attachment.name}</div>
           </div>
         ) : null}
@@ -261,7 +257,14 @@ export function ComposeView() {
           <div className="ui-enter mt-3 space-y-2 rounded-card border border-border bg-surface p-3 shadow-xs">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black">نظرسنجی</span>
-              <button type="button" onClick={() => setPollOptions(null)} aria-label="حذف نظرسنجی" className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover hover:text-danger"><X className="h-4 w-4" /></button>
+              <button
+                type="button"
+                onClick={() => setPollOptions(null)}
+                aria-label="حذف نظرسنجی"
+                className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover hover:text-danger"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
             {pollOptions.map((option, index) => (
               <input
@@ -273,7 +276,14 @@ export function ComposeView() {
               />
             ))}
             {pollOptions.length < 4 ? (
-              <button type="button" onClick={addPollOption} className="inline-flex items-center gap-1.5 rounded-control px-2 py-2 text-xs font-bold text-brand hover:bg-brand-muted"><Plus className="h-4 w-4" />افزودن گزینه</button>
+              <button
+                type="button"
+                onClick={addPollOption}
+                className="inline-flex items-center gap-1.5 rounded-control px-2 py-2 text-xs font-bold text-brand hover:bg-brand-muted"
+              >
+                <Plus className="h-4 w-4" />
+                افزودن گزینه
+              </button>
             ) : null}
           </div>
         ) : null}
@@ -285,31 +295,41 @@ export function ComposeView() {
                 <p className="text-xs font-black">زمان‌بندی انتشار</p>
                 <p className="mt-1 text-[10px] text-muted-foreground">زمان دلخواه را انتخاب کن.</p>
               </div>
-              <button type="button" onClick={() => { setScheduleOpen(false); setScheduledAt(""); }} className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover"><X className="h-4 w-4" /></button>
+              <button
+                type="button"
+                onClick={() => {
+                  setScheduleOpen(false);
+                  setScheduledAt("");
+                }}
+                className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover"
+                aria-label="بستن زمان‌بندی"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <input type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} className="mt-3 min-h-11 w-full rounded-control border border-input-border bg-input px-3 text-xs text-foreground outline-none focus:border-brand" />
+            <input
+              type="datetime-local"
+              value={scheduledAt}
+              onChange={(event) => setScheduledAt(event.target.value)}
+              className="mt-3 min-h-11 w-full rounded-control border border-input-border bg-input px-3 text-xs text-foreground outline-none focus:border-brand"
+            />
           </div>
         ) : null}
 
-        <div className="relative mt-3 w-fit">
-          <button type="button" onClick={() => setReplyOpen((open) => !open)} className="inline-flex items-center gap-2 rounded-pill px-2 py-1.5 text-xs font-bold text-brand transition-colors hover:bg-brand-muted">
-            {replyMode === "everyone" ? <Globe2 className="h-4 w-4" /> : <Users className="h-4 w-4" />}
-            {replyMode === "everyone" ? "همه می‌توانند پاسخ دهند" : "فقط دنبال‌کنندگان می‌توانند پاسخ دهند"}
-          </button>
-          {replyOpen ? (
-            <div role="menu" className="absolute bottom-10 right-0 z-40 w-64 rounded-card border border-border bg-popover p-1.5 shadow-popover">
-              <button type="button" onClick={() => { setReplyMode("everyone"); setReplyOpen(false); }} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-right text-xs font-bold hover:bg-hover"><Globe2 className="h-4 w-4 text-brand" />همه می‌توانند پاسخ دهند</button>
-              <button type="button" onClick={() => { setReplyMode("followers"); setReplyOpen(false); }} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-right text-xs font-bold hover:bg-hover"><Users className="h-4 w-4 text-brand" />فقط دنبال‌کنندگان</button>
-            </div>
-          ) : null}
-        </div>
-
         {locationEnabled ? (
-          <button type="button" onClick={() => setLocationEnabled(false)} className="ui-enter mt-2 inline-flex w-fit items-center gap-1.5 rounded-pill bg-brand-muted px-3 py-1.5 text-xs font-bold text-brand"><MapPin className="h-3.5 w-3.5" />موقعیت فعلی<X className="h-3.5 w-3.5" /></button>
+          <button
+            type="button"
+            onClick={() => setLocationEnabled(false)}
+            className="ui-enter mt-3 inline-flex w-fit items-center gap-1.5 rounded-pill bg-brand-muted px-3 py-1.5 text-xs font-bold text-brand"
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            موقعیت فعلی
+            <X className="h-3.5 w-3.5" />
+          </button>
         ) : null}
       </div>
 
-      <div className="sticky bottom-0 z-20 border-t border-divider bg-surface-glass px-3 py-2.5 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur-md">
+      <div className="sticky bottom-0 z-20 border-t border-divider bg-surface-glass px-3 py-2.5 backdrop-blur-md">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-0.5 text-brand">
             <input
