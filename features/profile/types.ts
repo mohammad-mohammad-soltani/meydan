@@ -23,6 +23,7 @@ export type ProfileActivity = {
   likes: number;
   reposts: number;
   comments: number;
+  viewerState?: { liked: boolean; reposted: boolean };
 };
 
 export type ProfileDetails = {
