@@ -28,7 +28,7 @@ type ApiNarrative = {
   tags?: string[];
   initiative?: { id?: number; cta_label?: string; viewer_state?: { joined?: boolean } } | null;
   media_reflections?: Array<{ outlet: string; title: string }>;
-  stats?: { likes?: number; comments?: number; reposts?: number };
+  stats?: { likes?: number; comments?: number; reposts?: number; views?: number };
   viewer_state?: { liked?: boolean; reposted?: boolean } | null;
 };
 
@@ -126,6 +126,7 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
       likes: item.stats?.likes || 0,
       comments: item.stats?.comments || 0,
       reposts: item.stats?.reposts || 0,
+      views: item.stats?.views || 0,
     },
     callToAction: item.initiative?.cta_label || undefined,
   };
