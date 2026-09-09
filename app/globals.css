@@ -441,7 +441,7 @@ html.dark {
 @utility ui-pop { animation: ui-pop-keyframes var(--motion-slow) var(--motion-ease-standard) both; }
 
 @utility no-scrollbar {
-  -ms-overflow-style: none;
+  -ms-overflow-style: none; 
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
