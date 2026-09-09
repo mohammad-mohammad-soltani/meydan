@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { BellRing, PenLine, X } from "lucide-react";
+import { BellRing, X } from "lucide-react";
 import { FeedFilters } from "./FeedFilters";
 import { FeedTabs } from "./FeedTabs";
 import { FollowSuggestions } from "./FollowSuggestions";
@@ -81,15 +80,6 @@ export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestion
           <FollowSuggestions suggestions={feed.suggestions} followedIds={feed.followedSquareIds} onToggleFollow={feed.toggleFollow} />
         </div>
       )}
-
-      <Link
-        href="/compose"
-        aria-label="نوشتن روایت تازه"
-        title="نوشتن روایت"
-        className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-brand text-brand-foreground shadow-floating transition-[transform,background-color,box-shadow] hover:bg-brand-hover hover:shadow-dialog active:scale-90 lg:hidden"
-      >
-        <PenLine className="h-6 w-6" strokeWidth={2.2} />
-      </Link>
 
       {feed.selectedMedia ? (
         <div role="dialog" aria-modal="true" aria-label="انعکاس رسانه‌ای" className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-sm">
