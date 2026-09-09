@@ -48,6 +48,7 @@ export type PostDetail = {
   reflections: MediaReflection[];
   likes: number;
   reposts: number;
+  views: number;
   commentsCount: number;
   comments: PostComment[];
   viewerState?: { liked: boolean; reposted: boolean };
