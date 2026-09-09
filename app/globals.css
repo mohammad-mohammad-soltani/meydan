@@ -216,6 +216,7 @@
   --motion-fast: 140ms;
   --motion-normal: 180ms;
   --motion-slow: 240ms;
+  --motion-page: 300ms;
   --motion-ease-standard: cubic-bezier(.2,.8,.2,1);
   --motion-ease-emphasized: cubic-bezier(.22,1,.36,1);
 }
@@ -340,10 +341,35 @@ html.dark {
   button, a, input, textarea, select, [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
+  button,
+  a,
+  [role="button"],
+  input,
+  textarea,
+  select {
+    transition-property: scale, opacity, color, background-color, border-color, box-shadow;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-standard);
+  }
+  button:not(:disabled):active,
+  a:active,
+  [role="button"]:active {
+    scale: .97;
+  }
+  button:disabled,
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   ::selection { background: var(--selection-bg); color: var(--foreground); }
 }
 
+@keyframes route-transition-enter-keyframes {
+  from { opacity: 0; transform: translateY(.65rem) scale(.992); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 @keyframes ui-enter-keyframes {
   from { opacity: 0; transform: translateY(.375rem); }
   to { opacity: 1; transform: translateY(0); }
@@ -364,6 +390,47 @@ html.dark {
   0%, 100% { transform: scale(1); }
   45% { transform: scale(1.35); }
   72% { transform: scale(.9); }
+}
+@keyframes ui-fade-in-keyframes {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes ui-dialog-panel-in-keyframes {
+  from { opacity: 0; transform: translateY(.75rem) scale(.965); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ui-popover-in-keyframes {
+  from { opacity: 0; transform: translateY(-.35rem) scale(.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ui-state-settle-keyframes {
+  0% { scale: .96; }
+  65% { scale: 1.025; }
+  100% { scale: 1; }
+}
+
+.route-transition-stage {
+  animation: route-transition-enter-keyframes var(--motion-page) var(--motion-ease-emphasized) both;
+  transform-origin: 50% 0;
+}
+
+[role="dialog"] {
+  animation: ui-fade-in-keyframes var(--motion-normal) var(--motion-ease-standard) both;
+}
+
+[role="dialog"] > :first-child {
+  animation: ui-dialog-panel-in-keyframes var(--motion-slow) var(--motion-ease-emphasized) both;
+}
+
+[role="menu"],
+[role="listbox"] {
+  animation: ui-popover-in-keyframes var(--motion-normal) var(--motion-ease-emphasized) both;
+  transform-origin: top center;
+}
+
+[aria-selected="true"],
+[aria-pressed="true"] {
+  animation: ui-state-settle-keyframes var(--motion-normal) var(--motion-ease-emphasized) both;
 }
 
 @utility ui-enter { animation: ui-enter-keyframes var(--motion-slow) var(--motion-ease-standard) both; }
