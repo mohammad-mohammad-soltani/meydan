@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { FolderKanban, Home, Map, Mic, Search, UserCheck } from "lucide-react";
 import { BottomNavigation } from "./BottomNavigation";
+import { FloatingComposeButton } from "./FloatingComposeButton";
 import { MobileHeader } from "./MobileHeader";
 
 type AppShellProps = { children: ReactNode };
@@ -37,6 +38,7 @@ export function AppShell({ children }: AppShellProps) {
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
           {children}
         </main>
+        <FloatingComposeButton />
         <BottomNavigation />
       </div>
 
