@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { FolderKanban, Home, Map, Mic, Search, UserCheck } from "lucide-react";
+import { MiniPlayer } from "@/features/audio/MiniPlayer";
 import { BottomNavigation } from "./BottomNavigation";
 import { FloatingComposeButton } from "./FloatingComposeButton";
 import { MobileHeader } from "./MobileHeader";
@@ -39,6 +40,7 @@ export function AppShell({ children }: AppShellProps) {
           {children}
         </main>
         <FloatingComposeButton />
+        <MiniPlayer />
         <BottomNavigation />
       </div>
 
