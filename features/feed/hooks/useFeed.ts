@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { meydanApi } from "@/lib/meydan-api";
+import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import { getFeedPosts } from "../services/feed.service";
 import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
 
@@ -15,6 +15,10 @@ function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
   }
 }
 
+function redirectToLogin() {
+  if (typeof window !== "undefined") window.location.assign("/auth");
+}
+
 export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSuggestion[]) {
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
@@ -26,7 +30,7 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const applyStats = useCallback((postId: string, stats?: { likes?: number; reposts?: number; comments?: number }) => {
+  const applyStats = useCallback((postId: string, stats?: { likes?: number; reposts?: number; comments?: number; views?: number }) => {
     if (!stats) return;
     setRemotePosts((current) => current.map((post) => post.id === postId ? {
       ...post,
@@ -34,6 +38,7 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
         likes: stats.likes ?? post.stats.likes,
         reposts: stats.reposts ?? post.stats.reposts,
         comments: stats.comments ?? post.stats.comments,
+        views: stats.views ?? post.stats.views,
       },
     } : post));
   }, []);
@@ -64,10 +69,11 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
       return next;
     });
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${postId}/like`, { method: isOn ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${postId}/like`, { method: isOn ? "PUT" : "DELETE" });
       applyStats(postId, result.stats);
-    } catch {
+    } catch (reason) {
       setLikedPostIds((current) => { const next = new Set(current); if (isOn) next.delete(postId); else next.add(postId); return next; });
+      if (isAuthApiError(reason)) redirectToLogin();
     }
   }, [applyStats, likedPostIds]);
 
@@ -79,10 +85,11 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
       return next;
     });
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${postId}/repost`, { method: isOn ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${postId}/repost`, { method: isOn ? "PUT" : "DELETE" });
       applyStats(postId, result.stats);
-    } catch {
+    } catch (reason) {
       setRepostedPostIds((current) => { const next = new Set(current); if (isOn) next.delete(postId); else next.add(postId); return next; });
+      if (isAuthApiError(reason)) redirectToLogin();
     }
   }, [applyStats, repostedPostIds]);
 
@@ -95,8 +102,9 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     });
     try {
       await meydanApi(`/actors/square/${squareId}/follow`, { method: isOn ? "PUT" : "DELETE" });
-    } catch {
+    } catch (reason) {
       setFollowedSquareIds((current) => { const next = new Set(current); if (isOn) next.delete(squareId); else next.add(squareId); return next; });
+      if (isAuthApiError(reason)) redirectToLogin();
     }
   }, [followedSquareIds]);
 
@@ -106,8 +114,9 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     setJoinedPostIds((current) => new Set(current).add(postId));
     try {
       await meydanApi(`/initiatives/${post.initiativeId}/join`, { method: "PUT" });
-    } catch {
+    } catch (reason) {
       setJoinedPostIds((current) => { const next = new Set(current); next.delete(postId); return next; });
+      if (isAuthApiError(reason)) redirectToLogin();
     }
   }, [remotePosts]);
 
