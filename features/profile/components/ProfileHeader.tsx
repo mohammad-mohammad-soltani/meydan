@@ -1,13 +1,19 @@
 import { generatedMedia } from "@/components/shared/generated-media";
 import Image from "next/image";
 import { BadgeCheck } from "lucide-react";
-import type { ProfileIdentity } from "../types";
+import type { ProfileIdentity, ProfileTab } from "../types";
 
-export function ProfileHeader({ identity }: { identity: ProfileIdentity }) {
+export function ProfileHeader({ identity, variant }: { identity: ProfileIdentity; variant: ProfileTab }) {
+  const statusLabel = variant === "square"
+    ? "هویت و پایگاه تاییدشده"
+    : identity.verified
+      ? "هویت کاربر تاییدشده"
+      : "هویت کاربر";
+
   return (
     <>
       <div className="relative h-28 overflow-hidden bg-gradient-to-r from-brand via-surface-elevated to-solid-dark">
-        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-pill bg-scrim px-2.5 py-1 text-[11px] text-on-solid backdrop-blur-sm"><span className="h-2 w-2 rounded-full bg-success" />هویت و پایگاه تاییدشده</span>
+        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-pill bg-scrim px-2.5 py-1 text-[11px] text-on-solid backdrop-blur-sm"><span className="h-2 w-2 rounded-full bg-success" />{statusLabel}</span>
       </div>
       <div className="relative px-4">
         <Image src={generatedMedia.avatarCoordinator} alt="" width={64} height={64} className="absolute -top-8 right-4 h-16 w-16 rounded-full border-2 border-surface object-cover shadow-card" />
