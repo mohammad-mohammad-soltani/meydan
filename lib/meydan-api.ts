@@ -6,6 +6,20 @@ export type ApiEnvelope<T> = {
   meta?: { request_id?: string; next_cursor?: string | null };
 };
 
+export class MeydanApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "MeydanApiError";
+    this.status = status;
+  }
+}
+
+export function isAuthApiError(reason: unknown): boolean {
+  return reason instanceof MeydanApiError && (reason.status === 401 || reason.status === 403);
+}
+
 export function getMeydanApiBaseUrl(): string {
   if (typeof window !== "undefined") return "/api/meydan";
 
@@ -35,8 +49,9 @@ export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T>
     body = raw ? JSON.parse(raw) : {};
   } catch {
     const preview = raw.replace(/\s+/g, " ").trim().slice(0, 180);
-    throw new Error(
+    throw new MeydanApiError(
       `Meydan API returned invalid JSON (${response.status})${preview ? `: ${preview}` : ""}`,
+      response.status,
     );
   }
 
@@ -45,11 +60,11 @@ export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T>
       "error" in body && body.error?.message
         ? body.error.message
         : `Meydan API request failed (${response.status})`;
-    throw new Error(message);
+    throw new MeydanApiError(message, response.status);
   }
 
   if (!("data" in body)) {
-    throw new Error("Meydan API response is missing the data envelope.");
+    throw new MeydanApiError("Meydan API response is missing the data envelope.", response.status);
   }
 
   return body.data;
