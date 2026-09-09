@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { Headphones, LoaderCircle, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import {
+  Headphones,
+  LoaderCircle,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  X,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import { AudioProgressBar, formatAudioTime } from "./AudioProgressBar";
 import { useAudio } from "./AudioProvider";
@@ -24,6 +32,7 @@ export function MiniPlayer() {
     toggle,
     next,
     previous,
+    clear,
   } = useAudio();
 
   if (!currentTrack) return null;
@@ -100,6 +109,16 @@ export function MiniPlayer() {
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5" dir="ltr">
+          <button
+            type="button"
+            onClick={clear}
+            aria-label="بستن پخش‌کننده"
+            title="بستن پخش‌کننده"
+            className="grid h-9 w-9 place-items-center rounded-full text-icon-muted outline-none transition hover:bg-hover hover:text-danger focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
+          </button>
+
           <button
             type="button"
             onClick={() => void previous()}
