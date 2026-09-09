@@ -13,23 +13,13 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { generatedMedia } from "@/components/shared/generated-media";
-import type { FeedAttachment, FeedPost } from "@/features/feed/types";
+import { meydanApi } from "@/lib/meydan-api";
+import { uploadNarrativeFile } from "@/lib/meydan-upload";
 
 const MAX_CHARACTERS = 280;
 const DRAFT_KEY = "meydan-compose-draft";
-const LOCAL_POSTS_KEY = "meydan-local-narratives";
 
 type PollOption = { id: number; value: string };
-
-function loadLocalPosts(): FeedPost[] {
-  try {
-    const stored = window.localStorage.getItem(LOCAL_POSTS_KEY);
-    return stored ? (JSON.parse(stored) as FeedPost[]) : [];
-  } catch {
-    return [];
-  }
-}
 
 export function ComposeView() {
   const router = useRouter();
@@ -45,12 +35,27 @@ export function ComposeView() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [viewer, setViewer] = useState({ name: "", handle: "", avatarUrl: "", location: null as { province_id: number; city_id: number } | null });
 
   useEffect(() => {
     const draft = window.localStorage.getItem(DRAFT_KEY) ?? "";
-    setText(draft);
+    queueMicrotask(() => setText(draft));
     const frame = window.requestAnimationFrame(() => textareaRef.current?.focus());
     return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    void meydanApi<{ account_type: "user" | "square"; profile?: { full_name?: string; avatar_url?: string; province_id?: number; city_id?: number }; square?: { name?: string; avatar_url?: string; handle?: string; location?: { province_id?: number; city_id?: number } } }>("/me").then((me) => {
+      const location = me.account_type === "square" ? me.square?.location : undefined;
+      const provinceId = location?.province_id ?? me.profile?.province_id;
+      const cityId = location?.city_id ?? me.profile?.city_id;
+      setViewer({
+        name: me.account_type === "square" ? me.square?.name || "" : me.profile?.full_name || "",
+        handle: me.account_type === "square" ? me.square?.handle || "" : "",
+        avatarUrl: me.account_type === "square" ? me.square?.avatar_url || "" : me.profile?.avatar_url || "",
+        location: provinceId && cityId ? { province_id: provinceId, city_id: cityId } : null,
+      });
+    }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -60,12 +65,12 @@ export function ComposeView() {
 
   useEffect(() => {
     if (!attachment) {
-      setPreviewUrl(null);
+      queueMicrotask(() => setPreviewUrl(null));
       return;
     }
 
     const url = URL.createObjectURL(attachment);
-    setPreviewUrl(url);
+    queueMicrotask(() => setPreviewUrl(url));
     return () => URL.revokeObjectURL(url);
   }, [attachment]);
 
@@ -130,53 +135,26 @@ export function ComposeView() {
       : current);
   };
 
-  const publish = () => {
+  const publish = async () => {
     if (!canPublish) return;
     setIsPublishing(true);
-
-    const trimmed = text.trim();
-    const firstLine = trimmed.split("\n")[0] ?? trimmed;
-    const attachments: FeedAttachment[] = [];
-
-    if (attachment) {
-      attachments.push({
-        id: `attachment-${Date.now()}`,
-        label: attachment.name,
-        detail: attachment.type.startsWith("video/") ? "ویدئوی پیوست" : "تصویر پیوست",
-        icon: attachment.type.startsWith("video/") ? "video" : "image",
+    try {
+      const mediaId = attachment ? await uploadNarrativeFile(attachment) : undefined;
+      await meydanApi("/narratives", {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+        body: JSON.stringify({
+          body: text.trim(),
+          attachments: mediaId ? [{ media_id: mediaId, label: attachment?.name }] : [],
+          poll: hasPollContent ? { options: pollOptions?.map((option) => option.value.trim()).filter(Boolean) } : undefined,
+          scheduled_at: scheduledAt || undefined,
+          location: locationEnabled ? viewer.location || undefined : undefined,
+        }),
       });
-    }
-
-    if (hasPollContent) {
-      attachments.push({
-        id: `poll-${Date.now()}`,
-        label: "نظرسنجی",
-        detail: pollOptions?.filter((option) => option.value.trim()).map((option) => option.value.trim()).join(" · ") ?? "",
-        icon: "article",
-      });
-    }
-
-    const post: FeedPost = {
-      id: `local-${Date.now()}`,
-      kind: "ideas",
-      squareName: "روایت شما",
-      handle: "@you",
-      timeAgo: scheduledAt ? "زمان‌بندی‌شده" : "همین حالا",
-      city: locationEnabled ? "موقعیت فعلی" : "ایران",
-      badge: "روایت تازه",
-      title: firstLine.length > 64 ? `${firstLine.slice(0, 64)}…` : firstLine,
-      body: trimmed,
-      attachments,
-      stats: { likes: 0, comments: 0, reposts: 0 },
-    };
-
-    const existing = loadLocalPosts();
-    window.localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify([post, ...existing].slice(0, 20)));
-    window.localStorage.removeItem(DRAFT_KEY);
-    setText("");
-    setAttachment(null);
-    setPollOptions(null);
-    router.push("/home");
+      window.localStorage.removeItem(DRAFT_KEY);
+      setText(""); setAttachment(null); setPollOptions(null);
+      router.push("/home");
+    } finally { setIsPublishing(false); }
   };
 
   return (
@@ -195,7 +173,7 @@ export function ComposeView() {
 
         <button
           type="button"
-          onClick={publish}
+          onClick={() => void publish()}
           disabled={!canPublish}
           className="rounded-pill bg-brand px-4 py-2 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground"
         >
@@ -205,16 +183,12 @@ export function ComposeView() {
 
       <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
         <div className="flex items-start gap-3">
-          <img
-            src={generatedMedia.avatarJournalist}
-            alt="آواتار کاربر"
-            className="h-12 w-12 shrink-0 rounded-full border border-border object-cover shadow-xs"
-          />
+          {viewer.avatarUrl ? <img src={viewer.avatarUrl} alt="آواتار کاربر" className="h-12 w-12 shrink-0 rounded-full border border-border object-cover shadow-xs" /> : <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface-muted text-sm font-black text-icon shadow-xs">{viewer.name.slice(0, 1) || "م"}</span>}
 
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex items-center gap-2">
-              <span className="text-sm font-black text-foreground">روایتگر میدان</span>
-              <span className="text-[11px] text-muted-foreground">@you</span>
+              <span className="text-sm font-black text-foreground">{viewer.name || "روایتگر میدان"}</span>
+              <span className="text-[11px] text-muted-foreground">{viewer.handle ? `@${viewer.handle}` : ""}</span>
             </div>
 
             <textarea

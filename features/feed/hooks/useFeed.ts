@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { meydanApi } from "@/lib/meydan-api";
+import { getFeedPosts } from "../services/feed.service";
 import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
 
 function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
@@ -10,56 +12,108 @@ function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
     case "ideas":
     case "media":
       return post.kind === filter;
-    case "visual":
-      return post.attachments.some((attachment) => attachment.icon === "image" || attachment.icon === "video");
-    case "audio":
-      return post.attachments.some((attachment) => attachment.icon === "microphone");
-    case "initiatives":
-      return Boolean(post.callToAction);
   }
 }
 
 export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSuggestion[]) {
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
-  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => new Set());
-  const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(() => new Set());
+  const [remotePosts, setRemotePosts] = useState(initialPosts);
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
+  const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
   const [followedSquareIds, setFollowedSquareIds] = useState<Set<string>>(() => new Set());
-  const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set());
+  const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.joined).map((post) => post.id)));
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const posts = useMemo(() => initialPosts.filter((post) => matchesFilter(post, activeFilter)), [activeFilter, initialPosts]);
+  const applyStats = useCallback((postId: string, stats?: { likes?: number; reposts?: number; comments?: number }) => {
+    if (!stats) return;
+    setRemotePosts((current) => current.map((post) => post.id === postId ? {
+      ...post,
+      stats: {
+        likes: stats.likes ?? post.stats.likes,
+        reposts: stats.reposts ?? post.stats.reposts,
+        comments: stats.comments ?? post.stats.comments,
+      },
+    } : post));
+  }, []);
 
-  const toggleLike = useCallback((postId: string) => {
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => active && setIsLoading(true));
+    void getFeedPosts({ mode: activeTab === "for-you" ? "for_you" : "following", filter: activeFilter })
+      .then((next) => {
+        if (!active) return;
+        setRemotePosts(next);
+        setLikedPostIds(new Set(next.filter((post) => post.viewerState?.liked).map((post) => post.id)));
+        setRepostedPostIds(new Set(next.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
+        setJoinedPostIds(new Set(next.filter((post) => post.viewerState?.joined).map((post) => post.id)));
+      })
+      .catch(() => undefined)
+      .finally(() => active && setIsLoading(false));
+    return () => { active = false; };
+  }, [activeFilter, activeTab]);
+
+  const posts = useMemo(() => remotePosts.filter((post) => matchesFilter(post, activeFilter)), [activeFilter, remotePosts]);
+
+  const toggleLike = useCallback(async (postId: string) => {
+    const isOn = !likedPostIds.has(postId);
     setLikedPostIds((current) => {
       const next = new Set(current);
       if (next.has(postId)) next.delete(postId); else next.add(postId);
       return next;
     });
-  }, []);
+    try {
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${postId}/like`, { method: isOn ? "PUT" : "DELETE" });
+      applyStats(postId, result.stats);
+    } catch {
+      setLikedPostIds((current) => { const next = new Set(current); if (isOn) next.delete(postId); else next.add(postId); return next; });
+    }
+  }, [applyStats, likedPostIds]);
 
-  const toggleRepost = useCallback((postId: string) => {
+  const toggleRepost = useCallback(async (postId: string) => {
+    const isOn = !repostedPostIds.has(postId);
     setRepostedPostIds((current) => {
       const next = new Set(current);
       if (next.has(postId)) next.delete(postId); else next.add(postId);
       return next;
     });
-  }, []);
+    try {
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${postId}/repost`, { method: isOn ? "PUT" : "DELETE" });
+      applyStats(postId, result.stats);
+    } catch {
+      setRepostedPostIds((current) => { const next = new Set(current); if (isOn) next.delete(postId); else next.add(postId); return next; });
+    }
+  }, [applyStats, repostedPostIds]);
 
-  const toggleFollow = useCallback((squareId: string) => {
+  const toggleFollow = useCallback(async (squareId: string) => {
+    const isOn = !followedSquareIds.has(squareId);
     setFollowedSquareIds((current) => {
       const next = new Set(current);
       if (next.has(squareId)) next.delete(squareId); else next.add(squareId);
       return next;
     });
-  }, []);
+    try {
+      await meydanApi(`/actors/square/${squareId}/follow`, { method: isOn ? "PUT" : "DELETE" });
+    } catch {
+      setFollowedSquareIds((current) => { const next = new Set(current); if (isOn) next.delete(squareId); else next.add(squareId); return next; });
+    }
+  }, [followedSquareIds]);
 
-  const joinInitiative = useCallback((postId: string) => {
+  const joinInitiative = useCallback(async (postId: string) => {
+    const post = remotePosts.find((item) => item.id === postId);
+    if (!post?.initiativeId) return;
     setJoinedPostIds((current) => new Set(current).add(postId));
-  }, []);
+    try {
+      await meydanApi(`/initiatives/${post.initiativeId}/join`, { method: "PUT" });
+    } catch {
+      setJoinedPostIds((current) => { const next = new Set(current); next.delete(postId); return next; });
+    }
+  }, [remotePosts]);
 
   const sharePost = useCallback(async (post: FeedPost) => {
     const text = post.title + " — " + post.body;
+    await meydanApi(`/narratives/${post.id}/share`, { method: "POST", headers: { "idempotency-key": crypto.randomUUID() } }).catch(() => undefined);
     if (navigator.share) {
       await navigator.share({ title: post.title, text });
       return;
@@ -85,6 +139,7 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     joinInitiative,
     sharePost,
     openMedia: setSelectedMedia,
-    closeMedia: () => setSelectedMedia(null)
+    closeMedia: () => setSelectedMedia(null),
+    isLoading,
   };
 }

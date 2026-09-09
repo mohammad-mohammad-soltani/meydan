@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { meydanApi } from "@/lib/meydan-api";
 import type { ReservationRequest, ReservationResult, Speaker, SpeakerFilter } from "../types";
 
 const initialRequest: ReservationRequest = { venue: "میدان انقلاب تهران", timeSlot: "امشب - ساعت ۲۱:۰۰" };
@@ -25,9 +26,16 @@ export function useSpeakers(initialSpeakers: Speaker[]) {
   const openSpeaker = (speaker: Speaker) => { setSelectedSpeaker(speaker); setReservation(null); };
   const closeProfile = () => { setSelectedSpeaker(null); setReservation(null); };
   const updateRequest = (field: keyof ReservationRequest, value: string) => setRequest((current) => ({ ...current, [field]: value }));
-  const submitReservation = () => {
+  const submitReservation = async () => {
     if (!selectedSpeaker) return;
-    setReservation({ speakerId: selectedSpeaker.id, submittedAt: new Date().toISOString() });
+    try {
+      const result = await meydanApi<{ created_at?: string }>("/speaker-requests", {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+        body: JSON.stringify({ creator_id: Number(selectedSpeaker.id), venue: request.venue, requested_at: new Date().toISOString(), note: request.timeSlot }),
+      });
+      setReservation({ speakerId: selectedSpeaker.id, submittedAt: result.created_at || new Date().toISOString() });
+    } catch { return; }
   };
 
   return { query, filter, speakers, selectedSpeaker, request, reservation, isLoading, setQuery, setFilter, openSpeaker, closeProfile, updateRequest, submitReservation };

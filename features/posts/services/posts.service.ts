@@ -1,8 +1,8 @@
 import { meydanApi, plainText } from "@/lib/meydan-api";
 import type { MediaReflection, PostComment, PostDetail, PostMedia } from "../types";
 
-type ApiActor = { id: string; display_name: string; verified?: boolean };
-type ApiAttachment = { id: number; type?: string; label?: string; filename?: string; url?: string };
+type ApiActor = { id: string; display_name: string; avatar_url?: string; verified?: boolean };
+type ApiAttachment = { id: number; type?: string; label?: string; filename?: string; url?: string; width?: number; height?: number };
 type ApiReflection = { id: number; outlet: string; title?: string; summary?: string };
 type ApiNarrative = {
   id: number;
@@ -12,7 +12,8 @@ type ApiNarrative = {
   attachments?: ApiAttachment[];
   tags?: string[];
   media_reflections?: ApiReflection[];
-  stats?: { likes?: number; reposts?: number };
+  stats?: { likes?: number; reposts?: number; comments?: number };
+  viewer_state?: { liked?: boolean; reposted?: boolean } | null;
 };
 type ApiComment = {
   id: number;
@@ -66,6 +67,7 @@ export async function getPostById(postId: string): Promise<PostDetail | null> {
         handle: post.author?.id || "meydan",
         initials: initials(authorName),
         verified: Boolean(post.author?.verified),
+        avatarUrl: post.author?.avatar_url,
       },
       outlet: post.media_reflections?.[0]?.outlet || "روایت میدان",
       badge: post.tags?.[0] || "روایت میدان",
@@ -78,6 +80,8 @@ export async function getPostById(postId: string): Promise<PostDetail | null> {
         detail: item.type || "فایل",
         previewSrc: item.type === "image" || item.type === "video" ? item.url : undefined,
         previewAlt: item.label || authorName,
+        width: item.width,
+        height: item.height,
       })),
       reflections: (post.media_reflections || []).map((item, index) => ({
         id: String(item.id),
@@ -87,6 +91,8 @@ export async function getPostById(postId: string): Promise<PostDetail | null> {
       })),
       likes: post.stats?.likes || 0,
       reposts: post.stats?.reposts || 0,
+      commentsCount: post.stats?.comments || 0,
+      viewerState: { liked: Boolean(post.viewer_state?.liked), reposted: Boolean(post.viewer_state?.reposted) },
       comments: comments.map((item): PostComment => {
         const name = item.author?.display_name || "کاربر میدان";
         return {
@@ -96,6 +102,7 @@ export async function getPostById(postId: string): Promise<PostDetail | null> {
           timeAgo: relativeFa(item.created_at),
           content: plainText(item.body || ""),
           isAuthor: item.author?.id === post.author?.id,
+          avatarUrl: item.author?.avatar_url,
         };
       }),
     };

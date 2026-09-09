@@ -5,6 +5,7 @@ type ApiActor = {
   id: string;
   type: "user" | "square";
   display_name: string;
+  avatar_url?: string;
   verified?: boolean;
 };
 
@@ -14,6 +15,8 @@ type ApiAttachment = {
   label?: string;
   filename?: string;
   url?: string;
+  width?: number;
+  height?: number;
 };
 
 type ApiNarrative = {
@@ -23,9 +26,10 @@ type ApiNarrative = {
   published_at?: string | null;
   attachments?: ApiAttachment[];
   tags?: string[];
-  initiative?: { cta_label?: string } | null;
+  initiative?: { id?: number; cta_label?: string; viewer_state?: { joined?: boolean } } | null;
   media_reflections?: Array<{ outlet: string; title: string }>;
   stats?: { likes?: number; comments?: number; reposts?: number };
+  viewer_state?: { liked?: boolean; reposted?: boolean } | null;
 };
 
 type ApiSquare = {
@@ -33,6 +37,7 @@ type ApiSquare = {
   name: string;
   description?: string;
   handle?: string;
+  avatar_url?: string;
   location?: { address?: string } | null;
 };
 
@@ -64,6 +69,11 @@ function cityFromAddress(address?: string): string {
   return parts.at(-1) || "";
 }
 
+function numericActorId(value?: string): number {
+  const match = (value || "").match(/(?:sq_|u_)?(\d+)$/);
+  return Number(match?.[1] || 0);
+}
+
 function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): FeedPost {
   const reflection = item.media_reflections?.[0];
   const visual = item.attachments?.some(
@@ -73,6 +83,18 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
 
   return {
     id: String(item.id),
+    author: {
+      id: numericActorId(item.author?.id),
+      type: item.author?.type || "square",
+      avatarUrl: square?.avatar_url || item.author?.avatar_url,
+      verified: Boolean(item.author?.verified),
+    },
+    initiativeId: item.initiative?.id,
+    viewerState: {
+      liked: Boolean(item.viewer_state?.liked),
+      reposted: Boolean(item.viewer_state?.reposted),
+      joined: Boolean(item.initiative?.viewer_state?.joined),
+    },
     kind: visual || reflection ? "media" : "ideas",
     squareName: item.author?.display_name || "میدان",
     handle: square?.handle || item.author?.id || "meydan",
@@ -94,6 +116,8 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
         attachment.type === "image" || attachment.type === "video"
           ? attachment.label || item.author?.display_name
           : undefined,
+      width: attachment.width,
+      height: attachment.height,
     })),
     mediaReflection: reflection
       ? { outlet: reflection.outlet, headline: reflection.title }
@@ -111,9 +135,13 @@ async function getSquares(): Promise<ApiSquare[]> {
   return meydanApi<ApiSquare[]>("/squares");
 }
 
-export async function getFeedPosts(): Promise<FeedPost[]> {
+export type FeedQuery = { mode?: "for_you" | "following"; filter?: string; cursor?: string | null };
+
+export async function getFeedPosts(query: FeedQuery = {}): Promise<FeedPost[]> {
+  const params = new URLSearchParams({ mode: query.mode || "for_you", filter: query.filter || "all" });
+  if (query.cursor) params.set("cursor", query.cursor);
   const [narratives, squares] = await Promise.all([
-    meydanApi<ApiNarrative[]>("/timeline?mode=for_you&filter=all"),
+    meydanApi<ApiNarrative[]>(`/timeline?${params}`),
     getSquares(),
   ]);
   const squareMap = new Map(
@@ -126,6 +154,7 @@ export async function getFollowSuggestions(): Promise<FollowSuggestion[]> {
   const squares = await meydanApi<ApiSquare[]>("/squares?verified=1");
   return squares.slice(0, 6).map((square) => ({
     id: String(square.id),
+    actorType: "square",
     name: square.name,
     city: cityFromAddress(square.location?.address),
     handle: square.handle || `square_${square.id}`,

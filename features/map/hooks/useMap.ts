@@ -1,34 +1,42 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { defaultProvince, getCitiesByProvinceId, getDefaultCityForProvince, getProvinceById, provinces } from "../data/iran-cities";
-import { geocodeLocation } from "../services/geocoding.service";
+import { getCities, getCityMap, getProvinces } from "../services/map.service";
 import type { MapLocation, MapStatus } from "../types";
 
 export function useMap() {
-  const initialProvince = defaultProvince;
-  const initialCity = getDefaultCityForProvince(initialProvince.id);
-  const [selectedProvinceId, setSelectedProvinceId] = useState(initialProvince.id);
-  const [selectedCityId, setSelectedCityId] = useState(initialCity?.id ?? 0);
+  const [provinces, setProvinces] = useState<import("../types").Province[]>([]);
+  const [provinceCities, setProvinceCities] = useState<import("../types").City[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState(0);
+  const [selectedCityId, setSelectedCityId] = useState(0);
   const [provinceQuery, setProvinceQuery] = useState("");
   const [cityQuery, setCityQuery] = useState("");
   const [location, setLocation] = useState<MapLocation | null>(null);
   const [status, setStatus] = useState<MapStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [activeCount, setActiveCount] = useState(0);
 
-  const selectedProvince = getProvinceById(selectedProvinceId) ?? initialProvince;
-  const provinceCities = useMemo(() => getCitiesByProvinceId(selectedProvince.id), [selectedProvince.id]);
+  const selectedProvince = provinces.find((province) => province.id === selectedProvinceId) ?? provinces[0];
   const selectedCity = provinceCities.find((city) => city.id === selectedCityId) ?? provinceCities[0];
-  const visibleProvinces = useMemo(() => provinces.filter((province) => province.name.includes(provinceQuery.trim())), [provinceQuery]);
+  const visibleProvinces = useMemo(() => provinces.filter((province) => province.name.includes(provinceQuery.trim())), [provinceQuery, provinces]);
   const visibleCities = useMemo(() => provinceCities.filter((city) => city.name.includes(cityQuery.trim())), [cityQuery, provinceCities]);
+
+  useEffect(() => { void getProvinces().then((items) => { setProvinces(items); setSelectedProvinceId(items[0]?.id || 0); }).catch(() => setError("دریافت استان‌ها با خطا مواجه شد.")); }, []);
+
+  useEffect(() => {
+    if (!selectedProvinceId) return;
+    void getCities(selectedProvinceId).then((items) => { setProvinceCities(items); setSelectedCityId(items[0]?.id || 0); }).catch(() => setError("دریافت شهرها با خطا مواجه شد."));
+  }, [selectedProvinceId]);
 
   useEffect(() => {
     if (!selectedCity) return;
     let active = true;
-    void geocodeLocation({ city: selectedCity.name, province: selectedProvince.name })
-      .then((nextLocation) => {
+    queueMicrotask(() => active && setStatus("loading"));
+    void getCityMap(selectedCity.id)
+      .then(({ location: nextLocation, activeCount: count }) => {
         if (!active) return;
         setLocation(nextLocation);
+        setActiveCount(count);
         setStatus("ready");
       })
       .catch((reason: unknown) => {
@@ -39,16 +47,15 @@ export function useMap() {
       });
 
     return () => { active = false; };
-  }, [selectedCity, selectedProvince.name]);
+  }, [selectedCity]);
 
   const selectProvince = (provinceId: number) => {
-    const city = getDefaultCityForProvince(provinceId);
     setSelectedProvinceId(provinceId);
-    setSelectedCityId(city?.id ?? 0);
+    setSelectedCityId(0);
     setCityQuery("");
   };
 
   const selectCity = (cityId: number) => setSelectedCityId(cityId);
 
-  return { selectedProvince, selectedCity, selectedProvinceId, selectedCityId, provinceCities, visibleProvinces, visibleCities, provinceQuery, cityQuery, location, status, error, selectProvince, selectCity, setProvinceQuery, setCityQuery };
+  return { selectedProvince, selectedCity, selectedProvinceId, selectedCityId, provinceCities, visibleProvinces, visibleCities, provinceQuery, cityQuery, location, status, error, activeCount, selectProvince, selectCity, setProvinceQuery, setCityQuery };
 }

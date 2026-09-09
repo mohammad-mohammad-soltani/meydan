@@ -20,7 +20,7 @@ export function SpeakersView({ initialSpeakers }: { initialSpeakers: Speaker[] }
       <SpeakersSearch value={speakers.query} onChange={speakers.setQuery} />
       <SpeakersFilters activeFilter={speakers.filter} onChange={speakers.setFilter} />
       <div className="divide-y divide-divider">{speakers.isLoading ? <p className="py-6 text-center text-xs text-muted-foreground">در حال دریافت فهرست…</p> : speakers.speakers.length ? speakers.speakers.map((speaker) => <SpeakerCard key={speaker.id} speaker={speaker} onOpen={() => speakers.openSpeaker(speaker)} />) : <div className="rounded-control border border-dashed border-border-strong p-6 text-center text-xs text-muted-foreground">سخنرانی با این مشخصات پیدا نشد.</div>}</div>
-      <SpeakerProfile speaker={speakers.selectedSpeaker} request={speakers.request} reservation={speakers.reservation} onClose={speakers.closeProfile} onRequestChange={speakers.updateRequest} onSubmit={speakers.submitReservation} />
+      <SpeakerProfile speaker={speakers.selectedSpeaker} request={speakers.request} reservation={speakers.reservation} onClose={speakers.closeProfile} onRequestChange={speakers.updateRequest} onSubmit={() => void speakers.submitReservation()} />
     </section>
   );
 }

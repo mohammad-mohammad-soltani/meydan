@@ -7,6 +7,8 @@ export type ApiEnvelope<T> = {
 };
 
 export function getMeydanApiBaseUrl(): string {
+  if (typeof window !== "undefined") return "/api/meydan";
+
   return (
     process.env.MEYDAN_API_BASE_URL ||
     process.env.NEXT_PUBLIC_MEYDAN_API_BASE_URL ||

@@ -11,6 +11,7 @@ type ApiSpeaker = {
   handle?: string;
   expertise?: string;
   initials?: string;
+  avatar_url?: string;
   cities?: Array<{ name?: string } | string>;
 };
 
@@ -46,6 +47,7 @@ export async function getSpeakers(): Promise<Speaker[]> {
         .slice(-2)
         .map((part) => part[0])
         .join("."),
+    avatarUrl: item.avatar_url,
     accent: accents[index % accents.length],
     verified: Boolean(item.verified),
   }));

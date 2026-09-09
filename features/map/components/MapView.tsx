@@ -22,7 +22,7 @@ export function MapView() {
         </div>
       </section>
       <MapFrame location={map.location} />
-      <LocationPreview province={map.selectedProvince} city={map.selectedCity} location={map.location} status={map.status} error={map.error} />
+      {map.selectedProvince ? <LocationPreview province={map.selectedProvince} city={map.selectedCity} location={map.location} status={map.status} error={map.error} activeCount={map.activeCount} /> : null}
     </section>
   );
 }

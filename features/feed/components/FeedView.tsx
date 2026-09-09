@@ -1,34 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { BellRing, X } from "lucide-react";
 import { FeedFilters } from "./FeedFilters";
 import { FeedTabs } from "./FeedTabs";
-import { FollowSuggestions } from "./FollowSuggestions";
 import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
 import type { FeedPost, FollowSuggestion } from "../types";
 
-const LOCAL_POSTS_KEY = "meydan-local-narratives";
-
-function readLocalPosts(): FeedPost[] {
-  try {
-    const stored = window.localStorage.getItem(LOCAL_POSTS_KEY);
-    return stored ? (JSON.parse(stored) as FeedPost[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestions: FollowSuggestion[] }) {
   const feed = useFeed(posts, suggestions);
-  const [localPosts, setLocalPosts] = useState<FeedPost[]>([]);
-
-  useEffect(() => {
-    setLocalPosts(readLocalPosts());
-  }, []);
-
-  const showLocalPosts = feed.activeFilter === "all" || feed.activeFilter === "ideas";
 
   return (
     <div id="view-feed" className="relative min-h-full bg-background text-foreground">
@@ -43,21 +23,6 @@ export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestion
           <FeedFilters activeFilter={feed.activeFilter} onChange={feed.setActiveFilter} />
           <div key={feed.activeFilter} className="ui-enter">
             <div className="w-full divide-y divide-divider">
-              {showLocalPosts ? localPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  liked={feed.likedPostIds.has(post.id)}
-                  reposted={feed.repostedPostIds.has(post.id)}
-                  joined={false}
-                  onLike={() => feed.toggleLike(post.id)}
-                  onRepost={() => feed.toggleRepost(post.id)}
-                  onShare={() => void feed.sharePost(post)}
-                  onJoin={() => undefined}
-                  onOpenMedia={() => undefined}
-                />
-              )) : null}
-
               {feed.posts.map((post) => (
                 <PostCard
                   key={post.id}
@@ -77,7 +42,9 @@ export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestion
         </>
       ) : (
         <div key={feed.activeTab} className="ui-enter">
-          <FollowSuggestions suggestions={feed.suggestions} followedIds={feed.followedSquareIds} onToggleFollow={feed.toggleFollow} />
+          <div className="w-full divide-y divide-divider">
+            {feed.posts.map((post) => <PostCard key={post.id} post={post} liked={feed.likedPostIds.has(post.id)} reposted={feed.repostedPostIds.has(post.id)} joined={feed.joinedPostIds.has(post.id)} onLike={() => void feed.toggleLike(post.id)} onRepost={() => void feed.toggleRepost(post.id)} onShare={() => void feed.sharePost(post)} onJoin={() => void feed.joinInitiative(post.id)} onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)} />)}
+          </div>
         </div>
       )}
 

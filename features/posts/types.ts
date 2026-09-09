@@ -6,6 +6,7 @@ export type PostAuthor = {
   handle: string;
   initials: string;
   verified: boolean;
+  avatarUrl?: string;
 };
 
 export type PostMedia = {
@@ -15,6 +16,8 @@ export type PostMedia = {
   detail?: string;
   previewSrc?: string;
   previewAlt?: string;
+  width?: number;
+  height?: number;
 };
 
 export type MediaReflection = {
@@ -31,6 +34,7 @@ export type PostComment = {
   timeAgo: string;
   content: string;
   isAuthor?: boolean;
+  avatarUrl?: string;
 };
 
 export type PostDetail = {
@@ -44,5 +48,7 @@ export type PostDetail = {
   reflections: MediaReflection[];
   likes: number;
   reposts: number;
+  commentsCount: number;
   comments: PostComment[];
+  viewerState?: { liked: boolean; reposted: boolean };
 };

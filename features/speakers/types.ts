@@ -9,6 +9,7 @@ export type Speaker = {
   category: SpeakerCategory;
   expertise: string;
   initials: string;
+  avatarUrl?: string;
   accent: "slate" | "blue" | "amber" | "emerald";
   verified: boolean;
 };

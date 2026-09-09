@@ -32,6 +32,7 @@ type ApiContent = {
     label?: string;
     filename?: string;
     size?: number;
+    duration?: number;
   }>;
   creators?: ApiCreator[];
   tags?: string[];
@@ -39,10 +40,12 @@ type ApiContent = {
   featured?: boolean;
   published_at?: string | null;
   stats?: { views?: number; downloads?: number };
+  viewer_state?: { bookmarked?: boolean } | null;
   subtitle?: string;
   badge?: string;
   location_label?: string;
   media_duration?: string;
+  primary_attachment_id?: number;
   files?: Array<{
     id: string | number;
     label: string;
@@ -97,10 +100,17 @@ function coverOf(item: ApiContent): string | undefined {
   return item.attachments?.find((attachment) => attachment.type === "image")?.url;
 }
 
+function audioOf(item: ApiContent): string | undefined {
+  const primary = item.attachments?.find((attachment) => attachment.id === item.primary_attachment_id);
+  if (primary?.type === "audio") return `/api/content/${item.id}/media/${primary.id}`;
+  return undefined;
+}
+
 function toItem(item: ApiContent): ContentItem {
   const kind = kindOf(item.format);
   return {
     id: item.slug || String(item.id),
+    apiId: item.id,
     category: categoryOf(item),
     status: item.featured ? "urgent" : "ready",
     badge: item.badge || undefined,
@@ -108,9 +118,11 @@ function toItem(item: ApiContent): ContentItem {
     subtitle: item.subtitle || item.excerpt || "",
     description: item.excerpt || plainText(item.body || ""),
     author: item.creators?.[0]?.name,
+    authorAvatar: item.creators?.[0]?.avatar_url,
     media: {
       kind: kind === "video" ? "image" : kind,
       duration: item.media_duration || undefined,
+      audioSrc: audioOf(item),
       description: mediaDescription(item.format),
       coverImage: coverOf(item),
     },
@@ -128,22 +140,24 @@ function paragraphize(value?: string): string[] {
 }
 
 function fileList(item: ApiContent): ContentFile[] {
-  if (item.files?.length) {
-    return item.files.map((file) => ({
+  const attachments = item.attachments || [];
+  if (attachments.length) {
+    return attachments.map((file) => ({
       id: String(file.id),
-      label: file.label,
-      format: file.format,
-      size: file.size,
-      detail: file.detail,
+      url: file.url,
+      label: file.label || file.filename || "فایل",
+      format: (file.filename?.split(".").pop() || file.type || "FILE").toUpperCase(),
+      size: file.size ? `${compactFa(file.size)} بایت` : "",
+      detail: file.type === "audio" ? "فایل صوتی" : "فایل ضمیمه",
     }));
   }
 
-  return (item.attachments || []).map((file) => ({
+  return (item.files || []).map((file) => ({
     id: String(file.id),
-    label: file.label || file.filename || "فایل",
-    format: (file.filename?.split(".").pop() || file.type || "FILE").toUpperCase(),
-    size: file.size ? `${compactFa(file.size)} بایت` : "",
-    detail: "فایل ضمیمه",
+    label: file.label,
+    format: file.format,
+    size: file.size,
+    detail: file.detail,
   }));
 }
 
@@ -153,6 +167,7 @@ function toDetail(item: ApiContent): ContentDetailItem {
 
   return {
     id: item.slug || String(item.id),
+    apiId: item.id,
     category: kind === "video" ? "video" : categoryOf(item),
     status: item.featured ? "urgent" : "ready",
     badge: item.badge || undefined,
@@ -163,6 +178,7 @@ function toDetail(item: ApiContent): ContentDetailItem {
     media: {
       kind,
       duration: item.media_duration || undefined,
+      audioSrc: audioOf(item),
       description: mediaDescription(item.format),
       coverImage:
         coverOf(item) ||
@@ -173,7 +189,7 @@ function toDetail(item: ApiContent): ContentDetailItem {
     creator: {
       name: creator?.name || "میدان خیابان",
       role: creator?.role || "تولیدکننده محتوا",
-      avatar: creator?.avatar_url || "/images/generated/avatar-speaker.svg",
+      avatar: creator?.avatar_url,
       bio: creator?.bio || "",
       publishedCount: "",
     },
@@ -185,6 +201,7 @@ function toDetail(item: ApiContent): ContentDetailItem {
     tags: item.tags || [],
     files: fileList(item),
     usageNote: item.usage_note || "",
+    viewerState: { bookmarked: Boolean(item.viewer_state?.bookmarked) },
   };
 }
 

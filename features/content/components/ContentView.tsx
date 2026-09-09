@@ -36,9 +36,12 @@ const actionStyles = {
 
 type DetailModal = { title: string; description: string } | null;
 
-export function ContentView({ scheduleItems, quickActions }: { items: ContentItem[]; scheduleItems: ScheduleItem[]; quickActions: ContentQuickAction[] }) {
+export function ContentView({ items, scheduleItems, quickActions }: { items: ContentItem[]; scheduleItems: ScheduleItem[]; quickActions: ContentQuickAction[] }) {
   const [detailModal, setDetailModal] = useState<DetailModal>(null);
   const [audioNotice, setAudioNotice] = useState(false);
+  const featuredItem = items.find((item) => item.category === "featured") || items[0];
+  const talkItems = items.filter((item) => item.category === "talks").slice(0, 2);
+  const audioItem = items.find((item) => item.category === "audio");
 
   const openQuickAction = (action: ContentQuickAction) => {
     const descriptions: Partial<Record<ContentQuickAction["id"], string>> = {
@@ -52,17 +55,17 @@ export function ContentView({ scheduleItems, quickActions }: { items: ContentIte
 
   return (
     <section id="view-content" className="min-h-full space-y-6 bg-background p-4 pb-24 text-foreground">
-      <Link href="/content/nahj-jihad" className="relative block cursor-pointer overflow-hidden rounded-2xl border border-border bg-solid-dark shadow-card">
+      {featuredItem ? <Link href={`/content/${featuredItem.id}` as Route} className="relative block cursor-pointer overflow-hidden rounded-2xl border border-border bg-solid-dark shadow-card">
         <div className="relative h-52 w-full">
-          <img src={generatedMedia.contentHero} alt="محتوا" className="h-full w-full object-cover opacity-35" />
+          <img src={featuredItem.media.coverImage || generatedMedia.contentHero} alt="محتوا" className="h-full w-full object-cover opacity-35" />
           <div className="absolute inset-0 bg-gradient-to-t from-solid-dark via-solid-dark/55 to-transparent" />
           <div className="absolute inset-x-4 bottom-4 space-y-1 text-right">
-            <span className="mb-1 inline-block rounded bg-brand px-2 py-0.5 text-[10px] font-bold text-brand-foreground">منبر شبانه</span>
-            <h2 className="text-base font-black leading-tight text-on-solid">شرح نهج‌البلاغه؛ جهاد اجتماعی و سیاسی</h2>
-            <p className="line-clamp-2 text-xs leading-relaxed text-on-solid/75">شرح خطبه جهاد متناسب با روحیه ایستادگی و حضور سازمان‌یافته مردمی.</p>
+            <span className="mb-1 inline-block rounded bg-brand px-2 py-0.5 text-[10px] font-bold text-brand-foreground">{featuredItem.badge || "منبر شبانه"}</span>
+            <h2 className="text-base font-black leading-tight text-on-solid">{featuredItem.title}</h2>
+            <p className="line-clamp-2 text-xs leading-relaxed text-on-solid/75">{featuredItem.subtitle || featuredItem.description}</p>
           </div>
         </div>
-      </Link>
+      </Link> : null}
 
       <div className="rounded-2xl border border-border bg-surface p-3">
         <div className="grid grid-cols-4 gap-2 text-center">
@@ -124,20 +127,13 @@ export function ContentView({ scheduleItems, quickActions }: { items: ContentIte
           <span className="text-[11px] text-muted-foreground">فیش ۱۰ دقیقه‌ای منبر</span>
         </div>
         <div className="space-y-2">
-          <div className="flex items-center justify-between rounded-xl border border-border bg-surface p-3">
+          {talkItems.map((item) => <div key={item.apiId} className="flex items-center justify-between rounded-xl border border-border bg-surface p-3">
             <div className="flex min-w-0 items-center gap-3">
-              <img src={generatedMedia.avatarSpeaker} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
-              <div className="min-w-0"><h4 className="text-xs font-bold text-foreground">حجت‌الاسلام علیرضا پناهیان</h4><p className="mt-0.5 text-[10px] text-muted-foreground">مفهوم «میدانِ خیابان» در دفاع اجتماعی</p></div>
+              {item.authorAvatar ? <img src={item.authorAvatar} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" /> : <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-black text-icon">{(item.author || item.title).slice(0, 1)}</span>}
+              <div className="min-w-0"><h4 className="text-xs font-bold text-foreground">{item.author || item.title}</h4><p className="mt-0.5 text-[10px] text-muted-foreground">{item.title}</p></div>
             </div>
-            <Link href="/content/panahian-square" className="flex shrink-0 items-center gap-1 rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] font-bold text-foreground-secondary transition-colors hover:bg-brand hover:text-brand-foreground"><FileText className="h-3 w-3" />دریافت فیش</Link>
-          </div>
-          <div className="flex items-center justify-between rounded-xl border border-border bg-surface p-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <img src={generatedMedia.avatarCoordinator} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
-              <div className="min-w-0"><h4 className="text-xs font-bold text-foreground">استاد ناصر رفیعی</h4><p className="mt-0.5 text-[10px] text-muted-foreground">سیره اهل‌بیت در مواجهه با محاصره و بحران</p></div>
-            </div>
-            <Link href="/content/rafiei-crisis" className="flex shrink-0 items-center gap-1 rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] font-bold text-foreground-secondary transition-colors hover:bg-brand hover:text-brand-foreground"><FileText className="h-3 w-3" />دریافت فیش</Link>
-          </div>
+            <Link href={`/content/${item.id}` as Route} className="flex shrink-0 items-center gap-1 rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] font-bold text-foreground-secondary transition-colors hover:bg-brand hover:text-brand-foreground"><FileText className="h-3 w-3" />دریافت فیش</Link>
+          </div>)}
         </div>
       </div>
 
@@ -146,11 +142,11 @@ export function ContentView({ scheduleItems, quickActions }: { items: ContentIte
           <h3 className="flex items-center gap-1.5 text-sm font-black text-foreground"><Music2 className="h-4 w-4 text-success" />دم‌ها و سرودهای حماسی کشوری</h3>
           <Link href="/podcasts" className="flex items-center gap-0.5 text-[11px] font-bold text-brand hover:underline"><span>مشاهده بیشتر</span><ChevronLeft className="h-3.5 w-3.5" /></Link>
         </div>
-        <div className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
-          <Link href="/content/farmandeh-song" aria-label="مشاهده جزئیات دم هماهنگ فرمانده کل قوا" className="p-2 text-icon-muted transition-colors hover:text-icon"><Info className="h-5 w-5" /></Link>
-          <Link href="/content/farmandeh-song" className="flex-1 cursor-pointer pr-3 text-right"><h4 className="text-sm font-bold text-foreground">دم هماهنگ: «فرمانده کل قوا»</h4><p className="mt-0.5 text-[11px] text-muted-foreground">با نوای حاج میثم مطیعی · ۳ دقیقه</p></Link>
-          <button type="button" onClick={() => { setAudioNotice(true); window.setTimeout(() => setAudioNotice(false), 2200); }} aria-label="پخش فرمانده کل قوا" className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-xs"><Play className="mr-0.5 h-5 w-5 fill-current" /></button>
-        </div>
+        {audioItem ? <div className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
+          <Link href={`/content/${audioItem.id}` as Route} aria-label={`مشاهده جزئیات ${audioItem.title}`} className="p-2 text-icon-muted transition-colors hover:text-icon"><Info className="h-5 w-5" /></Link>
+          <Link href={`/content/${audioItem.id}` as Route} className="flex-1 cursor-pointer pr-3 text-right"><h4 className="text-sm font-bold text-foreground">{audioItem.title}</h4><p className="mt-0.5 text-[11px] text-muted-foreground">{audioItem.author ? `با نوای ${audioItem.author}` : audioItem.subtitle} · {audioItem.media.duration || ""}</p></Link>
+          <button type="button" onClick={() => { setAudioNotice(true); window.setTimeout(() => setAudioNotice(false), 2200); }} aria-label={`پخش ${audioItem.title}`} className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-xs"><Play className="mr-0.5 h-5 w-5 fill-current" /></button>
+        </div> : null}
       </div>
 
       {detailModal ? (

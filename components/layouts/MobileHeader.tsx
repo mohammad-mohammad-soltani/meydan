@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Moon, Search, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
 export function MobileHeader() {
   const pathname = usePathname();
@@ -42,10 +42,6 @@ export function MobileHeader() {
         </span>
       </Link>
       <div className="flex shrink-0 items-center gap-2">
-        <Link href="/explore" aria-label="جستجو" className="flex min-h-11 items-center gap-1.5 rounded-control border border-border bg-surface-muted px-3 py-2 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
-          <span className="whitespace-nowrap text-xs font-bold">جستجو</span>
-          <Search className="h-4 w-4" />
-        </Link>
         <button type="button" onClick={toggleTheme} aria-label={isDark ? "فعال‌کردن حالت روشن" : "فعال‌کردن حالت تیره"} className="grid h-11 w-11 place-items-center rounded-full border border-border bg-surface-muted text-icon transition-colors hover:bg-hover hover:text-warning">
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>

@@ -6,6 +6,7 @@ export type ContentStatus = "ready" | "urgent";
 export type ContentMedia = {
   kind: MediaKind;
   duration?: string;
+  audioSrc?: string;
   description: string;
   coverImage?: string;
 };
@@ -13,13 +14,14 @@ export type ContentMedia = {
 export type ContentCreator = {
   name: string;
   role: string;
-  avatar: string;
+  avatar?: string;
   bio: string;
   publishedCount: string;
 };
 
 export type ContentFile = {
   id: string;
+  url?: string;
   label: string;
   format: string;
   size: string;
@@ -28,6 +30,7 @@ export type ContentFile = {
 
 export type ContentItem = {
   id: string;
+  apiId: number;
   category: ContentCategory;
   status: ContentStatus;
   badge?: string;
@@ -35,6 +38,7 @@ export type ContentItem = {
   subtitle: string;
   description: string;
   author?: string;
+  authorAvatar?: string;
   media: ContentMedia;
 };
 
@@ -50,6 +54,7 @@ export type ContentDetailItem = Omit<ContentItem, "category" | "media"> & {
   tags: string[];
   files: ContentFile[];
   usageNote: string;
+  viewerState?: { bookmarked: boolean };
 };
 
 export type ScheduleItem = {

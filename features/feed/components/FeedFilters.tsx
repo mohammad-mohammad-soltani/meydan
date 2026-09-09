@@ -1,4 +1,4 @@
-import { BellRing, Image, Mic, Newspaper, Star } from "lucide-react";
+import { Newspaper, Star } from "lucide-react";
 import type { FeedFilter } from "../types";
 
 type FeedFiltersProps = {
@@ -6,16 +6,13 @@ type FeedFiltersProps = {
   onChange: (filter: FeedFilter) => void;
 };
 
-const filters: Array<{ id: FeedFilter; label: string; icon?: "star" | "newspaper" | "image" | "mic" | "bell" }> = [
+const filters: Array<{ id: FeedFilter; label: string; icon?: "star" | "newspaper" }> = [
   { id: "all", label: "همه روایت‌ها" },
-  { id: "ideas", label: "پژواک (کار خوب)", icon: "star" },
+  { id: "ideas", label: "کار خوب", icon: "star" },
   { id: "media", label: "بازنشر رسانه‌ای", icon: "newspaper" },
-  { id: "visual", label: "عکس و ویدیو", icon: "image" },
-  { id: "audio", label: "صوت و سخنرانی", icon: "mic" },
-  { id: "initiatives", label: "فراخوان‌ها", icon: "bell" },
 ];
 
-const filterIcons = { star: Star, newspaper: Newspaper, image: Image, mic: Mic, bell: BellRing };
+const filterIcons = { star: Star, newspaper: Newspaper };
 
 export function FeedFilters({ activeFilter, onChange }: FeedFiltersProps) {
   return (

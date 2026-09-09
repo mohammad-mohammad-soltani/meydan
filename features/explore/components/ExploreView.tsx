@@ -15,6 +15,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { meydanApi } from "@/lib/meydan-api";
 
 type ExploreItem = {
   id: string;
@@ -25,81 +26,6 @@ type ExploreItem = {
   keywords: string[];
   verified?: boolean;
 };
-
-const catalog: ExploreItem[] = [
-  {
-    id: "enghelab-square",
-    title: "میدان انقلاب تهران",
-    subtitle: "تهران · میدان و روایت‌های مرتبط",
-    kind: "place",
-    href: "/map",
-    keywords: ["تهران", "انقلاب", "میدان", "تجمع"],
-  },
-  {
-    id: "amir-chakhmaq",
-    title: "میدان امیرچخماق یزد",
-    subtitle: "یزد · میدان و رویدادهای محلی",
-    kind: "place",
-    href: "/map",
-    keywords: ["یزد", "امیرچخماق", "میدان"],
-  },
-  {
-    id: "panahian",
-    title: "حجت‌الاسلام علیرضا پناهیان",
-    subtitle: "سخنران · فیش‌ها و محتوای منتشرشده",
-    kind: "speaker",
-    href: "/speakers",
-    keywords: ["پناهیان", "سخنران", "منبر", "نهج البلاغه"],
-    verified: true,
-  },
-  {
-    id: "meysam-motiee",
-    title: "حاج میثم مطیعی",
-    subtitle: "مداح و تولیدکننده محتوای آیینی",
-    kind: "speaker",
-    href: "/content/farmandeh-song",
-    keywords: ["میثم", "مطیعی", "سرود", "صوت", "مداح"],
-    verified: true,
-  },
-  {
-    id: "nahj-jihad",
-    title: "شرح نهج‌البلاغه؛ جهاد اجتماعی و سیاسی",
-    subtitle: "بسته محتوایی · متن، پوستر و نسخه انتشار",
-    kind: "content",
-    href: "/content/nahj-jihad",
-    keywords: ["نهج البلاغه", "جهاد", "منبر", "محتوا"],
-  },
-  {
-    id: "farmandeh-song",
-    title: "دم هماهنگ: «فرمانده کل قوا»",
-    subtitle: "صوت منتخب · با نوای حاج میثم مطیعی",
-    kind: "content",
-    href: "/content/farmandeh-song",
-    keywords: ["فرمانده", "سرود", "صوت", "مطیعی"],
-  },
-  {
-    id: "profile",
-    title: "هویت و پایگاه",
-    subtitle: "پروفایل، فعالیت‌ها و اطلاعات پایگاه",
-    kind: "profile",
-    href: "/profile",
-    keywords: ["پروفایل", "هویت", "پایگاه"],
-  },
-  {
-    id: "street-square",
-    title: "#میدان_خیابان",
-    subtitle: "موضوع · روایت‌ها و محتوای مرتبط",
-    kind: "topic",
-    href: "/home",
-    keywords: ["میدان خیابان", "هشتگ", "روایت"],
-  },
-];
-
-const trends = [
-  { id: "trend-1", label: "#میدان_خیابان", meta: "موضوع داغ در روایت‌ها", href: "/home" as Route },
-  { id: "trend-2", label: "روایت میدان انقلاب", meta: "محتوا و گزارش‌های تازه", href: "/content" as Route },
-  { id: "trend-3", label: "سخنرانان امشب", meta: "پیشنهادهای مرتبط با برنامه‌ها", href: "/speakers" as Route },
-];
 
 function normalize(value: string) {
   return value
@@ -121,6 +47,9 @@ function ResultIcon({ kind }: { kind: ExploreItem["kind"] }) {
 
 export function ExploreView() {
   const [query, setQuery] = useState("");
+  const [liveCatalog, setLiveCatalog] = useState<ExploreItem[]>([]);
+  const [liveTrends, setLiveTrends] = useState<Array<{ id: string; label: string; meta: string; href: Route }>>([]);
+  const [searchResults, setSearchResults] = useState<ExploreItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -128,15 +57,48 @@ export function ExploreView() {
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
+  useEffect(() => {
+    const needle = query.trim();
+    if (!needle) {
+      queueMicrotask(() => setSearchResults([]));
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void meydanApi<{ sections?: Record<string, Array<{ id: number; name?: string; title?: string; display_name?: string; description?: string; location?: { address?: string } }> > }>(`/explore/search?q=${encodeURIComponent(needle)}`).then((data) => {
+        const sections = data.sections || {};
+        const toItems = (items: Array<{ id: number; name?: string; title?: string; display_name?: string; description?: string; location?: { address?: string } }>, kind: ExploreItem["kind"], href: string) => items.map((item) => {
+          const title = item.name || item.title || item.display_name || "مورد میدان";
+          const subtitle = item.description || item.location?.address || "نتیجه جست‌وجو";
+          return { id: `${kind}-${item.id}`, title, subtitle, kind, href, keywords: [title, subtitle] };
+        });
+        setSearchResults([
+          ...toItems(sections.squares || [], "place", "/map"),
+          ...toItems(sections.creators || [], "speaker", "/speakers"),
+          ...toItems(sections.content || [], "content", "/content"),
+          ...toItems(sections.users || [], "profile", "/profile"),
+          ...toItems(sections.topics || [], "topic", "/home"),
+        ]);
+      }).catch(() => setSearchResults([]));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    void Promise.all([meydanApi<{ recommended_actors?: Array<{ id: string; display_name: string; verified?: boolean }> }>("/explore/suggestions"), meydanApi<{ items?: Array<{ id: number; tags?: string[] }> }>("/explore/trends")]).then(([suggestions, trendData]) => {
+      setLiveCatalog((suggestions.recommended_actors || []).map((item) => ({ id: item.id, title: item.display_name, subtitle: "پیشنهاد میدان", kind: "place", href: "/map", keywords: [item.display_name], verified: item.verified })));
+      setLiveTrends((trendData.items || []).map((item) => ({ id: String(item.id), label: `#${item.tags?.[0] || "روایت"}`, meta: "موضوع داغ در روایت‌ها", href: "/home" as Route })));
+    }).catch(() => undefined);
+  }, []);
+
   const results = useMemo(() => {
     const needle = normalize(query);
     if (!needle) return [];
 
-    return catalog.filter((item) => {
+    return searchResults.filter((item) => {
       const haystack = normalize([item.title, item.subtitle, ...item.keywords].join(" "));
       return haystack.includes(needle);
     });
-  }, [query]);
+  }, [query, searchResults]);
 
   const hasQuery = query.trim().length > 0;
 
@@ -211,7 +173,7 @@ export function ExploreView() {
               <span className="text-[11px] font-bold text-muted-foreground">پیشنهاد برای شما</span>
             </div>
             <div className="mt-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-              {catalog.slice(0, 5).map((item) => (
+              {liveCatalog.slice(0, 5).map((item) => (
                 <button key={item.id} type="button" onClick={() => { setQuery(item.title.replace(/^#/, "")); inputRef.current?.focus(); }} className="shrink-0 rounded-pill border border-border bg-surface px-3 py-2 text-xs font-bold text-foreground transition-colors hover:bg-hover">
                   {item.title}
                 </button>
@@ -225,7 +187,7 @@ export function ExploreView() {
               <h2 className="text-base font-black text-foreground">موضوعات داغ</h2>
             </div>
             <div className="divide-y divide-divider">
-              {trends.map((trend, index) => (
+              {liveTrends.map((trend, index) => (
                 <Link key={trend.id} href={trend.href} className="block px-4 py-4 transition-colors hover:bg-hover">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

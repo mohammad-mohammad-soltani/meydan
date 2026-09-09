@@ -1,6 +1,5 @@
 "use client";
 
-import { generatedMedia } from "@/components/shared/generated-media";
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
@@ -24,13 +23,16 @@ type PostCardProps = {
 
 const attachmentIcons = { image: ImageIcon, video: Video, article: FileText, microphone: Mic, bolt: Bolt };
 
-function PrimaryAttachment({ attachment }: { attachment: FeedAttachment }) {
+function PrimaryAttachment({ attachment, singleImage = false }: { attachment: FeedAttachment; singleImage?: boolean }) {
   const Icon = attachmentIcons[attachment.icon];
+  const intrinsicRatio = attachment.width && attachment.height
+    ? Math.min(16 / 9, Math.max(4 / 5, attachment.width / attachment.height))
+    : 16 / 9;
 
   if (attachment.previewSrc) {
     return (
-      <div className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-surface-muted">
-        <Image src={attachment.previewSrc} alt={attachment.previewAlt ?? attachment.label} fill sizes="(max-width: 640px) calc(100vw - 76px), 520px" className="object-cover" draggable={false} />
+      <div className={`relative overflow-hidden rounded-2xl border border-border bg-surface-muted ${singleImage ? "" : "aspect-video"}`} style={singleImage ? { aspectRatio: intrinsicRatio } : undefined}>
+        <Image src={attachment.previewSrc} alt={attachment.previewAlt ?? attachment.label} fill unoptimized={attachment.previewSrc.startsWith("http")} sizes="(max-width: 640px) calc(100vw - 76px), 520px" className="object-cover" draggable={false} />
         {attachment.icon === "video" ? (
           <>
             <span className="absolute inset-0 grid place-items-center bg-active">
@@ -99,7 +101,7 @@ function DetailMediaScroller({ attachments }: { attachments: FeedAttachment[] })
       }}
       onDragStart={(event) => event.preventDefault()}
     >
-      {attachments.map((attachment, index) => <div dir="rtl" key={attachment.id} className={`ml-4 min-w-[78%] snap-start ${index === 0 ? "pr-4" : ""}`}><PrimaryAttachment attachment={attachment} /></div>)}
+      {attachments.map((attachment, index) => <div dir="rtl" key={attachment.id} className={`ml-4 min-w-[78%] snap-start ${index === 0 ? "pr-4" : ""}`}><PrimaryAttachment attachment={attachment} singleImage={attachments.length === 1 && attachment.icon === "image"} /></div>)}
     </div>
   );
 }
@@ -112,7 +114,7 @@ export function PostCard({ post, variant = "timeline", liked, reposted, joined, 
     <article className={`relative py-3 ${isDetail ? "px-0" : "px-3 transition-colors hover:bg-hover sm:px-4"}`}>
       {!isDetail ? <Link href={("/posts/" + post.id) as Route} aria-label={`مشاهده روایت ${post.title}`} className="absolute inset-0 z-0" /> : null}
       <div className={`pointer-events-none relative z-10 ${isDetail ? "block" : "flex items-start gap-3"}`}>
-        <Image src={post.city === "یزد" ? generatedMedia.avatarSpeaker : generatedMedia.avatarCoordinator} alt="" width={44} height={44} className={isDetail ? "absolute right-3 top-0 h-11 w-11 rounded-full object-cover" : "h-11 w-11 shrink-0 rounded-full object-cover"} />
+        {post.author.avatarUrl ? <Image src={post.author.avatarUrl} alt="" width={44} height={44} unoptimized={post.author.avatarUrl.startsWith("http")} className={isDetail ? "absolute right-3 top-0 h-11 w-11 rounded-full object-cover" : "h-11 w-11 shrink-0 rounded-full object-cover"} /> : <span aria-hidden="true" className={isDetail ? "absolute right-3 top-0 grid h-11 w-11 place-items-center rounded-full bg-brand text-xs font-black text-brand-foreground" : "grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-brand-foreground"}>{post.squareName.slice(0, 1)}</span>}
         <div className={`min-w-0 ${isDetail ? "w-full" : "flex-1"}`}>
           <div dir="rtl" className={`flex min-w-0 items-center gap-2 text-sm leading-5 ${isDetail ? "justify-start pr-[4.5rem]" : ""}`}>
             <span className={`font-black text-foreground ${isDetail ? "whitespace-nowrap" : "truncate"}`}>{post.squareName}</span>
@@ -128,7 +130,7 @@ export function PostCard({ post, variant = "timeline", liked, reposted, joined, 
             <p className={`${post.title !== post.squareName ? "mt-0.5 " : ""}text-[14px] leading-7 text-foreground-secondary`}>{post.body}</p>
           </div>
 
-          {isDetail ? <DetailMediaScroller attachments={post.attachments} /> : primaryAttachment ? <div className="mt-3"><PrimaryAttachment attachment={primaryAttachment} /></div> : null}
+          {isDetail ? <DetailMediaScroller attachments={post.attachments} /> : primaryAttachment ? <div className="mt-3"><PrimaryAttachment attachment={primaryAttachment} singleImage={post.attachments.length === 1 && primaryAttachment.icon === "image"} /></div> : null}
 
           {!isDetail && otherAttachments.length > 0 ? (
             <p className="mt-2 flex flex-wrap items-center gap-x-1.5 text-xs leading-6 text-muted-foreground" aria-label="ضمیمه‌های بیشتر">

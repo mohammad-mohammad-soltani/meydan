@@ -1,5 +1,5 @@
 export type FeedTab = "for-you" | "following";
-export type FeedFilter = "all" | "ideas" | "media" | "visual" | "audio" | "initiatives";
+export type FeedFilter = "all" | "ideas" | "media";
 export type PostKind = "ideas" | "media";
 
 export type FeedAttachment = {
@@ -9,6 +9,8 @@ export type FeedAttachment = {
   icon: "image" | "video" | "article" | "microphone" | "bolt";
   previewSrc?: string;
   previewAlt?: string;
+  width?: number;
+  height?: number;
 };
 
 export type MediaReflection = {
@@ -18,6 +20,9 @@ export type MediaReflection = {
 
 export type FeedPost = {
   id: string;
+  author: { id: number; type: "user" | "square"; avatarUrl?: string; verified?: boolean };
+  initiativeId?: number;
+  viewerState?: { liked: boolean; reposted: boolean; joined: boolean };
   kind: PostKind;
   squareName: string;
   handle: string;
@@ -38,6 +43,7 @@ export type FeedPost = {
 
 export type FollowSuggestion = {
   id: string;
+  actorType?: "user" | "square";
   name: string;
   city: string;
   handle: string;

@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { compactFa, meydanApi, plainText } from "@/lib/meydan-api";
+import { accessTokenHeader } from "@/lib/meydan-session";
 import type { ProfileDetails, ProfileStat } from "../types";
 
 type ApiSchedule = {
@@ -14,6 +14,7 @@ type ApiSquare = {
   name: string;
   description?: string;
   verified?: boolean;
+  avatar_url?: string;
   handle?: string;
   subtitle?: string;
   profile_about?: string;
@@ -108,13 +109,15 @@ function mapSquare(
       ];
 
   return {
+    actorId: square.id,
+    accountType: "square",
     initialTab: "square",
     identity: {
       name: square.name,
       handle: square.handle || `square_${square.id}`,
       subtitle: square.subtitle || "پایگاه فعال میدان",
       location: square.location?.address || "",
-      avatar: "🏛️",
+      avatar: square.avatar_url || undefined,
       verified: Boolean(square.verified),
     },
     squareStats,
@@ -148,13 +151,15 @@ function mapSquare(
 function mapUser(profile: ApiUserProfile): ProfileDetails {
   const narratives = profile.stats?.narratives || 0;
   return {
+    actorId: profile.id,
+    accountType: "resume",
     initialTab: "resume",
     identity: {
       name: profile.full_name || "کاربر میدان",
       handle: `user_${profile.id}`,
       subtitle: profile.headline || "عضو میدان",
       location: profile.location_label || "",
-      avatar: profile.avatar_url || "👤",
+      avatar: profile.avatar_url || undefined,
       verified: Boolean(profile.verified),
     },
     squareStats: [],
@@ -175,15 +180,9 @@ function mapUser(profile: ApiUserProfile): ProfileDetails {
   };
 }
 
-async function cookieHeader(): Promise<Record<string, string>> {
-  const store = await cookies();
-  const value = store.toString();
-  return value ? { Cookie: value } : {};
-}
-
 async function authenticatedProfile(): Promise<ProfileDetails | null> {
-  const headers = await cookieHeader();
-  if (!headers.Cookie) return null;
+  const headers = await accessTokenHeader();
+  if (!headers.Authorization) return null;
 
   try {
     const me = await meydanApi<ApiMe>("/me", { headers });
@@ -202,25 +201,8 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
   }
 }
 
-async function publicSquareFallback(): Promise<ProfileDetails> {
-  const squares = await meydanApi<ApiSquare[]>(
-    "/squares?q=" + encodeURIComponent("پایگاه میدان انقلاب تهران"),
-  );
-  const square = squares[0];
-  if (!square) throw new Error("پروفایل میدان در WordPress پیدا نشد.");
-
-  let narratives: ApiNarrative[] = [];
-  try {
-    narratives = await meydanApi<ApiNarrative[]>(
-      `/squares/${square.id}/narratives`,
-    );
-  } catch {
-    narratives = [];
-  }
-
-  return mapSquare(square, narratives);
-}
-
 export async function getProfileDetails(): Promise<ProfileDetails> {
-  return (await authenticatedProfile()) || publicSquareFallback();
+  const profile = await authenticatedProfile();
+  if (!profile) throw new Error("برای مشاهده پروفایل وارد شوید.");
+  return profile;
 }

@@ -6,7 +6,7 @@ export type ProfileIdentity = {
   handle: string;
   subtitle: string;
   location: string;
-  avatar: string;
+  avatar?: string;
   verified: boolean;
 };
 
@@ -26,6 +26,8 @@ export type ProfileActivity = {
 };
 
 export type ProfileDetails = {
+  actorId: number;
+  accountType: ProfileTab;
   initialTab?: ProfileTab;
   identity: ProfileIdentity;
   squareStats: ProfileStat[];

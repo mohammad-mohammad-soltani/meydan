@@ -1,0 +1,100 @@
+import { NextRequest, NextResponse } from "next/server";
+import {
+  ACCESS_COOKIE,
+  REFRESH_COOKIE,
+  sessionCookieOptions,
+} from "@/lib/meydan-session";
+
+const apiBase = () => {
+  const value =
+    process.env.MEYDAN_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_MEYDAN_API_BASE_URL;
+  if (!value) throw new Error("MEYDAN_API_BASE_URL is not configured.");
+  return value.replace(/\/$/, "");
+};
+
+async function upstream(
+  request: NextRequest,
+  path: string[],
+  accessToken?: string,
+  body?: ArrayBuffer,
+) {
+  const url = new URL(`${apiBase()}/${path.join("/")}`);
+  url.search = request.nextUrl.search;
+  const headers = new Headers();
+  const contentType = request.headers.get("content-type");
+  const idempotencyKey = request.headers.get("idempotency-key");
+  if (contentType) headers.set("content-type", contentType);
+  if (idempotencyKey) headers.set("idempotency-key", idempotencyKey);
+  headers.set("accept", "application/json");
+  if (accessToken) headers.set("authorization", `Bearer ${accessToken}`);
+
+  return fetch(url, {
+    method: request.method,
+    headers,
+    body: ["GET", "HEAD"].includes(request.method)
+      ? undefined
+      : body,
+    cache: "no-store",
+  });
+}
+
+async function refresh(refreshToken: string) {
+  const response = await fetch(`${apiBase()}/auth/refresh`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+    cache: "no-store",
+  });
+  const body = await response.json().catch(() => null) as {
+    data?: { access_token?: string };
+  } | null;
+  return response.ok ? body?.data?.access_token : undefined;
+}
+
+async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[...path]">) {
+  const { path } = await context.params;
+  // The request stream can be read only once. Preserve it so a refreshed
+  // authenticated request can be retried without losing its payload.
+  const body = ["GET", "HEAD"].includes(request.method)
+    ? undefined
+    : await request.arrayBuffer();
+  let accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
+  let response = await upstream(request, path, accessToken, body);
+  let refreshed = false;
+
+  if (response.status === 401) {
+    const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
+    const nextToken = refreshToken ? await refresh(refreshToken) : undefined;
+    if (nextToken) {
+      accessToken = nextToken;
+      refreshed = true;
+      response = await upstream(request, path, accessToken, body);
+    }
+  }
+
+  const responseBody = await response.arrayBuffer();
+  const responseHeaders = new Headers({
+    "content-type": response.headers.get("content-type") || "application/json; charset=utf-8",
+  });
+  const requestId = response.headers.get("x-request-id");
+  if (requestId) responseHeaders.set("x-request-id", requestId);
+  const result = new NextResponse(responseBody, {
+    status: response.status,
+    headers: responseHeaders,
+  });
+  if (refreshed && accessToken) {
+    result.cookies.set(ACCESS_COOKIE, accessToken, { ...sessionCookieOptions, maxAge: 15 * 60 });
+  }
+  if (response.status === 401) {
+    result.cookies.delete(ACCESS_COOKIE);
+    result.cookies.delete(REFRESH_COOKIE);
+  }
+  return result;
+}
+
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const PATCH = handle;
+export const DELETE = handle;
