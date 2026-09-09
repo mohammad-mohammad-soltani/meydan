@@ -12,7 +12,7 @@ type ApiNarrative = {
   attachments?: ApiAttachment[];
   tags?: string[];
   media_reflections?: ApiReflection[];
-  stats?: { likes?: number; reposts?: number; comments?: number };
+  stats?: { likes?: number; reposts?: number; comments?: number; views?: number };
   viewer_state?: { liked?: boolean; reposted?: boolean } | null;
 };
 type ApiComment = {
@@ -91,6 +91,7 @@ export async function getPostById(postId: string): Promise<PostDetail | null> {
       })),
       likes: post.stats?.likes || 0,
       reposts: post.stats?.reposts || 0,
+      views: post.stats?.views || 0,
       commentsCount: post.stats?.comments || 0,
       viewerState: { liked: Boolean(post.viewer_state?.liked), reposted: Boolean(post.viewer_state?.reposted) },
       comments: comments.map((item): PostComment => {
