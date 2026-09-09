@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { FolderKanban, Home, Map, MessageSquare, Mic, UserCheck } from "lucide-react";
+import { FolderKanban, Home, Map, Mic, Search, UserCheck } from "lucide-react";
 import { BottomNavigation } from "./BottomNavigation";
 import { MobileHeader } from "./MobileHeader";
 
@@ -26,7 +26,7 @@ export function AppShell({ children }: AppShellProps) {
             <Link href="/content" className={desktopLinkClass}><FolderKanban className="h-5 w-5" />بسته محتوا</Link>
             <Link href="/speakers" className={desktopLinkClass}><Mic className="h-5 w-5" />اعزام سخنران</Link>
             <Link href="/map" className={desktopLinkClass}><Map className="h-5 w-5" />نقشه زنده</Link>
-            <Link href="/chat" className={desktopLinkClass}><MessageSquare className="h-5 w-5" />گفتگوها</Link>
+            <Link href="/explore" className={desktopLinkClass}><Search className="h-5 w-5" />کاوش و جستجو</Link>
             <Link href="/profile" className={desktopLinkClass}><UserCheck className="h-5 w-5" />هویت و پایگاه</Link>
           </nav>
         </div>
