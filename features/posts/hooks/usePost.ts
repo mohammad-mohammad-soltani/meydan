@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { meydanApi } from "@/lib/meydan-api";
+import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import type { PostComment, PostDetail } from "../types";
+
+function redirectToLogin() {
+  if (typeof window !== "undefined") window.location.assign("/auth");
+}
 
 export function usePost(post: PostDetail) {
   const [liked, setLiked] = useState(Boolean(post.viewerState?.liked));
@@ -21,8 +25,9 @@ export function usePost(post: PostDetail) {
       const comment = await meydanApi<{ id: number; author?: { display_name?: string } | null; body: string; created_at?: string }>(`/narratives/${post.id}/comments`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() }, body: JSON.stringify({ body: content }) });
       setComments((current) => [{ id: String(comment.id), author: comment.author?.display_name || "شما", initials: "ش", timeAgo: "همین حالا", content: comment.body }, ...current]);
       setCounts((current) => ({ ...current, comments: current.comments + 1 }));
-    } catch {
+    } catch (reason) {
       setCommentDraft(content);
+      if (isAuthApiError(reason)) redirectToLogin();
     }
   };
 
@@ -37,17 +42,24 @@ export function usePost(post: PostDetail) {
     const next = !liked;
     setLiked(next);
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${post.id}/like`, { method: next ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${post.id}/like`, { method: next ? "PUT" : "DELETE" });
       if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, comments: result.stats?.comments ?? current.comments }));
-    } catch { setLiked(!next); }
+    } catch (reason) {
+      setLiked(!next);
+      if (isAuthApiError(reason)) redirectToLogin();
+    }
   };
+
   const toggleRepost = async () => {
     const next = !reposted;
     setReposted(next);
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${post.id}/repost`, { method: next ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${post.id}/repost`, { method: next ? "PUT" : "DELETE" });
       if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, comments: result.stats?.comments ?? current.comments }));
-    } catch { setReposted(!next); }
+    } catch (reason) {
+      setReposted(!next);
+      if (isAuthApiError(reason)) redirectToLogin();
+    }
   };
 
   return { post, comments, commentDraft, counts, liked, reposted, isLiveJoined, isLoading, setCommentDraft, toggleLike, toggleRepost, submitComment, share, joinLive: () => setIsLiveJoined(true) };
