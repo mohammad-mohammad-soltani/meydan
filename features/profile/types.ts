@@ -26,6 +26,7 @@ export type ProfileActivity = {
 };
 
 export type ProfileDetails = {
+  initialTab?: ProfileTab;
   identity: ProfileIdentity;
   squareStats: ProfileStat[];
   resumeStats: ProfileStat[];
