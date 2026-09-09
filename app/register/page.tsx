@@ -1,7 +1,7 @@
 "use client";
 
 import type { Route } from "next";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { meydanClientApi } from "@/lib/meydan-client-api";
 
@@ -9,7 +9,7 @@ type Region = { id: number; name: string };
 type City = Region & { province_id: number };
 type AccountType = "user" | "square";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = useMemo(() => {
@@ -75,5 +75,13 @@ export default function RegisterPage() {
         {error ? <p className="rounded-control border border-danger-border bg-danger-muted px-3 py-2 text-xs text-danger">{error}</p> : null}
       </form>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<main className="min-h-dvh bg-background" />}>
+      <RegisterForm />
+    </Suspense>
   );
 }
