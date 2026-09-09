@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { BellRing, X } from "lucide-react";
 import { FeedFilters } from "./FeedFilters";
 import { FeedTabs } from "./FeedTabs";
@@ -10,6 +11,12 @@ import type { FeedPost, FollowSuggestion } from "../types";
 
 export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestions: FollowSuggestion[] }) {
   const feed = useFeed(posts, suggestions);
+
+  useEffect(() => {
+    feed.setActiveTab("for-you");
+    // Initial SSR is public; this same-origin refresh hydrates viewer_state when logged in.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const postList = (
     <div className="w-full divide-y divide-divider">
