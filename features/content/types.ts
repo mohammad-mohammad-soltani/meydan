@@ -39,6 +39,7 @@ export type ContentItem = {
 };
 
 export type ContentDetailItem = Omit<ContentItem, "category" | "media"> & {
+  apiId: string;
   category: ContentCategory | "video";
   media: Omit<ContentMedia, "kind"> & { kind: MediaKind | "video" };
   creator: ContentCreator;
@@ -50,6 +51,7 @@ export type ContentDetailItem = Omit<ContentItem, "category" | "media"> & {
   tags: string[];
   files: ContentFile[];
   usageNote: string;
+  viewerState?: { bookmarked: boolean };
 };
 
 export type ScheduleItem = {
