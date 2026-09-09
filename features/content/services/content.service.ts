@@ -101,9 +101,17 @@ function coverOf(item: ApiContent): string | undefined {
 }
 
 function audioOf(item: ApiContent): string | undefined {
-  const primary = item.attachments?.find((attachment) => attachment.id === item.primary_attachment_id);
-  if (primary?.type === "audio") return `/api/content/${item.id}/media/${primary.id}`;
-  return undefined;
+  const primary = item.attachments?.find(
+    (attachment) => attachment.id === item.primary_attachment_id,
+  );
+  const audioAttachment =
+    primary?.type === "audio"
+      ? primary
+      : item.attachments?.find((attachment) => attachment.type === "audio");
+
+  return audioAttachment
+    ? `/api/content/${item.id}/media/${audioAttachment.id}`
+    : undefined;
 }
 
 function toItem(item: ApiContent): ContentItem {
