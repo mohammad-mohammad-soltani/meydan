@@ -1,9 +1,10 @@
 import { generatedMedia } from "@/components/shared/generated-media";
+import Link from "next/link";
 import { Icon } from "../icon";
 export function ViewContent() {
   return (
         <section id="view-content" className="app-view hidden p-4 space-y-6">
-          <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 cursor-pointer" data-action="openDetailModal('شرح نهج‌البلاغه؛ جهاد اجتماعی و سیاسی', 'صوت و متن بیانات پیرامون پایداری در نبرد تبیین.')">
+          <Link href="/content/nahj-jihad" className="relative block rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 cursor-pointer">
             <div className="relative h-52 w-full">
               <img src={generatedMedia.contentHero} alt="محتوا" className="w-full h-full object-cover opacity-35" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
@@ -17,7 +18,7 @@ export function ViewContent() {
                 </p>
               </div>
             </div>
-          </div>
+          </Link>
           <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-3">
             <div className="grid grid-cols-4 gap-2 text-center">
               <button data-action="switchView('view-speakers')" className="flex flex-col items-center gap-1.5 p-1 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 transition">
@@ -96,9 +97,9 @@ export function ViewContent() {
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">مفهوم «میدانِ خیابان» در دفاع اجتماعی</p>
                   </div>
                 </div>
-                <button data-action="openDetailModal('فیش منبر: مفهوم میدان خیابان - پناهیان', 'سرفصل‌ها: تبیین میدانِ خیابان.')" className="bg-slate-100 dark:bg-slate-900 hover:bg-brand-red hover:text-white text-slate-800 dark:text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1">
+                <Link href="/content/panahian-square" className="bg-slate-100 dark:bg-slate-900 hover:bg-brand-red hover:text-white text-slate-800 dark:text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1">
                   <Icon name="file-text" className="w-3 h-3"  /> دریافت فیش
-                </button>
+                </Link>
               </div>
               <div className="border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -108,9 +109,9 @@ export function ViewContent() {
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">سیره اهل‌بیت در مواجهه با محاصره و بحران</p>
                   </div>
                 </div>
-                <button data-action="openDetailModal('فیش منبر: مواسات در بحران - دکتر رفیعی', 'استناد به آیات سوره احزاب.')" className="bg-slate-100 dark:bg-slate-900 hover:bg-brand-red hover:text-white text-slate-800 dark:text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1">
+                <Link href="/content/rafiei-crisis" className="bg-slate-100 dark:bg-slate-900 hover:bg-brand-red hover:text-white text-slate-800 dark:text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1">
                   <Icon name="file-text" className="w-3 h-3"  /> دریافت فیش
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -125,13 +126,13 @@ export function ViewContent() {
               </button>
             </div>
             <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between">
-              <button data-action="openAudioModal('دم هماهنگ: فرمانده کل قوا', 'حاج میثم مطیعی', 'میدان انقلاب تهران - شب دوازدهم', 'اجرا شده در اجتماع ۳۰ هزار نفری.')" className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2">
+              <Link href="/content/farmandeh-song" aria-label="مشاهده جزئیات دم هماهنگ فرمانده کل قوا" className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2">
                 <Icon name="info" className="w-5 h-5"  />
-              </button>
-              <div className="text-right flex-1 pr-3 cursor-pointer" data-action="openAudioModal('دم هماهنگ: فرمانده کل قوا', 'حاج میثم مطیعی', 'میدان انقلاب تهران - شب دوازدهم', 'اجرا شده در اجتماع ۳۰ هزار نفری.')">
+              </Link>
+              <Link href="/content/farmandeh-song" className="text-right flex-1 pr-3 cursor-pointer">
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white">دم هماهنگ: «فرمانده کل قوا»</h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">با نوای حاج میثم مطیعی · ۳ دقیقه</p>
-              </div>
+              </Link>
               <button data-action="playAudio('فرمانده کل قوا')" className="w-11 h-11 rounded-full bg-brand-red text-white flex items-center justify-center shadow-md">
                 <Icon name="play" className="w-5 h-5 fill-white mr-0.5"  />
               </button>

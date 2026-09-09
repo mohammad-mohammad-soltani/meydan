@@ -16,7 +16,7 @@
 
 html.dark {
   color-scheme: dark;
-  background: #070a0f;
+  background: lab(11.7579% .00000745058 .00000298023 / .95);
 }
 
 html {
@@ -173,7 +173,7 @@ body {
 
 html.dark,
 html.dark body {
-  background: #070a0f;
+  background: lab(11.7579% .00000745058 .00000298023 / .95);
 }
 
 .pill-tab {
@@ -2136,5 +2136,26 @@ html.dark .feed-filter-pill:not(.active-pill) {
 }
 
 html.dark .feed-filter-pill:not(.active-pill) svg {
+  color: #111827 !important;
+}
+
+/* Dark theme correction: only the selected filter is light; idle filters keep the dark rail style. */
+html.dark .feed-filter-pill:not(.active-pill) {
+  background: #202832 !important;
+  border-color: #344454 !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark .feed-filter-pill:not(.active-pill) svg {
+  color: #f1f5f9 !important;
+}
+
+html.dark .feed-filter-pill.active-pill {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+html.dark .feed-filter-pill.active-pill svg {
   color: #111827 !important;
 }

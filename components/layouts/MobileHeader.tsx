@@ -13,6 +13,7 @@ export function MobileHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const isConversationRoute = pathname.startsWith("/chat/");
+  const isContentDetailRoute = pathname.startsWith("/content/");
   const isPostRoute = pathname.startsWith("/posts/");
   const results = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("fa-IR");
@@ -34,7 +35,7 @@ export function MobileHeader() {
   };
 
   // The chat area has its own Telegram-like app bar, including search and actions.
-  if (pathname === "/chat" || isConversationRoute || isPostRoute) return null;
+  if (pathname === "/chat" || isConversationRoute || isContentDetailRoute || isPostRoute) return null;
 
   return (
     <header className="mobile-app-header sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-[#070a0f]/95 lg:hidden">

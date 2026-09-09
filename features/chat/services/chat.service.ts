@@ -1,4 +1,4 @@
-import type { ChatMessage, ChatNotification, Conversation } from "../types";
+import type { ChatAttachment, ChatMessage, ChatNotification, Conversation } from "../types";
 
 const currentUserId = "current-user";
 
@@ -60,7 +60,7 @@ export async function getMessages(conversationId: string): Promise<ChatMessage[]
   return (messagesByConversation[conversationId] ?? []).map((message) => ({ ...message }));
 }
 
-export async function sendMessage(conversationId: string, body: string): Promise<ChatMessage> {
+export async function sendMessage(conversationId: string, body: string, attachment?: ChatAttachment): Promise<ChatMessage> {
   return {
     id: "message-" + crypto.randomUUID(),
     conversationId,
@@ -68,6 +68,7 @@ export async function sendMessage(conversationId: string, body: string): Promise
     body,
     sentAt: new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()),
     status: "sent",
+    attachment,
   };
 }
 

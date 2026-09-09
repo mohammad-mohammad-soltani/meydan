@@ -25,6 +25,25 @@ export type ChatMessage = {
   body: string;
   sentAt: string;
   status: MessageStatus;
+  attachment?: ChatAttachment;
+  replyTo?: MessageReply;
+  forwardedFrom?: string;
+  editedAt?: string;
+  reactions?: string[];
+};
+
+export type ChatAttachment = {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  previewUrl?: string;
+};
+
+export type MessageReply = {
+  id: string;
+  body: string;
+  senderName: string;
 };
 
 export type ChatNotificationKind = "like" | "repost" | "message" | "media" | "mention" | "follow";
