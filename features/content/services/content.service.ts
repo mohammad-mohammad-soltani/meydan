@@ -39,6 +39,7 @@ type ApiContent = {
   featured?: boolean;
   published_at?: string | null;
   stats?: { views?: number; downloads?: number };
+  viewer_state?: { bookmarked?: boolean } | null;
   subtitle?: string;
   badge?: string;
   location_label?: string;
@@ -67,14 +68,7 @@ type ApiConfig = { quick_actions?: ContentQuickAction[] };
 
 function categoryOf(item: ApiContent): ContentCategory {
   const slug = item.category?.slug;
-  if (
-    slug === "talks" ||
-    slug === "audio" ||
-    slug === "schedule" ||
-    slug === "featured"
-  ) {
-    return slug;
-  }
+  if (slug === "talks" || slug === "audio" || slug === "schedule" || slug === "featured") return slug;
   if (item.format === "audio") return "audio";
   return item.featured ? "featured" : "talks";
 }
@@ -119,25 +113,13 @@ function toItem(item: ApiContent): ContentItem {
 
 function paragraphize(value?: string): string[] {
   const text = plainText(value || "");
-  return text
-    ? text
-        .split(/\n+/)
-        .map((part) => part.trim())
-        .filter(Boolean)
-    : [];
+  return text ? text.split(/\n+/).map((part) => part.trim()).filter(Boolean) : [];
 }
 
 function fileList(item: ApiContent): ContentFile[] {
   if (item.files?.length) {
-    return item.files.map((file) => ({
-      id: String(file.id),
-      label: file.label,
-      format: file.format,
-      size: file.size,
-      detail: file.detail,
-    }));
+    return item.files.map((file) => ({ id: String(file.id), label: file.label, format: file.format, size: file.size, detail: file.detail }));
   }
-
   return (item.attachments || []).map((file) => ({
     id: String(file.id),
     label: file.label || file.filename || "فایل",
@@ -150,9 +132,9 @@ function fileList(item: ApiContent): ContentFile[] {
 function toDetail(item: ApiContent): ContentDetailItem {
   const creator = item.creators?.[0];
   const kind = kindOf(item.format);
-
   return {
     id: item.slug || String(item.id),
+    apiId: String(item.id),
     category: kind === "video" ? "video" : categoryOf(item),
     status: item.featured ? "urgent" : "ready",
     badge: item.badge || undefined,
@@ -164,11 +146,7 @@ function toDetail(item: ApiContent): ContentDetailItem {
       kind,
       duration: item.media_duration || undefined,
       description: mediaDescription(item.format),
-      coverImage:
-        coverOf(item) ||
-        (kind === "video"
-          ? "/images/generated/feed/enghelab-gathering.png"
-          : "/images/generated/content-hero.svg"),
+      coverImage: coverOf(item) || (kind === "video" ? "/images/generated/feed/enghelab-gathering.png" : "/images/generated/content-hero.svg"),
     },
     creator: {
       name: creator?.name || "میدان خیابان",
@@ -185,6 +163,7 @@ function toDetail(item: ApiContent): ContentDetailItem {
     tags: item.tags || [],
     files: fileList(item),
     usageNote: item.usage_note || "",
+    viewerState: { bookmarked: Boolean(item.viewer_state?.bookmarked) },
   };
 }
 
@@ -196,13 +175,9 @@ export async function getContentItems(): Promise<ContentItem[]> {
   return (await rawContent()).map(toItem);
 }
 
-export async function getContentDetailById(
-  id: string,
-): Promise<ContentDetailItem | undefined> {
+export async function getContentDetailById(id: string): Promise<ContentDetailItem | undefined> {
   const list = await rawContent();
-  const match = list.find(
-    (item) => item.slug === id || String(item.id) === id,
-  );
+  const match = list.find((item) => item.slug === id || String(item.id) === id);
   if (!match) return undefined;
   const detail = await meydanApi<ApiContent>(`/content/${match.id}`);
   return toDetail(detail);
@@ -217,11 +192,7 @@ export async function getScheduleItems(): Promise<ScheduleItem[]> {
   return (campaign?.schedule || []).map((item, index) => ({
     id: String(item.id ?? index),
     night: item.night || "",
-    number:
-      item.number ||
-      new Intl.NumberFormat("fa-IR", { minimumIntegerDigits: 2 }).format(
-        index + 1,
-      ),
+    number: item.number || new Intl.NumberFormat("fa-IR", { minimumIntegerDigits: 2 }).format(index + 1),
     title: item.title || "",
     description: item.description || "",
     current: Boolean(item.current),
