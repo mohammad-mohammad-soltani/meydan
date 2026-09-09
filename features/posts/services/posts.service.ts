@@ -1,27 +1,28 @@
 import { meydanApi, plainText } from "@/lib/meydan-api";
 import type { MediaReflection, PostComment, PostDetail, PostMedia } from "../types";
 
-type ApiActor = { id: string; display_name: string; verified?: boolean };
-type ApiAttachment = { id: number; type?: string; label?: string; filename?: string; url?: string };
-type ApiReflection = { id: number; outlet: string; title?: string; summary?: string };
-type ApiNarrative = {
+export type ApiPostActor = { id: string; display_name: string; verified?: boolean };
+export type ApiPostAttachment = { id: number; type?: string; label?: string; filename?: string; url?: string };
+export type ApiPostReflection = { id: number; outlet: string; title?: string; summary?: string };
+export type ApiPostNarrative = {
   id: number;
-  author: ApiActor;
+  author: ApiPostActor;
   body: string;
   published_at?: string | null;
-  attachments?: ApiAttachment[];
+  attachments?: ApiPostAttachment[];
   tags?: string[];
-  media_reflections?: ApiReflection[];
-  stats?: { likes?: number; reposts?: number };
+  media_reflections?: ApiPostReflection[];
+  stats?: { likes?: number; reposts?: number; comments?: number };
+  viewer_state?: { liked?: boolean; reposted?: boolean } | null;
 };
-type ApiComment = {
+export type ApiPostComment = {
   id: number;
-  author?: ApiActor | null;
+  author?: ApiPostActor | null;
   body: string;
   created_at?: string | null;
 };
 
-function relativeFa(value?: string | null): string {
+export function relativeFa(value?: string | null): string {
   if (!value) return "";
   const then = new Date(value).getTime();
   if (!Number.isFinite(then)) return "";
@@ -32,7 +33,7 @@ function relativeFa(value?: string | null): string {
   return hours < 24 ? `${n.format(hours)} ساعت پیش` : `${n.format(Math.round(hours / 24))} روز پیش`;
 }
 
-function initials(name: string): string {
+export function initials(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(-2).map((part) => part[0]).join(".");
 }
 
@@ -46,17 +47,26 @@ function accent(index: number): MediaReflection["accent"] {
   return (["blue", "emerald", "amber", "red"] as const)[index % 4];
 }
 
+export function mapApiComment(item: ApiPostComment, postAuthorId?: string): PostComment {
+  const name = item.author?.display_name || "کاربر میدان";
+  return {
+    id: String(item.id),
+    author: name,
+    initials: initials(name),
+    timeAgo: relativeFa(item.created_at),
+    content: plainText(item.body || ""),
+    isAuthor: Boolean(postAuthorId && item.author?.id === postAuthorId),
+  };
+}
+
 export async function getPostById(postId: string): Promise<PostDetail | null> {
   if (!/^\d+$/.test(postId)) return null;
 
   try {
-    const post = await meydanApi<ApiNarrative>(`/narratives/${postId}`);
-    let comments: ApiComment[] = [];
-    try {
-      comments = await meydanApi<ApiComment[]>(`/narratives/${postId}/comments`);
-    } catch {
-      comments = [];
-    }
+    const [post, comments] = await Promise.all([
+      meydanApi<ApiPostNarrative>(`/narratives/${postId}`),
+      meydanApi<ApiPostComment[]>(`/narratives/${postId}/comments`).catch(() => []),
+    ]);
 
     const authorName = post.author?.display_name || "میدان";
     return {
@@ -87,17 +97,11 @@ export async function getPostById(postId: string): Promise<PostDetail | null> {
       })),
       likes: post.stats?.likes || 0,
       reposts: post.stats?.reposts || 0,
-      comments: comments.map((item): PostComment => {
-        const name = item.author?.display_name || "کاربر میدان";
-        return {
-          id: String(item.id),
-          author: name,
-          initials: initials(name),
-          timeAgo: relativeFa(item.created_at),
-          content: plainText(item.body || ""),
-          isAuthor: item.author?.id === post.author?.id,
-        };
-      }),
+      comments: comments.map((item) => mapApiComment(item, post.author?.id)),
+      viewerState: {
+        liked: Boolean(post.viewer_state?.liked),
+        reposted: Boolean(post.viewer_state?.reposted),
+      },
     };
   } catch {
     return null;
