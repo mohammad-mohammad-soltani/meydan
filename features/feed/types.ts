@@ -37,6 +37,7 @@ export type FeedPost = {
     likes: number;
     comments: number;
     reposts: number;
+    views: number;
   };
   callToAction?: string;
 };
