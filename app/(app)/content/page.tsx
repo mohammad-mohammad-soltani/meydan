@@ -1,5 +1,6 @@
-import { LegacyRouteApp } from "@/components/prototype/LegacyRouteApp";
+import { ContentView } from "@/features/content/components/ContentView";
+import { getContentItems, getContentQuickActions, getScheduleItems } from "@/features/content/services/content.service";
 
 export default function ContentPage() {
-  return <LegacyRouteApp initialView="view-content" />;
+  return <ContentView items={getContentItems()} scheduleItems={getScheduleItems()} quickActions={getContentQuickActions()} />;
 }
