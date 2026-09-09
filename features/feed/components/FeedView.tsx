@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { BellRing, X } from "lucide-react";
 import { FeedFilters } from "./FeedFilters";
 import { FeedTabs } from "./FeedTabs";
@@ -9,26 +8,27 @@ import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
 import type { FeedPost, FollowSuggestion } from "../types";
 
-const LOCAL_POSTS_KEY = "meydan-local-narratives";
-
-function readLocalPosts(): FeedPost[] {
-  try {
-    const stored = window.localStorage.getItem(LOCAL_POSTS_KEY);
-    return stored ? (JSON.parse(stored) as FeedPost[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestions: FollowSuggestion[] }) {
   const feed = useFeed(posts, suggestions);
-  const [localPosts, setLocalPosts] = useState<FeedPost[]>([]);
 
-  useEffect(() => {
-    setLocalPosts(readLocalPosts());
-  }, []);
-
-  const showLocalPosts = feed.activeFilter === "all" || feed.activeFilter === "ideas";
+  const postList = (
+    <div className="w-full divide-y divide-divider">
+      {feed.posts.map((post) => (
+        <PostCard
+          key={post.id}
+          post={post}
+          liked={feed.likedPostIds.has(post.id)}
+          reposted={feed.repostedPostIds.has(post.id)}
+          joined={feed.joinedPostIds.has(post.id)}
+          onLike={() => void feed.toggleLike(post.id)}
+          onRepost={() => void feed.toggleRepost(post.id)}
+          onShare={() => void feed.sharePost(post)}
+          onJoin={() => void feed.joinInitiative(post.id)}
+          onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <div id="view-feed" className="relative min-h-full bg-background text-foreground">
@@ -41,43 +41,13 @@ export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestion
             <span className="shrink-0 rounded-md bg-warning px-2 py-1 text-[10px] text-on-solid">زنده</span>
           </section>
           <FeedFilters activeFilter={feed.activeFilter} onChange={feed.setActiveFilter} />
-          <div key={feed.activeFilter} className="ui-enter">
-            <div className="w-full divide-y divide-divider">
-              {showLocalPosts ? localPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  liked={feed.likedPostIds.has(post.id)}
-                  reposted={feed.repostedPostIds.has(post.id)}
-                  joined={false}
-                  onLike={() => feed.toggleLike(post.id)}
-                  onRepost={() => feed.toggleRepost(post.id)}
-                  onShare={() => void feed.sharePost(post)}
-                  onJoin={() => undefined}
-                  onOpenMedia={() => undefined}
-                />
-              )) : null}
-
-              {feed.posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  liked={feed.likedPostIds.has(post.id)}
-                  reposted={feed.repostedPostIds.has(post.id)}
-                  joined={feed.joinedPostIds.has(post.id)}
-                  onLike={() => feed.toggleLike(post.id)}
-                  onRepost={() => feed.toggleRepost(post.id)}
-                  onShare={() => void feed.sharePost(post)}
-                  onJoin={() => feed.joinInitiative(post.id)}
-                  onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)}
-                />
-              ))}
-            </div>
+          <div key={`${feed.activeTab}-${feed.activeFilter}`} className="ui-enter">
+            {postList}
           </div>
         </>
       ) : (
         <div key={feed.activeTab} className="ui-enter">
-          <FollowSuggestions suggestions={feed.suggestions} followedIds={feed.followedSquareIds} onToggleFollow={feed.toggleFollow} />
+          {feed.posts.length ? postList : <FollowSuggestions suggestions={feed.suggestions} followedIds={feed.followedSquareIds} onToggleFollow={(id) => void feed.toggleFollow(id)} />}
         </div>
       )}
 
