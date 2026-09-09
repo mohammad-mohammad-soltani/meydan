@@ -24,7 +24,7 @@ function toFeedPost(post: PostDetail, commentCount: number): FeedPost {
     title: post.author.name,
     body: post.body,
     attachments: post.media.map((media) => ({ id: media.id, label: media.label, detail: media.detail ?? mediaDetails[media.kind], icon: media.kind, previewSrc: media.previewSrc, previewAlt: media.previewAlt, width: media.width, height: media.height })),
-    stats: { likes: post.likes, reposts: post.reposts, comments: commentCount },
+    stats: { likes: post.likes, reposts: post.reposts, comments: commentCount, views: post.views },
   };
 }
 
