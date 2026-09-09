@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
-import { compactFa, meydanApi, plainText } from "@/lib/meydan-api";
+import { compactFa, plainText } from "@/lib/meydan-api";
+import { meydanAuthenticatedApi } from "@/lib/meydan-server-api";
 import type { ProfileDetails, ProfileStat } from "../types";
 
 type ApiSchedule = {
@@ -47,6 +47,7 @@ type ApiNarrative = {
   published_at?: string | null;
   tags?: string[];
   stats?: { likes?: number; reposts?: number; comments?: number };
+  viewer_state?: { liked?: boolean; reposted?: boolean } | null;
 };
 
 function timeFa(value: string): string {
@@ -63,10 +64,7 @@ function relativeFa(value?: string | null): string {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  const diffMinutes = Math.max(
-    1,
-    Math.round((Date.now() - date.getTime()) / 60000),
-  );
+  const diffMinutes = Math.max(1, Math.round((Date.now() - date.getTime()) / 60000));
   const number = new Intl.NumberFormat("fa-IR");
   if (diffMinutes < 60) return `${number.format(diffMinutes)} دقیقه پیش`;
   const hours = Math.round(diffMinutes / 60);
@@ -84,27 +82,18 @@ function emptyActivity(): ProfileDetails["activity"] {
     likes: 0,
     reposts: 0,
     comments: 0,
+    viewerState: { liked: false, reposted: false },
   };
 }
 
-function mapSquare(
-  square: ApiSquare,
-  narratives: ApiNarrative[] = [],
-): ProfileDetails {
+function mapSquare(square: ApiSquare, narratives: ApiNarrative[] = []): ProfileDetails {
   const activity = narratives[0];
   const squareStats = square.square_stats?.length
     ? square.square_stats
     : [
         { value: compactFa(narratives.length), label: "روایت منتشرشده" },
-        {
-          value: compactFa(activity?.stats?.likes || 0),
-          label: "پسند آخرین روایت",
-        },
-        {
-          value: compactFa(activity?.stats?.comments || 0),
-          label: "گفتگو",
-          tone: "success" as const,
-        },
+        { value: compactFa(activity?.stats?.likes || 0), label: "پسند آخرین روایت" },
+        { value: compactFa(activity?.stats?.comments || 0), label: "گفتگو", tone: "success" as const },
       ];
 
   return {
@@ -138,6 +127,10 @@ function mapSquare(
           likes: activity.stats?.likes || 0,
           reposts: activity.stats?.reposts || 0,
           comments: activity.stats?.comments || 0,
+          viewerState: {
+            liked: Boolean(activity.viewer_state?.liked),
+            reposted: Boolean(activity.viewer_state?.reposted),
+          },
         }
       : emptyActivity(),
     about: plainText(square.profile_about || square.description || ""),
@@ -163,10 +156,7 @@ function mapUser(profile: ApiUserProfile): ProfileDetails {
       : [
           { value: compactFa(narratives), label: "روایت منتشرشده" },
           { value: "فعال", label: "وضعیت عضویت", tone: "success" },
-          {
-            value: profile.verified ? "تأییدشده" : "عادی",
-            label: "اعتبار هویت",
-          },
+          { value: profile.verified ? "تأییدشده" : "عادی", label: "اعتبار هویت" },
         ],
     schedule: [],
     activity: emptyActivity(),
@@ -175,52 +165,10 @@ function mapUser(profile: ApiUserProfile): ProfileDetails {
   };
 }
 
-async function cookieHeader(): Promise<Record<string, string>> {
-  const store = await cookies();
-  const value = store.toString();
-  return value ? { Cookie: value } : {};
-}
-
-async function authenticatedProfile(): Promise<ProfileDetails | null> {
-  const headers = await cookieHeader();
-  if (!headers.Cookie) return null;
-
-  try {
-    const me = await meydanApi<ApiMe>("/me", { headers });
-    if (me.account_type === "user") return mapUser(me.profile);
-    if (!me.square) return null;
-
-    let narratives: ApiNarrative[] = [];
-    try {
-      narratives = await meydanApi<ApiNarrative[]>("/me/narratives", { headers });
-    } catch {
-      narratives = [];
-    }
-    return mapSquare(me.square, narratives);
-  } catch {
-    return null;
-  }
-}
-
-async function publicSquareFallback(): Promise<ProfileDetails> {
-  const squares = await meydanApi<ApiSquare[]>(
-    "/squares?q=" + encodeURIComponent("پایگاه میدان انقلاب تهران"),
-  );
-  const square = squares[0];
-  if (!square) throw new Error("پروفایل میدان در WordPress پیدا نشد.");
-
-  let narratives: ApiNarrative[] = [];
-  try {
-    narratives = await meydanApi<ApiNarrative[]>(
-      `/squares/${square.id}/narratives`,
-    );
-  } catch {
-    narratives = [];
-  }
-
-  return mapSquare(square, narratives);
-}
-
 export async function getProfileDetails(): Promise<ProfileDetails> {
-  return (await authenticatedProfile()) || publicSquareFallback();
+  const me = await meydanAuthenticatedApi<ApiMe>("/me");
+  if (me.account_type === "user") return mapUser(me.profile);
+  if (!me.square) throw new Error("پایگاه این حساب در بک‌اند پیدا نشد.");
+  const narratives = await meydanAuthenticatedApi<ApiNarrative[]>("/me/narratives").catch(() => []);
+  return mapSquare(me.square, narratives);
 }
