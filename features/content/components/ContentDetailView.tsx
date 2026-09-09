@@ -1,11 +1,9 @@
 "use client";
-/* eslint-disable react-hooks/rules-of-hooks */
 
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import { useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,7 +14,6 @@ import {
   Download,
   Eye,
   FileText,
-  Headphones,
   LoaderCircle,
   MapPin,
   Pause,
@@ -24,50 +21,20 @@ import {
   Share2,
   ShieldCheck,
   Sparkles,
+  Headphones,
 } from "lucide-react";
 import type { ContentDetailItem } from "../types";
 import { meydanApi } from "@/lib/meydan-api";
+import { AudioMediaStage } from "./AudioMediaStage";
 
 type ContentDetailViewProps = { item: ContentDetailItem; relatedItems: ContentDetailItem[] };
 
 const kindLabels = { image: "بسته تصویری", audio: "محتوای صوتی", video: "ویدئو", document: "متن و سند" };
 const kindIcons = { image: Sparkles, audio: Headphones, video: Clapperboard, document: FileText };
-function formatTime(value: number): string { const seconds = Math.max(0, Math.floor(value)); return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`; }
 
-function MediaStage({ item, isPlaying, onTogglePlayback }: { item: ContentDetailItem; isPlaying: boolean; onTogglePlayback: () => void }) {
+function MediaStage({ item, isPlaying, onPlayingChange }: { item: ContentDetailItem; isPlaying: boolean; onPlayingChange: (value: boolean) => void }) {
   if (item.media.kind === "audio") {
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const frameRef = useRef<number | null>(null);
-    const [progress, setProgress] = useState(0);
-    const [duration, setDuration] = useState(0);
-    const [levels, setLevels] = useState<number[]>([]);
-    useEffect(() => { const audio = audioRef.current; if (!audio) return; if (isPlaying) void audio.play().catch(() => onTogglePlayback()); else audio.pause(); }, [isPlaying, onTogglePlayback]);
-    useEffect(() => { const audio = audioRef.current; if (!audio || !item.media.audioSrc) return; const update = () => setProgress(audio.duration ? audio.currentTime / audio.duration : 0); const loaded = () => setDuration(audio.duration || 0); audio.addEventListener("timeupdate", update); audio.addEventListener("loadedmetadata", loaded); audio.addEventListener("ended", onTogglePlayback); return () => { audio.removeEventListener("timeupdate", update); audio.removeEventListener("loadedmetadata", loaded); audio.removeEventListener("ended", onTogglePlayback); }; }, [item.media.audioSrc, onTogglePlayback]);
-    useEffect(() => { const audio = audioRef.current; if (!audio || !item.media.audioSrc || typeof window === "undefined") return; try { const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext; if (!AudioContextClass) return; const context = new AudioContextClass(); const analyser = context.createAnalyser(); analyser.fftSize = 64; const source = context.createMediaElementSource(audio); source.connect(analyser); analyser.connect(context.destination); const data = new Uint8Array(analyser.frequencyBinCount); const tick = () => { analyser.getByteFrequencyData(data); setLevels(Array.from(data.slice(0, 24), (value) => Math.max(18, Math.round((value / 255) * 100)))); frameRef.current = requestAnimationFrame(tick); }; tick(); return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); source.disconnect(); analyser.disconnect(); void context.close(); }; } catch { return undefined; } }, [item.media.audioSrc]);
-    const bars = levels.length ? levels : [25, 42, 68, 38, 76, 48, 86, 55, 34, 72, 46, 90, 62, 37, 70, 45, 82, 52, 31, 64, 44, 74, 36, 58];
-    const seek = (event: MouseEvent<HTMLDivElement>) => { const audio = audioRef.current; if (!audio || !duration) return; const rect = event.currentTarget.getBoundingClientRect(); audio.currentTime = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)) * duration; };
-    return (
-      <div className="relative overflow-hidden bg-solid-dark px-5 py-9 text-on-solid">
-        <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full border-[36px] border-border opacity-20" aria-hidden="true" />
-        <div className="relative flex flex-col items-center text-center">
-          <span className="grid h-16 w-16 place-items-center rounded-3xl border border-border-strong bg-surface-glass shadow-dialog backdrop-blur"><Headphones aria-hidden="true" className="h-7 w-7" /></span>
-          <p className="mt-4 text-xs font-bold text-brand">پیش‌نمایش صوت</p>
-          <p className="mt-1 max-w-sm text-base font-black leading-7">{item.title}</p>
-          <div className="mt-6 flex h-16 w-full items-center justify-center gap-1" aria-hidden="true">
-            {bars.map((height, index) => <span key={index} className={`w-1 rounded-full ${index / bars.length <= progress || isPlaying ? "bg-brand" : "bg-surface-glass"}`} style={{ height: `${height}%` }} />)}
-          </div>
-          <div className="mt-3 flex w-full items-center gap-3" dir="ltr">
-            <span className="w-9 text-left text-[11px] tabular-nums text-on-solid/70">{formatTime((duration || 0) * progress)}</span>
-            <div role="slider" aria-label="موقعیت پخش صوت" aria-valuemin={0} aria-valuemax={duration || 0} aria-valuenow={(duration || 0) * progress} tabIndex={0} onClick={seek} className="h-1.5 flex-1 cursor-pointer overflow-hidden rounded-full bg-surface-glass"><div className="h-full rounded-full bg-brand" style={{ width: `${progress * 100}%` }} /></div>
-            <span className="w-9 text-right text-[11px] tabular-nums text-on-solid/70">{duration ? formatTime(duration) : item.media.duration}</span>
-          </div>
-          <button type="button" onClick={() => { const audio = audioRef.current; if (audio) { if (isPlaying) audio.pause(); else void audio.play().catch(() => undefined); } onTogglePlayback(); }} aria-label={isPlaying ? "توقف پیش‌نمایش صوت" : "پخش پیش‌نمایش صوت"} className="mt-5 grid h-14 w-14 cursor-pointer place-items-center rounded-full bg-solid-light text-on-light shadow-popover outline-none transition hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-solid-dark">
-            {isPlaying ? <Pause aria-hidden="true" className="h-6 w-6 fill-current" /> : <Play aria-hidden="true" className="mr-0.5 h-6 w-6 fill-current" />}
-          </button>
-          {item.media.audioSrc ? <audio ref={audioRef} src={item.media.audioSrc} preload="metadata" aria-label={item.title} onError={() => { if (isPlaying) onTogglePlayback(); }} className="hidden" /> : null}
-        </div>
-      </div>
-    );
+    return <AudioMediaStage item={item} isPlaying={isPlaying} onPlayingChange={onPlayingChange} />;
   }
 
   if (item.media.kind === "document") {
@@ -92,7 +59,7 @@ function MediaStage({ item, isPlaying, onTogglePlayback }: { item: ContentDetail
       <Image src={item.media.coverImage ?? "/images/generated/content-hero.svg"} alt={item.title} fill priority sizes="(max-width: 640px) 100vw, 576px" className="object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-scrim via-overlay to-transparent" />
       {item.media.kind === "video" ? (
-        <button type="button" onClick={onTogglePlayback} aria-label={isPlaying ? "توقف پخش ویدئو" : "پخش ویدئو"} className="absolute inset-0 m-auto grid h-16 w-16 cursor-pointer place-items-center rounded-full border border-border-strong bg-overlay text-on-solid shadow-dialog backdrop-blur-sm outline-none transition hover:scale-105 hover:bg-brand focus-visible:ring-2 focus-visible:ring-ring">
+        <button type="button" onClick={() => onPlayingChange(!isPlaying)} aria-label={isPlaying ? "توقف پخش ویدئو" : "پخش ویدئو"} className="absolute inset-0 m-auto grid h-16 w-16 cursor-pointer place-items-center rounded-full border border-border-strong bg-overlay text-on-solid shadow-dialog backdrop-blur-sm outline-none transition hover:scale-105 hover:bg-brand focus-visible:ring-2 focus-visible:ring-ring">
           {isPlaying ? <Pause aria-hidden="true" className="h-7 w-7 fill-current" /> : <Play aria-hidden="true" className="mr-0.5 h-7 w-7 fill-current" />}
         </button>
       ) : null}
@@ -159,7 +126,7 @@ export function ContentDetailView({ item, relatedItems }: ContentDetailViewProps
         </div>
       </div>
 
-      <div className="overflow-hidden border-b border-border bg-surface"><MediaStage item={item} isPlaying={isPlaying} onTogglePlayback={() => setIsPlaying((value) => !value)} /></div>
+      <div className="overflow-hidden border-b border-border bg-surface"><MediaStage item={item} isPlaying={isPlaying} onPlayingChange={setIsPlaying} /></div>
 
       <div className="space-y-4 p-4">
         <section className={panelClass}>
