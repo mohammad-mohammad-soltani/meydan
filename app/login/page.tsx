@@ -1,7 +1,7 @@
 "use client";
 
 import type { Route } from "next";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { meydanClientApi } from "@/lib/meydan-client-api";
 
@@ -13,7 +13,7 @@ type OtpVerify = {
   account?: { id: number; account_type: "user" | "square" };
 };
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = useMemo(() => {
@@ -92,5 +92,13 @@ export default function LoginPage() {
         {error ? <p className="mt-4 rounded-control border border-danger-border bg-danger-muted px-3 py-2 text-xs text-danger">{error}</p> : null}
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="min-h-dvh bg-background" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
