@@ -1,11 +1,7 @@
 import { Headphones } from "lucide-react";
+import type { PodcastEpisode } from "../services/podcasts.service";
 
-const episodes = [
-  { id: "field-voice", title: "صدای میدان؛ گزارش شب دوازدهم", duration: "۱۸ دقیقه", description: "گفت‌وگو با هماهنگ‌کنندگان پایگاه‌های مردمی." },
-  { id: "city-story", title: "روایت شهر؛ ابتکارهای کوچک محلی", duration: "۲۴ دقیقه", description: "مرور تجربه‌های موفق محله‌ها و میدان‌ها." },
-];
-
-export function PodcastsView() {
+export function PodcastsView({ episodes }: { episodes: PodcastEpisode[] }) {
   return (
     <section className="space-y-4 bg-background p-4 text-foreground" aria-labelledby="podcasts-title">
       <header><h1 id="podcasts-title" className="text-base font-black text-foreground">رادیو میدان</h1><p className="mt-1 text-xs text-muted-foreground">گفت‌وگوها و روایت‌های صوتی منتخب.</p></header>
