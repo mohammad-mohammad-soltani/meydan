@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { FolderKanban, Home, Map, MessageSquare, UserCheck } from "lucide-react";
+import { FolderKanban, Home, Map, Search, UserCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const items = [
   { href: "/home", label: "خانه", icon: Home, match: (path: string) => path === "/home" },
   { href: "/content", label: "محتوا", icon: FolderKanban, match: (path: string) => path === "/content" },
   { href: "/map", label: "نقشه زنده", icon: Map, match: (path: string) => path === "/map" },
-  { href: "/chat", label: "گفتگو", icon: MessageSquare, match: (path: string) => path === "/chat" || path.startsWith("/chat/") },
+  { href: "/explore", label: "کاوش", icon: Search, match: (path: string) => path === "/explore" },
   { href: "/profile", label: "هویت و پایگاه", icon: UserCheck, match: (path: string) => path === "/profile" },
 ];
 
