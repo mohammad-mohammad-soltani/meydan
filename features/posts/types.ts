@@ -45,4 +45,5 @@ export type PostDetail = {
   likes: number;
   reposts: number;
   comments: PostComment[];
+  viewerState?: { liked: boolean; reposted: boolean };
 };
