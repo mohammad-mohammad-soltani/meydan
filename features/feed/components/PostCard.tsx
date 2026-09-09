@@ -154,7 +154,7 @@ export function PostCard({ post, variant = "timeline", liked, reposted, joined, 
             </button>
           ) : null}
 
-          <PostActions postId={post.id} likes={post.stats.likes} comments={post.stats.comments} reposts={post.stats.reposts} liked={liked} reposted={reposted} onLike={onLike} onRepost={onRepost} onShare={onShare} className={isDetail ? "mx-3 mt-4" : ""} />
+          <PostActions postId={post.id} likes={post.stats.likes} comments={post.stats.comments} views={post.stats.views} liked={liked} onLike={onLike} onShare={onShare} className={isDetail ? "mx-3 mt-4" : ""} />
         </div>
       </div>
     </article>
