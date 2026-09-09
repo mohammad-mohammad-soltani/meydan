@@ -6,5 +6,10 @@ const episodes = [
 ];
 
 export function PodcastsView() {
-  return <section className="space-y-4 bg-white p-4 dark:bg-[#070a0f]" aria-labelledby="podcasts-title"><header><h1 id="podcasts-title" className="text-base font-black text-slate-950 dark:text-white">رادیو میدان</h1><p className="mt-1 text-xs text-slate-500">گفت‌وگوها و روایت‌های صوتی منتخب.</p></header><div className="space-y-3">{episodes.map((episode) => <article key={episode.id} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800"><div className="flex items-start gap-3"><span className="rounded-xl bg-brand-red/10 p-2 text-brand-red"><Headphones className="h-5 w-5" /></span><div><h2 className="text-sm font-bold text-slate-900 dark:text-white">{episode.title}</h2><p className="mt-1 text-xs leading-6 text-slate-500">{episode.description}</p><span className="mt-2 block text-[11px] font-bold text-brand-red">{episode.duration}</span></div></div></article>)}</div></section>;
+  return (
+    <section className="space-y-4 bg-background p-4 text-foreground" aria-labelledby="podcasts-title">
+      <header><h1 id="podcasts-title" className="text-base font-black text-foreground">رادیو میدان</h1><p className="mt-1 text-xs text-muted-foreground">گفت‌وگوها و روایت‌های صوتی منتخب.</p></header>
+      <div className="space-y-3">{episodes.map((episode) => <article key={episode.id} className="rounded-card border border-border bg-card p-4 text-card-foreground shadow-xs"><div className="flex items-start gap-3"><span className="rounded-xl bg-brand-muted p-2 text-brand"><Headphones className="h-5 w-5" /></span><div><h2 className="text-sm font-bold text-foreground">{episode.title}</h2><p className="mt-1 text-xs leading-6 text-muted-foreground">{episode.description}</p><span className="mt-2 block text-[11px] font-bold text-brand">{episode.duration}</span></div></div></article>)}</div>
+    </section>
+  );
 }

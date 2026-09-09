@@ -51,31 +51,43 @@ export function MessageInput({ value, attachment, replyingTo, editingMessage, no
     });
   };
 
+  const glassPanelClass = "border border-border bg-surface-glass shadow-card backdrop-blur-xl";
+  const iconButtonClass = "grid h-9 w-9 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-foreground";
+
   return (
     <footer className="shrink-0 bg-transparent px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2">
-      {replyingTo || editingMessage ? <div className="mb-2 flex items-center gap-2 rounded-2xl border border-white/65 bg-white/60 px-3 py-2 shadow-[0_8px_24px_rgba(60,90,105,.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#202c33]/75"><span className="min-w-0 flex-1 border-r-2 border-sky-500 pr-2 text-right"><strong className="block text-[11px] text-sky-700 dark:text-sky-300">{editingMessage ? "ویرایش پیام" : `پاسخ به ${replyingTo?.senderName}`}</strong><span className="block truncate text-[10px] text-slate-500 dark:text-[#a9bac4]">{editingMessage?.body ?? replyingTo?.body}</span></span><button type="button" aria-label="لغو" onClick={editingMessage ? onCancelEdit : onCancelReply} className="grid h-8 w-8 place-items-center rounded-full text-slate-500 hover:bg-white/60 dark:text-[#a9bac4] dark:hover:bg-white/10"><X className="h-4 w-4" /></button></div> : null}
-      {attachment ? <div className="mb-2 flex items-center gap-2 rounded-2xl border border-white/65 bg-white/60 p-2 shadow-[0_8px_24px_rgba(60,90,105,.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#202c33]/75">
-        {attachment.previewUrl ? <img src={attachment.previewUrl} alt="پیش‌نمایش فایل انتخاب‌شده" className="h-12 w-12 rounded-xl object-cover" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-[#a9bac4]"><FileText className="h-6 w-6" /></span>}
-        <div className="min-w-0 flex-1 text-right"><p className="truncate text-xs font-semibold text-slate-700 dark:text-[#e9edef]">{attachment.name}</p><p className="mt-0.5 text-[10px] text-slate-500 dark:text-[#a9bac4]">{formatFileSize(attachment.size)}</p></div>
-        <button type="button" aria-label="حذف فایل انتخاب‌شده" onClick={onClearAttachment} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-500 hover:bg-white/60 dark:text-[#a9bac4] dark:hover:bg-white/10"><X className="h-4 w-4" /></button>
-      </div> : null}
+      {replyingTo || editingMessage ? (
+        <div className={`mb-2 flex items-center gap-2 rounded-2xl px-3 py-2 ${glassPanelClass}`}>
+          <span className="min-w-0 flex-1 border-r-2 border-info pr-2 text-right"><strong className="block text-[11px] text-info">{editingMessage ? "ویرایش پیام" : `پاسخ به ${replyingTo?.senderName}`}</strong><span className="block truncate text-[10px] text-muted-foreground">{editingMessage?.body ?? replyingTo?.body}</span></span>
+          <button type="button" aria-label="لغو" onClick={editingMessage ? onCancelEdit : onCancelReply} className={iconButtonClass}><X className="h-4 w-4" /></button>
+        </div>
+      ) : null}
+
+      {attachment ? (
+        <div className={`mb-2 flex items-center gap-2 rounded-2xl p-2 ${glassPanelClass}`}>
+          {attachment.previewUrl ? <img src={attachment.previewUrl} alt="پیش‌نمایش فایل انتخاب‌شده" className="h-12 w-12 rounded-xl object-cover" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-surface-muted text-icon-muted"><FileText className="h-6 w-6" /></span>}
+          <div className="min-w-0 flex-1 text-right"><p className="truncate text-xs font-semibold text-foreground-secondary">{attachment.name}</p><p className="mt-0.5 text-[10px] text-muted-foreground">{formatFileSize(attachment.size)}</p></div>
+          <button type="button" aria-label="حذف فایل انتخاب‌شده" onClick={onClearAttachment} className={iconButtonClass}><X className="h-4 w-4" /></button>
+        </div>
+      ) : null}
+
       <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); onSubmit(); }}>
-        <div className="chat-composer-glass flex min-w-0 flex-1 items-end gap-1 rounded-[22px] border border-white/70 bg-white/60 px-2 shadow-[0_8px_28px_rgba(60,90,105,.14)] backdrop-blur-xl dark:border-white/10 dark:bg-[#202c33]/70 dark:shadow-[0_8px_28px_rgba(0,0,0,.25)]">
+        <div className={`flex min-w-0 flex-1 items-end gap-1 rounded-[22px] px-2 ${glassPanelClass}`}>
           <span className="flex h-11 w-9 shrink-0 items-center justify-center">
             <input ref={fileInputRef} type="file" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAttachmentSelected(file); event.target.value = ""; }} />
-            <button type="button" aria-label="افزودن فایل" onClick={() => fileInputRef.current?.click()} className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-white/50 dark:text-[#a9bac4] dark:hover:bg-white/10"><Paperclip className="h-5 w-5" /></button>
+            <button type="button" aria-label="افزودن فایل" onClick={() => fileInputRef.current?.click()} className={iconButtonClass}><Paperclip className="h-5 w-5" /></button>
           </span>
-          <textarea id="directChatMessageInput" ref={textareaRef} rows={1} value={value} onChange={(event) => onChange(event.target.value)} placeholder="پیام بنویسید" className="max-h-[108px] min-h-10 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-[13px] leading-5 text-slate-800 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 placeholder:text-slate-500 dark:text-[#e9edef] dark:placeholder:text-[#9babb4]" />
-          <span className={"relative flex h-11 w-9 shrink-0 items-center justify-center transition-all duration-200 ease-out " + (hasMessage ? "-translate-x-0.5 opacity-100" : "translate-x-0 opacity-100")}>
-            <button type="button" aria-label="انتخاب شکلک" aria-expanded={isEmojiPickerOpen} onClick={() => setIsEmojiPickerOpen((open) => !open)} className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-white/50 dark:text-[#a9bac4] dark:hover:bg-white/10"><Smile className="h-5 w-5" /></button>
-            {isEmojiPickerOpen ? <div role="dialog" aria-label="انتخاب شکلک" className="absolute bottom-full left-0 z-20 mb-2 grid w-56 grid-cols-4 gap-1 rounded-2xl border border-white/70 bg-white/90 p-2 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-[#202c33]/95">{emojis.map((emoji) => <button key={emoji} type="button" aria-label={`افزودن ${emoji}`} onClick={() => addEmoji(emoji)} className="grid h-10 w-10 place-items-center rounded-xl text-xl transition hover:bg-slate-100 dark:hover:bg-white/10">{emoji}</button>)}</div> : null}
+          <textarea id="directChatMessageInput" ref={textareaRef} rows={1} value={value} onChange={(event) => onChange(event.target.value)} placeholder="پیام بنویسید" className="max-h-[108px] min-h-10 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-[13px] leading-5 text-foreground outline-none placeholder:text-placeholder focus-visible:outline-none" />
+          <span className={`relative flex h-11 w-9 shrink-0 items-center justify-center transition-all duration-200 ease-out ${hasMessage ? "-translate-x-0.5 opacity-100" : "translate-x-0 opacity-100"}`}>
+            <button type="button" aria-label="انتخاب شکلک" aria-expanded={isEmojiPickerOpen} onClick={() => setIsEmojiPickerOpen((open) => !open)} className={iconButtonClass}><Smile className="h-5 w-5" /></button>
+            {isEmojiPickerOpen ? <div role="dialog" aria-label="انتخاب شکلک" className="absolute bottom-full left-0 z-20 mb-2 grid w-56 grid-cols-4 gap-1 rounded-panel border border-border bg-popover p-2 shadow-popover backdrop-blur-xl">{emojis.map((emoji) => <button key={emoji} type="button" aria-label={`افزودن ${emoji}`} onClick={() => addEmoji(emoji)} className="grid h-10 w-10 place-items-center rounded-xl text-xl transition-colors hover:bg-hover">{emoji}</button>)}</div> : null}
           </span>
-          <span aria-hidden={!hasMessage} className={"flex h-11 shrink-0 items-center justify-center overflow-hidden transition-[width] duration-200 ease-out " + (hasMessage ? "w-9" : "w-0")}>
-            <button type="submit" disabled={!hasMessage || isSending} tabIndex={hasMessage ? 0 : -1} aria-label="ارسال پیام" className={"grid h-9 w-9 shrink-0 origin-center place-items-center rounded-full text-[#5c9edb] transition-[transform,opacity] duration-200 ease-out hover:bg-white/50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-[#8ebfe2] dark:hover:bg-white/10 " + (hasMessage ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-50 opacity-0")}><SendHorizontal className="h-5 w-5 rotate-180" /></button>
+          <span aria-hidden={!hasMessage} className={`flex h-11 shrink-0 items-center justify-center overflow-hidden transition-[width] duration-200 ease-out ${hasMessage ? "w-9" : "w-0"}`}>
+            <button type="submit" disabled={!hasMessage || isSending} tabIndex={hasMessage ? 0 : -1} aria-label="ارسال پیام" className={`grid h-9 w-9 shrink-0 origin-center place-items-center rounded-full text-info transition-[transform,opacity] duration-200 ease-out hover:bg-hover disabled:cursor-not-allowed disabled:text-disabled-foreground ${hasMessage ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-50 opacity-0"}`}><SendHorizontal className="h-5 w-5 rotate-180" /></button>
           </span>
         </div>
       </form>
-      {notice ? <p className="mx-2 mt-1.5 rounded-lg bg-white/70 px-2 py-1 text-[10px] text-slate-600 backdrop-blur dark:bg-[#202c33]/75 dark:text-[#a9bac4]">{notice}</p> : null}
+      {notice ? <p className="mx-2 mt-1.5 rounded-lg bg-surface-glass px-2 py-1 text-[10px] text-muted-foreground backdrop-blur">{notice}</p> : null}
     </footer>
   );
 }

@@ -11,5 +11,5 @@ function getMapUrl(location: MapLocation | null): string {
 }
 
 export function MapFrame({ location }: { location: MapLocation | null }) {
-  return <div className="h-80 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 dark:border-slate-800"><iframe title="نقشه زنده میادین ایران" className="block h-full w-full border-0" loading="lazy" src={getMapUrl(location)} /></div>;
+  return <div className="h-80 w-full overflow-hidden rounded-card border border-border bg-surface-sunken shadow-xs"><iframe title="نقشه زنده میادین ایران" className="block h-full w-full border-0" loading="lazy" src={getMapUrl(location)} /></div>;
 }
