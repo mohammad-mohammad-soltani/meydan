@@ -12,8 +12,8 @@ export function ProfileInfo({ profile, tab, expandedSections, onToggleSection }:
     return (
       <section className="space-y-3 px-4">
         <div>
-          <h2 className="flex flex-wrap items-center gap-1.5 text-base font-black text-foreground">محمدصادق رضایی<span className="rounded border border-success-border bg-success-surface px-1.5 py-0.5 text-[10px] text-success">عضو فعال تبیین</span></h2>
-          <p className="mt-1 text-xs text-muted-foreground">کارشناس ارشد علوم سیاسی | فعال رسانه و میدان</p>
+          <h2 className="flex flex-wrap items-center gap-1.5 text-base font-black text-foreground">{profile.identity.name}<span className="rounded border border-success-border bg-success-surface px-1.5 py-0.5 text-[10px] text-success">عضو فعال تبیین</span></h2>
+          <p className="mt-1 text-xs text-muted-foreground">{profile.identity.subtitle}</p>
           <p className="mt-1 text-[11px] text-foreground-subtle">{profile.identity.location}</p>
         </div>
         <Stats items={profile.resumeStats} />
