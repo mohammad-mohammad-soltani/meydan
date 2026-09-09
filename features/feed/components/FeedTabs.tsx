@@ -6,14 +6,12 @@ type FeedTabsProps = {
 };
 
 export function FeedTabs({ activeTab, onChange }: FeedTabsProps) {
-  const tabClass = (active: boolean) => `flex-1 border-b-2 px-2 py-2.5 text-xs font-black transition-colors ${active ? "border-brand text-brand" : "border-transparent text-muted-foreground hover:bg-hover hover:text-foreground"}`;
-
   return (
-    <div data-active-tab={activeTab} className="relative flex w-full border-b border-border bg-surface-glass backdrop-blur">
-      <button type="button" onClick={() => onChange("for-you")} aria-pressed={activeTab === "for-you"} className={tabClass(activeTab === "for-you")}>
+    <div id="homeSubTabs" data-active-tab={activeTab} className="feed-tabs relative flex w-full border-b border-slate-200 bg-white/95 dark:border-slate-800 dark:bg-[#070a0f]/95">
+      <button type="button" onClick={() => onChange("for-you")} className={"flex-1 px-2 py-2.5 text-xs font-black transition " + (activeTab === "for-you" ? "home-subtab-active" : "text-slate-500 dark:text-slate-400")}>
         برای شما
       </button>
-      <button type="button" onClick={() => onChange("following")} aria-pressed={activeTab === "following"} className={tabClass(activeTab === "following")}>
+      <button type="button" onClick={() => onChange("following")} className={"flex-1 px-2 py-2.5 text-xs font-black transition " + (activeTab === "following" ? "home-subtab-active" : "text-slate-500 dark:text-slate-400")}>
         دنبال‌شده‌ها
       </button>
     </div>
