@@ -5,7 +5,7 @@ export type ChatUser = {
   name: string;
   handle: string;
   avatarLabel: string;
-  avatarTone: "red" | "amber";
+  avatarTone: "red" | "amber" | "blue" | "emerald" | "violet" | "slate";
   isVerified?: boolean;
   isOnline?: boolean;
 };

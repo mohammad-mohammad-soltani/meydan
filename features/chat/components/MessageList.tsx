@@ -7,5 +7,5 @@ type MessageListProps = {
 };
 
 export function MessageList({ messages, currentUserId }: MessageListProps) {
-  return <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5"><div className="flex justify-center"><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] text-slate-500 dark:bg-slate-900 dark:text-slate-400">امروز</span></div>{messages.map((message) => <MessageBubble key={message.id} message={message} isOwn={message.senderId === currentUserId} />)}</div>;
+  return <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4"><div className="flex min-h-full flex-col justify-end gap-2.5"><div className="mb-2 flex justify-center"><span className="rounded-lg bg-[#78909c]/85 px-2.5 py-1 text-[10px] font-medium text-white shadow-sm dark:bg-[#182d38]/90">امروز</span></div>{messages.map((message) => <MessageBubble key={message.id} message={message} isOwn={message.senderId === currentUserId} />)}</div></div>;
 }

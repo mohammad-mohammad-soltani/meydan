@@ -33,7 +33,8 @@ export function MobileHeader() {
     setIsDark(next);
   };
 
-  if (isConversationRoute || isPostRoute) return null;
+  // The chat area has its own Telegram-like app bar, including search and actions.
+  if (pathname === "/chat" || isConversationRoute || isPostRoute) return null;
 
   return (
     <header className="mobile-app-header sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-[#070a0f]/95 lg:hidden">

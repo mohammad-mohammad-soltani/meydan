@@ -53,6 +53,114 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Illustrated, low-contrast wallpaper used exclusively for direct conversations. */
+.chat-wallpaper {
+  isolation: isolate;
+  position: relative;
+  background-color: #e4ece5;
+  background-image:
+    radial-gradient(circle at 12% 0%, rgb(255 255 255 / .64), transparent 34rem),
+    linear-gradient(145deg, rgb(255 255 255 / .24), transparent 42%);
+}
+
+.chat-wallpaper::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("/images/patterns/resistance-chat-pattern-v2.png");
+  background-position: center 18px;
+  background-repeat: repeat;
+  background-size: 512px 512px;
+  opacity: .12;
+  mix-blend-mode: multiply;
+}
+
+.chat-wallpaper > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dark .chat-wallpaper {
+  background-color: #0d1815;
+  background-image:
+    radial-gradient(circle at 12% 0%, rgb(52 92 78 / .22), transparent 34rem),
+    linear-gradient(145deg, rgb(255 255 255 / .025), transparent 42%);
+}
+
+.dark .chat-wallpaper::before {
+  filter: brightness(0) invert(1);
+  opacity: .095;
+  mix-blend-mode: screen;
+}
+
+/* Direct conversations have no bottom navigation, so they must not reserve its space. */
+.conversation-view + [aria-hidden="true"] {
+  display: none;
+}
+
+/* The composer is intentionally chrome-free while typing. */
+.conversation-view .chat-composer-glass textarea,
+.conversation-view .chat-composer-glass textarea:focus,
+.conversation-view .chat-composer-glass textarea:focus-visible {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.chat-view-search input,
+.chat-view-search input:focus,
+.chat-view-search input:focus-visible {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@keyframes conversationItemOpening {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: .2; transform: translateX(-1rem) scale(.985); }
+}
+
+.conversation-item-opening {
+  pointer-events: none;
+  animation: conversationItemOpening 180ms cubic-bezier(.4, 0, .7, .2) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conversation-item-opening { animation: none; opacity: .65; }
+}
+
+@keyframes conversationEnter {
+  from { opacity: 0; transform: translateX(-1.25rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes conversationLeave {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
+
+.conversation-view-entering {
+  animation: conversationEnter 220ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.conversation-view-leaving {
+  pointer-events: none;
+  animation: conversationLeave 220ms cubic-bezier(.4, 0, .7, .2) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conversation-view-entering,
+  .conversation-view-leaving {
+    animation: none;
+  }
+}
+
 html,
 body {
   width: 100%;
@@ -1607,6 +1715,10 @@ html:not(.dark) .feed-filter-pill {
   color: #566477 !important;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / .82);
 }
+html:not(.dark) .feed-filter-pill:not(.active-pill) {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
 html:not(.dark) .feed-filter-pill:hover {
   border-color: #cbd5e1 !important;
   background: #eef2f6 !important;
@@ -1620,6 +1732,11 @@ html:not(.dark) .feed-filter-pill.active-pill {
 }
 html:not(.dark) .feed-filter-pill.active-pill svg:not(.fill-amber-400) {
   color: #b95c24 !important;
+}
+html.dark .feed-filter-pill:not(.active-pill) {
+  background: #202832 !important;
+  border-color: #344454 !important;
+  color: #f1f5f9 !important;
 }
 html:not(.dark) .feed-live-banner {
   border-color: #f1dfbe;
@@ -1991,4 +2108,33 @@ html.dark #homeSubTabs.feed-tabs button.home-subtab-active {
     transition: none;
     animation: none;
   }
+}
+
+/* Active feed filter: strong monochrome contrast in both themes. */
+.feed-filter-pill.active-pill,
+html.dark .feed-filter-pill.active-pill,
+html:not(.dark) .feed-filter-pill.active-pill {
+  background: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.feed-filter-pill.active-pill svg,
+html.dark .feed-filter-pill.active-pill svg,
+html:not(.dark) .feed-filter-pill.active-pill svg {
+  color: #ffffff !important;
+  stroke: currentColor;
+}
+
+html.dark .feed-filter-pill:not(.active-pill) {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+html.dark .feed-filter-pill:not(.active-pill) svg {
+  color: #111827 !important;
 }

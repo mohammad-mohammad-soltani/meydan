@@ -1,8 +1,12 @@
-import { chatAvatar } from "@/components/shared/generated-media";
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Image from "next/image";
+import { chatAvatar } from "@/components/shared/generated-media";
 import type { Route } from "next";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, CheckCheck } from "lucide-react";
 import type { Conversation } from "../types";
 
 type ConversationItemProps = {
@@ -11,21 +15,31 @@ type ConversationItemProps = {
 
 export function ConversationItem({ conversation }: ConversationItemProps) {
   const { participant } = conversation;
+  const router = useRouter();
+  const [isOpening, setIsOpening] = useState(false);
+  const href = ("/chat/" + conversation.id) as Route;
+  const tones = { red: "from-rose-500 to-orange-400", amber: "from-amber-400 to-orange-500", blue: "from-sky-400 to-blue-600", emerald: "from-emerald-400 to-teal-600", violet: "from-violet-400 to-indigo-600", slate: "from-slate-500 to-slate-800" };
+  const openConversation = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || isOpening) return;
+    event.preventDefault();
+    setIsOpening(true);
+    window.setTimeout(() => router.push(href), 180);
+  };
   return (
-    <Link href={("/chat/" + conversation.id) as Route} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 p-3 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40 dark:border-slate-800 dark:hover:bg-slate-900/60">
-      <div className="flex min-w-0 items-center gap-3">
-        <Image src={chatAvatar(participant.avatarTone)} alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full object-cover" />
-        <div className="min-w-0">
-          <div className="flex items-center gap-1 text-xs font-bold text-slate-900 dark:text-white">
-            <span className="truncate">{participant.name}</span>
-            {participant.isVerified ? <BadgeCheck className="h-3.5 w-3.5 shrink-0 fill-blue-500 text-blue-500" aria-label="تأییدشده" /> : null}
+    <Link href={href} onClick={openConversation} aria-busy={isOpening} className={"group flex min-h-[72px] items-center gap-3 px-4 py-2 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#5c9edb] dark:hover:bg-white/[.035] " + (isOpening ? "conversation-item-opening" : "")}>
+      <Image src={chatAvatar(participant.avatarTone)} alt="" width={54} height={54} className={`h-[54px] w-[54px] shrink-0 rounded-full object-cover shadow-inner ${tones[participant.avatarTone]}`} />
+      <div className="min-w-0 flex-1 self-stretch border-b border-slate-100 py-2 dark:border-white/[.08]">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-1">
+            <span className="truncate text-[15px] font-bold leading-5 text-slate-900 dark:text-white">{participant.name}</span>
+            {participant.isVerified ? <BadgeCheck className="h-4 w-4 shrink-0 fill-[#5c9edb] text-white" aria-label="تأییدشده" /> : null}
           </div>
-          <p className="mt-1 max-w-[14rem] truncate text-[10px] text-slate-500 dark:text-slate-400">{conversation.preview}</p>
+          <span className="shrink-0 text-[11px] leading-5 text-slate-400 dark:text-slate-500">{conversation.updatedAt}</span>
         </div>
-      </div>
-      <div className="flex shrink-0 flex-col items-end gap-1 text-[9px] text-slate-400">
-        <span>{conversation.updatedAt}</span>
-        {conversation.unreadCount > 0 ? <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-red px-1 text-[9px] font-bold text-white">{conversation.unreadCount}</span> : null}
+        <div className="mt-1 flex items-center justify-between gap-3">
+          <p className="min-w-0 truncate text-[13px] leading-5 text-slate-500 dark:text-slate-400">{conversation.unreadCount === 0 ? <CheckCheck className="ml-1 inline h-3.5 w-3.5 text-[#5c9edb]" /> : null}{conversation.preview}</p>
+          {conversation.unreadCount > 0 ? <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#6f8090] px-1.5 text-[10px] font-bold text-white">{conversation.unreadCount > 99 ? "۹۹+" : conversation.unreadCount}</span> : null}
+        </div>
       </div>
     </Link>
   );

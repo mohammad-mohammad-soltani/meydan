@@ -5,24 +5,29 @@ const currentUserId = "current-user";
 const conversations: Conversation[] = [
   {
     id: "tehran-enghelab",
-    participant: { id: "tehran-enghelab", name: "پایگاه میدان انقلاب", handle: "@tehran_enghelab", avatarLabel: "م.ا", avatarTone: "red", isVerified: true, isOnline: true },
-    preview: "هماهنگی برای منبر ساعت ۲۱ نهایی شد.",
-    updatedAt: "۱۰ دقیقه",
-    unreadCount: 1,
+    participant: { id: "tehran-enghelab", name: "پایگاه میدان انقلاب", handle: "@tehran_enghelab", avatarLabel: "انقلاب", avatarTone: "red", isVerified: true, isOnline: true },
+    preview: "هماهنگی برای منبر ساعت ۲۱ نهایی شد.", updatedAt: "۱۱:۲۸", unreadCount: 14,
   },
   {
     id: "yazd-chakhmaq",
     participant: { id: "yazd-chakhmaq", name: "موکب امیرچخماق یزد", handle: "@yazd_chakhmaq", avatarLabel: "یزد", avatarTone: "amber" },
-    preview: "نقشه سیم‌کشی ارسال شد؛ خداقوت.",
-    updatedAt: "۳۵ دقیقه",
-    unreadCount: 0,
+    preview: "نقشه سیم‌کشی ارسال شد؛ خداقوت.", updatedAt: "۱۱:۱۵", unreadCount: 20,
   },
+  { id: "code-explore", participant: { id: "code-explore", name: "گروه رسانه و فناوری", handle: "@media_tech", avatarLabel: "رسانه", avatarTone: "emerald" }, preview: "از API جدید برای دریافت گزارش‌ها استفاده کنید.", updatedAt: "۱۱:۱۴", unreadCount: 3 },
+  { id: "rah-dalileh", participant: { id: "rah-dalileh", name: "راهِ دلیله", handle: "@rahedalileh", avatarLabel: "ره", avatarTone: "slate", isVerified: true }, preview: "سم کوییم دیگر پایبند نیستیم؟! 🌐", updatedAt: "۱۱:۱۱", unreadCount: 202 },
+  { id: "dev-twitter", participant: { id: "dev-twitter", name: "اتاق خبرِ میدان", handle: "@meydan_news", avatarLabel: "خبر", avatarTone: "blue" }, preview: "گزارش زنده از میدان‌ها منتشر شد.", updatedAt: "۱۰:۵۲", unreadCount: 1 },
+  { id: "hosein-sabeti", participant: { id: "hosein-sabeti", name: "امیرحسین ثابتی", handle: "@sabeti", avatarLabel: "ث", avatarTone: "violet", isVerified: true }, preview: "آلبوم تصاویر مراسم در حاشیه اجلاس ارسال شد.", updatedAt: "۰۷:۳۸", unreadCount: 2 },
+  { id: "temp-number", participant: { id: "temp-number", name: "سامانه پاسخ‌گویی", handle: "@support", avatarLabel: "پ", avatarTone: "blue" }, preview: "🔴 اطلاعیه جدید برای مسئولان پایگاه‌ها", updatedAt: "۰۴:۵۲", unreadCount: 44 },
+  { id: "kanal-gheymat", participant: { id: "kanal-gheymat", name: "کانال گزارش‌های مردمی", handle: "@reports", avatarLabel: "گزارش", avatarTone: "red" }, preview: "وقتی بعد از مراسم باران می‌بارد، در خیابان…", updatedAt: "۰۲:۵۸", unreadCount: 6 },
+  { id: "linuxor", participant: { id: "linuxor", name: "شبکه داوطلبان", handle: "@volunteers", avatarLabel: "دو", avatarTone: "emerald" }, preview: "برای ناوبری ایستگاه‌ها، یک راهنما آماده است.", updatedAt: "۰۲:۳۶", unreadCount: 1 },
 ];
 
 const messagesByConversation: Record<string, ChatMessage[]> = {
   "tehran-enghelab": [
-    { id: "message-1", conversationId: "tehran-enghelab", senderId: "tehran-enghelab", body: "سلام علیکم، سیستم صوتی میدان انقلاب وصل شد و آماده پخش صوت دمِ رأس ساعت ۲۱:۳۰ هستیم.", sentAt: "۲۰:۱۰", status: "sent" },
-    { id: "message-2", conversationId: "tehran-enghelab", senderId: currentUserId, body: "خداقوت، فیش سخنرانی شب دوازدهم هم در صفحه محتوا بارگذاری شده است.", sentAt: "۲۰:۱۵", status: "sent" },
+    { id: "message-1", conversationId: "tehran-enghelab", senderId: "tehran-enghelab", body: "سلام، وقت‌تان بخیر. تجهیزات صوتیِ پایگاه بررسی و آماده شد.", sentAt: "۲۰:۱۰", status: "sent" },
+    { id: "message-2", conversationId: "tehran-enghelab", senderId: currentUserId, body: "خداقوت. فایل برنامه و زمان‌بندی نهایی را هم در بخش محتوا گذاشتم.", sentAt: "۲۰:۱۵", status: "sent" },
+    { id: "message-3", conversationId: "tehran-enghelab", senderId: "tehran-enghelab", body: "دریافت شد، ممنون. شروع برنامه ساعت ۲۱ خواهد بود.", sentAt: "۲۰:۱۷", status: "sent" },
+    { id: "message-4", conversationId: "tehran-enghelab", senderId: currentUserId, body: "عالی است. اگر موردی پیش آمد همین‌جا اطلاع دهید.", sentAt: "۲۰:۱۸", status: "sent" },
   ],
   "yazd-chakhmaq": [
     { id: "message-3", conversationId: "yazd-chakhmaq", senderId: "yazd-chakhmaq", body: "نقشه سیم‌کشی محل موکب را ارسال کردیم. اگر نکته‌ای هست بفرمایید.", sentAt: "۱۹:۴۰", status: "sent" },

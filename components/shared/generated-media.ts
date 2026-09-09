@@ -5,8 +5,10 @@ export const generatedMedia = {
   avatarSpeaker: "/images/generated/avatar-speaker.svg"
 } as const;
 
-export function chatAvatar(tone: "red" | "amber") {
-  return tone === "amber" ? generatedMedia.avatarSpeaker : generatedMedia.avatarJournalist;
+export function chatAvatar(tone: "red" | "amber" | "blue" | "emerald" | "violet" | "slate") {
+  if (tone === "amber" || tone === "violet") return generatedMedia.avatarSpeaker;
+  if (tone === "blue" || tone === "emerald" || tone === "slate") return generatedMedia.avatarCoordinator;
+  return generatedMedia.avatarJournalist;
 }
 
 export function speakerAvatar(accent: "slate" | "blue" | "amber" | "emerald") {
