@@ -14,22 +14,13 @@ import {
   X,
 } from "lucide-react";
 import { generatedMedia } from "@/components/shared/generated-media";
-import type { FeedAttachment, FeedPost } from "@/features/feed/types";
+import { requireLogin } from "@/lib/meydan-client-api";
+import { publishNarrative } from "../services/compose.service";
 
 const MAX_CHARACTERS = 280;
 const DRAFT_KEY = "meydan-compose-draft";
-const LOCAL_POSTS_KEY = "meydan-local-narratives";
 
 type PollOption = { id: number; value: string };
-
-function loadLocalPosts(): FeedPost[] {
-  try {
-    const stored = window.localStorage.getItem(LOCAL_POSTS_KEY);
-    return stored ? (JSON.parse(stored) as FeedPost[]) : [];
-  } catch {
-    return [];
-  }
-}
 
 export function ComposeView() {
   const router = useRouter();
@@ -63,7 +54,6 @@ export function ComposeView() {
       setPreviewUrl(null);
       return;
     }
-
     const url = URL.createObjectURL(attachment);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
@@ -98,12 +88,10 @@ export function ComposeView() {
   const insertEmoji = () => {
     const textarea = textareaRef.current;
     const emoji = "✨";
-
     if (!textarea) {
       setText((value) => `${value}${emoji}`);
       return;
     }
-
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     setText((value) => `${value.slice(0, start)}${emoji}${value.slice(end)}`);
@@ -125,220 +113,81 @@ export function ComposeView() {
   };
 
   const addPollOption = () => {
-    setPollOptions((current) => current && current.length < 4
-      ? [...current, { id: Date.now(), value: "" }]
-      : current);
+    setPollOptions((current) => current && current.length < 4 ? [...current, { id: Date.now(), value: "" }] : current);
   };
 
-  const publish = () => {
+  const publish = async () => {
     if (!canPublish) return;
     setIsPublishing(true);
-
-    const trimmed = text.trim();
-    const firstLine = trimmed.split("\n")[0] ?? trimmed;
-    const attachments: FeedAttachment[] = [];
-
-    if (attachment) {
-      attachments.push({
-        id: `attachment-${Date.now()}`,
-        label: attachment.name,
-        detail: attachment.type.startsWith("video/") ? "ویدئوی پیوست" : "تصویر پیوست",
-        icon: attachment.type.startsWith("video/") ? "video" : "image",
+    try {
+      await publishNarrative({
+        body: text,
+        attachment,
+        scheduledAt: scheduledAt || undefined,
+        pollOptions: pollOptions?.map((option) => option.value),
       });
+      window.localStorage.removeItem(DRAFT_KEY);
+      setText("");
+      setAttachment(null);
+      setPollOptions(null);
+      router.push("/home");
+      router.refresh();
+    } catch (error) {
+      if (!requireLogin(error)) {
+        window.alert(error instanceof Error ? error.message : "انتشار روایت ناموفق بود.");
+      }
+    } finally {
+      setIsPublishing(false);
     }
-
-    if (hasPollContent) {
-      attachments.push({
-        id: `poll-${Date.now()}`,
-        label: "نظرسنجی",
-        detail: pollOptions?.filter((option) => option.value.trim()).map((option) => option.value.trim()).join(" · ") ?? "",
-        icon: "article",
-      });
-    }
-
-    const post: FeedPost = {
-      id: `local-${Date.now()}`,
-      kind: "ideas",
-      squareName: "روایت شما",
-      handle: "@you",
-      timeAgo: scheduledAt ? "زمان‌بندی‌شده" : "همین حالا",
-      city: locationEnabled ? "موقعیت فعلی" : "ایران",
-      badge: "روایت تازه",
-      title: firstLine.length > 64 ? `${firstLine.slice(0, 64)}…` : firstLine,
-      body: trimmed,
-      attachments,
-      stats: { likes: 0, comments: 0, reposts: 0 },
-    };
-
-    const existing = loadLocalPosts();
-    window.localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify([post, ...existing].slice(0, 20)));
-    window.localStorage.removeItem(DRAFT_KEY);
-    setText("");
-    setAttachment(null);
-    setPollOptions(null);
-    router.push("/home");
   };
 
   return (
     <section className="flex min-h-full flex-1 flex-col bg-background text-foreground" aria-label="نوشتن روایت تازه">
       <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between border-b border-divider bg-surface-glass px-3 backdrop-blur-md">
-        <button
-          type="button"
-          onClick={requestClose}
-          aria-label="بستن و بازگشت"
-          className="grid h-10 w-10 place-items-center rounded-full text-icon transition-colors hover:bg-hover hover:text-foreground"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
+        <button type="button" onClick={requestClose} aria-label="بستن و بازگشت" className="grid h-10 w-10 place-items-center rounded-full text-icon transition-colors hover:bg-hover hover:text-foreground"><X className="h-5 w-5" /></button>
         <span className="text-sm font-black">روایت جدید</span>
-
-        <button
-          type="button"
-          onClick={publish}
-          disabled={!canPublish}
-          className="rounded-pill bg-brand px-4 py-2 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground"
-        >
-          {isPublishing ? "در حال انتشار…" : "انتشار"}
-        </button>
+        <button type="button" onClick={() => void publish()} disabled={!canPublish} className="rounded-pill bg-brand px-4 py-2 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground">{isPublishing ? "در حال انتشار…" : "انتشار"}</button>
       </header>
 
       <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
         <div className="flex items-start gap-3">
-          <img
-            src={generatedMedia.avatarJournalist}
-            alt="آواتار کاربر"
-            className="h-12 w-12 shrink-0 rounded-full border border-border object-cover shadow-xs"
-          />
-
+          <img src={generatedMedia.avatarJournalist} alt="آواتار کاربر" className="h-12 w-12 shrink-0 rounded-full border border-border object-cover shadow-xs" />
           <div className="min-w-0 flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-sm font-black text-foreground">روایتگر میدان</span>
-              <span className="text-[11px] text-muted-foreground">@you</span>
-            </div>
-
-            <textarea
-              ref={textareaRef}
-              autoFocus
-              value={text}
-              onChange={(event) => {
-                setText(event.target.value);
-                event.currentTarget.style.height = "auto";
-                event.currentTarget.style.height = `${Math.max(180, event.currentTarget.scrollHeight)}px`;
-              }}
-              maxLength={MAX_CHARACTERS + 40}
-              placeholder="چه روایتی برای گفتن داری؟"
-              aria-label="متن روایت"
-              className="min-h-48 w-full resize-none overflow-hidden bg-transparent text-[19px] leading-8 text-foreground outline-none placeholder:text-placeholder focus-visible:outline-none"
-            />
+            <div className="mb-2 flex items-center gap-2"><span className="text-sm font-black text-foreground">روایتگر میدان</span><span className="text-[11px] text-muted-foreground">@you</span></div>
+            <textarea ref={textareaRef} autoFocus value={text} onChange={(event) => { setText(event.target.value); event.currentTarget.style.height = "auto"; event.currentTarget.style.height = `${Math.max(180, event.currentTarget.scrollHeight)}px`; }} maxLength={MAX_CHARACTERS + 40} placeholder="چه روایتی برای گفتن داری؟" aria-label="متن روایت" className="min-h-48 w-full resize-none overflow-hidden bg-transparent text-[19px] leading-8 text-foreground outline-none placeholder:text-placeholder focus-visible:outline-none" />
           </div>
         </div>
 
         {previewUrl && attachment ? (
           <div className="ui-enter relative mt-3 overflow-hidden rounded-panel border border-border bg-surface-muted">
-            {attachment.type.startsWith("video/") ? (
-              <video src={previewUrl} controls className="max-h-80 w-full bg-surface-sunken object-contain" />
-            ) : (
-              <img src={previewUrl} alt="پیش‌نمایش تصویر انتخاب‌شده" className="max-h-80 w-full object-cover" />
-            )}
-            <button
-              type="button"
-              onClick={() => setAttachment(null)}
-              aria-label="حذف فایل پیوست"
-              className="absolute left-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-scrim text-on-solid shadow-sm backdrop-blur"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {attachment.type.startsWith("video/") ? <video src={previewUrl} controls className="max-h-80 w-full bg-surface-sunken object-contain" /> : <img src={previewUrl} alt="پیش‌نمایش تصویر انتخاب‌شده" className="max-h-80 w-full object-cover" />}
+            <button type="button" onClick={() => setAttachment(null)} aria-label="حذف فایل پیوست" className="absolute left-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-scrim text-on-solid shadow-sm backdrop-blur"><X className="h-4 w-4" /></button>
             <div className="border-t border-divider px-3 py-2 text-[10px] text-muted-foreground">{attachment.name}</div>
           </div>
         ) : null}
 
         {pollOptions ? (
           <div className="ui-enter mt-3 space-y-2 rounded-card border border-border bg-surface p-3 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black">نظرسنجی</span>
-              <button
-                type="button"
-                onClick={() => setPollOptions(null)}
-                aria-label="حذف نظرسنجی"
-                className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover hover:text-danger"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            {pollOptions.map((option, index) => (
-              <input
-                key={option.id}
-                value={option.value}
-                onChange={(event) => updatePollOption(option.id, event.target.value)}
-                placeholder={`گزینه ${index + 1}`}
-                className="min-h-11 w-full rounded-control border border-input-border bg-input px-3 text-sm text-foreground outline-none placeholder:text-placeholder focus:border-brand"
-              />
-            ))}
-            {pollOptions.length < 4 ? (
-              <button
-                type="button"
-                onClick={addPollOption}
-                className="inline-flex items-center gap-1.5 rounded-control px-2 py-2 text-xs font-bold text-brand hover:bg-brand-muted"
-              >
-                <Plus className="h-4 w-4" />
-                افزودن گزینه
-              </button>
-            ) : null}
+            <div className="flex items-center justify-between"><span className="text-xs font-black">نظرسنجی</span><button type="button" onClick={() => setPollOptions(null)} aria-label="حذف نظرسنجی" className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover hover:text-danger"><X className="h-4 w-4" /></button></div>
+            {pollOptions.map((option, index) => <input key={option.id} value={option.value} onChange={(event) => updatePollOption(option.id, event.target.value)} placeholder={`گزینه ${index + 1}`} className="min-h-11 w-full rounded-control border border-input-border bg-input px-3 text-sm text-foreground outline-none placeholder:text-placeholder focus:border-brand" />)}
+            {pollOptions.length < 4 ? <button type="button" onClick={addPollOption} className="inline-flex items-center gap-1.5 rounded-control px-2 py-2 text-xs font-bold text-brand hover:bg-brand-muted"><Plus className="h-4 w-4" />افزودن گزینه</button> : null}
           </div>
         ) : null}
 
         {scheduleOpen ? (
           <div className="ui-enter mt-3 rounded-card border border-border bg-surface p-3 shadow-xs">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-black">زمان‌بندی انتشار</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">زمان دلخواه را انتخاب کن.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setScheduleOpen(false);
-                  setScheduledAt("");
-                }}
-                className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover"
-                aria-label="بستن زمان‌بندی"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <input
-              type="datetime-local"
-              value={scheduledAt}
-              onChange={(event) => setScheduledAt(event.target.value)}
-              className="mt-3 min-h-11 w-full rounded-control border border-input-border bg-input px-3 text-xs text-foreground outline-none focus:border-brand"
-            />
+            <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-black">زمان‌بندی انتشار</p><p className="mt-1 text-[10px] text-muted-foreground">زمان دلخواه را انتخاب کن.</p></div><button type="button" onClick={() => { setScheduleOpen(false); setScheduledAt(""); }} className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover" aria-label="بستن زمان‌بندی"><X className="h-4 w-4" /></button></div>
+            <input type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} className="mt-3 min-h-11 w-full rounded-control border border-input-border bg-input px-3 text-xs text-foreground outline-none focus:border-brand" />
           </div>
         ) : null}
 
-        {locationEnabled ? (
-          <button
-            type="button"
-            onClick={() => setLocationEnabled(false)}
-            className="ui-enter mt-3 inline-flex w-fit items-center gap-1.5 rounded-pill bg-brand-muted px-3 py-1.5 text-xs font-bold text-brand"
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            موقعیت فعلی
-            <X className="h-3.5 w-3.5" />
-          </button>
-        ) : null}
+        {locationEnabled ? <button type="button" onClick={() => setLocationEnabled(false)} className="ui-enter mt-3 inline-flex w-fit items-center gap-1.5 rounded-pill bg-brand-muted px-3 py-1.5 text-xs font-bold text-brand"><MapPin className="h-3.5 w-3.5" />موقعیت فعلی<X className="h-3.5 w-3.5" /></button> : null}
       </div>
 
       <div className="sticky bottom-0 z-20 border-t border-divider bg-surface-glass px-3 py-2.5 backdrop-blur-md">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-0.5 text-brand">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              className="hidden"
-              onChange={(event) => setAttachment(event.target.files?.[0] ?? null)}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] ?? null)} />
             <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="افزودن تصویر یا ویدئو" className="grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted"><ImagePlus className="h-[19px] w-[19px]" /></button>
             <button type="button" onClick={startPoll} aria-label="افزودن نظرسنجی" className={`grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted ${pollOptions ? "bg-brand-muted" : ""}`}><ListChecks className="h-[19px] w-[19px]" /></button>
             <button type="button" onClick={insertEmoji} aria-label="افزودن ایموجی" className="grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted"><Smile className="h-[19px] w-[19px]" /></button>
@@ -349,10 +198,7 @@ export function ComposeView() {
           {text.length > 0 ? (
             <div className={`flex items-center gap-2 text-[11px] font-bold ${remaining < 0 ? "text-danger" : remaining <= 20 ? "text-warning" : "text-muted-foreground"}`}>
               {remaining <= 20 ? <span>{remaining}</span> : null}
-              <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" className="-rotate-90">
-                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-20" />
-                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} />
-              </svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" className="-rotate-90"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-20" /><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} /></svg>
             </div>
           ) : null}
         </div>
