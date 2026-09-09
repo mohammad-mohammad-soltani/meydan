@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { ProfileDetails, ProfileSection, ProfileTab } from "../types";
 
 export function useProfile(profile: ProfileDetails) {
-  const [selectedTab, setSelectedTab] = useState<ProfileTab>("square");
+  const [selectedTab, setSelectedTab] = useState<ProfileTab>(profile.initialTab ?? "square");
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
