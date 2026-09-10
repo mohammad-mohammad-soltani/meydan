@@ -19,12 +19,12 @@ const filters: FilterItem[] = [
     icon: Layers3,
   },
   {
-    id: "ideas",
+    id: "initiatives",
     label: "کار خوب",
     icon: Sparkles,
   },
   {
-    id: "media",
+    id: "reflected",
     label: "بازنشر رسانه‌ای",
     icon: Radio,
   },
