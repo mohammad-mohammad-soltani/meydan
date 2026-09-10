@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Route } from "next";
 import { BadgeCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import type { PostComment } from "../types";
@@ -14,11 +15,26 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
       {composer}
 
       {comments.length ? (
-        <div className="divide-y divide-divider border-y border-divider">
+        <div className="divide-y divide-divider">
           {comments.map((comment) => {
-            const profileHref = comment.authorId
-              ? `/profile/${comment.authorType || "user"}/${comment.authorId}`
-              : "#";
+            const profileHref: Route | null = comment.authorId
+              ? (`/profile/${comment.authorType || "user"}/${comment.authorId}` as Route)
+              : null;
+
+            const avatar = comment.avatarUrl ? (
+              <Image
+                src={comment.avatarUrl}
+                alt=""
+                width={42}
+                height={42}
+                unoptimized={comment.avatarUrl.startsWith("http")}
+                className="h-[42px] w-[42px] rounded-full object-cover ring-1 ring-border"
+              />
+            ) : (
+              <div className="grid h-[42px] w-[42px] place-items-center rounded-full bg-surface-muted text-xs font-black text-foreground-secondary">
+                {comment.initials}
+              </div>
+            );
 
             return (
               <article
@@ -26,28 +42,25 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
                 className={`flex gap-3 py-4 transition-colors hover:bg-hover/40 ${comment.id.startsWith("comment-") ? "ui-enter" : ""}`}
                 dir="rtl"
               >
-                <Link href={profileHref} className="shrink-0">
-                  {comment.avatarUrl ? (
-                    <Image
-                      src={comment.avatarUrl}
-                      alt=""
-                      width={42}
-                      height={42}
-                      unoptimized={comment.avatarUrl.startsWith("http")}
-                      className="h-[42px] w-[42px] rounded-full object-cover ring-1 ring-border"
-                    />
-                  ) : (
-                    <div className="grid h-[42px] w-[42px] place-items-center rounded-full bg-surface-muted text-xs font-black text-foreground-secondary">
-                      {comment.initials}
-                    </div>
-                  )}
-                </Link>
+                {profileHref ? (
+                  <Link href={profileHref} className="shrink-0" aria-label={`نمایه ${comment.author}`}>
+                    {avatar}
+                  </Link>
+                ) : (
+                  <div className="shrink-0">{avatar}</div>
+                )}
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <Link href={profileHref} className="truncate text-sm font-black text-foreground hover:underline">
-                      {comment.author}
-                    </Link>
+                    {profileHref ? (
+                      <Link href={profileHref} className="truncate text-sm font-black text-foreground hover:underline">
+                        {comment.author}
+                      </Link>
+                    ) : (
+                      <span className="truncate text-sm font-black text-foreground">
+                        {comment.author}
+                      </span>
+                    )}
 
                     {comment.verified ? (
                       <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" aria-label="تأیید شده" />
