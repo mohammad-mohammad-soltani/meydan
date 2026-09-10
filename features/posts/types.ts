@@ -2,6 +2,8 @@ export type PostMediaKind = "image" | "video" | "article";
 export type ReactionKind = "like" | "repost";
 
 export type PostAuthor = {
+  id: number;
+  type: "user" | "square";
   name: string;
   handle: string;
   initials: string;
