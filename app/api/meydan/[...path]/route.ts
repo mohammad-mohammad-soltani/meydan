@@ -49,7 +49,11 @@ async function refresh(refreshToken: string) {
   const body = await response.json().catch(() => null) as {
     data?: { access_token?: string };
   } | null;
-  return response.ok ? body?.data?.access_token : undefined;
+  if (!response.ok || !body?.data?.access_token) return undefined;
+  return {
+    accessToken: body.data.access_token,
+    refreshToken: response.headers.get("set-cookie")?.match(/(?:^|,\s*)meydan_refresh=([^;]+)/)?.[1],
+  };
 }
 
 async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[...path]">) {
@@ -62,12 +66,14 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
   let accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   let response = await upstream(request, path, accessToken, body);
   let refreshed = false;
+  let refreshedRefreshToken: string | undefined;
 
   if (response.status === 401) {
     const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
-    const nextToken = refreshToken ? await refresh(refreshToken) : undefined;
-    if (nextToken) {
-      accessToken = nextToken;
+    const refreshedSession = refreshToken ? await refresh(refreshToken) : undefined;
+    if (refreshedSession) {
+      accessToken = refreshedSession.accessToken;
+      refreshedRefreshToken = refreshedSession.refreshToken;
       refreshed = true;
       response = await upstream(request, path, accessToken, body);
     }
@@ -85,6 +91,7 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
   });
   if (refreshed && accessToken) {
     result.cookies.set(ACCESS_COOKIE, accessToken, { ...sessionCookieOptions, maxAge: 15 * 60 });
+    if (refreshedRefreshToken) result.cookies.set(REFRESH_COOKIE, refreshedRefreshToken, { ...sessionCookieOptions, maxAge: 30 * 24 * 60 * 60 });
   }
   if (response.status === 401) {
     result.cookies.delete(ACCESS_COOKIE);

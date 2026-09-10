@@ -18,7 +18,7 @@ const actionBase = "pointer-events-auto inline-flex h-8 w-full items-center just
 
 export function PostActions({ postId, likes, comments, views, liked, onLike, onShare, className = "" }: PostActionsProps) {
   return (
-    <div dir="ltr" className={`feed-post-actions pointer-events-auto relative z-20 mt-3 grid h-10 grid-cols-4 items-center rounded-2xl border border-border bg-surface-glass px-1 text-icon-muted shadow-xs ${className}`}>
+    <div dir="ltr" className={`feed-post-actions pointer-events-auto relative z-20 mt-3 grid h-9 grid-cols-4 items-center text-icon-muted ${className}`}>
       <button type="button" onClick={(event) => { event.stopPropagation(); onShare(); }} aria-label="اشتراک‌گذاری روایت" className={`${actionBase} hover:bg-info-surface hover:text-info`}><Share2 className="h-[17px] w-[17px]" /></button>
       <Link
         scroll={false}

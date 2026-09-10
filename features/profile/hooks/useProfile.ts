@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { meydanApi } from "@/lib/meydan-api";
+import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileSection } from "../types";
 
 export function useProfile(profile: ProfileDetails) {
@@ -9,8 +10,7 @@ export function useProfile(profile: ProfileDetails) {
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
-  const [likedActivity, setLikedActivity] = useState(false);
-  const [repostedActivity, setRepostedActivity] = useState(false);
+  const [likedNarrativeIds, setLikedNarrativeIds] = useState<Set<string>>(() => new Set(profile.narrativePosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
   const [isLoading] = useState(false);
   const [isSavingManagement, setIsSavingManagement] = useState(false);
   const [managementError, setManagementError] = useState<string | null>(null);
@@ -26,17 +26,26 @@ export function useProfile(profile: ProfileDetails) {
     setIsFollowing(next);
     try { await meydanApi(`/actors/square/${profile.actorId}/follow`, { method: next ? "PUT" : "DELETE" }); } catch { setIsFollowing(!next); }
   };
-  const toggleLike = async () => {
-    if (profile.activity.id === "none") return;
-    const next = !likedActivity;
-    setLikedActivity(next);
-    try { await meydanApi(`/narratives/${profile.activity.id}/like`, { method: next ? "PUT" : "DELETE" }); } catch { setLikedActivity(!next); }
+  const toggleLike = async (narrativeId: string) => {
+    const next = !likedNarrativeIds.has(narrativeId);
+    setLikedNarrativeIds((current) => { const updated = new Set(current); if (next) updated.add(narrativeId); else updated.delete(narrativeId); return updated; });
+    try { await meydanApi(`/narratives/${narrativeId}/like`, { method: next ? "PUT" : "DELETE" }); } catch { setLikedNarrativeIds((current) => { const updated = new Set(current); if (next) updated.delete(narrativeId); else updated.add(narrativeId); return updated; }); }
   };
-  const toggleRepost = async () => {
-    if (profile.activity.id === "none") return;
-    const next = !repostedActivity;
-    setRepostedActivity(next);
-    try { await meydanApi(`/narratives/${profile.activity.id}/repost`, { method: next ? "PUT" : "DELETE" }); } catch { setRepostedActivity(!next); }
+  const shareNarrative = async (post: FeedPost) => {
+    await meydanApi(`/narratives/${post.id}/share`, { method: "POST", headers: { "idempotency-key": crypto.randomUUID() } }).catch(() => undefined);
+    const text = `${post.title} — ${post.body}`;
+    if (navigator.share) { await navigator.share({ title: post.title, text }); return; }
+    await navigator.clipboard?.writeText(text);
+  };
+  const saveUserDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
+    setIsSavingManagement(true);
+    setManagementError(null);
+    try {
+      await meydanApi("/me/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ full_name: input.name, headline: input.subtitle, about: input.about, skills: input.skills }) });
+      window.location.reload();
+    } catch {
+      setManagementError("ذخیره‌سازی انجام نشد. دوباره تلاش کنید.");
+    } finally { setIsSavingManagement(false); }
   };
   const saveSquareDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
     setIsSavingManagement(true);
@@ -75,5 +84,5 @@ export function useProfile(profile: ProfileDetails) {
       setIsSavingManagement(false);
     }
   };
-  return { profile, selectedTab, expandedSections, isFollowing, isManagementOpen, likedActivity, repostedActivity, isLoading, isSavingManagement, managementError, toggleSection, toggleFollowing, openManagement: () => setIsManagementOpen(true), closeManagement: () => setIsManagementOpen(false), toggleLike, toggleRepost, saveSquareDetails, createSchedule };
+  return { profile, selectedTab, expandedSections, isFollowing, isManagementOpen, likedNarrativeIds, isLoading, isSavingManagement, managementError, toggleSection, toggleFollowing, openManagement: () => setIsManagementOpen(true), closeManagement: () => setIsManagementOpen(false), toggleLike, shareNarrative, saveSquareDetails, saveUserDetails, createSchedule };
 }

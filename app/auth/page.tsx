@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
+import type { ClipboardEvent, FormEvent, KeyboardEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -71,6 +71,55 @@ function Field({ label, hint, children }: FieldProps) {
   );
 }
 
+function OtpInputs({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const digits = Array.from({ length: 6 }, (_, index) => value[index] ?? "");
+
+  const update = (index: number, nextValue: string) => {
+    const next = digits.map((digit) => digit || "");
+    next[index] = toLatinDigits(nextValue).replace(/\D/g, "").slice(-1);
+    onChange(next.join(""));
+    if (next[index] && index < 5) inputRefs.current[index + 1]?.focus();
+  };
+
+  const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const pasted = toLatinDigits(event.clipboardData.getData("text")).replace(/\D/g, "").slice(0, 6);
+    onChange(pasted);
+    inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+  };
+
+  const handleKeyDown = (index: number, event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Backspace" && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+    if (event.key === "ArrowLeft" && index > 0) inputRefs.current[index - 1]?.focus();
+    if (event.key === "ArrowRight" && index < 5) inputRefs.current[index + 1]?.focus();
+  };
+
+  return (
+    <div className="mt-2 grid grid-cols-6 gap-2" dir="ltr" role="group" aria-label="شش رقم کد تأیید">
+      {digits.map((digit, index) => (
+        <input
+          key={index}
+          ref={(element) => { inputRefs.current[index] = element; }}
+          className="h-14 min-w-0 rounded-control border border-input-border bg-input text-center text-xl font-black text-foreground tabular-nums shadow-xs outline-none transition-[border-color,box-shadow,background-color] hover:border-border-strong focus:border-ring focus-visible:ring-2 focus-visible:ring-ring"
+          value={digit}
+          onChange={(event) => update(index, event.target.value)}
+          onKeyDown={(event) => handleKeyDown(index, event)}
+          onPaste={handlePaste}
+          inputMode="numeric"
+          autoComplete={index === 0 ? "one-time-code" : "off"}
+          maxLength={1}
+          aria-label={`رقم ${index + 1} کد تأیید`}
+          autoFocus={index === 0}
+          required
+        />
+      ))}
+    </div>
+  );
+}
+
 function Stepper({ step }: { step: AuthStep }) {
   const current = step === "phone" ? 1 : step === "code" ? 2 : 3;
   const steps = [
@@ -128,6 +177,11 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(false);
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const inputClass =
     "mt-2 min-h-12 w-full rounded-control border border-input-border bg-input px-3.5 text-sm text-foreground shadow-xs outline-none transition-[border-color,box-shadow,background-color] placeholder:text-foreground-subtle hover:border-border-strong focus:border-ring focus-visible:ring-2 focus-visible:ring-ring";
@@ -330,7 +384,7 @@ export default function AuthPage() {
                         </div>
                       </Field>
 
-                      <button disabled={pending || phone.replace(/\D/g, "").length < 10} className={primaryButtonClass}>
+                      <button disabled={!isHydrated || pending || phone.replace(/\D/g, "").length < 10} className={primaryButtonClass}>
                         {pending ? <LoaderCircle aria-hidden="true" className="h-4.5 w-4.5 animate-spin" /> : <ArrowLeft aria-hidden="true" className="h-4.5 w-4.5" />}
                         {pending ? "در حال ارسال کد…" : "ادامه و دریافت کد"}
                       </button>
@@ -350,20 +404,10 @@ export default function AuthPage() {
 
                     <form onSubmit={submitCode} className="mt-6 space-y-4">
                       <Field label="کد تأیید" hint="کد پیامک‌شده">
-                        <input
-                          className={`${inputClass} text-center text-lg font-black tracking-[0.3em] tabular-nums`}
-                          value={code}
-                          onChange={(event) => setCode(toLatinDigits(event.target.value).replace(/\D/g, "").slice(0, 8))}
-                          inputMode="numeric"
-                          autoComplete="one-time-code"
-                          dir="ltr"
-                          placeholder="••••••"
-                          autoFocus
-                          required
-                        />
+                        <OtpInputs value={code} onChange={(nextCode) => setCode(nextCode.slice(0, 6))} />
                       </Field>
 
-                      <button disabled={pending || code.length < 4} className={primaryButtonClass}>
+                      <button disabled={!isHydrated || pending || code.length < 4} className={primaryButtonClass}>
                         {pending ? <LoaderCircle aria-hidden="true" className="h-4.5 w-4.5 animate-spin" /> : <Check aria-hidden="true" className="h-4.5 w-4.5" />}
                         {pending ? "در حال بررسی…" : "تأیید و ورود"}
                       </button>

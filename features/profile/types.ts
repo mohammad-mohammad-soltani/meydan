@@ -7,6 +7,7 @@ export type ProfileIdentity = {
   subtitle: string;
   location: string;
   avatar?: string;
+  cover?: string;
   verified: boolean;
 };
 
@@ -25,15 +26,24 @@ export type ProfileActivity = {
   comments: number;
 };
 
+export type ProfileNarrative = ProfileActivity;
+
+export type ProfileReply = { id: string; narrativeId: string; content: string; timeLabel: string };
+
 export type ProfileDetails = {
   actorId: number;
   accountType: ProfileTab;
+  provinceId?: number;
+  cityId?: number;
   initialTab?: ProfileTab;
   identity: ProfileIdentity;
   squareStats: ProfileStat[];
   resumeStats: ProfileStat[];
   schedule: SquareScheduleItem[];
   activity: ProfileActivity;
+  narratives: ProfileNarrative[];
+  narrativePosts: import("@/features/feed/types").FeedPost[];
+  replies: ProfileReply[];
   about: string;
   skills: string[];
 };

@@ -107,18 +107,22 @@ function DetailMediaScroller({ attachments }: { attachments: FeedAttachment[] })
 }
 
 export function PostCard({ post, variant = "timeline", liked, reposted, joined, onLike, onRepost, onShare, onJoin, onOpenMedia }: PostCardProps) {
+  // Kept in the card contract while repost interactions are not exposed in this UI.
+  void reposted;
+  void onRepost;
   const [primaryAttachment, ...otherAttachments] = post.attachments;
   const isDetail = variant === "detail";
+  const profileHref = (`/profile/${post.author.type}/${post.author.id}`) as Route;
 
   return (
-    <article className={`relative py-3 ${isDetail ? "px-0" : "px-3 transition-colors hover:bg-hover sm:px-4"}`}>
+    <article className={`relative py-3 ${isDetail ? "px-0" : "border-b border-divider px-3 transition-colors hover:bg-hover sm:px-4"}`}>
       {!isDetail ? <Link href={("/posts/" + post.id) as Route} aria-label={`مشاهده روایت ${post.title}`} className="absolute inset-0 z-0" /> : null}
       <div className={`pointer-events-none relative z-10 ${isDetail ? "block" : "flex items-start gap-3"}`}>
-        {post.author.avatarUrl ? <Image src={post.author.avatarUrl} alt="" width={44} height={44} unoptimized={post.author.avatarUrl.startsWith("http")} className={isDetail ? "absolute right-3 top-0 h-11 w-11 rounded-full object-cover" : "h-11 w-11 shrink-0 rounded-full object-cover"} /> : <span aria-hidden="true" className={isDetail ? "absolute right-3 top-0 grid h-11 w-11 place-items-center rounded-full bg-brand text-xs font-black text-brand-foreground" : "grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-brand-foreground"}>{post.squareName.slice(0, 1)}</span>}
+        <Link href={profileHref} aria-label={`مشاهده پروفایل ${post.squareName}`} className={`pointer-events-auto relative z-10 ${isDetail ? "absolute right-3 top-0" : "shrink-0"}`}>{post.author.avatarUrl ? <Image src={post.author.avatarUrl} alt="" width={44} height={44} unoptimized={post.author.avatarUrl.startsWith("http")} className="h-11 w-11 rounded-full object-cover" /> : <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-full bg-brand text-xs font-black text-brand-foreground">{post.squareName.slice(0, 1)}</span>}</Link>
         <div className={`min-w-0 ${isDetail ? "w-full" : "flex-1"}`}>
           <div dir="rtl" className={`flex min-w-0 items-center gap-2 text-sm leading-5 ${isDetail ? "justify-start pr-[4.5rem]" : ""}`}>
-            <span className={`font-black text-foreground ${isDetail ? "whitespace-nowrap" : "truncate"}`}>{post.squareName}</span>
-            <BadgeCheck aria-label="حساب تأییدشده" className="h-4 w-4 shrink-0 fill-verified text-on-solid" />
+            <Link href={profileHref} className={`pointer-events-auto relative z-10 font-black text-foreground hover:underline ${isDetail ? "whitespace-nowrap" : "truncate"}`}>{post.squareName}</Link>
+            {post.author.verified ? <BadgeCheck aria-label="حساب تأییدشده" className="h-4 w-4 shrink-0 fill-verified text-on-solid" /> : null}
           </div>
           <div dir="rtl" className={`flex items-center gap-2 text-xs ${isDetail ? "mt-1 justify-start pr-[4.5rem]" : "mt-1"}`}>
             <span className="inline-flex rounded-md bg-brand-muted px-2 py-1 text-[10px] font-bold text-brand">{post.badge}</span>

@@ -4,6 +4,7 @@ import type { City, MapLocation, Province } from "../types";
 type ApiProvince = { id: number; name: string };
 type ApiCity = { id: number; province_id: number; name: string };
 type ApiFeature = { geometry?: { coordinates?: [number, number] }; properties?: { name?: string } };
+export type ReverseGeocodedLocation = { latitude: number; longitude: number; address: string; province_id: number | null; city_id: number | null; province_name: string | null; city_name: string | null; };
 
 export async function getProvinces(): Promise<Province[]> {
   return (await meydanApi<ApiProvince[]>("/geo/provinces")).map((item) => ({ id: item.id, name: item.name }));
@@ -26,4 +27,8 @@ export async function getCityMap(cityId: number): Promise<{ location: MapLocatio
       ? { latitude: latitude as number, longitude: longitude as number, label: first?.properties?.name || "" }
       : null,
   };
+}
+
+export async function reverseGeocode(latitude: number, longitude: number): Promise<ReverseGeocodedLocation> {
+  return meydanApi<ReverseGeocodedLocation>(`/geo/reverse?latitude=${latitude}&longitude=${longitude}`);
 }
