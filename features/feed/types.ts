@@ -22,6 +22,7 @@ export type FeedPost = {
   id: string;
   author: { id: number; type: "user" | "square"; avatarUrl?: string; verified?: boolean };
   initiativeId?: number;
+  initiativeParticipantCount?: number;
   viewerState?: { liked: boolean; reposted: boolean; joined: boolean };
   kind: PostKind;
   squareName: string;
