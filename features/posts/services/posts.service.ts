@@ -1,7 +1,13 @@
 import { meydanApi, plainText } from "@/lib/meydan-api";
 import type { MediaReflection, PostComment, PostDetail, PostMedia } from "../types";
 
-type ApiActor = { id: string; display_name: string; avatar_url?: string; verified?: boolean };
+type ApiActor = {
+  id: string;
+  type?: "user" | "square";
+  display_name: string;
+  avatar_url?: string;
+  verified?: boolean;
+};
 type ApiAttachment = { id: number; type?: string; label?: string; filename?: string; url?: string; width?: number; height?: number };
 type ApiReflection = { id: number; outlet: string; title?: string; summary?: string };
 type ApiNarrative = {
@@ -47,6 +53,11 @@ function accent(index: number): MediaReflection["accent"] {
   return (["blue", "emerald", "amber", "red"] as const)[index % 4];
 }
 
+function numericActorId(value?: string): number {
+  const match = (value || "").match(/(?:sq_|u_)?(\d+)$/);
+  return Number(match?.[1] || 0);
+}
+
 export async function getPostById(postId: string): Promise<PostDetail | null> {
   if (!/^\d+$/.test(postId)) return null;
 
@@ -60,9 +71,14 @@ export async function getPostById(postId: string): Promise<PostDetail | null> {
     }
 
     const authorName = post.author?.display_name || "میدان";
+    const authorType = post.author?.type || "square";
+    const authorId = numericActorId(post.author?.id);
+
     return {
       id: String(post.id),
       author: {
+        id: authorId,
+        type: authorType,
         name: authorName,
         handle: post.author?.id || "meydan",
         initials: initials(authorName),
