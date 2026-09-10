@@ -9,9 +9,9 @@ function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
   switch (filter) {
     case "all":
       return true;
-    case "ideas":
+    case "initiatives":
       return Boolean(post.initiativeId);
-    case "media":
+    case "reflected":
       return Boolean(post.mediaReflection);
   }
 }
