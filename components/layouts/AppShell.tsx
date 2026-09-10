@@ -16,6 +16,7 @@ const desktopLinkClass = "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-f
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isPostPage = pathname.startsWith("/posts/");
+  const isComposePage = pathname === "/compose";
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full justify-center bg-background text-foreground">
@@ -36,7 +37,7 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </aside>
       <div id="mainAppShell" className="relative flex h-[100dvh] min-h-0 w-full max-w-xl flex-col border-x border-border bg-background transition-colors duration-150">
-        <MobileHeader />
+        {!isComposePage ? <MobileHeader /> : null}
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar">{children}</main>
         <FloatingComposeButton />
         <MiniPlayer />

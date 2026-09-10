@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ImageIcon, MapPin, Mic, Save, Trash2, Video, X } from "lucide-react";
+import { ChevronRight, ImageIcon, Mic, Save, Trash2, Video, X } from "lucide-react";
 import { meydanApi } from "@/lib/meydan-api";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 
@@ -11,8 +11,6 @@ const DRAFT_KEY = "meydan-compose-draft";
 
 type ViewerState = {
   accountType: "user" | "square" | "";
-  provinceId?: number;
-  cityId?: number;
 };
 
 type ComposeDraft = {
@@ -31,7 +29,6 @@ export function ComposeView() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isEcho, setIsEcho] = useState(false);
-  const [includeLocation, setIncludeLocation] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState("");
@@ -63,18 +60,9 @@ export function ComposeView() {
   }, [title, text, isEcho]);
 
   useEffect(() => {
-    void meydanApi<{
-      account_type: "user" | "square";
-      profile?: { province_id?: number; city_id?: number };
-      square?: { location?: { province_id?: number; city_id?: number } | null };
-    }>("/me")
+    void meydanApi<{ account_type: "user" | "square" }>("/me")
       .then((me) => {
-        const location = me.account_type === "square" ? me.square?.location : me.profile;
-        setViewer({
-          accountType: me.account_type,
-          provinceId: location?.province_id,
-          cityId: location?.city_id,
-        });
+        setViewer({ accountType: me.account_type });
       })
       .catch(() => undefined);
   }, []);
@@ -92,7 +80,6 @@ export function ComposeView() {
   const body = [title.trim(), text.trim()].filter(Boolean).join("\n\n");
   const hasContent = body.length > 0 || Boolean(attachment);
   const canPublish = hasContent && text.length <= MAX_CHARACTERS && !isPublishing;
-  const hasLocation = Boolean(viewer.provinceId || viewer.cityId);
 
   const goBack = () => {
     if (window.history.length > 1) router.back();
@@ -110,7 +97,6 @@ export function ComposeView() {
     setText("");
     setAttachment(null);
     setIsEcho(false);
-    setIncludeLocation(false);
     goBack();
   };
 
@@ -135,9 +121,6 @@ export function ComposeView() {
           body,
           is_echo: isEcho,
           attachments: mediaId ? [{ media_id: mediaId, label: attachment?.name }] : [],
-          ...(includeLocation && hasLocation
-            ? { location: { province_id: viewer.provinceId, city_id: viewer.cityId } }
-            : {}),
         }),
       });
       window.localStorage.removeItem(DRAFT_KEY);
@@ -145,7 +128,6 @@ export function ComposeView() {
       setText("");
       setAttachment(null);
       setIsEcho(false);
-      setIncludeLocation(false);
       router.push("/home");
       router.refresh();
     } catch {
@@ -193,9 +175,6 @@ export function ComposeView() {
             </button>
             <button type="button" onClick={() => chooseFile("video/*")} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
               <Video className="h-4 w-4" />ویدیو
-            </button>
-            <button type="button" onClick={() => hasLocation && setIncludeLocation((value) => !value)} disabled={!hasLocation} aria-pressed={includeLocation} className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${includeLocation ? "bg-brand text-brand-foreground" : "bg-surface-muted text-foreground-secondary hover:bg-hover hover:text-brand"}`}>
-              <MapPin className="h-4 w-4" />مکان میدان
             </button>
             <button type="button" onClick={() => chooseFile("audio/*")} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
               <Mic className="h-4 w-4" />صوت
