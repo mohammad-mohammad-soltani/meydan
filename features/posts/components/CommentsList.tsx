@@ -23,7 +23,7 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
             return (
               <article
                 key={comment.id}
-                className={`flex gap-3 rounded-2xl p-3 transition-colors hover:bg-hover ${comment.id.startsWith("comment-") ? "ui-enter" : ""}`}
+                className={`group relative flex gap-3 rounded-2xl border border-border bg-surface p-3 shadow-sm transition-all duration-200 hover:border-border-strong hover:bg-hover ${comment.id.startsWith("comment-") ? "ui-enter" : ""}`}
                 dir="rtl"
               >
                 <Link href={profileHref} className="shrink-0">
@@ -31,13 +31,13 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
                     <Image
                       src={comment.avatarUrl}
                       alt=""
-                      width={40}
-                      height={40}
+                      width={44}
+                      height={44}
                       unoptimized={comment.avatarUrl.startsWith("http")}
-                      className="h-10 w-10 rounded-full object-cover ring-1 ring-border"
+                      className="h-11 w-11 rounded-full object-cover ring-1 ring-border transition-transform duration-200 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="grid h-10 w-10 place-items-center rounded-full bg-surface-muted text-xs font-black text-foreground-secondary">
+                    <div className="grid h-11 w-11 place-items-center rounded-full bg-surface-muted text-xs font-black text-foreground-secondary ring-1 ring-border">
                       {comment.initials}
                     </div>
                   )}
@@ -45,7 +45,7 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <Link href={profileHref} className="truncate text-xs font-black text-foreground hover:underline">
+                    <Link href={profileHref} className="truncate text-sm font-black text-foreground hover:underline">
                       {comment.author}
                     </Link>
 
@@ -64,7 +64,7 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
                     </span>
                   </div>
 
-                  <p className="mt-2 whitespace-pre-wrap text-[13px] leading-6 text-foreground-secondary">
+                  <p className="mt-2 whitespace-pre-wrap text-[13px] leading-7 text-foreground-secondary">
                     {comment.content}
                   </p>
                 </div>
