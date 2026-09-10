@@ -17,13 +17,13 @@ export function FloatingComposeButton() {
       href="/compose"
       aria-label="نوشتن روایت تازه"
       title="نوشتن روایت"
-      className={`absolute left-2 z-40 grid size-14 place-items-center rounded-full bg-brand/10 backdrop-brightness-80 backdrop-blur-lg border-border text-brand-foreground shadow-floating transition-[bottom,transform,background-color,box-shadow] hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-dialog active:scale-90 lg:hidden ${
+      className={`absolute left-2 z-40 grid size-14 place-items-center rounded-full border border-border bg-brand/10 text-brand-foreground shadow-floating backdrop-blur-lg backdrop-brightness-80 transition-[bottom,transform,background-color,box-shadow] hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-dialog active:scale-90 lg:left-4 ${
         currentTrack
-          ? "bottom-[calc(11rem+env(safe-area-inset-bottom))]"
-          : "bottom-[calc(4.45rem+env(safe-area-inset-bottom))]"
+          ? "bottom-[calc(11rem+env(safe-area-inset-bottom))] lg:bottom-24"
+          : "bottom-[calc(4.45rem+env(safe-area-inset-bottom))] lg:bottom-6"
       }`}
     >
-      <PenLine className="aspect-square w-full" strokeWidth={2.2} />
+      <PenLine className="h-6 w-6" strokeWidth={2.2} />
     </Link>
   );
 }
