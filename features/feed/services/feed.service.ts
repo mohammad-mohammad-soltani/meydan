@@ -26,7 +26,12 @@ type ApiNarrative = {
   published_at?: string | null;
   attachments?: ApiAttachment[];
   tags?: string[];
-  initiative?: { id?: number; cta_label?: string; viewer_state?: { joined?: boolean } } | null;
+  initiative?: {
+    id?: number;
+    cta_label?: string;
+    participant_count?: number;
+    viewer_state?: { joined?: boolean };
+  } | null;
   media_reflections?: Array<{ outlet: string; title: string }>;
   stats?: { likes?: number; comments?: number; reposts?: number; views?: number };
   viewer_state?: { liked?: boolean; reposted?: boolean } | null;
@@ -90,6 +95,7 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
       verified: Boolean(item.author?.verified),
     },
     initiativeId: item.initiative?.id,
+    initiativeParticipantCount: item.initiative?.participant_count,
     viewerState: {
       liked: Boolean(item.viewer_state?.liked),
       reposted: Boolean(item.viewer_state?.reposted),
@@ -138,8 +144,14 @@ async function getSquares(): Promise<ApiSquare[]> {
 
 export type FeedQuery = { mode?: "for_you" | "following"; filter?: string; cursor?: string | null };
 
+function apiFilter(filter?: string): string {
+  if (filter === "ideas") return "initiatives";
+  if (filter === "media") return "reflected";
+  return "all";
+}
+
 export async function getFeedPosts(query: FeedQuery = {}): Promise<FeedPost[]> {
-  const params = new URLSearchParams({ mode: query.mode || "for_you", filter: query.filter || "all" });
+  const params = new URLSearchParams({ mode: query.mode || "for_you", filter: apiFilter(query.filter) });
   if (query.cursor) params.set("cursor", query.cursor);
   const [narratives, squares] = await Promise.all([
     meydanApi<ApiNarrative[]>(`/timeline?${params}`),
