@@ -1,73 +1,98 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Save, Trash2, X } from "lucide-react";
+import { ChevronRight, ImageIcon, MapPin, Mic, Save, Trash2, Video, X } from "lucide-react";
 import { meydanApi } from "@/lib/meydan-api";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 
 const MAX_CHARACTERS = 280;
 const DRAFT_KEY = "meydan-compose-draft";
 
+type ViewerState = {
+  accountType: "user" | "square" | "";
+  provinceId?: number;
+  cityId?: number;
+};
+
+type ComposeDraft = {
+  title: string;
+  text: string;
+  isEcho: boolean;
+};
 
 export function ComposeView() {
   const router = useRouter();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isInitiative, setIsInitiative] = useState(false);
+  const [isEcho, setIsEcho] = useState(false);
+  const [includeLocation, setIncludeLocation] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [viewer, setViewer] = useState({ name: "", handle: "", avatarUrl: "" });
+  const [publishError, setPublishError] = useState("");
+  const [viewer, setViewer] = useState<ViewerState>({ accountType: "" });
 
   useEffect(() => {
-    const draft = window.localStorage.getItem(DRAFT_KEY) ?? "";
-    queueMicrotask(() => setText(draft));
-    const frame = window.requestAnimationFrame(() => textareaRef.current?.focus());
+    const stored = window.localStorage.getItem(DRAFT_KEY);
+    if (stored) {
+      try {
+        const draft = JSON.parse(stored) as Partial<ComposeDraft>;
+        if (typeof draft.title === "string") setTitle(draft.title);
+        if (typeof draft.text === "string") setText(draft.text);
+        if (typeof draft.isEcho === "boolean") setIsEcho(draft.isEcho);
+      } catch {
+        setText(stored);
+      }
+    }
+    const frame = window.requestAnimationFrame(() => titleRef.current?.focus());
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
+    const hasDraft = title.trim().length > 0 || text.trim().length > 0 || isEcho;
+    if (hasDraft) {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, text, isEcho } satisfies ComposeDraft));
+    } else {
+      window.localStorage.removeItem(DRAFT_KEY);
+    }
+  }, [title, text, isEcho]);
+
+  useEffect(() => {
     void meydanApi<{
       account_type: "user" | "square";
-      profile?: { full_name?: string; avatar_url?: string };
-      square?: { name?: string; avatar_url?: string; handle?: string };
+      profile?: { province_id?: number; city_id?: number };
+      square?: { location?: { province_id?: number; city_id?: number } | null };
     }>("/me")
       .then((me) => {
+        const location = me.account_type === "square" ? me.square?.location : me.profile;
         setViewer({
-          name: me.account_type === "square" ? me.square?.name || "" : me.profile?.full_name || "",
-          handle: me.account_type === "square" ? me.square?.handle || "" : "",
-          avatarUrl: me.account_type === "square" ? me.square?.avatar_url || "" : me.profile?.avatar_url || "",
+          accountType: me.account_type,
+          provinceId: location?.province_id,
+          cityId: location?.city_id,
         });
       })
       .catch(() => undefined);
   }, []);
 
   useEffect(() => {
-    if (text) window.localStorage.setItem(DRAFT_KEY, text);
-    else window.localStorage.removeItem(DRAFT_KEY);
-  }, [text]);
-
-  useEffect(() => {
     if (!attachment) {
       queueMicrotask(() => setPreviewUrl(null));
       return;
     }
-
     const url = URL.createObjectURL(attachment);
     queueMicrotask(() => setPreviewUrl(url));
     return () => URL.revokeObjectURL(url);
   }, [attachment]);
 
-  const remaining = MAX_CHARACTERS - text.length;
-  const hasContent = text.trim().length > 0 || Boolean(attachment);
-  const canPublish = text.trim().length > 0 && remaining >= 0 && !isPublishing;
-  const progress = useMemo(() => Math.min(text.length / MAX_CHARACTERS, 1), [text.length]);
-  const circumference = 2 * Math.PI * 9;
-  const dashOffset = circumference * (1 - progress);
+  const body = [title.trim(), text.trim()].filter(Boolean).join("\n\n");
+  const hasContent = body.length > 0 || Boolean(attachment);
+  const canPublish = hasContent && text.length <= MAX_CHARACTERS && !isPublishing;
+  const hasLocation = Boolean(viewer.provinceId || viewer.cityId);
 
   const goBack = () => {
     if (window.history.length > 1) router.back();
@@ -81,161 +106,120 @@ export function ComposeView() {
 
   const discardAndExit = () => {
     window.localStorage.removeItem(DRAFT_KEY);
+    setTitle("");
     setText("");
     setAttachment(null);
-    setIsInitiative(false);
+    setIsEcho(false);
+    setIncludeLocation(false);
     goBack();
+  };
+
+  const chooseFile = (accept: string) => {
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.accept = accept;
+    input.value = "";
+    input.click();
   };
 
   const publish = async () => {
     if (!canPublish) return;
     setIsPublishing(true);
+    setPublishError("");
     try {
       const mediaId = attachment ? await uploadNarrativeFile(attachment) : undefined;
       await meydanApi("/narratives", {
         method: "POST",
         headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
         body: JSON.stringify({
-          body: text.trim(),
+          body,
+          is_echo: isEcho,
           attachments: mediaId ? [{ media_id: mediaId, label: attachment?.name }] : [],
+          ...(includeLocation && hasLocation
+            ? { location: { province_id: viewer.provinceId, city_id: viewer.cityId } }
+            : {}),
         }),
       });
       window.localStorage.removeItem(DRAFT_KEY);
-      setText(""); setAttachment(null); setIsInitiative(false);
+      setTitle("");
+      setText("");
+      setAttachment(null);
+      setIsEcho(false);
+      setIncludeLocation(false);
       router.push("/home");
-    } finally { setIsPublishing(false); }
+      router.refresh();
+    } catch {
+      setPublishError("انتشار روایت انجام نشد. دوباره تلاش کنید.");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
-    <section className="flex min-h-full flex-1 flex-col bg-background text-foreground" aria-label="نوشتن روایت تازه">
-      <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between border-b border-divider bg-surface-glass px-3 backdrop-blur-md">
-        <button
-          type="button"
-          onClick={requestClose}
-          aria-label="بستن و بازگشت"
-          className="grid h-10 w-10 place-items-center rounded-full text-icon transition-colors hover:bg-hover hover:text-foreground"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
-        <span className="text-sm font-black">روایت جدید</span>
-
-        <button
-          type="button"
-          onClick={() => void publish()}
-          disabled={!canPublish}
-          className="rounded-pill bg-brand px-4 py-2 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground"
-        >
-          {isPublishing ? "در حال انتشار…" : "انتشار"}
-        </button>
-      </header>
-
-      <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
-        <div className="flex items-start gap-3">
-          {viewer.avatarUrl ? <img src={viewer.avatarUrl} alt="آواتار کاربر" className="h-12 w-12 shrink-0 rounded-full border border-border object-cover shadow-xs" /> : <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface-muted text-sm font-black text-icon shadow-xs">{viewer.name.slice(0, 1) || "م"}</span>}
-
-          <div className="min-w-0 flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-sm font-black text-foreground">{viewer.name || "روایتگر میدان"}</span>
-              <span className="text-[11px] text-muted-foreground">{viewer.handle ? `@${viewer.handle}` : ""}</span>
-            </div>
-
-            <textarea
-              ref={textareaRef}
-              autoFocus
-              value={text}
-              onChange={(event) => {
-                setText(event.target.value);
-                event.currentTarget.style.height = "auto";
-                event.currentTarget.style.height = `${Math.max(180, event.currentTarget.scrollHeight)}px`;
-              }}
-              maxLength={MAX_CHARACTERS + 40}
-              placeholder="چه روایتی برای گفتن داری؟"
-              aria-label="متن روایت"
-              className="min-h-48 w-full resize-none overflow-hidden bg-transparent text-[19px] leading-8 text-foreground outline-none placeholder:text-placeholder focus-visible:outline-none"
-            />
-          </div>
+    <section dir="rtl" className="flex min-h-full flex-1 flex-col bg-background text-foreground" aria-label="ثبت روایت یا ایده جدید">
+      <div className="flex items-center justify-between gap-3 border-b border-divider px-4 py-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <button type="button" onClick={requestClose} aria-label="بازگشت" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand">
+            <ChevronRight className="h-5 w-5" />
+          </button>
+          <h1 className="truncate text-sm font-black text-foreground sm:text-base">ثبت روایت یا ایده جدید</h1>
         </div>
-
-        {previewUrl && attachment ? (
-          <div className="ui-enter relative mt-3 overflow-hidden rounded-panel border border-border bg-surface-muted">
-            {attachment.type.startsWith("video/") ? (
-              <video src={previewUrl} controls className="max-h-80 w-full bg-surface-sunken object-contain" />
-            ) : (
-              <img src={previewUrl} alt="پیش‌نمایش تصویر انتخاب‌شده" className="max-h-80 w-full object-cover" />
-            )}
-            <button
-              type="button"
-              onClick={() => setAttachment(null)}
-              aria-label="حذف فایل پیوست"
-              className="absolute left-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-scrim text-on-solid shadow-sm backdrop-blur"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="border-t border-divider px-3 py-2 text-[10px] text-muted-foreground">{attachment.name}</div>
-          </div>
-        ) : null}
-
+        <button type="button" onClick={() => void publish()} disabled={!canPublish} className="shrink-0 rounded-full bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground sm:px-5">
+          {isPublishing ? "در حال انتشار…" : viewer.accountType === "square" ? "انتشار به نام میدان" : "انتشار"}
+        </button>
       </div>
 
-      <div className="sticky bottom-0 z-20 border-t border-divider bg-surface-glass px-3 py-2.5 backdrop-blur-md">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center text-brand">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              className="hidden"
-              onChange={(event) => setAttachment(event.target.files?.[0] ?? null)}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="افزودن تصویر یا ویدئو"
-              className="grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted"
-            >
-              <ImagePlus className="h-[19px] w-[19px]" />
+      <div className="flex flex-1 flex-col px-4 pb-24 pt-4">
+        <div className="flex gap-2 border-b border-divider pb-4">
+          <button type="button" onClick={() => setIsEcho(false)} className={`rounded-xl px-4 py-2 text-xs font-black transition-colors ${!isEcho ? "bg-brand text-brand-foreground" : "bg-surface-muted text-muted-foreground hover:bg-hover hover:text-foreground"}`}>
+            روایت میدانی
+          </button>
+          <button type="button" onClick={() => setIsEcho(true)} className={`rounded-xl px-4 py-2 text-xs font-black transition-colors ${isEcho ? "bg-brand text-brand-foreground" : "bg-surface-muted text-muted-foreground hover:bg-hover hover:text-foreground"}`}>
+            پژواک (ایده و کار خوب)
+          </button>
+        </div>
+
+        <div className="space-y-3 pt-5">
+          <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="تیتر یا موضوع اصلی روایت..." aria-label="تیتر روایت" className="min-h-14 w-full rounded-2xl border border-input-border bg-input px-4 text-sm font-bold text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand" />
+          <textarea value={text} onChange={(event) => setText(event.target.value)} maxLength={MAX_CHARACTERS} placeholder="شرح ماجرا، حال‌وهوای امشب میدان، نیازها یا دستاوردها..." rows={7} aria-label="شرح روایت" className="min-h-44 w-full resize-none rounded-2xl border border-input-border bg-input p-4 text-sm leading-7 text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand" />
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-border bg-surface px-3 py-3.5">
+          <span className="block text-[11px] font-black text-foreground-secondary">پیوست‌های چندرسانه‌ای:</span>
+          <input ref={fileInputRef} type="file" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] ?? null)} />
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <button type="button" onClick={() => chooseFile("image/*")} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
+              <ImageIcon className="h-4 w-4" />عکس
+            </button>
+            <button type="button" onClick={() => chooseFile("video/*")} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
+              <Video className="h-4 w-4" />ویدیو
+            </button>
+            <button type="button" onClick={() => hasLocation && setIncludeLocation((value) => !value)} disabled={!hasLocation} aria-pressed={includeLocation} className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${includeLocation ? "bg-brand text-brand-foreground" : "bg-surface-muted text-foreground-secondary hover:bg-hover hover:text-brand"}`}>
+              <MapPin className="h-4 w-4" />مکان میدان
+            </button>
+            <button type="button" onClick={() => chooseFile("audio/*")} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
+              <Mic className="h-4 w-4" />صوت
             </button>
           </div>
 
-          {text.length > 0 ? (
-            <div className={`flex items-center gap-2 text-[11px] font-bold ${remaining < 0 ? "text-danger" : remaining <= 20 ? "text-warning" : "text-muted-foreground"}`}>
-              {remaining <= 20 ? <span>{remaining}</span> : null}
-              <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" className="-rotate-90">
-                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-20" />
-                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} />
-              </svg>
+          {previewUrl && attachment ? (
+            <div className="ui-enter relative mt-3 overflow-hidden rounded-xl border border-border bg-surface-muted">
+              {attachment.type.startsWith("video/") ? (
+                <video src={previewUrl} controls className="max-h-72 w-full bg-surface-sunken object-contain" />
+              ) : attachment.type.startsWith("audio/") ? (
+                <div className="p-3"><audio src={previewUrl} controls className="w-full" /></div>
+              ) : (
+                <img src={previewUrl} alt="پیش‌نمایش فایل انتخاب‌شده" className="max-h-72 w-full object-cover" />
+              )}
+              <button type="button" onClick={() => setAttachment(null)} aria-label="حذف فایل پیوست" className="absolute left-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-scrim text-on-solid shadow-sm backdrop-blur">
+                <X className="h-4 w-4" />
+              </button>
+              <div className="border-t border-divider px-3 py-2 text-[10px] text-muted-foreground">{attachment.name}</div>
             </div>
           ) : null}
         </div>
 
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isInitiative}
-          onClick={() => setIsInitiative((enabled) => !enabled)}
-          className="mt-2.5 flex w-full items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2.5 text-right transition-colors hover:bg-hover"
-        >
-          <span className="min-w-0">
-            <span className="block text-xs font-black text-foreground">این کار ابتکار است</span>
-            <span className="mt-0.5 block text-[10px] text-muted-foreground">
-              اگر کار شما ابتکاری جدید است این گزینه را بزنید. سایرین می‌توانند به ابتکار شما بپیوندند.
-            </span>
-          </span>
-
-          <span
-            aria-hidden="true"
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-              isInitiative ? "bg-brand" : "bg-surface-muted"
-            }`}
-          >
-            <span
-              className={`absolute right-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-surface shadow-sm transition-transform ${
-                isInitiative ? "-translate-x-5" : "translate-x-0"
-              }`}
-            />
-          </span>
-        </button>
+        {publishError ? <p role="alert" className="mt-3 text-xs font-bold text-danger">{publishError}</p> : null}
       </div>
 
       {exitOpen ? (
