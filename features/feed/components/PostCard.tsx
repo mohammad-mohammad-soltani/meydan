@@ -7,16 +7,14 @@ import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import {
   BadgeCheck,
   Bolt,
-  Check,
   FileText,
-  HandHeart,
   Image as ImageIcon,
   Mic,
   Play,
-  Plus,
   Video,
 } from "lucide-react";
 
+import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
 import { PostActions } from "./PostActions";
 import type { FeedAttachment, FeedPost } from "../types";
 
@@ -40,79 +38,6 @@ const attachmentIcons = {
   microphone: Mic,
   bolt: Bolt,
 };
-
-function GoodActionCard({
-  joined,
-  label,
-  onJoin,
-}: {
-  joined: boolean;
-  label: string;
-  onJoin: () => void;
-}) {
-  return (
-    <div
-      dir="rtl"
-      className="pointer-events-none relative z-10 mt-3 w-full overflow-hidden rounded-[16px] border border-warning-border bg-warning-surface/50 px-3 py-3 sm:px-3.5"
-    >
-      <div
-        aria-hidden="true"
-        className="absolute -left-8 -top-10 h-28 w-28 rounded-full bg-warning/10 blur-3xl"
-      />
-
-      <div className="relative flex min-w-0 items-center gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-warning/10 text-warning">
-          <HandHeart
-            aria-hidden="true"
-            className="h-[19px] w-[19px]"
-            strokeWidth={2}
-          />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <strong className="block text-[12px] font-black leading-5 text-warning-foreground sm:text-[13px]">
-            شما هم به این کار خوب بپیوندید
-          </strong>
-
-          <p className="mt-0.5 truncate text-[10px] leading-5 text-muted-foreground sm:text-[11px]">
-            با پیوستن شما، این حرکت مردمی گسترده‌تر می‌شود.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={onJoin}
-          disabled={joined}
-          className={`pointer-events-auto relative z-20 inline-flex h-10 max-w-[42%] shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5 text-[11px] font-black shadow-sm transition-all duration-200 active:scale-[0.94] sm:px-4 sm:text-[12px] ${
-            joined
-              ? "cursor-default border border-success-border bg-success-surface text-success shadow-none"
-              : "bg-warning text-on-solid hover:brightness-105"
-          }`}
-        >
-          {joined ? (
-            <>
-              <Check
-                aria-hidden="true"
-                className="h-4 w-4 shrink-0"
-                strokeWidth={2.5}
-              />
-              <span className="truncate">پیوستید</span>
-            </>
-          ) : (
-            <>
-              <Plus
-                aria-hidden="true"
-                className="h-4 w-4 shrink-0"
-                strokeWidth={2.5}
-              />
-              <span className="truncate">{label || "پیوستن"}</span>
-            </>
-          )}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function PrimaryAttachment({
   attachment,
@@ -306,6 +231,7 @@ export function PostCard({
 }: PostCardProps) {
   void reposted;
   void onRepost;
+  void onJoin;
 
   const [primaryAttachment, ...otherAttachments] = post.attachments;
 
@@ -431,12 +357,14 @@ export function PostCard({
           </button>
         ) : null}
 
-        {/* CTA - بالای اکشن‌ها */}
-        <GoodActionCard
-          joined={joined}
-          label={post.callToAction ?? "پیوستن"}
-          onJoin={onJoin}
-        />
+        {post.initiativeId ? (
+          <ConnectedGoodActionCard
+            initiativeId={post.initiativeId}
+            initialJoined={joined}
+            initialParticipantCount={post.initiativeParticipantCount}
+            label={post.callToAction ?? "پیوستن"}
+          />
+        ) : null}
 
         {/* Actions */}
         <PostActions
@@ -594,12 +522,14 @@ export function PostCard({
             </div>
           ) : null}
 
-          {/* CTA دقیقاً هم‌عرض عکس و بالای اکشن‌ها */}
-          <GoodActionCard
-            joined={joined}
-            label={post.callToAction ?? "پیوستن"}
-            onJoin={onJoin}
-          />
+          {post.initiativeId ? (
+            <ConnectedGoodActionCard
+              initiativeId={post.initiativeId}
+              initialJoined={joined}
+              initialParticipantCount={post.initiativeParticipantCount}
+              label={post.callToAction ?? "پیوستن"}
+            />
+          ) : null}
 
           <PostActions
             postId={post.id}
