@@ -23,6 +23,7 @@ export function ProfileView({ initialProfile, canManage = true }: { initialProfi
 
   return (
     <section id="view-combined-profile" className="min-h-dvh bg-background pb-20 text-foreground">
+      
       <div className="mx-auto w-full max-w-2xl border-x border-divider bg-surface">
         <ProfileHeader profile={profile.profile} canEdit={canManage} />
         <ProfileInfo profile={profile.profile} tab={profile.selectedTab} expandedSections={profile.expandedSections} onToggleSection={profile.toggleSection} />

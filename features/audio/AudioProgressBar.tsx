@@ -162,8 +162,8 @@ export function AudioProgressBar({
           {duration > 0 ? (
             <span
               aria-hidden="true"
-              className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-brand bg-solid-light shadow-popover transition-[width,height,opacity] ${
-                dragging
+              className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-brand bg-brand shadow-popover transition-[width,height,opacity] ${
+                true
                   ? "h-4 w-4 opacity-100"
                   : compact
                     ? "h-3 w-3 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"

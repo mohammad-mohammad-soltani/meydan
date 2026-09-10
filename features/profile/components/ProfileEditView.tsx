@@ -185,7 +185,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           <Link
             href="/profile"
             aria-label="بازگشت"
-            className="grid h-11 w-11 place-items-center rounded-full hover:bg-hover"
+            className="grid h-11 w-11 place-items-center rounded-full hover:bg-hover rotate-[180deg]"
           >
             <ChevronLeft className="h-5 w-5" />
           </Link>

@@ -2,24 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  CalendarClock,
-  ImagePlus,
-  ListChecks,
-  MapPin,
-  Plus,
-  Save,
-  Smile,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ImagePlus, Save, Trash2, X } from "lucide-react";
 import { meydanApi } from "@/lib/meydan-api";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 
 const MAX_CHARACTERS = 280;
 const DRAFT_KEY = "meydan-compose-draft";
 
-type PollOption = { id: number; value: string };
 
 export function ComposeView() {
   const router = useRouter();
@@ -29,13 +18,10 @@ export function ComposeView() {
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [pollOptions, setPollOptions] = useState<PollOption[] | null>(null);
-  const [locationEnabled, setLocationEnabled] = useState(false);
-  const [scheduledAt, setScheduledAt] = useState("");
-  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [isInitiative, setIsInitiative] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [viewer, setViewer] = useState({ name: "", handle: "", avatarUrl: "", location: null as { province_id: number; city_id: number } | null });
+  const [viewer, setViewer] = useState({ name: "", handle: "", avatarUrl: "" });
 
   useEffect(() => {
     const draft = window.localStorage.getItem(DRAFT_KEY) ?? "";
@@ -45,17 +31,19 @@ export function ComposeView() {
   }, []);
 
   useEffect(() => {
-    void meydanApi<{ account_type: "user" | "square"; profile?: { full_name?: string; avatar_url?: string; province_id?: number; city_id?: number }; square?: { name?: string; avatar_url?: string; handle?: string; location?: { province_id?: number; city_id?: number } } }>("/me").then((me) => {
-      const location = me.account_type === "square" ? me.square?.location : undefined;
-      const provinceId = location?.province_id ?? me.profile?.province_id;
-      const cityId = location?.city_id ?? me.profile?.city_id;
-      setViewer({
-        name: me.account_type === "square" ? me.square?.name || "" : me.profile?.full_name || "",
-        handle: me.account_type === "square" ? me.square?.handle || "" : "",
-        avatarUrl: me.account_type === "square" ? me.square?.avatar_url || "" : me.profile?.avatar_url || "",
-        location: provinceId && cityId ? { province_id: provinceId, city_id: cityId } : null,
-      });
-    }).catch(() => undefined);
+    void meydanApi<{
+      account_type: "user" | "square";
+      profile?: { full_name?: string; avatar_url?: string };
+      square?: { name?: string; avatar_url?: string; handle?: string };
+    }>("/me")
+      .then((me) => {
+        setViewer({
+          name: me.account_type === "square" ? me.square?.name || "" : me.profile?.full_name || "",
+          handle: me.account_type === "square" ? me.square?.handle || "" : "",
+          avatarUrl: me.account_type === "square" ? me.square?.avatar_url || "" : me.profile?.avatar_url || "",
+        });
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -75,8 +63,7 @@ export function ComposeView() {
   }, [attachment]);
 
   const remaining = MAX_CHARACTERS - text.length;
-  const hasPollContent = pollOptions?.some((option) => option.value.trim()) ?? false;
-  const hasContent = text.trim().length > 0 || Boolean(attachment) || hasPollContent;
+  const hasContent = text.trim().length > 0 || Boolean(attachment);
   const canPublish = text.trim().length > 0 && remaining >= 0 && !isPublishing;
   const progress = useMemo(() => Math.min(text.length / MAX_CHARACTERS, 1), [text.length]);
   const circumference = 2 * Math.PI * 9;
@@ -96,43 +83,8 @@ export function ComposeView() {
     window.localStorage.removeItem(DRAFT_KEY);
     setText("");
     setAttachment(null);
-    setPollOptions(null);
+    setIsInitiative(false);
     goBack();
-  };
-
-  const insertEmoji = () => {
-    const textarea = textareaRef.current;
-    const emoji = "✨";
-
-    if (!textarea) {
-      setText((value) => `${value}${emoji}`);
-      return;
-    }
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    setText((value) => `${value.slice(0, start)}${emoji}${value.slice(end)}`);
-    window.requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + emoji.length, start + emoji.length);
-    });
-  };
-
-  const startPoll = () => {
-    setPollOptions((current) => current ?? [
-      { id: Date.now(), value: "" },
-      { id: Date.now() + 1, value: "" },
-    ]);
-  };
-
-  const updatePollOption = (id: number, value: string) => {
-    setPollOptions((current) => current?.map((option) => option.id === id ? { ...option, value } : option) ?? null);
-  };
-
-  const addPollOption = () => {
-    setPollOptions((current) => current && current.length < 4
-      ? [...current, { id: Date.now(), value: "" }]
-      : current);
   };
 
   const publish = async () => {
@@ -146,13 +98,10 @@ export function ComposeView() {
         body: JSON.stringify({
           body: text.trim(),
           attachments: mediaId ? [{ media_id: mediaId, label: attachment?.name }] : [],
-          poll: hasPollContent ? { options: pollOptions?.map((option) => option.value.trim()).filter(Boolean) } : undefined,
-          scheduled_at: scheduledAt || undefined,
-          location: locationEnabled ? viewer.location || undefined : undefined,
         }),
       });
       window.localStorage.removeItem(DRAFT_KEY);
-      setText(""); setAttachment(null); setPollOptions(null);
+      setText(""); setAttachment(null); setIsInitiative(false);
       router.push("/home");
     } finally { setIsPublishing(false); }
   };
@@ -227,85 +176,11 @@ export function ComposeView() {
           </div>
         ) : null}
 
-        {pollOptions ? (
-          <div className="ui-enter mt-3 space-y-2 rounded-card border border-border bg-surface p-3 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black">نظرسنجی</span>
-              <button
-                type="button"
-                onClick={() => setPollOptions(null)}
-                aria-label="حذف نظرسنجی"
-                className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover hover:text-danger"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            {pollOptions.map((option, index) => (
-              <input
-                key={option.id}
-                value={option.value}
-                onChange={(event) => updatePollOption(option.id, event.target.value)}
-                placeholder={`گزینه ${index + 1}`}
-                className="min-h-11 w-full rounded-control border border-input-border bg-input px-3 text-sm text-foreground outline-none placeholder:text-placeholder focus:border-brand"
-              />
-            ))}
-            {pollOptions.length < 4 ? (
-              <button
-                type="button"
-                onClick={addPollOption}
-                className="inline-flex items-center gap-1.5 rounded-control px-2 py-2 text-xs font-bold text-brand hover:bg-brand-muted"
-              >
-                <Plus className="h-4 w-4" />
-                افزودن گزینه
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-
-        {scheduleOpen ? (
-          <div className="ui-enter mt-3 rounded-card border border-border bg-surface p-3 shadow-xs">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-black">زمان‌بندی انتشار</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">زمان دلخواه را انتخاب کن.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setScheduleOpen(false);
-                  setScheduledAt("");
-                }}
-                className="grid h-8 w-8 place-items-center rounded-full text-icon-muted hover:bg-hover"
-                aria-label="بستن زمان‌بندی"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <input
-              type="datetime-local"
-              value={scheduledAt}
-              onChange={(event) => setScheduledAt(event.target.value)}
-              className="mt-3 min-h-11 w-full rounded-control border border-input-border bg-input px-3 text-xs text-foreground outline-none focus:border-brand"
-            />
-          </div>
-        ) : null}
-
-        {locationEnabled ? (
-          <button
-            type="button"
-            onClick={() => setLocationEnabled(false)}
-            className="ui-enter mt-3 inline-flex w-fit items-center gap-1.5 rounded-pill bg-brand-muted px-3 py-1.5 text-xs font-bold text-brand"
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            موقعیت فعلی
-            <X className="h-3.5 w-3.5" />
-          </button>
-        ) : null}
       </div>
 
       <div className="sticky bottom-0 z-20 border-t border-divider bg-surface-glass px-3 py-2.5 backdrop-blur-md">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-0.5 text-brand">
+          <div className="flex items-center text-brand">
             <input
               ref={fileInputRef}
               type="file"
@@ -313,11 +188,14 @@ export function ComposeView() {
               className="hidden"
               onChange={(event) => setAttachment(event.target.files?.[0] ?? null)}
             />
-            <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="افزودن تصویر یا ویدئو" className="grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted"><ImagePlus className="h-[19px] w-[19px]" /></button>
-            <button type="button" onClick={startPoll} aria-label="افزودن نظرسنجی" className={`grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted ${pollOptions ? "bg-brand-muted" : ""}`}><ListChecks className="h-[19px] w-[19px]" /></button>
-            <button type="button" onClick={insertEmoji} aria-label="افزودن ایموجی" className="grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted"><Smile className="h-[19px] w-[19px]" /></button>
-            <button type="button" onClick={() => setScheduleOpen((open) => !open)} aria-label="افزودن زمان‌بندی" className={`grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted ${scheduleOpen ? "bg-brand-muted" : ""}`}><CalendarClock className="h-[19px] w-[19px]" /></button>
-            <button type="button" onClick={() => setLocationEnabled((enabled) => !enabled)} aria-label="افزودن موقعیت" className={`grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted ${locationEnabled ? "bg-brand-muted" : ""}`}><MapPin className="h-[19px] w-[19px]" /></button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="افزودن تصویر یا ویدئو"
+              className="grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-brand-muted"
+            >
+              <ImagePlus className="h-[19px] w-[19px]" />
+            </button>
           </div>
 
           {text.length > 0 ? (
@@ -330,6 +208,34 @@ export function ComposeView() {
             </div>
           ) : null}
         </div>
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isInitiative}
+          onClick={() => setIsInitiative((enabled) => !enabled)}
+          className="mt-2.5 flex w-full items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2.5 text-right transition-colors hover:bg-hover"
+        >
+          <span className="min-w-0">
+            <span className="block text-xs font-black text-foreground">این کار ابتکار است</span>
+            <span className="mt-0.5 block text-[10px] text-muted-foreground">
+              اگر کار شما ابتکاری جدید است این گزینه را بزنید. سایرین می‌توانند به ابتکار شما بپیوندند.
+            </span>
+          </span>
+
+          <span
+            aria-hidden="true"
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+              isInitiative ? "bg-brand" : "bg-surface-muted"
+            }`}
+          >
+            <span
+              className={`absolute right-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-surface shadow-sm transition-transform ${
+                isInitiative ? "-translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </span>
+        </button>
       </div>
 
       {exitOpen ? (

@@ -48,7 +48,7 @@ export function MiniPlayer() {
   const bars = levels.length ? levels.slice(0, fallbackBars.length) : fallbackBars;
   const trackBody = (
     <>
-      <strong className="line-clamp-1 block text-sm font-black text-foreground">
+      <strong className="line-clamp-1  text-[12px] w-full font-black text-foreground">
         {currentTrack.title}
       </strong>
       <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground" dir="ltr">
