@@ -12,7 +12,6 @@ export function MobileHeader() {
   const isContentDetailRoute = pathname.startsWith("/content/");
   const isPostRoute = pathname.startsWith("/posts/");
   const isExploreRoute = pathname === "/explore";
-  const isComposeRoute = pathname === "/compose";
   const isProfileRoute = pathname === "/profile" || pathname.startsWith("/profile/");
 
   useEffect(() => {
@@ -31,7 +30,7 @@ export function MobileHeader() {
     setIsDark(next);
   };
 
-  if (pathname === "/chat" || isConversationRoute || isContentDetailRoute || isPostRoute || isExploreRoute || isComposeRoute || isProfileRoute) return null;
+  if (pathname === "/chat" || isConversationRoute || isContentDetailRoute || isPostRoute || isExploreRoute || isProfileRoute) return null;
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-surface-glass px-4 py-3 backdrop-blur-md lg:hidden">
