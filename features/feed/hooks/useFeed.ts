@@ -10,8 +10,9 @@ function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
     case "all":
       return true;
     case "ideas":
+      return Boolean(post.initiativeId);
     case "media":
-      return post.kind === filter;
+      return Boolean(post.mediaReflection);
   }
 }
 
