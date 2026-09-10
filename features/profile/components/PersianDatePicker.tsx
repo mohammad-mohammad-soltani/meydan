@@ -218,7 +218,7 @@ export function PersianDatePicker({
         <span
           role="dialog"
           aria-label="انتخاب تاریخ شروع فعالیت میدان"
-          className="absolute inset-x-0 top-full z-50 mt-2 block rounded-panel border border-border bg-popover p-3 text-popover-foreground shadow-dialog"
+          className="absolute inset-x-0 top-full z-[9999] mt-2 block rounded-panel border border-border bg-popover p-3 text-popover-foreground shadow-dialog"
         >
           <span className="flex items-center justify-between gap-2">
             <button
