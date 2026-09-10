@@ -144,14 +144,8 @@ async function getSquares(): Promise<ApiSquare[]> {
 
 export type FeedQuery = { mode?: "for_you" | "following"; filter?: string; cursor?: string | null };
 
-function apiFilter(filter?: string): string {
-  if (filter === "ideas") return "initiatives";
-  if (filter === "media") return "reflected";
-  return "all";
-}
-
 export async function getFeedPosts(query: FeedQuery = {}): Promise<FeedPost[]> {
-  const params = new URLSearchParams({ mode: query.mode || "for_you", filter: apiFilter(query.filter) });
+  const params = new URLSearchParams({ mode: query.mode || "for_you", filter: query.filter || "all" });
   if (query.cursor) params.set("cursor", query.cursor);
   const [narratives, squares] = await Promise.all([
     meydanApi<ApiNarrative[]>(`/timeline?${params}`),
