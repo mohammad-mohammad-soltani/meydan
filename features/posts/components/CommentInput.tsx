@@ -1,9 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { Send } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { meydanApi } from "@/lib/meydan-api";
+import { useEffect, useRef } from "react";
 
 type CommentInputProps = {
   value: string;
@@ -12,15 +10,8 @@ type CommentInputProps = {
   avatarLabel: string;
 };
 
-export function CommentInput({ value, onChange, onSubmit, avatarLabel }: CommentInputProps) {
-  const [avatarUrl, setAvatarUrl] = useState("");
+export function CommentInput({ value, onChange, onSubmit }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    void meydanApi<{ account_type: "user" | "square"; profile?: { avatar_url?: string }; square?: { avatar_url?: string } }>("/me")
-      .then((me) => setAvatarUrl(me.account_type === "square" ? me.square?.avatar_url || "" : me.profile?.avatar_url || ""))
-      .catch(() => undefined);
-  }, []);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -38,12 +29,6 @@ export function CommentInput({ value, onChange, onSubmit, avatarLabel }: Comment
       className="fixed inset-x-0 bottom-0 z-40 border-t border-divider bg-background/90 px-3 py-2 backdrop-blur-xl"
     >
       <div className="mx-auto flex max-w-xl items-end gap-2">
-        {avatarUrl ? (
-          <Image src={avatarUrl} alt="" width={36} height={36} unoptimized={avatarUrl.startsWith("http")} className="h-9 w-9 shrink-0 rounded-full object-cover" />
-        ) : (
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-[11px] font-bold">{avatarLabel}</span>
-        )}
-
         <textarea
           ref={textareaRef}
           value={value}
