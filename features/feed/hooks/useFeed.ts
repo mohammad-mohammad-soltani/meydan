@@ -47,7 +47,10 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
   useEffect(() => {
     let active = true;
     queueMicrotask(() => active && setIsLoading(true));
-    void getFeedPosts({ mode: activeTab === "for-you" ? "for_you" : "following", filter: activeFilter })
+    void getFeedPosts({
+      mode: activeTab === "for-you" ? "for_you" : "following",
+      filter: activeTab === "for-you" ? activeFilter : "all",
+    })
       .then((next) => {
         if (!active) return;
         setRemotePosts(next);
@@ -60,7 +63,10 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     return () => { active = false; };
   }, [activeFilter, activeTab]);
 
-  const posts = useMemo(() => remotePosts.filter((post) => matchesFilter(post, activeFilter)), [activeFilter, remotePosts]);
+  const posts = useMemo(
+    () => activeTab === "for-you" ? remotePosts.filter((post) => matchesFilter(post, activeFilter)) : remotePosts,
+    [activeFilter, activeTab, remotePosts],
+  );
 
   const toggleLike = useCallback(async (postId: string) => {
     const isOn = !likedPostIds.has(postId);
