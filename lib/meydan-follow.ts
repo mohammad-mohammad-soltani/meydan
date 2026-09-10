@@ -29,11 +29,19 @@ export async function getViewerFollowing(): Promise<FollowActor[]> {
   const type: ActorType = me.account_type;
   const id = me.account_type === "square" ? me.square?.id : me.profile?.id;
   if (!id) return [];
-  return meydanApi<FollowActor[]>(`/actors/${type}/${id}/following`);
+
+  const response = await meydanApi<FollowActor[]>(`/actors/${type}/${id}/following`);
+  return Array.isArray(response) ? response : [];
 }
 
 export async function setActorFollowing(type: ActorType, value: string | number, following: boolean): Promise<void> {
   const id = actorNumericId(value);
   if (!id) throw new Error("Invalid actor id");
-  await meydanApi(`/actors/${type}/${id}/follow`, { method: following ? "PUT" : "DELETE" });
+
+  await meydanApi(`/actors/${type}/${id}/follow`, {
+    method: following ? "PUT" : "DELETE",
+    headers: {
+      "content-type": "application/json",
+    },
+  });
 }
