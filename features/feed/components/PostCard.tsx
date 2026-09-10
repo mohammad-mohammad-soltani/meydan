@@ -10,10 +10,13 @@ import {
   FileText,
   Image as ImageIcon,
   LoaderCircle,
+  Maximize2,
   Mic,
   Pause,
   Play,
   Video,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
@@ -41,13 +44,46 @@ const attachmentIcons = {
   bolt: Bolt,
 };
 
+function faDigits(value: string) {
+  return value.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)] ?? digit);
+}
+
+function formatMediaTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "۰:۰۰";
+
+  const total = Math.floor(seconds);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+
+  const value = hours
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+    : `${minutes}:${String(secs).padStart(2, "0")}`;
+
+  return faDigits(value);
+}
+
+function clampMediaRatio(width?: number, height?: number) {
+  if (!width || !height) return 4 / 5;
+  return Math.min(16 / 9, Math.max(4 / 5, width / height));
+}
+
 function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState(() =>
+    clampMediaRatio(attachment.width, attachment.height),
+  );
 
   const source = attachment.previewSrc;
+  const progress = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
 
   const togglePlayback = async () => {
     const video = videoRef.current;
@@ -65,33 +101,88 @@ function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
     video.pause();
   };
 
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+  };
+
+  const toggleFullscreen = async () => {
+    const wrapper = wrapperRef.current;
+    const video = videoRef.current;
+    if (!wrapper || !video) return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      if (wrapper.requestFullscreen) {
+        await wrapper.requestFullscreen();
+        return;
+      }
+
+      const iosVideo = video as HTMLVideoElement & {
+        webkitEnterFullscreen?: () => void;
+      };
+      iosVideo.webkitEnterFullscreen?.();
+    } catch {
+      // Fullscreen availability differs between browsers; playback must continue regardless.
+    }
+  };
+
   if (!source) return null;
 
   return (
     <div
+      ref={wrapperRef}
       data-media-interactive
-      className="pointer-events-auto relative z-20 aspect-video overflow-hidden rounded-[16px] border border-border bg-black shadow-sm"
+      className="group/video pointer-events-auto relative z-20 w-full overflow-hidden rounded-[16px] border border-border bg-black shadow-sm"
+      style={{ aspectRatio }}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
     >
       <video
         ref={videoRef}
         src={source}
-        controls
         playsInline
         preload="metadata"
         aria-label={attachment.label || "پخش ویدیو"}
-        className="h-full w-full bg-black object-contain"
+        className="absolute inset-0 h-full w-full cursor-pointer bg-black object-cover"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void togglePlayback();
+        }}
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget;
+          setDuration(Number.isFinite(video.duration) ? video.duration : 0);
+          setAspectRatio(clampMediaRatio(video.videoWidth, video.videoHeight));
+          setCurrentTime(video.currentTime || 0);
+          setIsMuted(video.muted);
+        }}
+        onDurationChange={(event) => {
+          const nextDuration = event.currentTarget.duration;
+          setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
+        }}
+        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
         onPlay={() => {
           setIsPlaying(true);
           setIsWaiting(false);
           setHasError(false);
         }}
         onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
+        onEnded={(event) => {
+          setIsPlaying(false);
+          setCurrentTime(event.currentTarget.duration || 0);
+        }}
         onWaiting={() => setIsWaiting(true)}
         onCanPlay={() => setIsWaiting(false)}
         onPlaying={() => setIsWaiting(false)}
+        onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
         onError={() => {
           setHasError(true);
           setIsPlaying(false);
@@ -99,7 +190,20 @@ function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
         }}
       />
 
-      {!isPlaying && !hasError ? (
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
+      />
+
+      {isWaiting && !hasError ? (
+        <span className="pointer-events-none absolute inset-0 z-30 grid place-items-center">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white shadow-xl backdrop-blur-sm">
+            <LoaderCircle aria-hidden="true" className="h-6 w-6 animate-spin" />
+          </span>
+        </span>
+      ) : null}
+
+      {!isPlaying && !isWaiting && !hasError ? (
         <button
           type="button"
           aria-label="پخش ویدیو"
@@ -108,53 +212,118 @@ function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
             event.stopPropagation();
             void togglePlayback();
           }}
-          className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-black/65 text-white shadow-xl backdrop-blur-sm transition hover:bg-black/75 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+          className="absolute inset-0 z-30 m-auto grid h-14 w-14 place-items-center rounded-full bg-black/60 text-white shadow-xl backdrop-blur-md transition hover:scale-105 hover:bg-black/70 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90"
         >
-          {isWaiting ? (
-            <LoaderCircle aria-hidden="true" className="h-6 w-6 animate-spin" />
-          ) : (
-            <Play aria-hidden="true" className="ml-0.5 h-6 w-6 fill-current" />
-          )}
+          <Play aria-hidden="true" className="ml-0.5 h-6 w-6 fill-current" />
         </button>
       ) : null}
 
-      {isPlaying && isWaiting ? (
-        <span className="pointer-events-none absolute inset-0 grid place-items-center">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-sm">
-            <LoaderCircle aria-hidden="true" className="h-6 w-6 animate-spin" />
-          </span>
-        </span>
-      ) : null}
-
-      {isPlaying ? (
-        <button
-          type="button"
-          aria-label="توقف موقت ویدیو"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void togglePlayback();
-          }}
-          className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-black/55 text-white opacity-0 shadow-md backdrop-blur-sm transition hover:bg-black/70 focus:opacity-100 group-hover/media:opacity-100"
+      {!hasError ? (
+        <div
+          dir="ltr"
+          className={`absolute inset-x-0 bottom-0 z-40 px-3 pb-2.5 pt-7 transition-opacity duration-200 ${
+            isPlaying
+              ? "opacity-0 group-hover/video:opacity-100 group-focus-within/video:opacity-100"
+              : "opacity-100"
+          }`}
+          onClick={(event) => event.stopPropagation()}
         >
-          <Pause aria-hidden="true" className="h-4 w-4 fill-current" />
-        </button>
-      ) : null}
+          <div className="relative mb-2 h-4 w-full touch-none">
+            <span className="pointer-events-none absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/35" />
+            <span
+              className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white"
+              style={{ width: `${progress}%` }}
+            />
+            <span
+              className="pointer-events-none absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 shadow-sm transition-opacity group-hover/video:opacity-100"
+              style={{ left: `${progress}%` }}
+            />
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              step="0.05"
+              value={Math.min(currentTime, duration || 0)}
+              aria-label="موقعیت پخش ویدیو"
+              onPointerDown={(event) => event.stopPropagation()}
+              onChange={(event) => {
+                const video = videoRef.current;
+                const nextTime = Number(event.currentTarget.value);
+                if (!video || !Number.isFinite(nextTime)) return;
+                video.currentTime = nextTime;
+                setCurrentTime(nextTime);
+              }}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            />
+          </div>
 
-      {hasError ? (
-        <div className="absolute inset-0 grid place-items-center bg-black/80 px-6 text-center text-white">
-          <div>
-            <Video aria-hidden="true" className="mx-auto h-7 w-7" />
-            <p className="mt-2 text-sm font-bold">پخش ویدیو ممکن نشد</p>
-            <p className="mt-1 text-xs text-white/70">فایل ویدیو در دسترس نیست یا مرورگر نتوانست آن را پخش کند.</p>
+          <div className="flex h-8 items-center gap-2 text-white">
+            <button
+              type="button"
+              aria-label={isPlaying ? "توقف موقت ویدیو" : "پخش ویدیو"}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void togglePlayback();
+              }}
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+            >
+              {isPlaying ? (
+                <Pause aria-hidden="true" className="h-[18px] w-[18px] fill-current" />
+              ) : (
+                <Play aria-hidden="true" className="ml-0.5 h-[18px] w-[18px] fill-current" />
+              )}
+            </button>
+
+            <span className="shrink-0 text-[12px] font-medium tabular-nums text-white/95">
+              {formatMediaTime(currentTime)} / {formatMediaTime(duration)}
+            </span>
+
+            <span className="min-w-0 flex-1" />
+
+            <button
+              type="button"
+              aria-label={isMuted ? "فعال کردن صدای ویدیو" : "بی‌صدا کردن ویدیو"}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleMute();
+              }}
+              className="hidden h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:grid"
+            >
+              {isMuted ? (
+                <VolumeX aria-hidden="true" className="h-[18px] w-[18px]" />
+              ) : (
+                <Volume2 aria-hidden="true" className="h-[18px] w-[18px]" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              aria-label="نمایش تمام‌صفحه"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void toggleFullscreen();
+              }}
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+            >
+              <Maximize2 aria-hidden="true" className="h-[18px] w-[18px]" />
+            </button>
           </div>
         </div>
       ) : null}
 
-      {!hasError && attachment.label ? (
-        <span className="pointer-events-none absolute right-2 top-2 max-w-[72%] truncate rounded-md bg-black/55 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
-          {attachment.label}
-        </span>
+      {hasError ? (
+        <div className="absolute inset-0 z-50 grid place-items-center bg-black px-6 text-center text-white">
+          <div>
+            <Video aria-hidden="true" className="mx-auto h-7 w-7" />
+            <p className="mt-2 text-sm font-bold">پخش ویدیو ممکن نشد</p>
+            <p className="mt-1 text-xs text-white/65">
+              فایل ویدیو در دسترس نیست یا مرورگر نتوانست آن را پخش کند.
+            </p>
+          </div>
+        </div>
       ) : null}
     </div>
   );
