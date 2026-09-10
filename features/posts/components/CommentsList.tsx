@@ -14,7 +14,7 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
       {composer}
 
       {comments.length ? (
-        <div className="space-y-2">
+        <div className="divide-y divide-divider border-y border-divider">
           {comments.map((comment) => {
             const profileHref = comment.authorId
               ? `/profile/${comment.authorType || "user"}/${comment.authorId}`
@@ -23,7 +23,7 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
             return (
               <article
                 key={comment.id}
-                className={`group relative flex gap-3 rounded-2xl border border-border bg-surface p-3 shadow-sm transition-all duration-200 hover:border-border-strong hover:bg-hover ${comment.id.startsWith("comment-") ? "ui-enter" : ""}`}
+                className={`flex gap-3 py-4 transition-colors hover:bg-hover/40 ${comment.id.startsWith("comment-") ? "ui-enter" : ""}`}
                 dir="rtl"
               >
                 <Link href={profileHref} className="shrink-0">
@@ -31,13 +31,13 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
                     <Image
                       src={comment.avatarUrl}
                       alt=""
-                      width={44}
-                      height={44}
+                      width={42}
+                      height={42}
                       unoptimized={comment.avatarUrl.startsWith("http")}
-                      className="h-11 w-11 rounded-full object-cover ring-1 ring-border transition-transform duration-200 group-hover:scale-105"
+                      className="h-[42px] w-[42px] rounded-full object-cover ring-1 ring-border"
                     />
                   ) : (
-                    <div className="grid h-11 w-11 place-items-center rounded-full bg-surface-muted text-xs font-black text-foreground-secondary ring-1 ring-border">
+                    <div className="grid h-[42px] w-[42px] place-items-center rounded-full bg-surface-muted text-xs font-black text-foreground-secondary">
                       {comment.initials}
                     </div>
                   )}
@@ -59,12 +59,12 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
                       </span>
                     ) : null}
 
-                    <span className="mr-auto text-[10px] text-foreground-subtle">
+                    <span className="mr-auto text-[11px] text-foreground-subtle">
                       {comment.timeAgo}
                     </span>
                   </div>
 
-                  <p className="mt-2 whitespace-pre-wrap text-[13px] leading-7 text-foreground-secondary">
+                  <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-6 text-foreground-secondary">
                     {comment.content}
                   </p>
                 </div>
@@ -73,7 +73,7 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
           })}
         </div>
       ) : (
-        <p className="rounded-2xl border border-dashed border-border-strong p-5 text-center text-xs text-muted-foreground">
+        <p className="rounded-control border border-dashed border-border-strong p-5 text-center text-xs text-muted-foreground">
           هنوز نظری ثبت نشده است.
         </p>
       )}
