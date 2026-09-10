@@ -10,7 +10,7 @@ const items = [
   { href: "/content", label: "محتوا", icon: FolderKanban, match: (path: string) => path === "/content" },
   { href: "/map", label: "نقشه زنده", icon: Map, match: (path: string) => path === "/map" },
   { href: "/explore", label: "کاوش", icon: Search, match: (path: string) => path === "/explore" },
-  { href: "/profile", label: "هویت و پایگاه", icon: UserCheck, match: (path: string) => path === "/profile" },
+  { href: "/profile", label: "نمایه", icon: UserCheck, match: (path: string) => path === "/profile" },
 ];
 
 export function BottomNavigation() {
