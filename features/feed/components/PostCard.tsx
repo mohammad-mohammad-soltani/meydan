@@ -63,27 +63,72 @@ function formatMediaTime(seconds: number) {
   return faDigits(value);
 }
 
-function clampMediaRatio(width?: number, height?: number) {
-  if (!width || !height) return 4 / 5;
-  return Math.min(16 / 9, Math.max(4 / 5, width / height));
+function mediaAspectRatio(width?: number, height?: number) {
+  if (!width || !height || width <= 0 || height <= 0) return 16 / 9;
+  return width / height;
+}
+
+function lastRangeEnd(ranges: TimeRanges) {
+  if (!ranges.length) return 0;
+
+  try {
+    const end = ranges.end(ranges.length - 1);
+    return Number.isFinite(end) && end > 0 ? end : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function resolveMediaDuration(video: HTMLVideoElement) {
+  if (Number.isFinite(video.duration) && video.duration > 0) {
+    return video.duration;
+  }
+
+  const seekableEnd = lastRangeEnd(video.seekable);
+  if (seekableEnd > 0) return seekableEnd;
+
+  const bufferedEnd = lastRangeEnd(video.buffered);
+  if (bufferedEnd > 0) return bufferedEnd;
+
+  return 0;
 }
 
 function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const seekingRef = useRef(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [aspectRatio, setAspectRatio] = useState(() =>
-    clampMediaRatio(attachment.width, attachment.height),
+    mediaAspectRatio(attachment.width, attachment.height),
   );
 
   const source = attachment.previewSrc;
   const progress = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
+
+  const syncDuration = (video: HTMLVideoElement) => {
+    const resolved = resolveMediaDuration(video);
+    if (resolved > 0) setDuration(resolved);
+    return resolved;
+  };
+
+  const syncVideoMetrics = (video: HTMLVideoElement) => {
+    syncDuration(video);
+
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      setAspectRatio(mediaAspectRatio(video.videoWidth, video.videoHeight));
+    }
+
+    setCurrentTime(Number.isFinite(video.currentTime) ? video.currentTime : 0);
+    setIsMuted(video.muted);
+  };
 
   const togglePlayback = async () => {
     const video = videoRef.current;
@@ -107,6 +152,50 @@ function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
 
     video.muted = !video.muted;
     setIsMuted(video.muted);
+  };
+
+  const seekTo = (nextTime: number) => {
+    const video = videoRef.current;
+    if (!video || !Number.isFinite(nextTime)) return;
+
+    const resolvedDuration = syncDuration(video) || duration;
+    if (resolvedDuration <= 0) return;
+
+    const clamped = Math.min(resolvedDuration, Math.max(0, nextTime));
+
+    try {
+      video.currentTime = clamped;
+      setCurrentTime(clamped);
+    } catch {
+      // Some browsers can briefly reject seeks before metadata is ready.
+    }
+  };
+
+  const seekFromClientX = (clientX: number) => {
+    const track = progressRef.current;
+    const video = videoRef.current;
+    if (!track || !video) return;
+
+    const resolvedDuration = syncDuration(video) || duration;
+    if (resolvedDuration <= 0) return;
+
+    const rect = track.getBoundingClientRect();
+    if (rect.width <= 0) return;
+
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    seekTo(ratio * resolvedDuration);
+  };
+
+  const finishSeeking = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!seekingRef.current) return;
+
+    seekFromClientX(event.clientX);
+    seekingRef.current = false;
+    setIsSeeking(false);
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
 
   const toggleFullscreen = async () => {
@@ -151,24 +240,21 @@ function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
         playsInline
         preload="metadata"
         aria-label={attachment.label || "پخش ویدیو"}
-        className="absolute inset-0 h-full w-full cursor-pointer bg-black object-cover"
+        className="absolute inset-0 h-full w-full cursor-pointer bg-black object-contain"
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void togglePlayback();
         }}
-        onLoadedMetadata={(event) => {
+        onLoadedMetadata={(event) => syncVideoMetrics(event.currentTarget)}
+        onLoadedData={(event) => syncVideoMetrics(event.currentTarget)}
+        onDurationChange={(event) => syncDuration(event.currentTarget)}
+        onProgress={(event) => syncDuration(event.currentTarget)}
+        onTimeUpdate={(event) => {
           const video = event.currentTarget;
-          setDuration(Number.isFinite(video.duration) ? video.duration : 0);
-          setAspectRatio(clampMediaRatio(video.videoWidth, video.videoHeight));
-          setCurrentTime(video.currentTime || 0);
-          setIsMuted(video.muted);
+          setCurrentTime(video.currentTime);
+          syncDuration(video);
         }}
-        onDurationChange={(event) => {
-          const nextDuration = event.currentTarget.duration;
-          setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
-        }}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
         onPlay={() => {
           setIsPlaying(true);
           setIsWaiting(false);
@@ -176,12 +262,20 @@ function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
         }}
         onPause={() => setIsPlaying(false)}
         onEnded={(event) => {
+          const video = event.currentTarget;
+          const resolvedDuration = syncDuration(video);
           setIsPlaying(false);
-          setCurrentTime(event.currentTarget.duration || 0);
+          setCurrentTime(resolvedDuration || video.currentTime || 0);
         }}
         onWaiting={() => setIsWaiting(true)}
-        onCanPlay={() => setIsWaiting(false)}
-        onPlaying={() => setIsWaiting(false)}
+        onCanPlay={(event) => {
+          setIsWaiting(false);
+          syncVideoMetrics(event.currentTarget);
+        }}
+        onPlaying={(event) => {
+          setIsWaiting(false);
+          syncDuration(event.currentTarget);
+        }}
         onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
         onError={() => {
           setHasError(true);
@@ -222,38 +316,78 @@ function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
         <div
           dir="ltr"
           className={`absolute inset-x-0 bottom-0 z-40 px-3 pb-2.5 pt-7 transition-opacity duration-200 ${
-            isPlaying
+            isPlaying && !isSeeking
               ? "opacity-0 group-hover/video:opacity-100 group-focus-within/video:opacity-100"
               : "opacity-100"
           }`}
           onClick={(event) => event.stopPropagation()}
         >
-          <div className="relative mb-2 h-4 w-full touch-none">
+          <div
+            ref={progressRef}
+            role="slider"
+            tabIndex={0}
+            aria-label="موقعیت پخش ویدیو"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
+            aria-valuenow={Math.round(currentTime)}
+            className="relative mb-2 h-5 w-full cursor-pointer touch-none select-none focus-visible:outline-none"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+
+              seekingRef.current = true;
+              setIsSeeking(true);
+              event.currentTarget.setPointerCapture(event.pointerId);
+              seekFromClientX(event.clientX);
+            }}
+            onPointerMove={(event) => {
+              if (!seekingRef.current) return;
+              event.preventDefault();
+              event.stopPropagation();
+              seekFromClientX(event.clientX);
+            }}
+            onPointerUp={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              finishSeeking(event);
+            }}
+            onPointerCancel={(event) => {
+              event.stopPropagation();
+              seekingRef.current = false;
+              setIsSeeking(false);
+
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
+            }}
+            onKeyDown={(event) => {
+              if (duration <= 0) return;
+
+              if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                seekTo(currentTime - 5);
+              } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                seekTo(currentTime + 5);
+              } else if (event.key === "Home") {
+                event.preventDefault();
+                seekTo(0);
+              } else if (event.key === "End") {
+                event.preventDefault();
+                seekTo(duration);
+              }
+            }}
+          >
             <span className="pointer-events-none absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/35" />
             <span
               className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white"
               style={{ width: `${progress}%` }}
             />
             <span
-              className="pointer-events-none absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 shadow-sm transition-opacity group-hover/video:opacity-100"
+              className={`pointer-events-none absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-sm transition-opacity ${
+                isSeeking ? "opacity-100" : "opacity-0 group-hover/video:opacity-100"
+              }`}
               style={{ left: `${progress}%` }}
-            />
-            <input
-              type="range"
-              min={0}
-              max={duration || 0}
-              step="0.05"
-              value={Math.min(currentTime, duration || 0)}
-              aria-label="موقعیت پخش ویدیو"
-              onPointerDown={(event) => event.stopPropagation()}
-              onChange={(event) => {
-                const video = videoRef.current;
-                const nextTime = Number(event.currentTarget.value);
-                if (!video || !Number.isFinite(nextTime)) return;
-                video.currentTime = nextTime;
-                setCurrentTime(nextTime);
-              }}
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
           </div>
 
