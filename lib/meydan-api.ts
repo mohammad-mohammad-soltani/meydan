@@ -6,6 +6,12 @@ export type ApiEnvelope<T> = {
   meta?: { request_id?: string; next_cursor?: string | null };
 };
 
+type ApiErrorBody = {
+  error?: { message?: string };
+  message?: string;
+  code?: string;
+};
+
 export class MeydanApiError extends Error {
   status: number;
 
@@ -43,7 +49,7 @@ export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T>
   });
 
   const raw = await response.text();
-  let body: ApiEnvelope<T> | { error?: { message?: string } };
+  let body: ApiEnvelope<T> | ApiErrorBody;
 
   try {
     body = raw ? JSON.parse(raw) : {};
@@ -56,10 +62,12 @@ export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T>
   }
 
   if (!response.ok) {
+    const envelopeMessage =
+      "error" in body && body.error?.message ? body.error.message : undefined;
+    const wordpressMessage =
+      "message" in body && typeof body.message === "string" ? body.message : undefined;
     const message =
-      "error" in body && body.error?.message
-        ? body.error.message
-        : `Meydan API request failed (${response.status})`;
+      envelopeMessage || wordpressMessage || `Meydan API request failed (${response.status})`;
     throw new MeydanApiError(message, response.status);
   }
 
