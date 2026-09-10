@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { FolderKanban, Home, Map, Mic, Search, UserCheck } from "lucide-react";
