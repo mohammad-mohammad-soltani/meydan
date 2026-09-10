@@ -35,13 +35,13 @@ export function CommentInput({ value, onChange, onSubmit, avatarLabel }: Comment
         event.preventDefault();
         onSubmit();
       }}
-      className="sticky bottom-0 z-30 border-t border-divider bg-background/85 px-3 py-3 backdrop-blur-xl"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-divider bg-background/90 px-3 py-2 backdrop-blur-xl"
     >
-      <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-3xl border border-border bg-card p-2 shadow-sm">
+      <div className="mx-auto flex max-w-xl items-end gap-2">
         {avatarUrl ? (
-          <Image src={avatarUrl} alt="" width={36} height={36} unoptimized={avatarUrl.startsWith("http")} className="mb-1 h-9 w-9 shrink-0 rounded-full object-cover" />
+          <Image src={avatarUrl} alt="" width={36} height={36} unoptimized={avatarUrl.startsWith("http")} className="h-9 w-9 shrink-0 rounded-full object-cover" />
         ) : (
-          <span className="mb-1 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-[11px] font-bold">{avatarLabel}</span>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-[11px] font-bold">{avatarLabel}</span>
         )}
 
         <textarea
@@ -50,14 +50,14 @@ export function CommentInput({ value, onChange, onSubmit, avatarLabel }: Comment
           rows={1}
           onChange={(event) => onChange(event.target.value)}
           placeholder="پاسخ خود را بنویسید..."
-          className="max-h-28 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-6 text-foreground outline-none placeholder:text-placeholder"
+          className="max-h-28 min-h-10 flex-1 resize-none rounded-full bg-surface-muted px-4 py-2 text-sm leading-6 text-foreground outline-none placeholder:text-placeholder"
         />
 
         <button
           type="submit"
           disabled={!value.trim()}
           aria-label="ارسال پاسخ"
-          className="mb-1 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand text-brand-foreground transition-transform active:scale-95 disabled:opacity-40"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand text-brand-foreground transition-transform active:scale-95 disabled:opacity-40"
         >
           <Send className="h-4 w-4" />
         </button>
