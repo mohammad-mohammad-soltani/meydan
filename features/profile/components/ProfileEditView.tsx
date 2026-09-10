@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, ChevronLeft, LoaderCircle, MapPin, X } from "lucide-react";
+import { CalendarDays, Camera, ChevronLeft, LoaderCircle, MapPin, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { meydanApi } from "@/lib/meydan-api";
 import { getCityMap } from "@/features/map/services/map.service";
@@ -21,6 +21,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
   const [bio, setBio] = useState(profile.about);
   const [headline, setHeadline] = useState(profile.identity.subtitle);
   const [skills, setSkills] = useState(profile.skills.join("، "));
+  const [startDate, setStartDate] = useState(profile.startDate ?? "");
   const initialLocation = useMemo<SelectedLocation | null>(() => {
     if (
       !isSquare ||
@@ -116,11 +117,10 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
       .filter(Boolean);
     try {
       if (isSquare) {
-        // میدان: همه‌چیز — از جمله موقعیت مکانی — داخل شیء میدان
-        // ذخیره می‌شود تا در پنل وردپرس روی همان میدان بنشیند.
         if (selectedLocation && (!selectedLocation.provinceId || !selectedLocation.cityId)) {
           throw new Error("unresolved_location");
         }
+
         await meydanApi("/me/square", {
           method: "PATCH",
           headers: { "content-type": "application/json" },
@@ -129,21 +129,26 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
             subtitle: headline,
             profile_about: bio,
             profile_skills: skillList,
-            ...(avatarId ? { avatar_media_id: avatarId } : {}),
-            ...(coverId ? { cover_media_id: coverId } : {}),
-            ...(selectedLocation
-              ? {
-                  province_id: selectedLocation.provinceId,
-                  city_id: selectedLocation.cityId,
-                  address: selectedLocation.address,
-                  latitude: selectedLocation.latitude,
-                  longitude: selectedLocation.longitude,
-                }
-              : {}),
+            start_date: startDate,
+            ...(avatarId !== undefined ? { avatar_media_id: avatarId } : {}),
+            ...(coverId !== undefined ? { cover_media_id: coverId } : {}),
           }),
         });
+
+        if (selectedLocation) {
+          await meydanApi("/me/square/location", {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              province_id: selectedLocation.provinceId,
+              city_id: selectedLocation.cityId,
+              address: selectedLocation.address,
+              latitude: selectedLocation.latitude,
+              longitude: selectedLocation.longitude,
+            }),
+          });
+        }
       } else {
-        // حساب شخصی: موقعیت مکانی ندارد و فقط پروفایل کاربر به‌روز می‌شود.
         await meydanApi("/me/profile", {
           method: "PATCH",
           headers: { "content-type": "application/json" },
@@ -152,8 +157,8 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
             headline,
             about: bio,
             skills: skillList,
-            ...(avatarId ? { avatar_media_id: avatarId } : {}),
-            ...(coverId ? { cover_media_id: coverId } : {}),
+            ...(avatarId !== undefined ? { avatar_media_id: avatarId } : {}),
+            ...(coverId !== undefined ? { cover_media_id: coverId } : {}),
           }),
         });
       }
@@ -261,6 +266,19 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           <Field label="بیو">
             <textarea rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
           </Field>
+          {isSquare ? (
+            <Field label="تاریخ شروع فعالیت میدان">
+              <span className="relative block">
+                <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="pr-10"
+                />
+              </span>
+            </Field>
+          ) : null}
           {isSquare ? (
             <div>
               <span className="mb-1.5 block px-1 text-xs text-foreground-subtle">
