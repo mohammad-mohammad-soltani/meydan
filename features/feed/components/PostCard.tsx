@@ -6,14 +6,17 @@ import type { Route } from "next";
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import {
   BadgeCheck,
-  BellRing,
   Bolt,
+  Check,
   FileText,
+  HandHeart,
   Image as ImageIcon,
   Mic,
   Play,
+  Plus,
   Video,
 } from "lucide-react";
+
 import { PostActions } from "./PostActions";
 import type { FeedAttachment, FeedPost } from "../types";
 
@@ -37,6 +40,79 @@ const attachmentIcons = {
   microphone: Mic,
   bolt: Bolt,
 };
+
+function GoodActionCard({
+  joined,
+  label,
+  onJoin,
+}: {
+  joined: boolean;
+  label: string;
+  onJoin: () => void;
+}) {
+  return (
+    <div
+      dir="rtl"
+      className="pointer-events-none relative z-10 mt-3 w-full overflow-hidden rounded-[16px] border border-warning-border bg-warning-surface/50 px-3 py-3 sm:px-3.5"
+    >
+      <div
+        aria-hidden="true"
+        className="absolute -left-8 -top-10 h-28 w-28 rounded-full bg-warning/10 blur-3xl"
+      />
+
+      <div className="relative flex min-w-0 items-center gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-warning/10 text-warning">
+          <HandHeart
+            aria-hidden="true"
+            className="h-[19px] w-[19px]"
+            strokeWidth={2}
+          />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <strong className="block text-[12px] font-black leading-5 text-warning-foreground sm:text-[13px]">
+            شما هم به این کار خوب بپیوندید
+          </strong>
+
+          <p className="mt-0.5 truncate text-[10px] leading-5 text-muted-foreground sm:text-[11px]">
+            با پیوستن شما، این حرکت مردمی گسترده‌تر می‌شود.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onJoin}
+          disabled={joined}
+          className={`pointer-events-auto relative z-20 inline-flex h-10 max-w-[42%] shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5 text-[11px] font-black shadow-sm transition-all duration-200 active:scale-[0.94] sm:px-4 sm:text-[12px] ${
+            joined
+              ? "cursor-default border border-success-border bg-success-surface text-success shadow-none"
+              : "bg-warning text-on-solid hover:brightness-105"
+          }`}
+        >
+          {joined ? (
+            <>
+              <Check
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0"
+                strokeWidth={2.5}
+              />
+              <span className="truncate">پیوستید</span>
+            </>
+          ) : (
+            <>
+              <Plus
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0"
+                strokeWidth={2.5}
+              />
+              <span className="truncate">{label || "پیوستن"}</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function PrimaryAttachment({
   attachment,
@@ -73,9 +149,13 @@ function PrimaryAttachment({
         {attachment.icon === "video" ? (
           <>
             <span className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+
             <span className="absolute inset-0 grid place-items-center">
               <span className="grid h-12 w-12 place-items-center rounded-full bg-black/55 text-white shadow-lg backdrop-blur-sm transition-transform duration-200 group-hover/media:scale-105">
-                <Play aria-hidden="true" className="ml-0.5 h-5 w-5 fill-current" />
+                <Play
+                  aria-hidden="true"
+                  className="ml-0.5 h-5 w-5 fill-current"
+                />
               </span>
             </span>
           </>
@@ -100,6 +180,7 @@ function PrimaryAttachment({
         <strong className="block truncate text-[13px] font-bold text-foreground">
           {attachment.label}
         </strong>
+
         {attachment.detail ? (
           <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
             {attachment.detail}
@@ -110,14 +191,20 @@ function PrimaryAttachment({
   );
 }
 
-function DetailMediaScroller({ attachments }: { attachments: FeedAttachment[] }) {
+function DetailMediaScroller({
+  attachments,
+}: {
+  attachments: FeedAttachment[];
+}) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+
   const dragState = useRef({
     active: false,
     moved: false,
     startX: 0,
     scrollLeft: 0,
   });
+
   const [isDragging, setIsDragging] = useState(false);
 
   const finishDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -139,7 +226,9 @@ function DetailMediaScroller({ attachments }: { attachments: FeedAttachment[] })
       tabIndex={0}
       aria-label="رسانه‌های ضمیمه؛ برای مشاهده موارد بیشتر افقی پیمایش کنید"
       className={`pointer-events-auto mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 no-scrollbar focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
-        isDragging ? "cursor-grabbing snap-none select-none" : "cursor-grab"
+        isDragging
+          ? "cursor-grabbing snap-none select-none"
+          : "cursor-grab"
       }`}
       onPointerDown={(event) => {
         if (event.pointerType !== "mouse" || event.button !== 0) return;
@@ -159,6 +248,7 @@ function DetailMediaScroller({ attachments }: { attachments: FeedAttachment[] })
       }}
       onPointerMove={(event) => {
         const scroller = scrollerRef.current;
+
         if (!scroller || !dragState.current.active) return;
 
         const deltaX = event.clientX - dragState.current.startX;
@@ -168,6 +258,7 @@ function DetailMediaScroller({ attachments }: { attachments: FeedAttachment[] })
         }
 
         scroller.scrollLeft = dragState.current.scrollLeft - deltaX;
+
         event.preventDefault();
       }}
       onPointerUp={finishDrag}
@@ -177,6 +268,7 @@ function DetailMediaScroller({ attachments }: { attachments: FeedAttachment[] })
 
         event.preventDefault();
         event.stopPropagation();
+
         dragState.current.moved = false;
       }}
       onDragStart={(event) => event.preventDefault()}
@@ -189,7 +281,10 @@ function DetailMediaScroller({ attachments }: { attachments: FeedAttachment[] })
         >
           <PrimaryAttachment
             attachment={attachment}
-            singleImage={attachments.length === 1 && attachment.icon === "image"}
+            singleImage={
+              attachments.length === 1 &&
+              attachment.icon === "image"
+            }
           />
         </div>
       ))}
@@ -209,19 +304,23 @@ export function PostCard({
   onJoin,
   onOpenMedia,
 }: PostCardProps) {
-  // Kept in the card contract while repost interactions are not exposed in this UI.
   void reposted;
   void onRepost;
 
   const [primaryAttachment, ...otherAttachments] = post.attachments;
+
   const isDetail = variant === "detail";
-  const profileHref = (`/profile/${post.author.type}/${post.author.id}`) as Route;
-  const squareHref = (`/profile/square/${post.author.id}`) as Route;
+
+  const profileHref = (
+    `/profile/${post.author.type}/${post.author.id}`
+  ) as Route;
+
+  const squareHref = (
+    `/profile/square/${post.author.id}`
+  ) as Route;
 
   /*
-   * Detail deliberately has its own layout.
-   * This keeps the timeline compact/X-like while avoiding timeline positioning
-   * tricks (absolute avatar, narrow carousel items) leaking into the post page.
+   * Detail
    */
   if (isDetail) {
     return (
@@ -270,14 +369,20 @@ export function PostCard({
             </div>
 
             <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
-              {post.badge ? <span className="min-w-0 truncate">{post.badge}</span> : null}
+              {post.badge ? (
+                <span className="min-w-0 truncate">{post.badge}</span>
+              ) : null}
+
               {post.badge ? <span aria-hidden="true">·</span> : null}
-              <span className="shrink-0 whitespace-nowrap">{post.timeAgo}</span>
+
+              <span className="shrink-0 whitespace-nowrap">
+                {post.timeAgo}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Post text */}
+        {/* Text */}
         <div className="mt-3" dir="rtl">
           {post.title !== post.squareName ? (
             <h1 className="sr-only">{post.title}</h1>
@@ -288,7 +393,7 @@ export function PostCard({
           </p>
         </div>
 
-        {/* Media: a single attachment is full width; carousel only for multiple items */}
+        {/* Media */}
         {post.attachments.length === 1 && primaryAttachment ? (
           <div className="mt-3">
             <PrimaryAttachment
@@ -300,7 +405,7 @@ export function PostCard({
           <DetailMediaScroller attachments={post.attachments} />
         ) : null}
 
-        {/* Related media/news */}
+        {/* Related media */}
         {post.mediaReflection ? (
           <button
             type="button"
@@ -314,6 +419,7 @@ export function PostCard({
                   className="h-4 w-4 fill-warning text-warning"
                 />
               </span>
+
               <span className="truncate text-[12px] text-foreground-secondary">
                 {post.mediaReflection.headline}
               </span>
@@ -325,25 +431,14 @@ export function PostCard({
           </button>
         ) : null}
 
-        {/* Initiative CTA */}
-        {post.callToAction ? (
-          <div className="mt-3 flex justify-start" dir="rtl">
-            <button
-              type="button"
-              onClick={onJoin}
-              className={`pointer-events-auto inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-black transition-[background-color,border-color,transform] active:scale-[0.98] ${
-                joined
-                  ? "border-success-border bg-success-surface text-success"
-                  : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"
-              }`}
-            >
-              <BellRing aria-hidden="true" className="h-3.5 w-3.5" />
-              {joined ? "به این ابتکار پیوستید" : post.callToAction}
-            </button>
-          </div>
-        ) : null}
+        {/* CTA - بالای اکشن‌ها */}
+        <GoodActionCard
+          joined={joined}
+          label={post.callToAction ?? "پیوستن"}
+          onJoin={onJoin}
+        />
 
-        {/* Engagement actions */}
+        {/* Actions */}
         <PostActions
           postId={post.id}
           likes={post.stats.likes}
@@ -352,19 +447,19 @@ export function PostCard({
           liked={liked}
           onLike={onLike}
           onShare={onShare}
-          className="mt-4"
+          className="mt-3"
         />
       </article>
     );
   }
 
   /*
-   * Timeline layout intentionally stays unchanged.
+   * Timeline
    */
   return (
     <article className="relative border-b border-divider px-3 py-3 transition-colors duration-150 hover:bg-hover sm:px-4">
       <Link
-        href={("/posts/" + post.id) as Route}
+        href={(`/posts/${post.id}`) as Route}
         aria-label={`مشاهده روایت ${post.title}`}
         className="absolute inset-0 z-0"
       />
@@ -394,8 +489,12 @@ export function PostCard({
           )}
         </Link>
 
+        {/* این ستون عرض تصویر، CTA و اکشن‌ها را یکی می‌کند */}
         <div className="min-w-0 flex-1">
-          <div dir="rtl" className="flex min-w-0 items-center gap-1.5 leading-5">
+          <div
+            dir="rtl"
+            className="flex min-w-0 items-center gap-1.5 leading-5"
+          >
             <Link
               href={profileHref}
               className="pointer-events-auto relative z-10 min-w-0 truncate text-[14px] font-black text-foreground hover:underline"
@@ -418,6 +517,7 @@ export function PostCard({
                 >
                   ·
                 </span>
+
                 <span className="min-w-0 truncate text-[11px] text-muted-foreground">
                   {post.badge}
                 </span>
@@ -457,7 +557,8 @@ export function PostCard({
               <PrimaryAttachment
                 attachment={primaryAttachment}
                 singleImage={
-                  post.attachments.length === 1 && primaryAttachment.icon === "image"
+                  post.attachments.length === 1 &&
+                  primaryAttachment.icon === "image"
                 }
               />
             </div>
@@ -471,8 +572,11 @@ export function PostCard({
               <span className="shrink-0 font-bold text-foreground-secondary">
                 +{otherAttachments.length.toLocaleString("fa-IR")}
               </span>
+
               <span className="truncate">
-                {otherAttachments.map((attachment) => attachment.label).join("، ")}
+                {otherAttachments
+                  .map((attachment) => attachment.label)
+                  .join("، ")}
               </span>
             </p>
           ) : null}
@@ -483,28 +587,19 @@ export function PostCard({
                 aria-hidden="true"
                 className="h-4 w-4 shrink-0 fill-warning text-warning"
               />
+
               <span className="truncate text-[11px] text-foreground-secondary">
                 {post.mediaReflection.headline}
               </span>
             </div>
           ) : null}
 
-          {post.callToAction ? (
-            <div className="mt-2.5 flex justify-start">
-              <button
-                type="button"
-                onClick={onJoin}
-                className={`pointer-events-auto relative z-10 inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border px-4 py-1.5 text-[11px] font-black transition-[background-color,border-color,transform] active:scale-[0.98] ${
-                  joined
-                    ? "border-success-border bg-success-surface text-success hover:bg-success-surface"
-                    : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"
-                }`}
-              >
-                <BellRing aria-hidden="true" className="h-3.5 w-3.5" />
-                {joined ? "به این ابتکار پیوستید" : post.callToAction}
-              </button>
-            </div>
-          ) : null}
+          {/* CTA دقیقاً هم‌عرض عکس و بالای اکشن‌ها */}
+          <GoodActionCard
+            joined={joined}
+            label={post.callToAction ?? "پیوستن"}
+            onJoin={onJoin}
+          />
 
           <PostActions
             postId={post.id}

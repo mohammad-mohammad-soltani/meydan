@@ -1,112 +1,478 @@
 "use client";
 
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { CommentsList } from "./CommentsList";
 import { CommentInput } from "./CommentInput";
 import { PostHeader } from "./PostHeader";
+
 import { PostCard } from "@/features/feed/components/PostCard";
+
 import { usePost } from "../hooks/usePost";
+
+import {
+  isAuthApiError,
+  meydanApi,
+} from "@/lib/meydan-api";
+
 import type { FeedPost } from "@/features/feed/types";
 import type { PostDetail } from "../types";
 
-const mediaDetails = { image: "گزارش تصویری", video: "ویدیو", article: "سند و گزارش" } as const;
+const mediaDetails = {
+  image: "گزارش تصویری",
+  video: "ویدیو",
+  article: "سند و گزارش",
+} as const;
+
 const noop = () => undefined;
 
-function toFeedPost(post: PostDetail, commentCount: number): FeedPost {
+type InitiativeApi = {
+  initiative?: {
+    id?: number;
+    cta_label?: string;
+    viewer_state?: {
+      joined?: boolean;
+    };
+  } | null;
+};
+
+type InitiativeState = {
+  id: number;
+  label: string;
+  joined: boolean;
+};
+
+function redirectToLogin() {
+  if (typeof window !== "undefined") {
+    window.location.assign("/auth");
+  }
+}
+
+function toFeedPost(
+  post: PostDetail,
+  commentCount: number,
+  initiative: InitiativeState | null,
+): FeedPost {
   return {
     id: post.id,
+
     author: {
       id: post.author.id,
       type: post.author.type,
-      avatarUrl: post.author.avatarUrl,
-      verified: post.author.verified,
+      avatarUrl:
+        post.author.avatarUrl,
+      verified:
+        post.author.verified,
     },
+
+    initiativeId:
+      initiative?.id,
+
+    viewerState: {
+      liked: Boolean(
+        post.viewerState?.liked,
+      ),
+      reposted: Boolean(
+        post.viewerState?.reposted,
+      ),
+      joined: Boolean(
+        initiative?.joined,
+      ),
+    },
+
     kind: "media",
-    squareName: post.author.name,
-    handle: post.author.handle,
-    timeAgo: post.timeAgo,
+
+    squareName:
+      post.author.name,
+
+    handle:
+      post.author.handle,
+
+    timeAgo:
+      post.timeAgo,
+
     city: "تهران",
-    badge: post.badge,
-    title: post.author.name,
-    body: post.body,
-    attachments: post.media.map((media) => ({
-      id: media.id,
-      label: media.label,
-      detail: media.detail ?? mediaDetails[media.kind],
-      icon: media.kind,
-      previewSrc: media.previewSrc,
-      previewAlt: media.previewAlt,
-      width: media.width,
-      height: media.height,
-    })),
+
+    badge:
+      post.badge,
+
+    title:
+      post.author.name,
+
+    body:
+      post.body,
+
+    attachments: post.media.map(
+      (media) => ({
+        id: media.id,
+        label: media.label,
+
+        detail:
+          media.detail ??
+          mediaDetails[media.kind],
+
+        icon: media.kind,
+
+        previewSrc:
+          media.previewSrc,
+
+        previewAlt:
+          media.previewAlt,
+
+        width:
+          media.width,
+
+        height:
+          media.height,
+      }),
+    ),
+
     stats: {
       likes: post.likes,
       reposts: post.reposts,
       comments: commentCount,
       views: post.views,
     },
+
+    callToAction:
+      initiative?.label,
   };
 }
 
-export function PostView({ post }: { post: PostDetail }) {
-  const state = usePost(post);
-  const feedPost = toFeedPost(
-    {
-      ...state.post,
-      likes: state.counts.likes,
-      reposts: state.counts.reposts,
-      commentsCount: state.counts.comments,
-    },
-    state.counts.comments,
-  );
+export function PostView({
+  post,
+}: {
+  post: PostDetail;
+}) {
+  const state =
+    usePost(post);
+
+  const [
+    initiative,
+    setInitiative,
+  ] =
+    useState<InitiativeState | null>(
+      null,
+    );
+
+  /*
+   * PostDetail فعلی initiative را map نمی‌کند.
+   * بنابراین در صفحه‌ی تکی یک بار اطلاعات
+   * narrative را می‌خوانیم.
+   */
+  useEffect(() => {
+    let active = true;
+
+    void meydanApi<InitiativeApi>(
+      `/narratives/${state.post.id}`,
+    )
+      .then((result) => {
+        if (!active) return;
+
+        const item =
+          result.initiative;
+
+        if (!item?.id) {
+          setInitiative(null);
+          return;
+        }
+
+        setInitiative({
+          id: item.id,
+
+          label:
+            item.cta_label?.trim() ||
+            "پیوستن",
+
+          joined: Boolean(
+            item.viewer_state?.joined,
+          ),
+        });
+      })
+      .catch(() => {
+        // نبود initiative نباید صفحه را خراب کند.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [state.post.id]);
+
+  const handleJoinInitiative =
+    async () => {
+      const current =
+        initiative;
+
+      if (
+        !current ||
+        current.joined
+      ) {
+        return;
+      }
+
+      /*
+       * optimistic UI
+       */
+      setInitiative({
+        ...current,
+        joined: true,
+      });
+
+      try {
+        await meydanApi(
+          `/initiatives/${current.id}/join`,
+          {
+            method: "PUT",
+          },
+        );
+      } catch (reason) {
+        /*
+         * rollback
+         */
+        setInitiative(current);
+
+        if (
+          isAuthApiError(reason)
+        ) {
+          redirectToLogin();
+        }
+      }
+    };
+
+  const feedPost =
+    toFeedPost(
+      {
+        ...state.post,
+
+        likes:
+          state.counts.likes,
+
+        reposts:
+          state.counts.reposts,
+
+        commentsCount:
+          state.counts.comments,
+
+        viewerState: {
+          liked:
+            state.liked,
+
+          reposted:
+            state.reposted,
+        },
+      },
+
+      state.counts.comments,
+
+      initiative,
+    );
 
   return (
-    <section id="view-full-post" className="ui-enter flex min-h-full shrink-0 flex-col bg-background text-foreground">
-      <PostHeader timeAgo={state.post.timeAgo} />
-      <main className="flex-1 space-y-5">
+    <section
+      id="view-full-post"
+      data-post-column
+      className="
+        ui-enter
+        flex
+        min-h-full
+        shrink-0
+        flex-col
+        bg-background
+        text-foreground
+      "
+    >
+      <PostHeader
+        timeAgo={
+          state.post.timeAgo
+        }
+      />
+
+      <main
+        className="
+          flex-1
+          space-y-5
+        "
+      >
         <PostCard
           variant="detail"
           post={feedPost}
-          liked={state.liked}
-          reposted={state.reposted}
-          joined={false}
-          onLike={state.toggleLike}
-          onRepost={state.toggleRepost}
-          onShare={() => void state.share()}
-          onJoin={noop}
-          onOpenMedia={noop}
+
+          liked={
+            state.liked
+          }
+
+          reposted={
+            state.reposted
+          }
+
+          joined={
+            Boolean(
+              initiative?.joined,
+            )
+          }
+
+          onLike={
+            state.toggleLike
+          }
+
+          onRepost={
+            state.toggleRepost
+          }
+
+          onShare={() =>
+            void state.share()
+          }
+
+          onJoin={() =>
+            void handleJoinInitiative()
+          }
+
+          onOpenMedia={
+            noop
+          }
         />
-        <div className="space-y-5 px-4">
-          {state.post.reflections.length ? (
+
+        <div
+          className="
+            space-y-5
+            px-4
+          "
+        >
+          {state.post.reflections
+            .length ? (
             <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold text-foreground">بازتاب در خبرگزاری‌ها و مطبوعات</h2>
-                <span className="text-[10px] text-foreground-subtle">کلیک برای مطالعه</span>
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                "
+              >
+                <h2
+                  className="
+                    text-xs
+                    font-bold
+                    text-foreground
+                  "
+                >
+                  بازتاب در خبرگزاری‌ها و مطبوعات
+                </h2>
+
+                <span
+                  className="
+                    text-[10px]
+                    text-foreground-subtle
+                  "
+                >
+                  کلیک برای مطالعه
+                </span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {state.post.reflections.map((reflection) => (
-                  <article key={reflection.id} className="min-h-28 rounded-card border border-border bg-card p-3 text-card-foreground shadow-xs">
-                    <strong className="block text-[13px] font-extrabold leading-6 text-foreground">{reflection.outlet}</strong>
-                    <p className="mt-2 line-clamp-3 text-[11px] leading-6 text-muted-foreground">{reflection.summary}</p>
-                  </article>
-                ))}
+
+              <div
+                className="
+                  grid
+                  grid-cols-2
+                  gap-2
+                "
+              >
+                {state.post.reflections.map(
+                  (
+                    reflection,
+                  ) => (
+                    <article
+                      key={
+                        reflection.id
+                      }
+                      className="
+                        min-h-28
+                        rounded-card
+                        border
+                        border-border
+                        bg-card
+                        p-3
+                        text-card-foreground
+                        shadow-xs
+                      "
+                    >
+                      <strong
+                        className="
+                          block
+                          text-[13px]
+                          font-extrabold
+                          leading-6
+                          text-foreground
+                        "
+                      >
+                        {
+                          reflection.outlet
+                        }
+                      </strong>
+
+                      <p
+                        className="
+                          mt-2
+                          line-clamp-3
+                          text-[11px]
+                          leading-6
+                          text-muted-foreground
+                        "
+                      >
+                        {
+                          reflection.summary
+                        }
+                      </p>
+                    </article>
+                  ),
+                )}
               </div>
             </section>
           ) : null}
+
           <CommentsList
-            comments={state.comments}
-            total={state.counts.comments}
+            comments={
+              state.comments
+            }
+            total={
+              state.counts
+                .comments
+            }
             composer={
               <CommentInput
-                value={state.commentDraft}
-                onChange={state.setCommentDraft}
-                onSubmit={state.submitComment}
-                avatarLabel={state.post.author.initials}
+                value={
+                  state.commentDraft
+                }
+
+                onChange={
+                  state.setCommentDraft
+                }
+
+                onSubmit={
+                  state.submitComment
+                }
+
+                avatarLabel={
+                  state.post.author
+                    .initials
+                }
               />
             }
           >
             {/* no children */}
           </CommentsList>
-          {state.isLoading ? <p className="text-xs text-muted-foreground">در حال دریافت روایت…</p> : null}
+
+          {state.isLoading ? (
+            <p
+              className="
+                text-xs
+                text-muted-foreground
+              "
+            >
+              در حال دریافت روایت…
+            </p>
+          ) : null}
         </div>
       </main>
     </section>

@@ -5,11 +5,23 @@ import { BadgeCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import type { PostComment } from "../types";
 
-export function CommentsList({ comments, composer, total }: { comments: PostComment[]; composer: ReactNode; total: number; children?: ReactNode }) {
+export function CommentsList({
+  comments,
+  composer,
+  total,
+}: {
+  comments: PostComment[];
+  composer: ReactNode;
+  total: number;
+  children?: ReactNode;
+}) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-4 pb-40 sm:pb-36">
       <h2 className="text-sm font-black text-foreground">
-        نظرات و گفتگوها <span className="font-normal text-foreground-subtle">({total} نظر)</span>
+        نظرات و گفتگوها{" "}
+        <span className="font-normal text-foreground-subtle">
+          ({total} نظر)
+        </span>
       </h2>
 
       {composer}
@@ -39,11 +51,17 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
             return (
               <article
                 key={comment.id}
-                className={`flex gap-3 py-4 transition-colors hover:bg-hover/40 ${comment.id.startsWith("comment-") ? "ui-enter" : ""}`}
+                className={`flex gap-3 py-4 transition-colors hover:bg-hover/40 ${
+                  comment.id.startsWith("comment-") ? "ui-enter" : ""
+                }`}
                 dir="rtl"
               >
                 {profileHref ? (
-                  <Link href={profileHref} className="shrink-0" aria-label={`نمایه ${comment.author}`}>
+                  <Link
+                    href={profileHref}
+                    className="shrink-0"
+                    aria-label={`نمایه ${comment.author}`}
+                  >
                     {avatar}
                   </Link>
                 ) : (
@@ -53,7 +71,10 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     {profileHref ? (
-                      <Link href={profileHref} className="truncate text-sm font-black text-foreground hover:underline">
+                      <Link
+                        href={profileHref}
+                        className="truncate text-sm font-black text-foreground hover:underline"
+                      >
                         {comment.author}
                       </Link>
                     ) : (
@@ -63,7 +84,10 @@ export function CommentsList({ comments, composer, total }: { comments: PostComm
                     )}
 
                     {comment.verified ? (
-                      <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" aria-label="تأیید شده" />
+                      <BadgeCheck
+                        className="h-4 w-4 shrink-0 fill-verified text-on-solid"
+                        aria-label="تأیید شده"
+                      />
                     ) : null}
 
                     {comment.isAuthor ? (
