@@ -35,6 +35,8 @@ export type ProfileDetails = {
   accountType: ProfileTab;
   provinceId?: number;
   cityId?: number;
+  latitude?: number;
+  longitude?: number;
   initialTab?: ProfileTab;
   identity: ProfileIdentity;
   squareStats: ProfileStat[];

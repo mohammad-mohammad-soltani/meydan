@@ -5,12 +5,15 @@ import { X } from "lucide-react";
 import { ProfileActivity } from "./ProfileActivity";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileInfo } from "./ProfileInfo";
+import { SquareLocationCard } from "./SquareLocationCard";
+import { SquareSchedule } from "./SquareSchedule";
 import { useProfile } from "../hooks/useProfile";
 import type { ProfileDetails } from "../types";
 
 export function ProfileView({ initialProfile, canManage = true }: { initialProfile: ProfileDetails; canManage?: boolean }) {
   const profile = useProfile(initialProfile);
   const isSquare = profile.selectedTab === "square";
+  const isSquareAccount = profile.profile.accountType === "square";
   const [name, setName] = useState(initialProfile.identity.name);
   const [subtitle, setSubtitle] = useState(initialProfile.identity.subtitle);
   const [about, setAbout] = useState(initialProfile.about);
@@ -23,6 +26,8 @@ export function ProfileView({ initialProfile, canManage = true }: { initialProfi
       <div className="mx-auto w-full max-w-2xl border-x border-divider bg-surface">
         <ProfileHeader profile={profile.profile} canEdit={canManage} />
         <ProfileInfo profile={profile.profile} tab={profile.selectedTab} expandedSections={profile.expandedSections} onToggleSection={profile.toggleSection} />
+        {isSquareAccount ? <SquareLocationCard profile={profile.profile} /> : null}
+        {isSquareAccount ? <SquareSchedule items={profile.profile.schedule} canManage={canManage} /> : null}
         <ProfileActivity posts={profile.profile.narrativePosts} replies={profile.profile.replies} likedPostIds={profile.likedNarrativeIds} onLike={(postId) => void profile.toggleLike(postId)} onShare={(post) => void profile.shareNarrative(post)} />
       </div>
       {profile.isLoading ? <p className="px-4 text-xs text-muted-foreground">در حال دریافت پروفایل…</p> : null}

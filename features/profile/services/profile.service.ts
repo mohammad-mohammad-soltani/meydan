@@ -10,6 +10,16 @@ type ApiSchedule = {
   position?: number;
 };
 
+type ApiSquareLocation = {
+  address?: string;
+  province_id?: number;
+  city_id?: number;
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
+};
+
 type ApiSquare = {
   id: number;
   name: string;
@@ -23,7 +33,11 @@ type ApiSquare = {
   profile_skills?: string[];
   square_stats?: ProfileStat[];
   resume_stats?: ProfileStat[];
-  location?: { address?: string; province_id?: number; city_id?: number } | null;
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
+  location?: ApiSquareLocation | null;
   schedule?: ApiSchedule[];
 };
 
@@ -125,6 +139,21 @@ function mapNarrativePost(item: ApiNarrative, identity: ProfileDetails["identity
   return { id: String(item.id), author: { id: actorId, type: item.author?.type || "square", avatarUrl: item.author?.avatar_url || identity.avatar, verified: Boolean(item.author?.verified ?? identity.verified) }, initiativeId: item.initiative?.id, viewerState: { liked: Boolean(item.viewer_state?.liked), reposted: Boolean(item.viewer_state?.reposted), joined: Boolean(item.initiative?.viewer_state?.joined) }, kind: attachments.some((attachment) => attachment.icon === "image" || attachment.icon === "video") || reflection ? "media" : "ideas", squareName: item.author?.display_name || identity.name, handle: identity.handle, timeAgo: relativeFa(item.published_at), city: identity.location, badge: item.tags?.[0] || "روایت میدان", title: item.author?.display_name || identity.name, body: plainText(item.body || ""), attachments, mediaReflection: reflection ? { outlet: reflection.outlet, headline: reflection.title } : undefined, stats: { likes: item.stats?.likes || 0, comments: item.stats?.comments || 0, reposts: item.stats?.reposts || 0, views: item.stats?.views || 0 }, callToAction: item.initiative?.cta_label || undefined };
 }
 
+function toFiniteNumber(value: unknown): number | undefined {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+function squareCoordinates(square: ApiSquare): { latitude?: number; longitude?: number } {
+  const latitude = toFiniteNumber(
+    square.location?.latitude ?? square.location?.lat ?? square.latitude ?? square.lat,
+  );
+  const longitude = toFiniteNumber(
+    square.location?.longitude ?? square.location?.lng ?? square.longitude ?? square.lng,
+  );
+  return { latitude, longitude };
+}
+
 function mapSquare(
   square: ApiSquare,
   narratives: ApiNarrative[] = [],
@@ -162,6 +191,8 @@ function mapSquare(
     accountType: "square",
     provinceId: square.location?.province_id,
     cityId: square.location?.city_id,
+    latitude: squareCoordinates(square).latitude,
+    longitude: squareCoordinates(square).longitude,
     initialTab: "square",
     identity,
     squareStats,
@@ -173,6 +204,7 @@ function mapSquare(
         id: String(item.id),
         title: item.title,
         time: timeFa(item.starts_at),
+        startsAt: item.starts_at,
         highlighted: index === 1,
       })),
     activity: mappedActivity || emptyActivity(),
