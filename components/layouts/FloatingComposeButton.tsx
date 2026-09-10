@@ -8,8 +8,9 @@ import { useAudio } from "@/features/audio/AudioProvider";
 export function FloatingComposeButton() {
   const pathname = usePathname();
   const { currentTrack } = useAudio();
+  const isVisible = pathname === "/home" || pathname === "/profile";
 
-  if (pathname !== "/home") return null;
+  if (!isVisible) return null;
 
   return (
     <Link
