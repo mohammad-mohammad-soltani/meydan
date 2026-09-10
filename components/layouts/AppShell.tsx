@@ -29,7 +29,7 @@ export function AppShell({ children }: AppShellProps) {
             <Link href="/speakers" className={desktopLinkClass}><Mic className="h-5 w-5" />اعزام سخنران</Link>
             <Link href="/map" className={desktopLinkClass}><Map className="h-5 w-5" />نقشه زنده</Link>
             <Link href="/explore" className={desktopLinkClass}><Search className="h-5 w-5" />کاوش و جستجو</Link>
-            <Link href="/profile" className={desktopLinkClass}><UserCheck className="h-5 w-5" />هویت و پایگاه</Link>
+            <Link href="/profile" className={desktopLinkClass}><UserCheck className="h-5 w-5" />نمایه</Link>
           </nav>
         </div>
       </aside>
