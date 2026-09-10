@@ -1,5 +1,5 @@
 export type FeedTab = "for-you" | "following";
-export type FeedFilter = "all" | "ideas" | "media";
+export type FeedFilter = "all" | "initiatives" | "reflected";
 export type PostKind = "ideas" | "media";
 
 export type FeedAttachment = {
