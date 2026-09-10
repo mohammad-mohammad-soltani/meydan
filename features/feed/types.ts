@@ -45,9 +45,13 @@ export type FeedPost = {
 
 export type FollowSuggestion = {
   id: string;
-  actorType?: "user" | "square";
+  actorType: "user" | "square";
   name: string;
   city: string;
   handle: string;
   description: string;
+  avatarUrl?: string;
+  verified?: boolean;
+  narrativeCount?: number;
+  followerCount?: number;
 };

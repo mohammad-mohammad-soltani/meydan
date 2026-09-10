@@ -11,7 +11,7 @@ import { useProfile } from "../hooks/useProfile";
 import type { ProfileDetails } from "../types";
 
 export function ProfileView({ initialProfile, canManage = true }: { initialProfile: ProfileDetails; canManage?: boolean }) {
-  const profile = useProfile(initialProfile);
+  const profile = useProfile(initialProfile, canManage);
   const isSquare = profile.selectedTab === "square";
   const isSquareAccount = profile.profile.accountType === "square";
   const [name, setName] = useState(initialProfile.identity.name);
@@ -23,9 +23,8 @@ export function ProfileView({ initialProfile, canManage = true }: { initialProfi
 
   return (
     <section id="view-combined-profile" className="min-h-dvh bg-background pb-20 text-foreground">
-      
       <div className="mx-auto w-full max-w-2xl border-x border-divider bg-surface">
-        <ProfileHeader profile={profile.profile} canEdit={canManage} />
+        <ProfileHeader profile={profile.profile} canEdit={canManage} isFollowing={profile.isFollowing} isFollowLoading={profile.isFollowLoading} followStateReady={profile.followStateReady} onToggleFollow={() => void profile.toggleFollowing()} />
         <ProfileInfo profile={profile.profile} tab={profile.selectedTab} expandedSections={profile.expandedSections} onToggleSection={profile.toggleSection} />
         {isSquareAccount ? <SquareLocationCard profile={profile.profile} /> : null}
         {isSquareAccount ? <SquareSchedule items={profile.profile.schedule} canManage={canManage} /> : null}

@@ -1,19 +1,47 @@
 "use client";
 
-import { useState } from "react";
-import { meydanApi } from "@/lib/meydan-api";
+import { useEffect, useState } from "react";
+import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
+import { actorKey, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileSection } from "../types";
 
-export function useProfile(profile: ProfileDetails) {
+export function useProfile(profile: ProfileDetails, canManage = false) {
   const selectedTab = profile.initialTab ?? "square";
+  const targetActorType: ActorType = profile.accountType === "square" ? "square" : "user";
+  const targetActorKey = actorKey(targetActorType, profile.actorId);
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [followStateReady, setFollowStateReady] = useState(canManage);
+  const [followRequiresAuth, setFollowRequiresAuth] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
   const [likedNarrativeIds, setLikedNarrativeIds] = useState<Set<string>>(() => new Set(profile.narrativePosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
   const [isLoading] = useState(false);
   const [isSavingManagement, setIsSavingManagement] = useState(false);
   const [managementError, setManagementError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (canManage) {
+      setFollowStateReady(true);
+      return;
+    }
+    let active = true;
+    void getViewerFollowing()
+      .then((actors) => {
+        if (!active) return;
+        setIsFollowing(actors.some((actor) => actorKey(actor.type, actor.id) === targetActorKey));
+        setFollowRequiresAuth(false);
+      })
+      .catch((reason) => {
+        if (!active) return;
+        if (isAuthApiError(reason)) setFollowRequiresAuth(true);
+      })
+      .finally(() => {
+        if (active) setFollowStateReady(true);
+      });
+    return () => { active = false; };
+  }, [canManage, targetActorKey]);
 
   const toggleSection = (section: ProfileSection) => setExpandedSections((current) => {
     const next = new Set(current);
@@ -22,21 +50,37 @@ export function useProfile(profile: ProfileDetails) {
   });
 
   const toggleFollowing = async () => {
+    if (canManage || isFollowLoading || !followStateReady) return;
+    if (followRequiresAuth) {
+      window.location.assign("/auth");
+      return;
+    }
     const next = !isFollowing;
     setIsFollowing(next);
-    try { await meydanApi(`/actors/square/${profile.actorId}/follow`, { method: next ? "PUT" : "DELETE" }); } catch { setIsFollowing(!next); }
+    setIsFollowLoading(true);
+    try {
+      await setActorFollowing(targetActorType, profile.actorId, next);
+    } catch (reason) {
+      setIsFollowing(!next);
+      if (isAuthApiError(reason)) window.location.assign("/auth");
+    } finally {
+      setIsFollowLoading(false);
+    }
   };
+
   const toggleLike = async (narrativeId: string) => {
     const next = !likedNarrativeIds.has(narrativeId);
     setLikedNarrativeIds((current) => { const updated = new Set(current); if (next) updated.add(narrativeId); else updated.delete(narrativeId); return updated; });
     try { await meydanApi(`/narratives/${narrativeId}/like`, { method: next ? "PUT" : "DELETE" }); } catch { setLikedNarrativeIds((current) => { const updated = new Set(current); if (next) updated.delete(narrativeId); else updated.add(narrativeId); return updated; }); }
   };
+
   const shareNarrative = async (post: FeedPost) => {
     await meydanApi(`/narratives/${post.id}/share`, { method: "POST", headers: { "idempotency-key": crypto.randomUUID() } }).catch(() => undefined);
     const text = `${post.title} — ${post.body}`;
     if (navigator.share) { await navigator.share({ title: post.title, text }); return; }
     await navigator.clipboard?.writeText(text);
   };
+
   const saveUserDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
     setIsSavingManagement(true);
     setManagementError(null);
@@ -47,6 +91,7 @@ export function useProfile(profile: ProfileDetails) {
       setManagementError("ذخیره‌سازی انجام نشد. دوباره تلاش کنید.");
     } finally { setIsSavingManagement(false); }
   };
+
   const saveSquareDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
     setIsSavingManagement(true);
     setManagementError(null);
@@ -68,6 +113,7 @@ export function useProfile(profile: ProfileDetails) {
       setIsSavingManagement(false);
     }
   };
+
   const createSchedule = async (input: { title: string; startsAt: string }) => {
     setIsSavingManagement(true);
     setManagementError(null);
@@ -84,5 +130,27 @@ export function useProfile(profile: ProfileDetails) {
       setIsSavingManagement(false);
     }
   };
-  return { profile, selectedTab, expandedSections, isFollowing, isManagementOpen, likedNarrativeIds, isLoading, isSavingManagement, managementError, toggleSection, toggleFollowing, openManagement: () => setIsManagementOpen(true), closeManagement: () => setIsManagementOpen(false), toggleLike, shareNarrative, saveSquareDetails, saveUserDetails, createSchedule };
+
+  return {
+    profile,
+    selectedTab,
+    expandedSections,
+    isFollowing,
+    isFollowLoading,
+    followStateReady,
+    isManagementOpen,
+    likedNarrativeIds,
+    isLoading,
+    isSavingManagement,
+    managementError,
+    toggleSection,
+    toggleFollowing,
+    openManagement: () => setIsManagementOpen(true),
+    closeManagement: () => setIsManagementOpen(false),
+    toggleLike,
+    shareNarrative,
+    saveSquareDetails,
+    saveUserDetails,
+    createSchedule,
+  };
 }

@@ -43,7 +43,9 @@ type ApiSquare = {
   description?: string;
   handle?: string;
   avatar_url?: string;
+  verified?: boolean;
   location?: { address?: string } | null;
+  stats?: { narratives?: number; followers?: number };
 };
 
 function relativeFa(value?: string | null): string {
@@ -166,5 +168,9 @@ export async function getFollowSuggestions(): Promise<FollowSuggestion[]> {
     city: cityFromAddress(square.location?.address),
     handle: square.handle || `square_${square.id}`,
     description: square.description || "پایگاه فعال میدان",
+    avatarUrl: square.avatar_url || undefined,
+    verified: Boolean(square.verified),
+    narrativeCount: square.stats?.narratives,
+    followerCount: square.stats?.followers,
   }));
 }

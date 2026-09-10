@@ -3,12 +3,32 @@
 import { BellRing, X } from "lucide-react";
 import { FeedFilters } from "./FeedFilters";
 import { FeedTabs } from "./FeedTabs";
+import { FollowingEmptyState } from "./FollowingEmptyState";
 import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
 import type { FeedPost, FollowSuggestion } from "../types";
 
 export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestions: FollowSuggestion[] }) {
   const feed = useFeed(posts, suggestions);
+
+  const postList = (
+    <div className="w-full divide-y divide-divider">
+      {feed.posts.map((post) => (
+        <PostCard
+          key={post.id}
+          post={post}
+          liked={feed.likedPostIds.has(post.id)}
+          reposted={feed.repostedPostIds.has(post.id)}
+          joined={feed.joinedPostIds.has(post.id)}
+          onLike={() => void feed.toggleLike(post.id)}
+          onRepost={() => void feed.toggleRepost(post.id)}
+          onShare={() => void feed.sharePost(post)}
+          onJoin={() => void feed.joinInitiative(post.id)}
+          onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <div id="view-feed" className="relative min-h-full bg-background text-foreground">
@@ -21,30 +41,21 @@ export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestion
             <span className="shrink-0 rounded-md bg-warning px-2 py-1 text-[10px] text-on-solid">زنده</span>
           </section>
           <FeedFilters activeFilter={feed.activeFilter} onChange={feed.setActiveFilter} />
-          <div key={feed.activeFilter} className="ui-enter">
-            <div className="w-full divide-y divide-divider">
-              {feed.posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  liked={feed.likedPostIds.has(post.id)}
-                  reposted={feed.repostedPostIds.has(post.id)}
-                  joined={feed.joinedPostIds.has(post.id)}
-                  onLike={() => feed.toggleLike(post.id)}
-                  onRepost={() => feed.toggleRepost(post.id)}
-                  onShare={() => void feed.sharePost(post)}
-                  onJoin={() => feed.joinInitiative(post.id)}
-                  onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)}
-                />
-              ))}
-            </div>
-          </div>
+          <div key={feed.activeFilter} className="ui-enter">{postList}</div>
         </>
       ) : (
         <div key={feed.activeTab} className="ui-enter">
-          <div className="w-full divide-y divide-divider">
-            {feed.posts.map((post) => <PostCard key={post.id} post={post} liked={feed.likedPostIds.has(post.id)} reposted={feed.repostedPostIds.has(post.id)} joined={feed.joinedPostIds.has(post.id)} onLike={() => void feed.toggleLike(post.id)} onRepost={() => void feed.toggleRepost(post.id)} onShare={() => void feed.sharePost(post)} onJoin={() => void feed.joinInitiative(post.id)} onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)} />)}
-          </div>
+          {feed.posts.length ? postList : (
+            <FollowingEmptyState
+              isLoading={feed.isLoading || feed.isFollowingStateLoading}
+              requiresAuth={feed.followingRequiresAuth}
+              hasFollowing={feed.hasFollowing}
+              suggestions={feed.suggestions}
+              followedActorKeys={feed.followedActorKeys}
+              pendingFollowKeys={feed.pendingFollowKeys}
+              onToggleFollow={(type, id) => void feed.toggleFollow(type, id)}
+            />
+          )}
         </div>
       )}
 

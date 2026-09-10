@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
+import { actorKey, actorNumericId, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { getFeedPosts } from "../services/feed.service";
 import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
 
@@ -26,10 +27,20 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
   const [remotePosts, setRemotePosts] = useState(initialPosts);
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
   const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
-  const [followedSquareIds, setFollowedSquareIds] = useState<Set<string>>(() => new Set());
+  const [followedActorKeys, setFollowedActorKeys] = useState<Set<string>>(() => new Set());
+  const [pendingFollowKeys, setPendingFollowKeys] = useState<Set<string>>(() => new Set());
+  const [followStateReady, setFollowStateReady] = useState(false);
+  const [followingRequiresAuth, setFollowingRequiresAuth] = useState(false);
   const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.joined).map((post) => post.id)));
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const replacePosts = useCallback((next: FeedPost[]) => {
+    setRemotePosts(next);
+    setLikedPostIds(new Set(next.filter((post) => post.viewerState?.liked).map((post) => post.id)));
+    setRepostedPostIds(new Set(next.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
+    setJoinedPostIds(new Set(next.filter((post) => post.viewerState?.joined).map((post) => post.id)));
+  }, []);
 
   const applyStats = useCallback((postId: string, stats?: { likes?: number; reposts?: number; comments?: number; views?: number }) => {
     if (!stats) return;
@@ -46,22 +57,48 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
 
   useEffect(() => {
     let active = true;
+    void getViewerFollowing()
+      .then((actors) => {
+        if (!active) return;
+        setFollowedActorKeys(new Set(actors.map((actor) => actorKey(actor.type, actor.id))));
+        setFollowingRequiresAuth(false);
+      })
+      .catch((reason) => {
+        if (!active) return;
+        if (isAuthApiError(reason)) {
+          setFollowedActorKeys(new Set());
+          setFollowingRequiresAuth(true);
+        }
+      })
+      .finally(() => {
+        if (active) setFollowStateReady(true);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
     queueMicrotask(() => active && setIsLoading(true));
+    if (activeTab === "following") setRemotePosts([]);
     void getFeedPosts({
       mode: activeTab === "for-you" ? "for_you" : "following",
       filter: activeTab === "for-you" ? activeFilter : "all",
     })
       .then((next) => {
         if (!active) return;
-        setRemotePosts(next);
-        setLikedPostIds(new Set(next.filter((post) => post.viewerState?.liked).map((post) => post.id)));
-        setRepostedPostIds(new Set(next.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
-        setJoinedPostIds(new Set(next.filter((post) => post.viewerState?.joined).map((post) => post.id)));
+        replacePosts(next);
+        if (activeTab === "following") setFollowingRequiresAuth(false);
       })
-      .catch(() => undefined)
+      .catch((reason) => {
+        if (!active) return;
+        if (activeTab === "following") {
+          replacePosts([]);
+          if (isAuthApiError(reason)) setFollowingRequiresAuth(true);
+        }
+      })
       .finally(() => active && setIsLoading(false));
     return () => { active = false; };
-  }, [activeFilter, activeTab]);
+  }, [activeFilter, activeTab, replacePosts]);
 
   const posts = useMemo(
     () => activeTab === "for-you" ? remotePosts.filter((post) => matchesFilter(post, activeFilter)) : remotePosts,
@@ -100,20 +137,42 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     }
   }, [applyStats, repostedPostIds]);
 
-  const toggleFollow = useCallback(async (squareId: string) => {
-    const isOn = !followedSquareIds.has(squareId);
-    setFollowedSquareIds((current) => {
+  const toggleFollow = useCallback(async (actorType: ActorType, actorId: string | number) => {
+    const id = actorNumericId(actorId);
+    if (!id) return;
+    const key = actorKey(actorType, id);
+    if (pendingFollowKeys.has(key)) return;
+    const isOn = !followedActorKeys.has(key);
+
+    setPendingFollowKeys((current) => new Set(current).add(key));
+    setFollowedActorKeys((current) => {
       const next = new Set(current);
-      if (next.has(squareId)) next.delete(squareId); else next.add(squareId);
+      if (isOn) next.add(key); else next.delete(key);
       return next;
     });
+
     try {
-      await meydanApi(`/actors/square/${squareId}/follow`, { method: isOn ? "PUT" : "DELETE" });
+      await setActorFollowing(actorType, id, isOn);
+      setFollowingRequiresAuth(false);
+      if (activeTab === "following") {
+        const next = await getFeedPosts({ mode: "following", filter: "all" });
+        replacePosts(next);
+      }
     } catch (reason) {
-      setFollowedSquareIds((current) => { const next = new Set(current); if (isOn) next.delete(squareId); else next.add(squareId); return next; });
+      setFollowedActorKeys((current) => {
+        const next = new Set(current);
+        if (isOn) next.delete(key); else next.add(key);
+        return next;
+      });
       if (isAuthApiError(reason)) redirectToLogin();
+    } finally {
+      setPendingFollowKeys((current) => {
+        const next = new Set(current);
+        next.delete(key);
+        return next;
+      });
     }
-  }, [followedSquareIds]);
+  }, [activeTab, followedActorKeys, pendingFollowKeys, replacePosts]);
 
   const joinInitiative = useCallback(async (postId: string) => {
     const post = remotePosts.find((item) => item.id === postId);
@@ -144,7 +203,11 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     suggestions: initialSuggestions,
     likedPostIds,
     repostedPostIds,
-    followedSquareIds,
+    followedActorKeys,
+    pendingFollowKeys,
+    hasFollowing: followedActorKeys.size > 0,
+    isFollowingStateLoading: !followStateReady,
+    followingRequiresAuth,
     joinedPostIds,
     selectedMedia,
     setActiveTab,
