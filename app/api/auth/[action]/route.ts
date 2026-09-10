@@ -14,6 +14,15 @@ const routes: Record<string, string> = {
   logout: "/auth/logout",
 };
 
+type AuthUpstreamPayload = {
+  data?: {
+    access_token?: string;
+  };
+  error?: {
+    message?: string;
+  };
+};
+
 function refreshFromSetCookie(value: string | null): string | undefined {
   return value?.match(/(?:^|,\s*)meydan_refresh=([^;]+)/)?.[1];
 }
@@ -52,9 +61,9 @@ export async function POST(request: NextRequest, context: RouteContext<"/api/aut
   }
 
   const raw = await response.text();
-  let parsed: { data?: { access_token?: string }; error?: { message?: string } } | null = null;
+  let parsed: AuthUpstreamPayload | null = null;
   try {
-    parsed = raw ? (JSON.parse(raw) as typeof parsed) : null;
+    parsed = raw ? (JSON.parse(raw) as AuthUpstreamPayload) : null;
   } catch {
     parsed = null;
   }
