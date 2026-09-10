@@ -9,7 +9,9 @@ import {
   Bolt,
   FileText,
   Image as ImageIcon,
+  LoaderCircle,
   Mic,
+  Pause,
   Play,
   Video,
 } from "lucide-react";
@@ -39,6 +41,125 @@ const attachmentIcons = {
   bolt: Bolt,
 };
 
+function VideoAttachment({ attachment }: { attachment: FeedAttachment }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  const source = attachment.previewSrc;
+
+  const togglePlayback = async () => {
+    const video = videoRef.current;
+    if (!video || hasError) return;
+
+    if (video.paused || video.ended) {
+      try {
+        await video.play();
+      } catch {
+        setHasError(true);
+      }
+      return;
+    }
+
+    video.pause();
+  };
+
+  if (!source) return null;
+
+  return (
+    <div
+      data-media-interactive
+      className="pointer-events-auto relative z-20 aspect-video overflow-hidden rounded-[16px] border border-border bg-black shadow-sm"
+      onClick={(event) => event.stopPropagation()}
+      onDoubleClick={(event) => event.stopPropagation()}
+    >
+      <video
+        ref={videoRef}
+        src={source}
+        controls
+        playsInline
+        preload="metadata"
+        aria-label={attachment.label || "پخش ویدیو"}
+        className="h-full w-full bg-black object-contain"
+        onPlay={() => {
+          setIsPlaying(true);
+          setIsWaiting(false);
+          setHasError(false);
+        }}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
+        onWaiting={() => setIsWaiting(true)}
+        onCanPlay={() => setIsWaiting(false)}
+        onPlaying={() => setIsWaiting(false)}
+        onError={() => {
+          setHasError(true);
+          setIsPlaying(false);
+          setIsWaiting(false);
+        }}
+      />
+
+      {!isPlaying && !hasError ? (
+        <button
+          type="button"
+          aria-label="پخش ویدیو"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            void togglePlayback();
+          }}
+          className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-black/65 text-white shadow-xl backdrop-blur-sm transition hover:bg-black/75 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+        >
+          {isWaiting ? (
+            <LoaderCircle aria-hidden="true" className="h-6 w-6 animate-spin" />
+          ) : (
+            <Play aria-hidden="true" className="ml-0.5 h-6 w-6 fill-current" />
+          )}
+        </button>
+      ) : null}
+
+      {isPlaying && isWaiting ? (
+        <span className="pointer-events-none absolute inset-0 grid place-items-center">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+            <LoaderCircle aria-hidden="true" className="h-6 w-6 animate-spin" />
+          </span>
+        </span>
+      ) : null}
+
+      {isPlaying ? (
+        <button
+          type="button"
+          aria-label="توقف موقت ویدیو"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            void togglePlayback();
+          }}
+          className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-black/55 text-white opacity-0 shadow-md backdrop-blur-sm transition hover:bg-black/70 focus:opacity-100 group-hover/media:opacity-100"
+        >
+          <Pause aria-hidden="true" className="h-4 w-4 fill-current" />
+        </button>
+      ) : null}
+
+      {hasError ? (
+        <div className="absolute inset-0 grid place-items-center bg-black/80 px-6 text-center text-white">
+          <div>
+            <Video aria-hidden="true" className="mx-auto h-7 w-7" />
+            <p className="mt-2 text-sm font-bold">پخش ویدیو ممکن نشد</p>
+            <p className="mt-1 text-xs text-white/70">فایل ویدیو در دسترس نیست یا مرورگر نتوانست آن را پخش کند.</p>
+          </div>
+        </div>
+      ) : null}
+
+      {!hasError && attachment.label ? (
+        <span className="pointer-events-none absolute right-2 top-2 max-w-[72%] truncate rounded-md bg-black/55 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
+          {attachment.label}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 function PrimaryAttachment({
   attachment,
   singleImage = false,
@@ -52,6 +173,10 @@ function PrimaryAttachment({
     attachment.width && attachment.height
       ? Math.min(16 / 9, Math.max(4 / 5, attachment.width / attachment.height))
       : 16 / 9;
+
+  if (attachment.icon === "video" && attachment.previewSrc) {
+    return <VideoAttachment attachment={attachment} />;
+  }
 
   if (attachment.previewSrc) {
     return (
@@ -70,21 +195,6 @@ function PrimaryAttachment({
           className="object-cover transition-transform duration-300 group-hover/media:scale-[1.01]"
           draggable={false}
         />
-
-        {attachment.icon === "video" ? (
-          <>
-            <span className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-
-            <span className="absolute inset-0 grid place-items-center">
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-black/55 text-white shadow-lg backdrop-blur-sm transition-transform duration-200 group-hover/media:scale-105">
-                <Play
-                  aria-hidden="true"
-                  className="ml-0.5 h-5 w-5 fill-current"
-                />
-              </span>
-            </span>
-          </>
-        ) : null}
 
         {attachment.icon !== "image" && attachment.label ? (
           <span className="absolute bottom-2 left-2 max-w-[70%] truncate rounded-md bg-black/55 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
@@ -157,6 +267,13 @@ function DetailMediaScroller({
       }`}
       onPointerDown={(event) => {
         if (event.pointerType !== "mouse" || event.button !== 0) return;
+
+        if (
+          event.target instanceof Element &&
+          event.target.closest("[data-media-interactive], video, button, input, a")
+        ) {
+          return;
+        }
 
         const scroller = scrollerRef.current;
         if (!scroller) return;
