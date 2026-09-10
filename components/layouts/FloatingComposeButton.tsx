@@ -45,7 +45,6 @@ export function FloatingComposeButton() {
 
         focus-visible:outline-none
         focus-visible:ring-4
-        focus-visible:ring-brand/20
 
         lg:left-5
         lg:size-[3.75rem]
