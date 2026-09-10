@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ImageIcon, Mic, Save, Trash2, Video, X } from "lucide-react";
-import { meydanApi } from "@/lib/meydan-api";
+import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 
 const MAX_CHARACTERS = 280;
@@ -130,8 +130,14 @@ export function ComposeView() {
       setIsEcho(false);
       router.push("/home");
       router.refresh();
-    } catch {
-      setPublishError("انتشار روایت انجام نشد. دوباره تلاش کنید.");
+    } catch (error) {
+      const message =
+        error instanceof MeydanApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "خطای ناشناخته در انتشار روایت.";
+      setPublishError(`انتشار انجام نشد: ${message}`);
     } finally {
       setIsPublishing(false);
     }
