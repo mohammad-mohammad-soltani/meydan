@@ -13,7 +13,7 @@ export type ProfileIdentity = {
 
 export type ProfileStat = { label: string; value: string; tone?: "default" | "success"; };
 
-export type SquareScheduleItem = { id: string; title: string; time: string; highlighted?: boolean; };
+export type SquareScheduleItem = { id: string; title: string; time: string; highlighted?: boolean; startsAt?: string; };
 
 export type ProfileActivity = {
   id: string;
@@ -37,6 +37,7 @@ export type ProfileDetails = {
   cityId?: number;
   latitude?: number;
   longitude?: number;
+  startDate?: string;
   initialTab?: ProfileTab;
   identity: ProfileIdentity;
   squareStats: ProfileStat[];
