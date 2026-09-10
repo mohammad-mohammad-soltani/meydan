@@ -3,13 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Camera, ChevronLeft, LoaderCircle, MapPin, X } from "lucide-react";
+import { Camera, ChevronLeft, LoaderCircle, MapPin, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { meydanApi } from "@/lib/meydan-api";
 import { getCityMap } from "@/features/map/services/map.service";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 import { ImageCropDialog } from "./ImageCropDialog";
 import { LocationPickerMap, type SelectedLocation } from "./LocationPickerMap";
+import { PersianDatePicker } from "./PersianDatePicker";
 import { ScheduleEditor } from "./ScheduleEditor";
 import type { ProfileDetails } from "../types";
 
@@ -268,15 +269,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           </Field>
           {isSquare ? (
             <Field label="تاریخ شروع فعالیت میدان">
-              <span className="relative block">
-                <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="pr-10"
-                />
-              </span>
+              <PersianDatePicker value={startDate} onChange={setStartDate} />
             </Field>
           ) : null}
           {isSquare ? (
