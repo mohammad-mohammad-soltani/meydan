@@ -32,6 +32,9 @@ export type MediaReflection = {
 export type PostComment = {
   id: string;
   author: string;
+  authorId?: number;
+  authorType?: "user" | "square";
+  verified?: boolean;
   initials: string;
   timeAgo: string;
   content: string;
