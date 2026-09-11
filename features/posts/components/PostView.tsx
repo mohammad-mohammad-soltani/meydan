@@ -381,51 +381,77 @@ export function PostView({
                 {state.post.reflections.map(
                   (
                     reflection,
-                  ) => (
-                    <article
-                      key={
-                        reflection.id
-                      }
-                      className="
+                  ) => {
+                    const cardClassName = `
+                        block
                         min-h-28
                         rounded-card
                         border
                         border-border
                         bg-card
                         p-3
+                        text-right
                         text-card-foreground
                         shadow-xs
-                      "
-                    >
-                      <strong
-                        className="
-                          block
-                          text-[13px]
-                          font-extrabold
-                          leading-6
-                          text-foreground
-                        "
-                      >
-                        {
-                          reflection.outlet
-                        }
-                      </strong>
+                      `;
 
-                      <p
-                        className="
-                          mt-2
-                          line-clamp-3
-                          text-[11px]
-                          leading-6
-                          text-muted-foreground
-                        "
-                      >
-                        {
-                          reflection.summary
+                    const content = (
+                      <>
+                        <strong
+                          className="
+                            block
+                            text-[13px]
+                            font-extrabold
+                            leading-6
+                            text-foreground
+                          "
+                        >
+                          {
+                            reflection.outlet
+                          }
+                        </strong>
+
+                        <p
+                          className="
+                            mt-2
+                            line-clamp-3
+                            text-[11px]
+                            leading-6
+                            text-muted-foreground
+                          "
+                        >
+                          {
+                            reflection.summary
+                          }
+                        </p>
+                      </>
+                    );
+
+                    return reflection.url ? (
+                      <a
+                        key={
+                          reflection.id
                         }
-                      </p>
-                    </article>
-                  ),
+                        href={
+                          reflection.url
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${cardClassName} transition-colors hover:bg-hover`}
+                      >
+                        {content}
+                      </a>
+                    ) : (
+                      <article
+                        key={
+                          reflection.id
+                        }
+                        className={cardClassName}
+                      >
+                        {content}
+                      </article>
+                    );
+                  },
                 )}
               </div>
             </section>

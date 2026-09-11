@@ -27,6 +27,7 @@ export type MediaReflection = {
   outlet: string;
   summary: string;
   accent: "blue" | "emerald" | "amber" | "red";
+  url?: string;
 };
 
 export type PostComment = {

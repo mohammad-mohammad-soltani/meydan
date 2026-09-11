@@ -68,6 +68,16 @@ export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestion
             </div>
             <p className="mt-4 text-sm font-bold text-foreground-secondary">{feed.selectedMedia.headline}</p>
             <p className="mt-2 text-xs text-muted-foreground">{feed.selectedMedia.outlet}</p>
+            {feed.selectedMedia.url ? (
+              <a
+                href={feed.selectedMedia.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex rounded-control bg-brand px-4 py-2 text-xs font-black text-on-solid transition-opacity hover:opacity-90"
+              >
+                مطالعه متن کامل خبر
+              </a>
+            ) : null}
           </div>
         </div>
       ) : null}

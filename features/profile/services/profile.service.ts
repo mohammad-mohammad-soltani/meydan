@@ -115,6 +115,7 @@ type ApiNarrative = {
   media_reflections?: Array<{
     outlet: string;
     title: string;
+    url?: string;
   }>;
 
   initiative?: {
@@ -421,6 +422,7 @@ function mapNarrativePost(
       ? {
           outlet: reflection.outlet,
           headline: reflection.title,
+          url: reflection.url,
         }
       : undefined,
 

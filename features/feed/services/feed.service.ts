@@ -32,7 +32,7 @@ type ApiNarrative = {
     participant_count?: number;
     viewer_state?: { joined?: boolean };
   } | null;
-  media_reflections?: Array<{ outlet: string; title: string }>;
+  media_reflections?: Array<{ outlet: string; title: string; url?: string }>;
   stats?: { likes?: number; comments?: number; reposts?: number; views?: number };
   viewer_state?: { liked?: boolean; reposted?: boolean } | null;
 };
@@ -128,7 +128,7 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
       height: attachment.height,
     })),
     mediaReflection: reflection
-      ? { outlet: reflection.outlet, headline: reflection.title }
+      ? { outlet: reflection.outlet, headline: reflection.title, url: reflection.url }
       : undefined,
     stats: {
       likes: item.stats?.likes || 0,

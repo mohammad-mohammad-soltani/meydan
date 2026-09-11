@@ -753,28 +753,54 @@ export function PostCard({
 
         {/* Related media */}
         {post.mediaReflection ? (
-          <button
-            type="button"
-            onClick={onOpenMedia}
-            className="pointer-events-auto mt-3 flex w-full items-center justify-between gap-3 rounded-[14px] border border-border bg-surface px-3 py-2.5 text-right transition-colors hover:bg-hover"
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-warning-surface">
-                <BadgeCheck
-                  aria-hidden="true"
-                  className="h-4 w-4 fill-warning text-warning"
-                />
+          post.mediaReflection.url ? (
+            <a
+              href={post.mediaReflection.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pointer-events-auto mt-3 flex w-full items-center justify-between gap-3 rounded-[14px] border border-border bg-surface px-3 py-2.5 text-right transition-colors hover:bg-hover"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-warning-surface">
+                  <BadgeCheck
+                    aria-hidden="true"
+                    className="h-4 w-4 fill-warning text-warning"
+                  />
+                </span>
+
+                <span className="truncate text-[12px] text-foreground-secondary">
+                  {post.mediaReflection.headline}
+                </span>
               </span>
 
-              <span className="truncate text-[12px] text-foreground-secondary">
-                {post.mediaReflection.headline}
+              <span className="shrink-0 whitespace-nowrap text-[11px] font-black text-link">
+                مشاهده خبر
               </span>
-            </span>
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenMedia}
+              className="pointer-events-auto mt-3 flex w-full items-center justify-between gap-3 rounded-[14px] border border-border bg-surface px-3 py-2.5 text-right transition-colors hover:bg-hover"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-warning-surface">
+                  <BadgeCheck
+                    aria-hidden="true"
+                    className="h-4 w-4 fill-warning text-warning"
+                  />
+                </span>
 
-            <span className="shrink-0 whitespace-nowrap text-[11px] font-black text-link">
-              مشاهده خبر
-            </span>
-          </button>
+                <span className="truncate text-[12px] text-foreground-secondary">
+                  {post.mediaReflection.headline}
+                </span>
+              </span>
+
+              <span className="shrink-0 whitespace-nowrap text-[11px] font-black text-link">
+                مشاهده خبر
+              </span>
+            </button>
+          )
         ) : null}
 
         {post.initiativeId ? (
@@ -930,16 +956,34 @@ export function PostCard({
           ) : null}
 
           {post.mediaReflection ? (
-            <div className="relative z-10 mt-2 flex w-full items-center gap-2 rounded-[12px] border border-border px-2.5 py-2 text-right">
-              <BadgeCheck
-                aria-hidden="true"
-                className="h-4 w-4 shrink-0 fill-warning text-warning"
-              />
+            post.mediaReflection.url ? (
+              <a
+                href={post.mediaReflection.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pointer-events-auto relative z-10 mt-2 flex w-full items-center gap-2 rounded-[12px] border border-border px-2.5 py-2 text-right transition-colors hover:bg-hover"
+              >
+                <BadgeCheck
+                  aria-hidden="true"
+                  className="h-4 w-4 shrink-0 fill-warning text-warning"
+                />
 
-              <span className="truncate text-[11px] text-foreground-secondary">
-                {post.mediaReflection.headline}
-              </span>
-            </div>
+                <span className="truncate text-[11px] text-foreground-secondary">
+                  {post.mediaReflection.headline}
+                </span>
+              </a>
+            ) : (
+              <div className="relative z-10 mt-2 flex w-full items-center gap-2 rounded-[12px] border border-border px-2.5 py-2 text-right">
+                <BadgeCheck
+                  aria-hidden="true"
+                  className="h-4 w-4 shrink-0 fill-warning text-warning"
+                />
+
+                <span className="truncate text-[11px] text-foreground-secondary">
+                  {post.mediaReflection.headline}
+                </span>
+              </div>
+            )
           ) : null}
 
           {post.initiativeId ? (
