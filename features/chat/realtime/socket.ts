@@ -5,13 +5,11 @@ import { getSocketTicket } from "../services/chat.service";
 
 let socket: Socket | null = null;
 let connecting: Promise<Socket> | null = null;
+let authRefreshInstalled = false;
 
 async function applyFreshTicket(target: Socket) {
   const ticket = await getSocketTicket();
   target.auth = { ticket: ticket.ticket };
-  if (ticket.socketUrl && target.io.uri !== ticket.socketUrl) {
-    target.io.uri = ticket.socketUrl;
-  }
 }
 
 export async function getChatSocket(): Promise<Socket> {
@@ -20,7 +18,8 @@ export async function getChatSocket(): Promise<Socket> {
 
   connecting = (async () => {
     const ticket = await getSocketTicket();
-    const target = socket ?? io(ticket.socketUrl, {
+    const socketUrl = ticket.socketUrl || process.env.NEXT_PUBLIC_MEYDAN_CHAT_SOCKET_URL || "http://localhost:3001";
+    const target = socket ?? io(socketUrl, {
       autoConnect: false,
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -31,11 +30,16 @@ export async function getChatSocket(): Promise<Socket> {
     });
     socket = target;
 
-    if (!target.hasListeners("connect_error")) {
+    if (!authRefreshInstalled) {
+      authRefreshInstalled = true;
       target.on("connect_error", (error) => {
         const message = error instanceof Error ? error.message : String(error);
         if (!/ticket|signature|expired|unauthorized/i.test(message)) return;
-        void applyFreshTicket(target).then(() => target.connect()).catch(() => undefined);
+        void applyFreshTicket(target)
+          .then(() => {
+            if (!target.connected) target.connect();
+          })
+          .catch(() => undefined);
       });
     }
 
