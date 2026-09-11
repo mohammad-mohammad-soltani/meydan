@@ -293,6 +293,38 @@ function attachmentIcon(
   return "article";
 }
 
+function mediaReflectionOutlets(
+  reflections: NonNullable<ApiNarrative["media_reflections"]>,
+): string[] {
+  return Array.from(
+    new Set(
+      reflections
+        .map((reflection) => reflection.outlet?.trim())
+        .filter((outlet): outlet is string => Boolean(outlet)),
+    ),
+  );
+}
+
+function mediaReflectionSummary(
+  outlets: string[],
+): string {
+  if (!outlets.length) return "";
+
+  if (outlets.length === 1) {
+    return `بازنشر شده در ${outlets[0]}`;
+  }
+
+  if (outlets.length === 2) {
+    return `بازنشر شده در ${outlets[0]} و ${outlets[1]}`;
+  }
+
+  if (outlets.length === 3) {
+    return `بازنشر شده در ${outlets[0]}، ${outlets[1]} و ${outlets[2]}`;
+  }
+
+  return `بازنشر شده در ${outlets[0]}، ${outlets[1]}، ${outlets[2]} و ${(outlets.length - 3).toLocaleString("fa-IR")} رسانه دیگر`;
+}
+
 function mapNarrativePost(
   item: ApiNarrative,
   identity: ProfileDetails["identity"],
@@ -340,8 +372,17 @@ function mapNarrativePost(
       attachment.height,
   }));
 
+  const reflections =
+    item.media_reflections || [];
+
   const reflection =
-    item.media_reflections?.[0];
+    reflections[0];
+
+  const reflectionOutlets =
+    mediaReflectionOutlets(reflections);
+
+  const reflectionSummary =
+    mediaReflectionSummary(reflectionOutlets);
 
   return {
     id: String(item.id),
@@ -421,8 +462,12 @@ function mapNarrativePost(
     mediaReflection: reflection
       ? {
           outlet: reflection.outlet,
-          headline: reflection.title,
-          url: reflection.url,
+          outlets: reflectionOutlets,
+          headline: reflectionSummary || reflection.title,
+          url:
+            reflections.length === 1
+              ? reflection.url
+              : undefined,
         }
       : undefined,
 
