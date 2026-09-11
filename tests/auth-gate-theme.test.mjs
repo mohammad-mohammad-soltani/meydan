@@ -1,0 +1,75 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import test from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import path from "node:path";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const source = (relative) => readFileSync(path.join(root, relative), "utf8");
+
+async function loadAuthNavigation() {
+  const file = path.join(root, "lib/auth-navigation.ts");
+  assert.ok(existsSync(file), "lib/auth-navigation.ts must exist");
+  return import(pathToFileURL(file).href);
+}
+
+test("login return paths stay inside the app", async () => {
+  const { sanitizeReturnTo, loginHref } = await loadAuthNavigation();
+  assert.equal(sanitizeReturnTo("/compose?draft=1#editor"), "/compose?draft=1#editor");
+  assert.equal(sanitizeReturnTo("https://evil.example/steal"), "/profile");
+  assert.equal(sanitizeReturnTo("//evil.example/steal"), "/profile");
+  assert.equal(sanitizeReturnTo("javascript:alert(1)"), "/profile");
+  assert.equal(loginHref("/compose"), "/auth?returnTo=%2Fcompose");
+});
+
+test("protected UI uses the shared auth gate before protected actions", () => {
+  const providerPath = path.join(root, "components/providers/AuthGateProvider.tsx");
+  assert.ok(existsSync(providerPath), "AuthGateProvider must exist");
+  const provider = readFileSync(providerPath, "utf8");
+  assert.match(provider, /requireAuth/);
+  assert.match(source("components/layouts/FloatingComposeButton.tsx"), /requireAuth\("\/compose"\)/);
+  assert.match(source("features/feed/hooks/useFeed.ts"), /requireAuth\(/);
+  assert.match(source("features/posts/hooks/usePost.ts"), /requireAuth\(/);
+  assert.match(source("features/profile/hooks/useProfile.ts"), /requireAuth\(/);
+  assert.match(source("features/feed/components/ConnectedGoodActionCard.tsx"), /requireAuth\(/);
+});
+
+test("compose and chat routes have server-side authentication guards", () => {
+  assert.match(source("app/(app)/compose/page.tsx"), /isAuthenticated/);
+  assert.match(source("app/(app)/compose/page.tsx"), /loginHref\("\/compose"\)/);
+  const chatLayout = path.join(root, "app/(app)/chat/layout.tsx");
+  assert.ok(existsSync(chatLayout), "chat subtree auth layout must exist");
+  assert.match(readFileSync(chatLayout, "utf8"), /isAuthenticated/);
+});
+
+test("successful login returns to a sanitized intended path", () => {
+  const auth = source("app/auth/page.tsx");
+  assert.match(auth, /sanitizeReturnTo/);
+  assert.match(auth, /returnTo/);
+  assert.doesNotMatch(auth, /result\.authenticated\)[\s\S]{0,120}router\.replace\("\/profile"\)/);
+});
+
+test("theme supports light, dark and pure-black modes", () => {
+  const themePath = path.join(root, "lib/theme.ts");
+  assert.ok(existsSync(themePath), "lib/theme.ts must exist");
+  const theme = readFileSync(themePath, "utf8");
+  assert.match(theme, /"light"\s*\|\s*"dark"\s*\|\s*"black"/);
+
+  const menuPath = path.join(root, "components/layouts/ThemeMenu.tsx");
+  assert.ok(existsSync(menuPath), "ThemeMenu must exist");
+  const menu = readFileSync(menuPath, "utf8");
+  assert.match(menu, /لایت/);
+  assert.match(menu, /دارک/);
+  assert.match(menu, /تیره/);
+
+  const globals = source("app/globals.css");
+  assert.match(globals, /html\.black/);
+  const blackBlock = globals.slice(globals.indexOf("html.black"));
+  for (const token of ["--background", "--surface", "--surface-muted", "--surface-elevated", "--surface-sunken", "--input"]) {
+    assert.match(blackBlock, new RegExp(`${token}:\\s*#000000`, "i"), `${token} must be pure black`);
+  }
+
+  const layout = source("app/layout.tsx");
+  assert.match(layout, /black/);
+  assert.match(layout, /meydan-theme/);
+});
