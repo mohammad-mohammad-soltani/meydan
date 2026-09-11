@@ -3,23 +3,35 @@ name: Chat UI CI
 on:
   push:
     paths:
+      - "app/**"
+      - "components/**"
       - "features/chat/**"
+      - "features/feed/**"
+      - "features/posts/**"
+      - "features/profile/**"
       - "features/podcasts/**"
-      - "app/(app)/podcasts/**"
+      - "lib/**"
       - "tests/chat-utils.test.mjs"
       - "tests/chat-message-menu.test.mjs"
       - "tests/podcasts-search.test.mjs"
+      - "tests/auth-gate-theme.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
   pull_request:
     paths:
+      - "app/**"
+      - "components/**"
       - "features/chat/**"
+      - "features/feed/**"
+      - "features/posts/**"
+      - "features/profile/**"
       - "features/podcasts/**"
-      - "app/(app)/podcasts/**"
+      - "lib/**"
       - "tests/chat-utils.test.mjs"
       - "tests/chat-message-menu.test.mjs"
       - "tests/podcasts-search.test.mjs"
+      - "tests/auth-gate-theme.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -41,5 +53,7 @@ jobs:
         run: node --experimental-strip-types --test tests/chat-utils.test.mjs tests/chat-message-menu.test.mjs
       - name: Run podcasts behavior tests
         run: node --experimental-strip-types --test tests/podcasts-search.test.mjs
+      - name: Run auth gate and theme tests
+        run: node --experimental-strip-types --test tests/auth-gate-theme.test.mjs
       - name: Build frontend
         run: npm run build
