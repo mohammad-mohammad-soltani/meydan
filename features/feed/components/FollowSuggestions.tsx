@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { BadgeCheck, Check, LoaderCircle, UserRoundPlus } from "lucide-react";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { actorKey, type ActorType } from "@/lib/meydan-follow";
 import type { FollowSuggestion } from "../types";
 
@@ -14,6 +17,7 @@ type FollowSuggestionsProps = {
 };
 
 export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollowKeys, onToggleFollow, title = "پیشنهاد برای دنبال‌کردن" }: FollowSuggestionsProps) {
+  const { requireAuth } = useAuthGate();
   if (!suggestions.length) return null;
 
   const number = new Intl.NumberFormat("fa-IR");
@@ -51,7 +55,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
                   <p className="mt-2 line-clamp-2 text-xs leading-5 text-foreground-secondary">{suggestion.description}</p>
                 </div>
               </div>
-              <button type="button" disabled={pending} onClick={() => onToggleFollow(suggestion.actorType, suggestion.id)} className={`mt-3 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-pill border px-3 text-xs font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${followed ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
+              <button type="button" disabled={pending} onClick={() => { if (requireAuth()) onToggleFollow(suggestion.actorType, suggestion.id); }} className={`mt-3 inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-pill border px-3 text-xs font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${followed ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
                 {pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : followed ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
                 {pending ? "در حال ثبت…" : followed ? "دنبال می‌کنید" : "دنبال کردن"}
               </button>
