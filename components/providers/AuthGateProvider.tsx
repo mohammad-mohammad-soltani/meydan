@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useLayoutEffect,
   useMemo,
   type ReactNode,
 } from "react";
@@ -27,6 +28,13 @@ export function AuthGateProvider({
   children: ReactNode;
   isAuthenticated: boolean;
 }) {
+  useLayoutEffect(() => {
+    document.documentElement.dataset.meydanAuthenticated = isAuthenticated ? "true" : "false";
+    return () => {
+      delete document.documentElement.dataset.meydanAuthenticated;
+    };
+  }, [isAuthenticated]);
+
   const requireAuth = useCallback(
     (returnTo?: string) => {
       if (isAuthenticated) return true;
