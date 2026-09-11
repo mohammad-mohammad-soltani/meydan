@@ -48,6 +48,54 @@ function faDigits(value: string) {
   return value.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)] ?? digit);
 }
 
+function TimelineMediaReflectionText({
+  reflection,
+}: {
+  reflection: NonNullable<FeedPost["mediaReflection"]>;
+}) {
+  const outlets = reflection.outlets?.filter(Boolean) || (reflection.outlet ? [reflection.outlet] : []);
+
+  if (!outlets.length) {
+    return <>{reflection.headline}</>;
+  }
+
+  if (outlets.length === 1) {
+    return (
+      <>
+        بازنشر شده در <strong className="font-black text-foreground">{outlets[0]}</strong>
+      </>
+    );
+  }
+
+  if (outlets.length === 2) {
+    return (
+      <>
+        بازنشر شده در <strong className="font-black text-foreground">{outlets[0]}</strong> و{" "}
+        <strong className="font-black text-foreground">{outlets[1]}</strong>
+      </>
+    );
+  }
+
+  if (outlets.length === 3) {
+    return (
+      <>
+        بازنشر شده در <strong className="font-black text-foreground">{outlets[0]}</strong>،{" "}
+        <strong className="font-black text-foreground">{outlets[1]}</strong> و{" "}
+        <strong className="font-black text-foreground">{outlets[2]}</strong>
+      </>
+    );
+  }
+
+  return (
+    <>
+      بازنشر شده در <strong className="font-black text-foreground">{outlets[0]}</strong>،{" "}
+      <strong className="font-black text-foreground">{outlets[1]}</strong>،{" "}
+      <strong className="font-black text-foreground">{outlets[2]}</strong> و{" "}
+      {(outlets.length - 3).toLocaleString("fa-IR")} رسانه دیگر
+    </>
+  );
+}
+
 function formatMediaTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "۰:۰۰";
 
@@ -961,26 +1009,16 @@ export function PostCard({
                 href={post.mediaReflection.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="pointer-events-auto relative z-10 mt-2 flex w-full items-center gap-2 rounded-[12px] border border-border px-2.5 py-2 text-right transition-colors hover:bg-hover"
+                className="pointer-events-auto relative z-10 mt-2 block w-full rounded-[12px] border border-border px-2.5 py-2 text-right transition-colors hover:bg-hover"
               >
-                <BadgeCheck
-                  aria-hidden="true"
-                  className="h-4 w-4 shrink-0 fill-warning text-warning"
-                />
-
-                <span className="truncate text-[11px] text-foreground-secondary">
-                  {post.mediaReflection.headline}
+                <span className="block truncate text-[11px] text-foreground-secondary">
+                  <TimelineMediaReflectionText reflection={post.mediaReflection} />
                 </span>
               </a>
             ) : (
-              <div className="relative z-10 mt-2 flex w-full items-center gap-2 rounded-[12px] border border-border px-2.5 py-2 text-right">
-                <BadgeCheck
-                  aria-hidden="true"
-                  className="h-4 w-4 shrink-0 fill-warning text-warning"
-                />
-
-                <span className="truncate text-[11px] text-foreground-secondary">
-                  {post.mediaReflection.headline}
+              <div className="relative z-10 mt-2 block w-full rounded-[12px] border border-border px-2.5 py-2 text-right">
+                <span className="block truncate text-[11px] text-foreground-secondary">
+                  <TimelineMediaReflectionText reflection={post.mediaReflection} />
                 </span>
               </div>
             )
