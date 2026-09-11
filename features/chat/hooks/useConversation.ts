@@ -334,7 +334,8 @@ export function useConversation(conversationId: string, initialConversation: Con
       setPendingAttachmentFile(file);
       setAttachment((current) => {
         if (current?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(current.previewUrl);
-        return { id: `attachment-${crypto.randomUUID()}`, name: file.name, mimeType: file.type || "application/octet-stream", size: file.size, previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined };
+        const previewable = /^(image|video|audio)\//.test(file.type);
+        return { id: `attachment-${crypto.randomUUID()}`, name: file.name, mimeType: file.type || "application/octet-stream", size: file.size, previewUrl: previewable ? URL.createObjectURL(file) : undefined };
       });
     },
     clearAttachment: clearPendingAttachment,

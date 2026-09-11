@@ -1,20 +1,51 @@
 "use client";
 
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { Check, Trash2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { participantProfileHref } from "../chat-utils";
 import { useConversation } from "../hooks/useConversation";
+import { getConversationHistory, searchConversationMessages, setConversationMuted } from "../services/chat.service";
+import type { ChatMessage, Conversation } from "../types";
 import { ChatHeader } from "./ChatHeader";
+import { ChatUserInfo } from "./ChatUserInfo";
+import { ConversationSearch } from "./ConversationSearch";
 import { MessageInput } from "./MessageInput";
 import { MessageList } from "./MessageList";
-import type { ChatMessage, Conversation } from "../types";
 
 export function ConversationView({ conversationId, conversation, messages }: { conversationId: string; conversation: Conversation | null; messages: ChatMessage[] }) {
   const chat = useConversation(conversationId, conversation, messages);
   const router = useRouter();
   const [isLeaving, setIsLeaving] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [sharedMessages, setSharedMessages] = useState<ChatMessage[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<ChatMessage[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [muted, setMuted] = useState(Boolean(conversation?.notificationsMuted));
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => { router.prefetch("/chat"); }, [router]);
+  useEffect(() => { if (chat.conversation) setMuted(Boolean(chat.conversation.notificationsMuted)); }, [chat.conversation?.id, chat.conversation?.notificationsMuted]);
+
+  useEffect(() => {
+    if (!isSearchOpen || !searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    let active = true;
+    setIsSearching(true);
+    const timer = window.setTimeout(() => {
+      void searchConversationMessages(conversationId, searchQuery.trim())
+        .then((items) => { if (active) setSearchResults(items); })
+        .catch(() => { if (active) setActionError("جستجو در گفتگو انجام نشد."); })
+        .finally(() => { if (active) setIsSearching(false); });
+    }, 250);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [conversationId, isSearchOpen, searchQuery]);
 
   const leaveConversation = () => {
     if (isLeaving) return;
@@ -22,16 +53,50 @@ export function ConversationView({ conversationId, conversation, messages }: { c
     window.setTimeout(() => router.push("/chat"), 220);
   };
 
+  const openProfile = () => {
+    if (!chat.conversation) return;
+    router.push(participantProfileHref(chat.conversation.participant) as Route);
+  };
+
+  const openInfo = () => {
+    setIsInfoOpen(true);
+    if (sharedMessages.length) return;
+    void getConversationHistory(conversationId, 300)
+      .then(setSharedMessages)
+      .catch(() => setSharedMessages(chat.messages));
+  };
+
+  const toggleMute = async () => {
+    const next = !muted;
+    setMuted(next);
+    setActionError(null);
+    try {
+      const result = await setConversationMuted(conversationId, next);
+      setMuted(Boolean(result.notificationsMuted));
+    } catch {
+      setMuted(!next);
+      setActionError("تغییر وضعیت اعلان‌ها انجام نشد.");
+    }
+  };
+
+  const displayedMessages = useMemo(() => isSearchOpen && searchQuery.trim() ? searchResults : chat.messages, [chat.messages, isSearchOpen, searchQuery, searchResults]);
+
   if (chat.isLoading) return <section className="flex min-h-0 flex-1 items-center justify-center text-xs text-muted-foreground">در حال باز کردن گفتگو...</section>;
   if (!chat.conversation) return <section className="flex min-h-0 flex-1 items-center justify-center text-xs text-muted-foreground">{chat.error || "این گفتگو پیدا نشد."}</section>;
 
+  const conversationForUi: Conversation = { ...chat.conversation, notificationsMuted: muted };
+
   return (
     <section className={`relative isolate flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-surface-sunken before:pointer-events-none before:absolute before:inset-0 before:z-0 before:bg-[url('/images/patterns/resistance-chat-pattern-v2.png')] before:bg-[length:512px_512px] before:bg-repeat before:bg-center before:opacity-10 [&>*]:relative [&>*]:z-[1] ${isLeaving ? "ui-view-leave" : "ui-view-enter"}`}>
-      <ChatHeader conversation={chat.conversation} isLeaving={isLeaving} onBack={leaveConversation} />
+      <ChatHeader conversation={conversationForUi} isLeaving={isLeaving} onBack={leaveConversation} onOpenInfo={openInfo} onOpenProfile={openProfile} onOpenSearch={() => setIsSearchOpen(true)} onToggleMute={() => void toggleMute()} />
+      {isSearchOpen ? <ConversationSearch query={searchQuery} resultCount={searchResults.length} isLoading={isSearching} onChange={setSearchQuery} onClose={() => { setIsSearchOpen(false); setSearchQuery(""); setSearchResults([]); }} /> : null}
       {chat.isPeerTyping ? <p className="border-b border-border bg-surface-glass px-4 py-1 text-[10px] text-verified">{chat.conversation.participant.name} در حال نوشتن است…</p> : !chat.isConnected ? <p className="border-b border-border bg-warning-surface px-4 py-1 text-[10px] text-warning">در حال اتصال مجدد…</p> : null}
-      <MessageList messages={chat.messages} currentUserId={chat.currentUserId} onReply={chat.startReply} onCopy={chat.copyMessage} onEdit={chat.startEdit} onDelete={chat.requestDelete} onForward={chat.requestForward} onReact={chat.toggleReaction} />
-      {chat.error ? <p className="bg-danger-surface px-4 pb-2 text-[10px] text-danger-foreground">{chat.error}</p> : null}
+      <MessageList messages={displayedMessages} currentUserId={chat.currentUserId} onReply={chat.startReply} onCopy={chat.copyMessage} onEdit={chat.startEdit} onDelete={chat.requestDelete} onForward={chat.requestForward} onReact={chat.toggleReaction} />
+      {isSearchOpen && searchQuery.trim() && !isSearching && !searchResults.length ? <p className="absolute left-1/2 top-32 z-20 -translate-x-1/2 rounded-full bg-popover px-4 py-2 text-xs text-muted-foreground shadow-sm">نتیجه‌ای پیدا نشد.</p> : null}
+      {chat.error || actionError ? <p className="bg-danger-surface px-4 pb-2 text-[10px] text-danger-foreground">{actionError || chat.error}</p> : null}
       <MessageInput value={chat.input} attachment={chat.attachment} replyingTo={chat.replyingTo} editingMessage={chat.editingMessage} notice={chat.notice} isSending={chat.isSending} onChange={chat.setInput} onSubmit={chat.send} onAttachmentSelected={chat.attachFile} onClearAttachment={chat.clearAttachment} onCancelReply={chat.cancelReply} onCancelEdit={chat.cancelEdit} />
+
+      {isInfoOpen ? <ChatUserInfo conversation={conversationForUi} messages={sharedMessages.length ? sharedMessages : chat.messages} muted={muted} onClose={() => setIsInfoOpen(false)} onToggleMute={() => void toggleMute()} onOpenProfile={(href) => router.push(href as Route)} /> : null}
 
       {chat.messageToDelete ? (
         <div role="dialog" aria-modal="true" aria-label="حذف پیام" className="fixed inset-0 z-50 grid place-items-end bg-overlay p-3 sm:place-items-center">
