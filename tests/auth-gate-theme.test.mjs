@@ -22,16 +22,21 @@ test("login return paths stay inside the app", async () => {
   assert.equal(loginHref("/compose"), "/auth?returnTo=%2Fcompose");
 });
 
-test("protected UI uses the shared auth gate before protected actions", () => {
+test("protected UI redirects before protected actions", () => {
   const providerPath = path.join(root, "components/providers/AuthGateProvider.tsx");
   assert.ok(existsSync(providerPath), "AuthGateProvider must exist");
   const provider = readFileSync(providerPath, "utf8");
   assert.match(provider, /requireAuth/);
   assert.match(source("components/layouts/FloatingComposeButton.tsx"), /requireAuth\("\/compose"\)/);
-  assert.match(source("features/feed/hooks/useFeed.ts"), /requireAuth\(/);
-  assert.match(source("features/posts/hooks/usePost.ts"), /requireAuth\(/);
-  assert.match(source("features/profile/hooks/useProfile.ts"), /requireAuth\(/);
-  assert.match(source("features/feed/components/ConnectedGoodActionCard.tsx"), /requireAuth\(/);
+  assert.match(source("features/feed/components/FeedTabs.tsx"), /requireAuth\(/);
+  assert.match(source("features/feed/components/PostActions.tsx"), /requireAuth\(/);
+  assert.match(source("features/feed/components/FollowSuggestions.tsx"), /requireAuth\(/);
+  assert.match(source("features/profile/components/ProfileHeader.tsx"), /requireAuth\(/);
+
+  const api = source("lib/meydan-api.ts");
+  assert.match(api, /requiresClientAuthentication/);
+  assert.match(api, /loginHref/);
+  assert.match(api, /window\.location\.assign/);
 });
 
 test("compose and chat routes have server-side authentication guards", () => {
