@@ -15,6 +15,7 @@ export type FeedAttachment = {
 
 export type MediaReflection = {
   outlet: string;
+  outlets?: string[];
   headline: string;
   url?: string;
 };
