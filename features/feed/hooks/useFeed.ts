@@ -55,6 +55,16 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     } : post));
   }, []);
 
+  const adjustLikeCount = useCallback((postId: string, delta: number) => {
+    setRemotePosts((current) => current.map((post) => post.id === postId ? {
+      ...post,
+      stats: {
+        ...post.stats,
+        likes: Math.max(0, post.stats.likes + delta),
+      },
+    } : post));
+  }, []);
+
   useEffect(() => {
     let active = true;
     void getViewerFollowing()
@@ -107,19 +117,24 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
 
   const toggleLike = useCallback(async (postId: string) => {
     const isOn = !likedPostIds.has(postId);
+    const delta = isOn ? 1 : -1;
+
     setLikedPostIds((current) => {
       const next = new Set(current);
       if (next.has(postId)) next.delete(postId); else next.add(postId);
       return next;
     });
+    adjustLikeCount(postId, delta);
+
     try {
       const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${postId}/like`, { method: isOn ? "PUT" : "DELETE" });
       applyStats(postId, result.stats);
     } catch (reason) {
       setLikedPostIds((current) => { const next = new Set(current); if (isOn) next.delete(postId); else next.add(postId); return next; });
+      adjustLikeCount(postId, -delta);
       if (isAuthApiError(reason)) redirectToLogin();
     }
-  }, [applyStats, likedPostIds]);
+  }, [adjustLikeCount, applyStats, likedPostIds]);
 
   const toggleRepost = useCallback(async (postId: string) => {
     const isOn = !repostedPostIds.has(postId);
