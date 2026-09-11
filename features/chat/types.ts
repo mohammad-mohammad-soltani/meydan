@@ -6,22 +6,26 @@ export type ChatUser = {
   handle: string;
   avatarLabel: string;
   avatarTone: "red" | "amber" | "blue" | "emerald" | "violet" | "slate";
+  avatarUrl?: string;
   isVerified?: boolean;
   isOnline?: boolean;
 };
 
 export type Conversation = {
   id: string;
+  type?: "direct" | "group";
   participant: ChatUser;
   preview: string;
   updatedAt: string;
   unreadCount: number;
+  lastMessageId?: string;
 };
 
 export type ChatMessage = {
   id: string;
   conversationId: string;
   senderId: string;
+  clientId?: string;
   body: string;
   sentAt: string;
   status: MessageStatus;
@@ -29,6 +33,7 @@ export type ChatMessage = {
   replyTo?: MessageReply;
   forwardedFrom?: string;
   editedAt?: string;
+  deletedAt?: string;
   reactions?: string[];
 };
 
@@ -38,12 +43,19 @@ export type ChatAttachment = {
   mimeType: string;
   size: number;
   previewUrl?: string;
+  url?: string;
 };
 
 export type MessageReply = {
   id: string;
   body: string;
   senderName: string;
+};
+
+export type SocketTicket = {
+  ticket: string;
+  expiresAt: string;
+  socketUrl: string;
 };
 
 export type ChatNotificationKind = "like" | "repost" | "message" | "media" | "mention" | "follow";
