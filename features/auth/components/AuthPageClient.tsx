@@ -1,0 +1,668 @@
+"use client";
+
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { ClipboardEvent, FormEvent, KeyboardEvent, ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Check,
+  CircleAlert,
+  LoaderCircle,
+  LockKeyhole,
+  MapPin,
+  MessageCircleMore,
+  RefreshCw,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
+import { getCities, getProvinces } from "@/features/map/services/map.service";
+import type { City, Province } from "@/features/map/types";
+import {
+  LocationPickerMap,
+  type SelectedLocation,
+} from "@/features/profile/components/LocationPickerMap";
+import {
+  buildSquareRegistrationPayload,
+  buildUserRegistrationPayload,
+} from "../registration";
+import { SearchableSelect } from "./SearchableSelect";
+
+type AuthStep = "phone" | "code" | "register";
+type AccountType = "user" | "square";
+
+type FieldProps = {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+};
+
+async function api<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`/api/auth/${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const payload = (await response.json()) as {
+    data?: T;
+    error?: { message?: string };
+  };
+  if (!response.ok || !payload.data) {
+    throw new Error(payload.error?.message || "انجام درخواست ممکن نشد.");
+  }
+  return payload.data;
+}
+
+function toLatinDigits(value: string): string {
+  const persian = "۰۱۲۳۴۵۶۷۸۹";
+  const arabic = "٠١٢٣٤٥٦٧٨٩";
+  return value
+    .replace(/[۰-۹]/g, (digit) => String(persian.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String(arabic.indexOf(digit)));
+}
+
+function normalizePhone(value: string): string {
+  const latin = toLatinDigits(value);
+  const startsWithPlus = latin.trim().startsWith("+");
+  const digits = latin.replace(/\D/g, "").slice(0, 13);
+  return startsWithPlus ? `+${digits}` : digits;
+}
+
+function Field({ label, hint, children }: FieldProps) {
+  return (
+    <label className="block">
+      <span className="flex items-center justify-between gap-3 text-xs font-black text-foreground-secondary">
+        <span>{label}</span>
+        {hint ? <span className="text-[10px] font-medium text-muted-foreground">{hint}</span> : null}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+function OtpInputs({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const digits = Array.from({ length: 6 }, (_, index) => value[index] ?? "");
+
+  const update = (index: number, nextValue: string) => {
+    const next = digits.map((digit) => digit || "");
+    next[index] = toLatinDigits(nextValue).replace(/\D/g, "").slice(-1);
+    onChange(next.join(""));
+    if (next[index] && index < 5) inputRefs.current[index + 1]?.focus();
+  };
+
+  const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const pasted = toLatinDigits(event.clipboardData.getData("text")).replace(/\D/g, "").slice(0, 6);
+    onChange(pasted);
+    inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+  };
+
+  const handleKeyDown = (index: number, event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Backspace" && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+    if (event.key === "ArrowLeft" && index > 0) inputRefs.current[index - 1]?.focus();
+    if (event.key === "ArrowRight" && index < 5) inputRefs.current[index + 1]?.focus();
+  };
+
+  return (
+    <div className="mt-2 grid grid-cols-6 gap-2" dir="ltr" role="group" aria-label="شش رقم کد تأیید">
+      {digits.map((digit, index) => (
+        <input
+          key={index}
+          ref={(element) => { inputRefs.current[index] = element; }}
+          className="h-14 min-w-0 rounded-control border border-input-border bg-input text-center text-xl font-black text-foreground tabular-nums shadow-xs outline-none transition-[border-color,box-shadow,background-color] hover:border-border-strong focus:border-ring focus-visible:ring-2 focus-visible:ring-ring"
+          value={digit}
+          onChange={(event) => update(index, event.target.value)}
+          onKeyDown={(event) => handleKeyDown(index, event)}
+          onPaste={handlePaste}
+          inputMode="numeric"
+          autoComplete={index === 0 ? "one-time-code" : "off"}
+          maxLength={1}
+          aria-label={`رقم ${index + 1} کد تأیید`}
+          autoFocus={index === 0}
+          required
+        />
+      ))}
+    </div>
+  );
+}
+
+function Stepper({ step }: { step: AuthStep }) {
+  const current = step === "phone" ? 1 : step === "code" ? 2 : 3;
+  const steps = [
+    { number: 1, label: "شماره همراه" },
+    { number: 2, label: "تأیید" },
+    { number: 3, label: "ساخت حساب" },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2" aria-label="مراحل ورود">
+      {steps.map(({ number, label }) => {
+        const complete = current > number;
+        const active = current === number;
+        return (
+          <div key={number} className="min-w-0 text-center" aria-current={active ? "step" : undefined}>
+            <div className="flex items-center">
+              <span className={`h-px flex-1 ${number === 1 ? "opacity-0" : complete || active ? "bg-brand" : "bg-divider"}`} />
+              <span
+                className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border text-[10px] font-black transition-colors ${
+                  complete
+                    ? "border-brand bg-brand text-brand-foreground"
+                    : active
+                      ? "border-brand bg-brand-muted text-brand"
+                      : "border-border bg-surface-muted text-muted-foreground"
+                }`}
+              >
+                {complete ? <Check aria-hidden="true" className="h-3.5 w-3.5" /> : number}
+              </span>
+              <span className={`h-px flex-1 ${number === 3 ? "opacity-0" : current > number ? "bg-brand" : "bg-divider"}`} />
+            </div>
+            <span className={`mt-1.5 block truncate text-[9px] font-bold ${active ? "text-brand" : "text-muted-foreground"}`}>
+              {label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function AuthPageClient() {
+  const router = useRouter();
+  const [step, setStep] = useState<AuthStep>("phone");
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [challengeId, setChallengeId] = useState("");
+  const [registrationToken, setRegistrationToken] = useState("");
+  const [accountType, setAccountType] = useState<AccountType>("user");
+  const [name, setName] = useState("");
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [provinceId, setProvinceId] = useState<number | null>(null);
+  const [cityId, setCityId] = useState<number | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
+  const [provinceLoading, setProvinceLoading] = useState(false);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [pending, setPending] = useState(false);
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  useEffect(() => {
+    if (step !== "register" || provinces.length) return;
+    let cancelled = false;
+    setProvinceLoading(true);
+    void getProvinces()
+      .then((items) => {
+        if (!cancelled) setProvinces(items);
+      })
+      .catch(() => {
+        if (!cancelled) setError("دریافت فهرست استان‌ها انجام نشد. دوباره تلاش کنید.");
+      })
+      .finally(() => {
+        if (!cancelled) setProvinceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [step, provinces.length]);
+
+  useEffect(() => {
+    if (!provinceId) {
+      setCities([]);
+      setCityId(null);
+      return;
+    }
+    let cancelled = false;
+    setCityLoading(true);
+    void getCities(provinceId)
+      .then((items) => {
+        if (cancelled) return;
+        setCities(items);
+        setCityId((current) => current && items.some((city) => city.id === current) ? current : null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCities([]);
+          setCityId(null);
+          setError("دریافت فهرست شهرها انجام نشد. دوباره تلاش کنید.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setCityLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [provinceId]);
+
+  const inputClass =
+    "mt-2 min-h-12 w-full rounded-control border border-input-border bg-input px-3.5 text-sm text-foreground shadow-xs outline-none transition-[border-color,box-shadow,background-color] placeholder:text-foreground-subtle hover:border-border-strong focus:border-ring focus-visible:ring-2 focus-visible:ring-ring";
+  const primaryButtonClass =
+    "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-brand px-5 text-sm font-black text-brand-foreground shadow-card outline-none transition-[transform,background-color,box-shadow] hover:bg-brand-hover hover:shadow-popover active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground disabled:shadow-none";
+
+  const resetMessages = () => {
+    setError("");
+    setNotice("");
+  };
+
+  const submitPhone = async (event: FormEvent) => {
+    event.preventDefault();
+    setPending(true);
+    resetMessages();
+    try {
+      const result = await api<{ challenge_id: string }>("otp-request", { phone });
+      setChallengeId(result.challenge_id);
+      setCode("");
+      setStep("code");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "خطا در ورود");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const submitCode = async (event: FormEvent) => {
+    event.preventDefault();
+    setPending(true);
+    resetMessages();
+    try {
+      const result = await api<{
+        authenticated?: boolean;
+        registration_required?: boolean;
+        registration_token?: string;
+      }>("otp-verify", { challenge_id: challengeId, code });
+
+      if (result.authenticated) {
+        router.replace("/profile");
+      } else if (result.registration_required && result.registration_token) {
+        setRegistrationToken(result.registration_token);
+        setStep("register");
+      } else {
+        setError("پاسخ ورود کامل نبود. دوباره تلاش کنید.");
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "کد معتبر نیست.");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const resendCode = async () => {
+    setPending(true);
+    resetMessages();
+    try {
+      const result = await api<{ challenge_id: string }>("otp-request", { phone });
+      setChallengeId(result.challenge_id);
+      setCode("");
+      setNotice("کد تأیید تازه ارسال شد.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "ارسال دوباره کد انجام نشد.");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const submitRegistration = async (event: FormEvent) => {
+    event.preventDefault();
+    setPending(true);
+    resetMessages();
+    try {
+      if (accountType === "user") {
+        await api("register-user", buildUserRegistrationPayload({
+          registrationToken,
+          fullName: name,
+          provinceId,
+          cityId,
+        }));
+      } else {
+        await api("register-square", buildSquareRegistrationPayload({
+          registrationToken,
+          squareName: name,
+          location: selectedLocation,
+        }));
+      }
+      router.replace("/profile");
+    } catch (reason) {
+      if (reason instanceof Error && reason.message.startsWith("missing_")) {
+        setError(accountType === "square" ? "موقعیت دقیق میدان را روی نقشه انتخاب کنید." : "استان و شهر را انتخاب کنید.");
+      } else {
+        setError(reason instanceof Error ? reason.message : "ثبت‌نام انجام نشد.");
+      }
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const editPhone = () => {
+    resetMessages();
+    setCode("");
+    setChallengeId("");
+    setStep("phone");
+  };
+
+  const selectProvince = (id: number) => {
+    setProvinceId(id);
+    setCityId(null);
+    if (accountType === "square") setSelectedLocation(null);
+  };
+
+  const selectCity = (id: number) => {
+    setCityId(id);
+    if (accountType === "square") setSelectedLocation(null);
+  };
+
+  const selectMapLocation = (location: SelectedLocation) => {
+    setSelectedLocation(location);
+    if (location.provinceId) setProvinceId(location.provinceId);
+    if (location.cityId) setCityId(location.cityId);
+  };
+
+  const registrationDisabled =
+    pending ||
+    !name.trim() ||
+    !provinceId ||
+    !cityId ||
+    (accountType === "square" && !selectedLocation);
+
+  return (
+    <main className="relative min-h-[100dvh] overflow-x-hidden bg-background text-foreground">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-muted opacity-70 blur-3xl" />
+        <div className="absolute -bottom-28 -left-24 h-80 w-80 rounded-full bg-surface-muted opacity-90 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto grid min-h-[100dvh] w-full max-w-6xl items-stretch lg:grid-cols-[1.05fr_.95fr]">
+        <section className="hidden border-l border-border bg-surface-glass p-10 backdrop-blur-sm lg:flex lg:flex-col lg:justify-between xl:p-14">
+          <div>
+            <div className="inline-flex items-center gap-3">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand text-xl font-black text-brand-foreground shadow-card">م</span>
+              <div>
+                <p className="text-lg font-black text-foreground">میدانِ خیابان</p>
+                <p className="mt-0.5 text-[11px] font-bold text-muted-foreground">شبکه سراسری میادین ایران</p>
+              </div>
+            </div>
+
+            <div className="mt-16 max-w-md">
+              <span className="inline-flex items-center gap-2 rounded-pill border border-brand-border bg-brand-muted px-3 py-1.5 text-[11px] font-black text-brand">
+                <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
+                ورود یکپارچه و امن
+              </span>
+              <h1 className="mt-5 text-4xl font-black leading-[1.45] tracking-tight text-foreground">
+                روایت، ارتباط و حضور میدانی؛ در یک حساب.
+              </h1>
+              <p className="mt-5 text-sm leading-8 text-foreground-secondary">
+                با شماره همراه وارد شوید. اگر اولین حضور شماست، بعد از تأیید شماره در چند قدم کوتاه حساب شخصی یا میدان خود را می‌سازید.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-3">
+              {[
+                { icon: MessageCircleMore, title: "دسترسی سریع", text: "ورود بدون رمز عبور با کد یک‌بارمصرف" },
+                { icon: ShieldCheck, title: "هویت مطمئن", text: "شماره همراه شما مبنای تأیید و بازیابی حساب است" },
+                { icon: MapPin, title: "متصل به میدان", text: "امکان ساخت حساب شخصی یا ثبت یک میدان محلی" },
+              ].map(({ icon: Icon, title, text }) => (
+                <div key={title} className="flex items-start gap-3 rounded-card border border-border bg-card p-3.5 shadow-xs">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-muted text-brand">
+                    <Icon aria-hidden="true" className="h-4.5 w-4.5" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-black text-foreground">{title}</p>
+                    <p className="mt-1 text-[11px] leading-6 text-muted-foreground">{text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="mt-10 text-[10px] leading-6 text-foreground-subtle">
+            برای امنیت حساب، کد تأیید را در اختیار دیگران قرار ندهید.
+          </p>
+        </section>
+
+        <section className="flex items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
+          <div className="w-full max-w-md">
+            <div className="mb-7 flex items-center justify-center gap-2.5 lg:hidden">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand text-base font-black text-brand-foreground shadow-card">م</span>
+              <div>
+                <p className="text-sm font-black text-foreground">میدانِ خیابان</p>
+                <p className="text-[9px] font-bold text-muted-foreground">شبکه سراسری میادین ایران</p>
+              </div>
+            </div>
+
+            <div className="rounded-panel border border-border bg-card p-5 text-card-foreground shadow-dialog sm:p-7">
+              <Stepper step={step} />
+
+              <div className="mt-7">
+                {step === "phone" ? (
+                  <>
+                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-muted text-brand">
+                      <Smartphone aria-hidden="true" className="h-6 w-6" />
+                    </div>
+                    <h2 className="mt-4 text-2xl font-black tracking-tight text-foreground">ورود به میدان</h2>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                      شماره همراهی که می‌خواهید حساب شما با آن شناخته شود وارد کنید.
+                    </p>
+
+                    <form onSubmit={submitPhone} className="mt-6 space-y-4">
+                      <Field label="شماره همراه" hint="مثلاً 09123456789">
+                        <div className="relative">
+                          <Smartphone aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 mt-1 h-4.5 w-4.5 -translate-y-1/2 text-icon-muted" />
+                          <input
+                            className={`${inputClass} pl-10 text-left tabular-nums`}
+                            value={phone}
+                            onChange={(event) => setPhone(normalizePhone(event.target.value))}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            dir="ltr"
+                            placeholder="09123456789"
+                            autoFocus
+                            required
+                          />
+                        </div>
+                      </Field>
+
+                      <button disabled={!isHydrated || pending || phone.replace(/\D/g, "").length < 10} className={primaryButtonClass}>
+                        {pending ? <LoaderCircle aria-hidden="true" className="h-4.5 w-4.5 animate-spin" /> : <ArrowLeft aria-hidden="true" className="h-4.5 w-4.5" />}
+                        {pending ? "در حال ارسال کد…" : "ادامه و دریافت کد"}
+                      </button>
+                    </form>
+                  </>
+                ) : null}
+
+                {step === "code" ? (
+                  <>
+                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-muted text-brand">
+                      <LockKeyhole aria-hidden="true" className="h-6 w-6" />
+                    </div>
+                    <h2 className="mt-4 text-2xl font-black tracking-tight text-foreground">کد تأیید را وارد کنید</h2>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                      کد یک‌بارمصرف برای <span className="font-black text-foreground" dir="ltr">{phone}</span> ارسال شد.
+                    </p>
+
+                    <form onSubmit={submitCode} className="mt-6 space-y-4">
+                      <Field label="کد تأیید" hint="کد پیامک‌شده">
+                        <OtpInputs value={code} onChange={(nextCode) => setCode(nextCode.slice(0, 6))} />
+                      </Field>
+
+                      <button disabled={!isHydrated || pending || code.length < 4} className={primaryButtonClass}>
+                        {pending ? <LoaderCircle aria-hidden="true" className="h-4.5 w-4.5 animate-spin" /> : <Check aria-hidden="true" className="h-4.5 w-4.5" />}
+                        {pending ? "در حال بررسی…" : "تأیید و ورود"}
+                      </button>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={editPhone}
+                          disabled={pending}
+                          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground-secondary outline-none transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                        >
+                          <Smartphone aria-hidden="true" className="h-4 w-4" />
+                          ویرایش شماره
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void resendCode()}
+                          disabled={pending}
+                          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground-secondary outline-none transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                        >
+                          <RefreshCw aria-hidden="true" className="h-4 w-4" />
+                          ارسال دوباره
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                ) : null}
+
+                {step === "register" ? (
+                  <>
+                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-muted text-brand">
+                      <UserRound aria-hidden="true" className="h-6 w-6" />
+                    </div>
+                    <h2 className="mt-4 text-2xl font-black tracking-tight text-foreground">حساب خود را کامل کنید</h2>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                      شماره شما تأیید شد. استان و شهر را انتخاب کنید و اگر حساب میدان می‌سازید، موقعیت دقیق را روی نقشه مشخص کنید.
+                    </p>
+
+                    <form onSubmit={submitRegistration} className="mt-6 space-y-5">
+                      <fieldset>
+                        <legend className="text-xs font-black text-foreground-secondary">نوع حساب</legend>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            aria-pressed={accountType === "user"}
+                            onClick={() => setAccountType("user")}
+                            className={`rounded-card border p-3.5 text-right outline-none transition-[border-color,background-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring ${
+                              accountType === "user"
+                                ? "border-brand bg-brand-muted shadow-xs"
+                                : "border-border bg-surface hover:bg-hover"
+                            }`}
+                          >
+                            <span className={`grid h-9 w-9 place-items-center rounded-xl ${accountType === "user" ? "bg-brand text-brand-foreground" : "bg-surface-muted text-icon-muted"}`}>
+                              <UserRound aria-hidden="true" className="h-4.5 w-4.5" />
+                            </span>
+                            <strong className="mt-3 block text-xs font-black text-foreground">حساب شخصی</strong>
+                            <span className="mt-1 block text-[10px] leading-5 text-muted-foreground">برای حضور و فعالیت فردی</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            aria-pressed={accountType === "square"}
+                            onClick={() => setAccountType("square")}
+                            className={`rounded-card border p-3.5 text-right outline-none transition-[border-color,background-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring ${
+                              accountType === "square"
+                                ? "border-brand bg-brand-muted shadow-xs"
+                                : "border-border bg-surface hover:bg-hover"
+                            }`}
+                          >
+                            <span className={`grid h-9 w-9 place-items-center rounded-xl ${accountType === "square" ? "bg-brand text-brand-foreground" : "bg-surface-muted text-icon-muted"}`}>
+                              <UsersRound aria-hidden="true" className="h-4.5 w-4.5" />
+                            </span>
+                            <strong className="mt-3 block text-xs font-black text-foreground">حساب میدان</strong>
+                            <span className="mt-1 block text-[10px] leading-5 text-muted-foreground">برای یک پایگاه یا میدان محلی</span>
+                          </button>
+                        </div>
+                      </fieldset>
+
+                      <Field label={accountType === "user" ? "نام و نام خانوادگی" : "نام میدان"}>
+                        <input
+                          className={inputClass}
+                          value={name}
+                          onChange={(event) => setName(event.target.value)}
+                          autoComplete={accountType === "user" ? "name" : "organization"}
+                          placeholder={accountType === "user" ? "نام کامل شما" : "نام میدان یا پایگاه"}
+                          required
+                        />
+                      </Field>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <SearchableSelect
+                          label="استان"
+                          placeholder="انتخاب استان"
+                          searchPlaceholder="جست‌وجوی استان…"
+                          options={provinces}
+                          value={provinceId}
+                          onChange={selectProvince}
+                          loading={provinceLoading}
+                          disabled={provinceLoading}
+                        />
+                        <SearchableSelect
+                          label="شهر"
+                          placeholder={provinceId ? "انتخاب شهر" : "ابتدا استان را انتخاب کنید"}
+                          searchPlaceholder="جست‌وجوی شهر…"
+                          options={cities}
+                          value={cityId}
+                          onChange={selectCity}
+                          loading={cityLoading}
+                          disabled={!provinceId || cityLoading}
+                        />
+                      </div>
+
+                      {accountType === "square" ? (
+                        <div className="space-y-3 rounded-card border border-border bg-surface-muted p-3.5">
+                          <div className="flex items-start gap-2.5 px-1">
+                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-muted text-brand">
+                              <MapPin aria-hidden="true" className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <p className="text-xs font-black text-foreground">موقعیت دقیق میدان</p>
+                              <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                                روی نقشه بزنید؛ آدرس، استان، شهر و مختصات به‌صورت خودکار تشخیص داده می‌شود.
+                              </p>
+                            </div>
+                          </div>
+                          <LocationPickerMap
+                            initialLocation={selectedLocation}
+                            onSelect={selectMapLocation}
+                          />
+                          {selectedLocation?.address ? (
+                            <p className="flex items-start gap-1.5 rounded-control bg-surface px-3 py-2.5 text-[11px] leading-6 text-foreground-secondary">
+                              <MapPin className="mt-1 h-3.5 w-3.5 shrink-0 text-brand" />
+                              {selectedLocation.address}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      <button disabled={registrationDisabled} className={primaryButtonClass}>
+                        {pending ? <LoaderCircle aria-hidden="true" className="h-4.5 w-4.5 animate-spin" /> : <ArrowLeft aria-hidden="true" className="h-4.5 w-4.5" />}
+                        {pending ? "در حال ساخت حساب…" : "تکمیل ثبت‌نام و ورود"}
+                      </button>
+                    </form>
+                  </>
+                ) : null}
+              </div>
+
+              {error ? (
+                <div role="alert" className="mt-5 flex items-start gap-2.5 rounded-card border border-danger-border bg-danger-surface p-3 text-danger">
+                  <CircleAlert aria-hidden="true" className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                  <p className="text-xs font-bold leading-6">{error}</p>
+                </div>
+              ) : null}
+
+              {notice ? (
+                <div role="status" className="mt-5 flex items-start gap-2.5 rounded-card border border-success-border bg-success-surface p-3 text-success-foreground">
+                  <Check aria-hidden="true" className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                  <p className="text-xs font-bold leading-6">{notice}</p>
+                </div>
+              ) : null}
+
+              <div className="mt-6 flex items-start gap-2.5 border-t border-divider pt-4 text-[10px] leading-6 text-muted-foreground">
+                <ShieldCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-icon-muted" />
+                <p>ورود با کد یک‌بارمصرف انجام می‌شود. کد تأیید فقط برای ورود شماست و نباید در اختیار فرد دیگری قرار بگیرد.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
