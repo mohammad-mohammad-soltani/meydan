@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
+import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import { actorKey, actorNumericId, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { getFeedPosts } from "../services/feed.service";
@@ -18,10 +20,14 @@ function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
 }
 
 function redirectToLogin() {
-  if (typeof window !== "undefined") window.location.assign("/auth");
+  if (typeof window === "undefined") return;
+  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  rememberReturnTo(returnTo);
+  window.location.assign(loginHref(returnTo));
 }
 
 export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSuggestion[]) {
+  const { requireAuth } = useAuthGate();
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
   const [remotePosts, setRemotePosts] = useState(initialPosts);
@@ -116,6 +122,7 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
   );
 
   const toggleLike = useCallback(async (postId: string) => {
+    if (!requireAuth()) return;
     const isOn = !likedPostIds.has(postId);
     const delta = isOn ? 1 : -1;
 
@@ -134,9 +141,10 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
       adjustLikeCount(postId, -delta);
       if (isAuthApiError(reason)) redirectToLogin();
     }
-  }, [adjustLikeCount, applyStats, likedPostIds]);
+  }, [adjustLikeCount, applyStats, likedPostIds, requireAuth]);
 
   const toggleRepost = useCallback(async (postId: string) => {
+    if (!requireAuth()) return;
     const isOn = !repostedPostIds.has(postId);
     setRepostedPostIds((current) => {
       const next = new Set(current);
@@ -150,9 +158,10 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
       setRepostedPostIds((current) => { const next = new Set(current); if (isOn) next.delete(postId); else next.add(postId); return next; });
       if (isAuthApiError(reason)) redirectToLogin();
     }
-  }, [applyStats, repostedPostIds]);
+  }, [applyStats, repostedPostIds, requireAuth]);
 
   const toggleFollow = useCallback(async (actorType: ActorType, actorId: string | number) => {
+    if (!requireAuth()) return;
     const id = actorNumericId(actorId);
     if (!id) return;
     const key = actorKey(actorType, id);
@@ -187,9 +196,10 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
         return next;
       });
     }
-  }, [activeTab, followedActorKeys, pendingFollowKeys, replacePosts]);
+  }, [activeTab, followedActorKeys, pendingFollowKeys, replacePosts, requireAuth]);
 
   const joinInitiative = useCallback(async (postId: string) => {
+    if (!requireAuth()) return;
     const post = remotePosts.find((item) => item.id === postId);
     if (!post?.initiativeId) return;
     setJoinedPostIds((current) => new Set(current).add(postId));
@@ -199,7 +209,7 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
       setJoinedPostIds((current) => { const next = new Set(current); next.delete(postId); return next; });
       if (isAuthApiError(reason)) redirectToLogin();
     }
-  }, [remotePosts]);
+  }, [remotePosts, requireAuth]);
 
   const sharePost = useCallback(async (post: FeedPost) => {
     const text = post.title + " — " + post.body;
