@@ -24,7 +24,8 @@ export function ProfileView({ initialProfile, canManage = true }: { initialProfi
   return (
     <section id="view-combined-profile" className="min-h-dvh bg-background pb-20 text-foreground">
       <div className="mx-auto w-full max-w-2xl border-x border-divider bg-surface">
-        <ProfileHeader profile={profile.profile} canEdit={canManage} isFollowing={profile.isFollowing} isFollowLoading={profile.isFollowLoading} followStateReady={profile.followStateReady} onToggleFollow={() => void profile.toggleFollowing()} />
+        <ProfileHeader profile={profile.profile} canEdit={canManage} isFollowing={profile.isFollowing} isFollowLoading={profile.isFollowLoading} followStateReady={profile.followStateReady} isChatOpening={profile.isChatOpening} onToggleFollow={() => void profile.toggleFollowing()} onMessage={() => void profile.openChat()} />
+        {profile.chatError ? <p role="alert" className="border-b border-divider bg-danger-surface px-4 py-2 text-xs text-danger-foreground">{profile.chatError}</p> : null}
         <ProfileInfo profile={profile.profile} tab={profile.selectedTab} expandedSections={profile.expandedSections} onToggleSection={profile.toggleSection} />
         {isSquareAccount ? <SquareLocationCard profile={profile.profile} /> : null}
         {isSquareAccount ? <SquareSchedule items={profile.profile.schedule} canManage={canManage} /> : null}
