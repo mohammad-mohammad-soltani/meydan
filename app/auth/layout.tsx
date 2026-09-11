@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BottomNavigation } from "@/components/layouts/BottomNavigation";
+import { AuthReturnToCapture } from "@/components/providers/AuthReturnToBridge";
 import { isAuthenticated } from "@/lib/meydan-session";
 
 export default async function AuthLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -7,6 +8,7 @@ export default async function AuthLayout({ children }: Readonly<{ children: Reac
 
   return (
     <div className="relative min-h-[100dvh] pb-16">
+      <AuthReturnToCapture />
       {children}
       <div className="fixed inset-x-0 bottom-0 z-50 lg:hidden">
         <BottomNavigation isAuthenticated={authenticated} />
