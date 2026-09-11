@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
+  SESSION_MAX_AGE,
   sessionCookieOptions,
 } from "@/lib/meydan-session";
 import { getMeydanApiBaseUrl } from "@/lib/meydan-api";
@@ -89,13 +90,13 @@ export async function POST(request: NextRequest, context: RouteContext<"/api/aut
   if (parsed.data?.access_token) {
     result.cookies.set(ACCESS_COOKIE, parsed.data.access_token, {
       ...sessionCookieOptions,
-      maxAge: 15 * 60,
+      maxAge: SESSION_MAX_AGE,
     });
   }
   if (refresh) {
     result.cookies.set(REFRESH_COOKIE, refresh, {
       ...sessionCookieOptions,
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: SESSION_MAX_AGE,
     });
   }
   if (action === "logout" && response.ok) {
