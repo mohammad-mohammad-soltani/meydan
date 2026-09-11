@@ -66,13 +66,18 @@ export function requiresClientAuthentication(path: string, init?: RequestInit): 
   );
 }
 
+function redirectClientToLogin(): void {
+  if (typeof window === "undefined") return;
+  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  rememberReturnTo(returnTo);
+  window.location.assign(loginHref(returnTo));
+}
+
 function redirectProtectedClientRequest(path: string, init?: RequestInit): void {
   if (typeof window === "undefined" || !requiresClientAuthentication(path, init)) return;
   if (document.documentElement.dataset.meydanAuthenticated === "true") return;
 
-  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-  rememberReturnTo(returnTo);
-  window.location.assign(loginHref(returnTo));
+  redirectClientToLogin();
   throw new MeydanApiError("Authentication required", 401);
 }
 
@@ -104,6 +109,14 @@ export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T>
   }
 
   if (!response.ok) {
+    if (
+      typeof window !== "undefined" &&
+      (response.status === 401 || response.status === 403) &&
+      requiresClientAuthentication(path, init)
+    ) {
+      redirectClientToLogin();
+    }
+
     const envelopeMessage =
       "error" in body && body.error?.message ? body.error.message : undefined;
     const wordpressMessage =
