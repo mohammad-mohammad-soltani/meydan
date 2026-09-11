@@ -9,8 +9,10 @@ on:
       - "features/auth/**"
       - "features/profile/components/LocationPickerMap.tsx"
       - "lib/meydan-session.ts"
+      - "lib/meydan-session-config.ts"
       - "tests/registration.test.mjs"
       - "tests/session-cookie.test.mjs"
+      - "tests/map-theme.test.mjs"
       - "package.json"
       - ".github/workflows/signup-flow-ci.yml"
   pull_request:
@@ -21,8 +23,10 @@ on:
       - "features/auth/**"
       - "features/profile/components/LocationPickerMap.tsx"
       - "lib/meydan-session.ts"
+      - "lib/meydan-session-config.ts"
       - "tests/registration.test.mjs"
       - "tests/session-cookie.test.mjs"
+      - "tests/map-theme.test.mjs"
       - "package.json"
       - ".github/workflows/signup-flow-ci.yml"
 
@@ -43,5 +47,9 @@ jobs:
         run: npm run test:registration
       - name: Session cookie tests
         run: npm run test:session
+      - name: Existing map tests
+        run: npm run test:map
+      - name: Lint frontend
+        run: npm run lint
       - name: Build frontend
         run: npm run build
