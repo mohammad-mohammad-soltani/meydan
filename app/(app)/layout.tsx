@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/layouts/AppShell";
+import { AuthGateProvider } from "@/components/providers/AuthGateProvider";
 import { AudioProvider } from "@/features/audio/AudioProvider";
 import { isAuthenticated } from "@/lib/meydan-session";
 
@@ -7,8 +8,10 @@ export default async function AppLayout({ children }: Readonly<{ children: React
   const authenticated = await isAuthenticated();
 
   return (
-    <AudioProvider>
-      <AppShell isAuthenticated={authenticated}>{children}</AppShell>
-    </AudioProvider>
+    <AuthGateProvider isAuthenticated={authenticated}>
+      <AudioProvider>
+        <AppShell isAuthenticated={authenticated}>{children}</AppShell>
+      </AudioProvider>
+    </AuthGateProvider>
   );
 }
