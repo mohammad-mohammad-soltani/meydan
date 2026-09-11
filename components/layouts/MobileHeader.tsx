@@ -1,34 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Moon, Sun } from "lucide-react";
+import { ThemeMenu } from "./ThemeMenu";
 
 export function MobileHeader() {
   const pathname = usePathname();
-  const [isDark, setIsDark] = useState(true);
   const isConversationRoute = pathname.startsWith("/chat/");
   const isContentDetailRoute = pathname.startsWith("/content/");
   const isPostRoute = pathname.startsWith("/posts/");
   const isExploreRoute = pathname === "/explore";
   const isProfileRoute = pathname === "/profile" || pathname.startsWith("/profile/");
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("meydan-theme");
-    const dark = saved !== "light";
-    document.documentElement.classList.toggle("dark", dark);
-    document.documentElement.style.colorScheme = dark ? "dark" : "light";
-    queueMicrotask(() => setIsDark(dark));
-  }, []);
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    document.documentElement.classList.toggle("dark", next);
-    document.documentElement.style.colorScheme = next ? "dark" : "light";
-    window.localStorage.setItem("meydan-theme", next ? "dark" : "light");
-    setIsDark(next);
-  };
 
   if (pathname === "/chat" || isConversationRoute || isContentDetailRoute || isPostRoute || isExploreRoute || isProfileRoute) return null;
 
@@ -42,9 +24,7 @@ export function MobileHeader() {
         </span>
       </Link>
       <div className="flex shrink-0 items-center gap-2">
-        <button type="button" onClick={toggleTheme} aria-label={isDark ? "فعال‌کردن حالت روشن" : "فعال‌کردن حالت تیره"} className="grid h-11 w-11 place-items-center rounded-full border border-border bg-surface-muted text-icon transition-colors hover:bg-hover hover:text-warning">
-          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
+        <ThemeMenu />
       </div>
     </header>
   );
