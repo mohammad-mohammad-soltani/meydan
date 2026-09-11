@@ -40,7 +40,7 @@ export function PostActions({ postId, likes, comments, views, liked, onLike, onS
         <Eye className="h-[17px] w-[17px]" /><span className="text-xs">{formatCount(views)}</span>
       </span>
       <button type="button" onClick={(event) => { event.stopPropagation(); onLike(); }} aria-label="پسندیدن روایت" aria-pressed={liked} className={`${actionBase} hover:bg-brand-muted ${liked ? "text-brand" : "hover:text-brand"}`}>
-        <Heart className={`h-[17px] w-[17px] ${liked ? "fill-current" : ""}`} /><span className="text-xs">{formatCount(likes + (liked ? 1 : 0))}</span>
+        <Heart className={`h-[17px] w-[17px] ${liked ? "fill-current" : ""}`} /><span className="text-xs">{formatCount(likes)}</span>
       </button>
     </div>
   );
