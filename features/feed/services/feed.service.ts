@@ -81,8 +81,36 @@ function numericActorId(value?: string): number {
   return Number(match?.[1] || 0);
 }
 
+function mediaReflectionSummary(reflections: NonNullable<ApiNarrative["media_reflections"]>): string {
+  const outlets = Array.from(
+    new Set(
+      reflections
+        .map((reflection) => reflection.outlet?.trim())
+        .filter((outlet): outlet is string => Boolean(outlet)),
+    ),
+  );
+
+  if (!outlets.length) return "";
+
+  if (outlets.length === 1) {
+    return `بازنشر شده در ${outlets[0]}`;
+  }
+
+  if (outlets.length === 2) {
+    return `بازنشر شده در ${outlets[0]} و ${outlets[1]}`;
+  }
+
+  if (outlets.length === 3) {
+    return `بازنشر شده در ${outlets[0]}، ${outlets[1]} و ${outlets[2]}`;
+  }
+
+  return `بازنشر شده در ${outlets[0]}، ${outlets[1]}، ${outlets[2]} و ${(outlets.length - 3).toLocaleString("fa-IR")} رسانه دیگر`;
+}
+
 function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): FeedPost {
-  const reflection = item.media_reflections?.[0];
+  const reflections = item.media_reflections || [];
+  const reflection = reflections[0];
+  const reflectionSummary = mediaReflectionSummary(reflections);
   const visual = item.attachments?.some(
     (attachment) => attachment.type === "image" || attachment.type === "video",
   );
@@ -128,7 +156,11 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
       height: attachment.height,
     })),
     mediaReflection: reflection
-      ? { outlet: reflection.outlet, headline: reflection.title, url: reflection.url }
+      ? {
+          outlet: reflection.outlet,
+          headline: reflectionSummary || reflection.title,
+          url: reflections.length === 1 ? reflection.url : undefined,
+        }
       : undefined,
     stats: {
       likes: item.stats?.likes || 0,
