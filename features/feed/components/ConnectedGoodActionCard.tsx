@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useState } from "react";
 import { BadgeCheck, Check, HandHeart, LoaderCircle, Plus, UsersRound, X } from "lucide-react";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
+import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 
 type InitiativeParticipant = {
@@ -36,7 +38,10 @@ function numericActorId(value: string): number {
 }
 
 function redirectToLogin() {
-  if (typeof window !== "undefined") window.location.assign("/auth");
+  if (typeof window === "undefined") return;
+  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  rememberReturnTo(returnTo);
+  window.location.assign(loginHref(returnTo));
 }
 
 export function ConnectedGoodActionCard({
@@ -50,6 +55,7 @@ export function ConnectedGoodActionCard({
   initialJoined: boolean;
   initialParticipantCount?: number;
 }) {
+  const { requireAuth } = useAuthGate();
   const [joined, setJoined] = useState(initialJoined);
   const [participantCount, setParticipantCount] = useState<number | null>(initialParticipantCount ?? null);
   const [isToggling, setIsToggling] = useState(false);
@@ -92,7 +98,7 @@ export function ConnectedGoodActionCard({
   };
 
   const toggleJoin = async () => {
-    if (isToggling) return;
+    if (isToggling || !requireAuth()) return;
 
     const previousJoined = joined;
     const previousCount = participantCount;
