@@ -48,14 +48,16 @@ export function requiresClientAuthentication(path: string, init?: RequestInit): 
     return new URLSearchParams(query).get("mode") === "following";
   }
 
-  // Sharing can remain a public browser action even when analytics recording fails.
+  // Sharing and public download analytics should not force a login.
   if (/^\/narratives\/[^/]+\/share$/.test(cleanPath)) return false;
+  if (/^\/content\/[^/]+\/(share|files\/[^/]+\/download)$/.test(cleanPath)) return false;
 
   return (
     cleanPath === "/narratives" ||
     /^\/narratives\/[^/]+\/(like|repost|comments)$/.test(cleanPath) ||
     /^\/actors\/[^/]+\/[^/]+\/follow$/.test(cleanPath) ||
     /^\/initiatives\/[^/]+\/join$/.test(cleanPath) ||
+    /^\/content\/[^/]+\/bookmark$/.test(cleanPath) ||
     cleanPath.startsWith("/chat/") ||
     cleanPath === "/chat" ||
     cleanPath.startsWith("/uploads") ||
