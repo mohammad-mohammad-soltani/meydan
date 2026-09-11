@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import type { PostComment, PostDetail } from "../types";
 
@@ -16,6 +16,33 @@ export function usePost(post: PostDetail) {
   const [isLiveJoined, setIsLiveJoined] = useState(false);
   const [isLoading] = useState(false);
   const [counts, setCounts] = useState({ likes: post.likes, reposts: post.reposts, comments: post.commentsCount });
+
+  // بعد از refresh مقدار viewer_state را دوباره از API می‌گیریم.
+  // قبلاً عدد لایک درست بود ولی state کاربر از props اولیه false می‌ماند.
+  useEffect(() => {
+    let active = true;
+
+    meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number }; viewer_state?: { liked?: boolean; reposted?: boolean } }>(`/narratives/${post.id}`)
+      .then((result) => {
+        if (!active) return;
+
+        setLiked(Boolean(result.viewer_state?.liked));
+        setReposted(Boolean(result.viewer_state?.reposted));
+
+        if (result.stats) {
+          setCounts((current) => ({
+            likes: result.stats?.likes ?? current.likes,
+            reposts: result.stats?.reposts ?? current.reposts,
+            comments: result.stats?.comments ?? current.comments,
+          }));
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [post.id]);
 
   const submitComment = async () => {
     const content = commentDraft.trim();
@@ -42,7 +69,7 @@ export function usePost(post: PostDetail) {
     const next = !liked;
     setLiked(next);
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${post.id}/like`, { method: next ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${post.id}/like`, { method: next ? "PUT" : "DELETE" });
       if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, comments: result.stats?.comments ?? current.comments }));
     } catch (reason) {
       setLiked(!next);
@@ -54,7 +81,7 @@ export function usePost(post: PostDetail) {
     const next = !reposted;
     setReposted(next);
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${post.id}/repost`, { method: next ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${post.id}/repost`, { method: next ? "PUT" : "DELETE" });
       if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, comments: result.stats?.comments ?? current.comments }));
     } catch (reason) {
       setReposted(!next);
