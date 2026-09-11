@@ -1,0 +1,98 @@
+html.black {
+  color-scheme: dark;
+
+  /* Pure-black canvas and surfaces. Separation comes from borders/opacity. */
+  --background: #000000;
+  --foreground: #f7f7f7;
+  --foreground-secondary: #d4d4d4;
+  --foreground-subtle: #9a9a9a;
+  --on-solid: #ffffff;
+  --on-light: #171717;
+  --solid-dark: #000000;
+  --solid-light: #ffffff;
+
+  --surface: #000000;
+  --surface-muted: #000000;
+  --surface-elevated: #000000;
+  --surface-sunken: #000000;
+  --surface-glass: rgb(0 0 0 / .92);
+  --card: #000000;
+  --card-foreground: var(--foreground);
+  --popover: #000000;
+  --popover-foreground: var(--foreground);
+
+  --border: #282828;
+  --border-strong: #3b3b3b;
+  --divider: #202020;
+
+  --input: #000000;
+  --input-hover: #000000;
+  --input-border: #343434;
+  --input-border-hover: #505050;
+  --placeholder: #858585;
+
+  --muted: #000000;
+  --muted-foreground: #a3a3a3;
+  --icon: #d4d4d4;
+  --icon-muted: #8f8f8f;
+
+  --hover: rgb(255 255 255 / .075);
+  --active: rgb(255 255 255 / .12);
+  --selected: rgb(239 68 68 / .18);
+  --selected-foreground: #f87171;
+  --disabled: #000000;
+  --disabled-foreground: #6f6f6f;
+  --ring: #ef4444;
+  --selection-bg: rgb(239 68 68 / .26);
+  --link: #f87171;
+  --link-hover: #fca5a5;
+
+  --brand: #ef4444;
+  --brand-hover: #dc2626;
+  --brand-active: #b91c1c;
+  --brand-muted: rgb(239 68 68 / .14);
+  --brand-border: rgb(239 68 68 / .38);
+  --brand-foreground: #ffffff;
+
+  --success: #34d399;
+  --success-foreground: #6ee7b7;
+  --success-surface: rgb(16 185 129 / .13);
+  --success-border: rgb(52 211 153 / .32);
+  --warning: #fbbf24;
+  --warning-foreground: #fcd34d;
+  --warning-surface: rgb(245 158 11 / .13);
+  --warning-border: rgb(251 191 36 / .32);
+  --danger: #f87171;
+  --danger-foreground: #fca5a5;
+  --danger-surface: rgb(239 68 68 / .13);
+  --danger-border: rgb(248 113 113 / .34);
+  --info: #60a5fa;
+  --info-foreground: #93c5fd;
+  --info-surface: rgb(59 130 246 / .13);
+  --info-border: rgb(96 165 250 / .32);
+  --accent: #a78bfa;
+  --accent-foreground: #c4b5fd;
+  --accent-surface: rgb(167 139 250 / .15);
+  --accent-border: rgb(167 139 250 / .32);
+  --verified: #60a5fa;
+  --verified-surface: rgb(96 165 250 / .15);
+
+  --message-own: #13271d;
+  --message-own-foreground: #f0fff6;
+  --message-peer: #000000;
+  --message-peer-foreground: #f5f5f5;
+  --message-meta: #a3a3a3;
+
+  --overlay: rgb(0 0 0 / .72);
+  --scrim: rgb(0 0 0 / .84);
+  --skeleton: #121212;
+  --skeleton-highlight: #242424;
+
+  --elevation-xs: 0 1px 2px rgb(0 0 0 / .55);
+  --elevation-sm: 0 3px 10px rgb(0 0 0 / .62);
+  --elevation-card: 0 8px 24px rgb(0 0 0 / .68);
+  --elevation-popover: 0 14px 36px rgb(0 0 0 / .74);
+  --elevation-floating: 0 20px 52px rgb(0 0 0 / .78);
+  --elevation-dialog: 0 28px 72px rgb(0 0 0 / .82);
+  --elevation-inset: inset 0 1px 2px rgb(255 255 255 / .035);
+}
