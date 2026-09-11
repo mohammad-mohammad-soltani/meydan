@@ -1,7 +1,8 @@
-/* eslint-disable @next/next/no-img-element -- Message attachments use temporary local blob URLs. */
-import { CheckCheck, Clock3, Copy, CornerUpRight, FileText, Forward, MoreVertical, Pencil, Trash2, TriangleAlert } from "lucide-react";
+/* eslint-disable @next/next/no-img-element -- Chat media can use authenticated/uploaded runtime URLs. */
+import { CheckCheck, Clock3, Copy, CornerUpRight, Download, FileText, Forward, MoreVertical, Music2, Pencil, Trash2, TriangleAlert } from "lucide-react";
 import { useRef, useState } from "react";
-import type { ChatMessage, MessageStatus } from "../types";
+import { attachmentSource, classifyChatAttachment } from "../chat-utils";
+import type { ChatAttachment, ChatMessage, MessageStatus } from "../types";
 
 const statusIcon: Record<MessageStatus, typeof CheckCheck> = { sending: Clock3, sent: CheckCheck, failed: TriangleAlert };
 const quickReactions = ["👍", "❤️", "😂", "🔥"];
@@ -19,6 +20,38 @@ type MessageBubbleProps = {
 
 function formatFileSize(size: number) { return size < 1024 * 1024 ? `${Math.max(1, Math.round(size / 1024))} کیلوبایت` : `${(size / (1024 * 1024)).toFixed(1)} مگابایت`; }
 
+function MessageAttachment({ attachment }: { attachment: ChatAttachment }) {
+  const kind = classifyChatAttachment(attachment);
+  const source = attachmentSource(attachment);
+
+  if (kind === "image" && source) {
+    return <a href={source} target="_blank" rel="noreferrer" className="mb-1.5 block overflow-hidden rounded-xl"><img src={source} alt={attachment.name} className="max-h-[26rem] w-full object-cover" /></a>;
+  }
+
+  if (kind === "video" && source) {
+    return <video src={source} controls playsInline preload="metadata" className="mb-1.5 max-h-[26rem] w-full rounded-xl bg-black" aria-label={attachment.name} />;
+  }
+
+  if (kind === "audio" && source) {
+    return (
+      <div className="mb-1.5 min-w-[240px] rounded-xl bg-active p-2.5">
+        <div className="mb-2 flex items-center gap-2 text-xs"><Music2 className="h-4 w-4 shrink-0" /><span className="min-w-0 flex-1 truncate">{attachment.name}</span><span className="text-[10px] opacity-70">{formatFileSize(attachment.size)}</span></div>
+        <audio src={source} controls preload="metadata" className="h-9 w-full" aria-label={attachment.name} />
+      </div>
+    );
+  }
+
+  const card = (
+    <div className="mb-1.5 flex min-w-[220px] items-center gap-2 rounded-xl bg-active p-2.5">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-glass text-icon-muted"><FileText className="h-5 w-5" /></span>
+      <span className="min-w-0 flex-1 text-right"><strong className="block truncate text-xs">{attachment.name}</strong><small className="block text-[10px] opacity-70">{formatFileSize(attachment.size)}</small></span>
+      {source ? <Download className="h-4 w-4 shrink-0 opacity-70" /> : null}
+    </div>
+  );
+
+  return source ? <a href={source} target="_blank" rel="noreferrer" download={attachment.name} className="block">{card}</a> : card;
+}
+
 export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelete, onForward, onReact }: MessageBubbleProps) {
   const StatusIcon = statusIcon[message.status];
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,10 +65,10 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
   return (
     <div className={`group relative flex ${isOwn ? "justify-start" : "justify-end"}`} onContextMenu={(event) => { event.preventDefault(); openMenu(); }} onPointerDown={longPressStart} onPointerUp={longPressEnd} onPointerCancel={longPressEnd}>
       <article className={`relative max-w-[84%] rounded-2xl px-3 py-2 text-[13px] leading-6 shadow-sm ${isOwn ? "rounded-tr-md bg-message-own text-message-own-foreground" : "rounded-tl-md bg-message-peer text-message-peer-foreground"}`}>
-        <button type="button" aria-label="گزینه‌های پیام" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="absolute left-1 top-1 grid h-7 w-7 place-items-center rounded-full opacity-0 transition hover:bg-hover focus:opacity-100 group-hover:opacity-100"><MoreVertical className="h-4 w-4" /></button>
+        <button type="button" aria-label="گزینه‌های پیام" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="absolute left-1 top-1 z-10 grid h-7 w-7 place-items-center rounded-full bg-surface-glass/70 opacity-0 transition hover:bg-hover focus:opacity-100 group-hover:opacity-100"><MoreVertical className="h-4 w-4" /></button>
         {message.forwardedFrom ? <p className="mb-1 text-[10px] font-semibold text-success">فورواردشده از {message.forwardedFrom}</p> : null}
         {message.replyTo ? <div className={`mb-1.5 border-r-2 pr-2 text-[11px] leading-4 ${isOwn ? "border-success-border text-message-meta" : "border-info-border text-message-meta"}`}><strong className="block text-[10px]">{message.replyTo.senderName}</strong><span className="block line-clamp-1">{message.replyTo.body}</span></div> : null}
-        {message.attachment ? message.attachment.previewUrl ? <img src={message.attachment.previewUrl} alt={message.attachment.name} className="mb-1.5 max-h-64 w-full rounded-xl object-cover" /> : <div className="mb-1.5 flex items-center gap-2 rounded-xl bg-active p-2"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-surface-glass text-icon-muted"><FileText className="h-5 w-5" /></span><span className="min-w-0 text-right"><strong className="block truncate text-xs">{message.attachment.name}</strong><small className="block text-[10px] opacity-70">{formatFileSize(message.attachment.size)}</small></span></div> : null}
+        {message.attachment ? <MessageAttachment attachment={message.attachment} /> : null}
         {message.body ? <p className="whitespace-pre-wrap">{message.body}</p> : null}
         {message.reactions?.length ? <div className="mt-1 flex flex-wrap gap-1">{message.reactions.map((reaction) => <button key={reaction} type="button" aria-label={`حذف واکنش ${reaction}`} onClick={() => onReact(message.id, reaction)} className="rounded-full bg-surface-glass px-1.5 py-0.5 text-xs shadow-xs">{reaction}</button>)}</div> : null}
         <footer className="mt-0.5 flex items-center justify-end gap-1 text-[10px] leading-4 text-message-meta"><time>{message.sentAt}</time>{message.editedAt ? <span>ویرایش‌شده</span> : null}{isOwn ? <StatusIcon className="h-3.5 w-3.5" aria-label={message.status} /> : null}</footer>
