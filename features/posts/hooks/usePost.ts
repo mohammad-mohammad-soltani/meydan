@@ -1,14 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
+import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import type { PostComment, PostDetail } from "../types";
 
 function redirectToLogin() {
-  if (typeof window !== "undefined") window.location.assign("/auth");
+  if (typeof window === "undefined") return;
+  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  rememberReturnTo(returnTo);
+  window.location.assign(loginHref(returnTo));
 }
 
 export function usePost(post: PostDetail) {
+  const { requireAuth } = useAuthGate();
   const [liked, setLiked] = useState(Boolean(post.viewerState?.liked));
   const [reposted, setReposted] = useState(Boolean(post.viewerState?.reposted));
   const [comments, setComments] = useState<PostComment[]>(post.comments);
@@ -34,6 +40,7 @@ export function usePost(post: PostDetail) {
   }, [post.id]);
 
   const submitComment = async () => {
+    if (!requireAuth(`/posts/${post.id}#comment-composer`)) return;
     const content = commentDraft.trim();
     if (!content) return;
     setCommentDraft("");
@@ -55,6 +62,7 @@ export function usePost(post: PostDetail) {
   };
 
   const toggleLike = async () => {
+    if (!requireAuth(`/posts/${post.id}`)) return;
     const next = !liked;
     const delta = next ? 1 : -1;
 
@@ -72,6 +80,7 @@ export function usePost(post: PostDetail) {
   };
 
   const toggleRepost = async () => {
+    if (!requireAuth(`/posts/${post.id}`)) return;
     const next = !reposted;
     setReposted(next);
     try {
@@ -83,5 +92,9 @@ export function usePost(post: PostDetail) {
     }
   };
 
-  return { post, comments, commentDraft, counts, liked, reposted, isLiveJoined, isLoading, setCommentDraft, toggleLike, toggleRepost, submitComment, share, joinLive: () => setIsLiveJoined(true) };
+  const joinLive = () => {
+    if (requireAuth(`/posts/${post.id}`)) setIsLiveJoined(true);
+  };
+
+  return { post, comments, commentDraft, counts, liked, reposted, isLiveJoined, isLoading, setCommentDraft, toggleLike, toggleRepost, submitComment, share, joinLive };
 }
