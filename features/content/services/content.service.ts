@@ -213,6 +213,18 @@ function toDetail(item: ApiContent): ContentDetailItem {
   };
 }
 
+function normalizeContentIdentifier(value: string): string {
+  let decoded = value;
+
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    // Keep malformed or already-decoded slugs comparable instead of failing the page.
+  }
+
+  return decoded.normalize("NFC");
+}
+
 async function rawContent(): Promise<ApiContent[]> {
   return meydanApi<ApiContent[]>("/content");
 }
@@ -225,8 +237,13 @@ export async function getContentDetailById(
   id: string,
 ): Promise<ContentDetailItem | undefined> {
   const list = await rawContent();
+  const normalizedId = normalizeContentIdentifier(id);
   const match = list.find(
-    (item) => item.slug === id || String(item.id) === id,
+    (item) =>
+      String(item.id) === id ||
+      (item.slug
+        ? normalizeContentIdentifier(item.slug) === normalizedId
+        : false),
   );
   if (!match) return undefined;
   const detail = await meydanApi<ApiContent>(`/content/${match.id}`);
