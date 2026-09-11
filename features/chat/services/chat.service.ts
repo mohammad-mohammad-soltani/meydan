@@ -4,11 +4,20 @@ import type { ChatAttachment, ChatMessage, ChatNotification, Conversation, Socke
 type ApiConversation = {
   id: string | number;
   type?: "direct" | "group";
-  participant: { id: string | number; name: string; handle: string; avatar_url?: string | null; verified?: boolean };
+  participant: {
+    id: string | number;
+    name: string;
+    handle: string;
+    avatar_url?: string | null;
+    verified?: boolean;
+    profile_type?: "user" | "square";
+    profile_id?: string | number;
+  };
   preview?: string;
   updated_at?: string;
   unread_count?: number;
   last_message_id?: string | number | null;
+  notifications_muted?: boolean;
 };
 
 type ApiMessage = {
@@ -55,11 +64,14 @@ function mapConversation(item: ApiConversation): Conversation {
       avatarTone: avatarTone(id),
       avatarUrl: item.participant.avatar_url || undefined,
       isVerified: Boolean(item.participant.verified),
+      profileType: item.participant.profile_type || "user",
+      profileId: item.participant.profile_id ? String(item.participant.profile_id) : id,
     },
     preview: item.preview || "گفتگوی جدید",
     updatedAt: timeLabel(item.updated_at),
     unreadCount: Number(item.unread_count || 0),
     lastMessageId: item.last_message_id ? String(item.last_message_id) : undefined,
+    notificationsMuted: Boolean(item.notifications_muted),
   };
 }
 
@@ -115,11 +127,42 @@ export async function getConversationById(conversationId: string): Promise<Conve
   }
 }
 
-export async function getMessages(conversationId: string, beforeId?: string): Promise<ChatMessage[]> {
-  const params = new URLSearchParams({ limit: "50" });
+export async function getMessages(conversationId: string, beforeId?: string, limit = 50): Promise<ChatMessage[]> {
+  const params = new URLSearchParams({ limit: String(Math.min(100, Math.max(1, limit))) });
   if (beforeId) params.set("before_id", beforeId);
   const result = await meydanApi<ApiMessage[]>(`/chat/conversations/${conversationId}/messages?${params}`);
   return result.map(mapMessage);
+}
+
+export async function getConversationHistory(conversationId: string, maxMessages = 300): Promise<ChatMessage[]> {
+  const history: ChatMessage[] = [];
+  let beforeId: string | undefined;
+  while (history.length < maxMessages) {
+    const remaining = maxMessages - history.length;
+    const page = await getMessages(conversationId, beforeId, Math.min(100, remaining));
+    if (!page.length) break;
+    history.unshift(...page);
+    if (page.length < Math.min(100, remaining)) break;
+    beforeId = page[0]?.id;
+    if (!beforeId) break;
+  }
+  const unique = new Map(history.map((message) => [message.id, message]));
+  return [...unique.values()].sort((a, b) => Number(a.id) - Number(b.id));
+}
+
+export async function searchConversationMessages(conversationId: string, query: string): Promise<ChatMessage[]> {
+  const params = new URLSearchParams({ q: query, limit: "100" });
+  const result = await meydanApi<ApiMessage[]>(`/chat/conversations/${conversationId}/search?${params}`);
+  return result.map(mapMessage);
+}
+
+export async function setConversationMuted(conversationId: string, muted: boolean): Promise<Conversation> {
+  const result = await meydanApi<ApiConversation>(`/chat/conversations/${conversationId}/mute`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ muted }),
+  });
+  return mapConversation(result);
 }
 
 export async function uploadChatAttachment(file: File): Promise<ChatAttachment> {
