@@ -54,17 +54,19 @@ export function ChatUserInfo({
           </div>
         </section>
 
-        <section className="mx-4 overflow-hidden rounded-[1.6rem] border border-border bg-surface shadow-sm sm:mx-auto sm:max-w-xl">
-          <div className="flex items-center gap-3 border-b border-divider px-4 py-3.5">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-info-surface text-info"><AtSign className="h-5 w-5" /></span>
-            <div className="min-w-0 flex-1 text-right"><strong className="block truncate text-sm text-foreground">{participant.handle}</strong><small className="text-xs text-muted-foreground">نام کاربری</small></div>
-          </div>
-          <button type="button" onClick={onToggleMute} className="flex w-full items-center gap-3 px-4 py-3.5 text-right hover:bg-hover">
-            <span className={`grid h-10 w-10 place-items-center rounded-xl ${muted ? "bg-danger-surface text-danger" : "bg-success-surface text-success"}`}>{muted ? <BellOff className="h-5 w-5" /> : <Bell className="h-5 w-5" />}</span>
-            <span className="min-w-0 flex-1"><strong className="block text-sm text-foreground">اعلان‌ها</strong><small className="text-xs text-muted-foreground">{muted ? "بی‌صدا" : "فعال"}</small></span>
-            <span aria-hidden="true" className={`relative h-7 w-12 rounded-full transition-colors ${muted ? "bg-surface-muted" : "bg-verified"}`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${muted ? "right-1" : "right-6"}`} /></span>
-          </button>
-        </section>
+        <div className="w-full flex justify-center">
+          <section className="mx-4 overflow-hidden rounded-[1.6rem] border border-border bg-surface shadow-sm w-9/10">
+            <div className="flex items-center gap-3 border-b border-divider px-4 py-3.5">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-info-surface text-info"><AtSign className="h-5 w-5" /></span>
+              <div className="min-w-0 flex-1 text-right"><strong className="block truncate text-sm text-foreground">{participant.handle}</strong><small className="text-xs text-muted-foreground">نام کاربری</small></div>
+            </div>
+            <button type="button" onClick={onToggleMute} className="flex w-full items-center gap-3 px-4 py-3.5 text-right hover:bg-hover">
+              <span className={`grid h-10 w-10 place-items-center rounded-xl ${muted ? "bg-danger-surface text-danger" : "bg-success-surface text-success"}`}>{muted ? <BellOff className="h-5 w-5" /> : <Bell className="h-5 w-5" />}</span>
+              <span className="min-w-0 flex-1"><strong className="block text-sm text-foreground">اعلان‌ها</strong><small className="text-xs text-muted-foreground">{muted ? "بی‌صدا" : "فعال"}</small></span>
+              <span aria-hidden="true" className={`relative h-7 w-12 rounded-full transition-colors ${muted ? "bg-surface-muted" : "bg-verified"}`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${muted ? "right-1" : "right-6"}`} /></span>
+            </button>
+          </section>
+        </div>
 
         <section className="mt-5 border-t border-divider">
           <div className="sticky top-0 z-10 mx-auto grid max-w-2xl grid-cols-3 bg-background/95 p-2 backdrop-blur">
