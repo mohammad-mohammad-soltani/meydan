@@ -12,6 +12,7 @@ import {
   markConversationRead,
   sendMessage,
   setMessageReaction,
+  uploadChatAttachment,
 } from "../services/chat.service";
 import type { ChatAttachment, ChatMessage, Conversation, MessageReply } from "../types";
 
@@ -60,6 +61,7 @@ export function useConversation(conversationId: string, initialConversation: Con
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<ChatAttachment | null>(null);
+  const [pendingAttachmentFile, setPendingAttachmentFile] = useState<File | null>(null);
   const [replyingTo, setReplyingTo] = useState<MessageReply | null>(null);
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
   const [messageToDelete, setMessageToDelete] = useState<ChatMessage | null>(null);
@@ -89,7 +91,7 @@ export function useConversation(conversationId: string, initialConversation: Con
   }, [conversationId]);
 
   useEffect(() => {
-    if (!conversation || !currentUserId) return;
+    if (!conversation?.id || !currentUserId) return;
     let disposed = false;
     let socketRef: Awaited<ReturnType<typeof getChatSocket>> | null = null;
 
@@ -151,7 +153,7 @@ export function useConversation(conversationId: string, initialConversation: Con
       socketRef.off("connect", onConnect);
       socketRef.off("disconnect", onDisconnect);
     };
-  }, [conversation, conversationId, currentUserId]);
+  }, [conversation?.id, conversationId, currentUserId]);
 
   useEffect(() => {
     if (!currentUserId || !messages.length) return;
@@ -162,7 +164,7 @@ export function useConversation(conversationId: string, initialConversation: Con
   }, [conversationId, currentUserId, messages]);
 
   useEffect(() => {
-    if (!currentUserId || !conversation) return;
+    if (!currentUserId || !conversation?.id) return;
     void getChatSocket().then((socket) => {
       if (!socket.connected) return;
       if (input.trim()) {
@@ -173,12 +175,15 @@ export function useConversation(conversationId: string, initialConversation: Con
         socket.emit("typing:stop", { conversationId });
       }
     }).catch(() => undefined);
-  }, [conversation, conversationId, currentUserId, input]);
+  }, [conversation?.id, conversationId, currentUserId, input]);
 
-  const clearPendingAttachment = () => setAttachment((current) => {
-    if (current?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(current.previewUrl);
-    return null;
-  });
+  const clearPendingAttachment = () => {
+    setPendingAttachmentFile(null);
+    setAttachment((current) => {
+      if (current?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
+  };
 
   const send = async () => {
     const body = input.trim();
@@ -206,6 +211,7 @@ export function useConversation(conversationId: string, initialConversation: Con
     if ((!body && !attachment) || isSending || !currentUserId) return;
     const clientId = crypto.randomUUID();
     const pendingAttachment = attachment ?? undefined;
+    const pendingFile = pendingAttachmentFile;
     const optimistic: ChatMessage = {
       id: `optimistic-${clientId}`,
       clientId,
@@ -219,12 +225,14 @@ export function useConversation(conversationId: string, initialConversation: Con
     };
     setInput("");
     setAttachment(null);
+    setPendingAttachmentFile(null);
     setReplyingTo(null);
     setError(null);
     setIsSending(true);
     setMessages((current) => [...current, optimistic]);
 
     try {
+      const persistedAttachment = pendingFile ? await uploadChatAttachment(pendingFile) : pendingAttachment;
       const socket = await getChatSocket();
       let sent: ChatMessage;
       if (socket.connected) {
@@ -232,14 +240,21 @@ export function useConversation(conversationId: string, initialConversation: Con
           conversationId,
           clientId,
           body,
-          attachment: pendingAttachment ? { id: pendingAttachment.id, name: pendingAttachment.name, mimeType: pendingAttachment.mimeType, size: pendingAttachment.size, url: pendingAttachment.url } : undefined,
+          attachment: persistedAttachment ? { id: persistedAttachment.id, name: persistedAttachment.name, mimeType: persistedAttachment.mimeType, size: persistedAttachment.size, url: persistedAttachment.url } : undefined,
           replyToId: optimistic.replyTo?.id,
         });
         sent = normalizeRealtimeMessage(result.message);
       } else {
-        sent = await sendMessage(conversationId, body, pendingAttachment, { clientId, replyToId: optimistic.replyTo?.id });
+        sent = await sendMessage(conversationId, body, persistedAttachment, { clientId, replyToId: optimistic.replyTo?.id });
       }
-      setMessages((current) => upsertMessage(current, { ...sent, attachment: sent.attachment ? { ...sent.attachment, previewUrl: pendingAttachment?.previewUrl || sent.attachment.previewUrl } : undefined }));
+      setMessages((current) => upsertMessage(current, {
+        ...sent,
+        attachment: sent.attachment ? {
+          ...sent.attachment,
+          previewUrl: persistedAttachment?.previewUrl || pendingAttachment?.previewUrl || sent.attachment.previewUrl,
+        } : undefined,
+      }));
+      if (pendingAttachment?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(pendingAttachment.previewUrl);
     } catch {
       setMessages((current) => current.map((message) => message.clientId === clientId ? { ...message, status: "failed" } : message));
       setError("ارسال پیام انجام نشد. دوباره تلاش کنید.");
@@ -315,10 +330,13 @@ export function useConversation(conversationId: string, initialConversation: Con
 
   return {
     conversation, messages, currentUserId, input, setInput, isLoading, isSending, isConnected, isPeerTyping, error, notice, attachment, replyingTo, editingMessage, messageToDelete, messageToForward, forwardTargets,
-    attachFile: (file: File) => setAttachment((current) => {
-      if (current?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(current.previewUrl);
-      return { id: `attachment-${crypto.randomUUID()}`, name: file.name, mimeType: file.type || "application/octet-stream", size: file.size, previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined };
-    }),
+    attachFile: (file: File) => {
+      setPendingAttachmentFile(file);
+      setAttachment((current) => {
+        if (current?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(current.previewUrl);
+        return { id: `attachment-${crypto.randomUUID()}`, name: file.name, mimeType: file.type || "application/octet-stream", size: file.size, previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined };
+      });
+    },
     clearAttachment: clearPendingAttachment,
     cancelReply: () => setReplyingTo(null),
     cancelEdit: () => { setEditingMessage(null); setInput(""); },
