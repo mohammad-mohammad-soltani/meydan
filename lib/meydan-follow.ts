@@ -30,7 +30,7 @@ export async function getViewerFollowing(): Promise<FollowActor[]> {
   const id = me.account_type === "square" ? me.square?.id : me.profile?.id;
   if (!id) return [];
 
-  const response = await meydanApi<FollowActor[]>(`/actors/${type}/${id}/following`);
+  const response = await meydanApi<FollowActor[]>(`/actors/${type}/${id}/following?limit=1000`);
   return Array.isArray(response) ? response : [];
 }
 
