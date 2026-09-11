@@ -6,6 +6,15 @@ type ApiAttachment = { id: number; type?: string; label?: string; filename?: str
 type ApiReflection = {
   id: number;
   outlet: string;
+  outlet_id?: number;
+  outlet_detail?: {
+    id?: number;
+    name?: string;
+    avatar_url?: string;
+    website?: string;
+    bale?: string;
+    eitaa?: string;
+  } | null;
   title?: string;
   summary?: string;
   url?: string;
@@ -32,6 +41,6 @@ export async function getPostById(postId:string):Promise<PostDetail|null>{
   let comments:ApiComment[]=[];
   try{ comments=await meydanApi<ApiComment[]>(`/narratives/${postId}/comments`); }catch{}
   const authorName=post.author?.display_name||"میدان";
-  return { id:String(post.id), author:{ id:numericActorId(post.author?.id), type:post.author?.type||"square", name:authorName, handle:post.author?.id||"meydan", initials:initials(authorName), verified:Boolean(post.author?.verified), avatarUrl:post.author?.avatar_url }, outlet:post.media_reflections?.[0]?.outlet||"روایت میدان", badge:post.tags?.[0]||"روایت میدان", timeAgo:relativeFa(post.published_at), body:plainText(post.body||""), media:(post.attachments||[]).map(item=>({id:String(item.id),label:item.label||item.filename||"پیوست",kind:mediaKind(item.type),detail:item.type||"فایل",previewSrc:item.type==="image"||item.type==="video"?item.url:undefined,previewAlt:item.label||authorName,width:item.width,height:item.height})), reflections:(post.media_reflections||[]).map((item,index)=>({id:String(item.id),outlet:item.outlet||"خبرگزاری",title:item.title?.trim()||item.summary?.trim()||"",summary:item.summary?.trim()||item.title?.trim()||"",accent:accent(index),url:item.url||item.link||item.source_url,avatarUrl:item.outlet_avatar_url||item.outlet_logo_url||item.avatar_url||item.logo_url})), likes:post.stats?.likes||0,reposts:post.stats?.reposts||0,views:post.stats?.views||0,commentsCount:post.stats?.comments||0,viewerState:{liked:Boolean(post.viewer_state?.liked),reposted:Boolean(post.viewer_state?.reposted)}, comments:comments.map((item):PostComment=>{ const name=item.author?.display_name||"کاربر میدان"; return {id:String(item.id),author:name,authorId:numericActorId(item.author?.id),authorType:item.author?.type||"user",verified:Boolean(item.author?.verified),initials:initials(name),timeAgo:relativeFa(item.created_at),content:plainText(item.body||""),isAuthor:item.author?.id===post.author?.id,avatarUrl:item.author?.avatar_url}; })};
+  return { id:String(post.id), author:{ id:numericActorId(post.author?.id), type:post.author?.type||"square", name:authorName, handle:post.author?.id||"meydan", initials:initials(authorName), verified:Boolean(post.author?.verified), avatarUrl:post.author?.avatar_url }, outlet:post.media_reflections?.[0]?.outlet||"روایت میدان", badge:post.tags?.[0]||"روایت میدان", timeAgo:relativeFa(post.published_at), body:plainText(post.body||""), media:(post.attachments||[]).map(item=>({id:String(item.id),label:item.label||item.filename||"پیوست",kind:mediaKind(item.type),detail:item.type||"فایل",previewSrc:item.type==="image"||item.type==="video"?item.url:undefined,previewAlt:item.label||authorName,width:item.width,height:item.height})), reflections:(post.media_reflections||[]).map((item,index)=>({id:String(item.id),outlet:item.outlet||item.outlet_detail?.name||"خبرگزاری",title:item.title?.trim()||item.summary?.trim()||"",summary:item.summary?.trim()||item.title?.trim()||"",accent:accent(index),url:item.url||item.link||item.source_url,avatarUrl:item.outlet_detail?.avatar_url||item.outlet_avatar_url||item.outlet_logo_url||item.avatar_url||item.logo_url})), likes:post.stats?.likes||0,reposts:post.stats?.reposts||0,views:post.stats?.views||0,commentsCount:post.stats?.comments||0,viewerState:{liked:Boolean(post.viewer_state?.liked),reposted:Boolean(post.viewer_state?.reposted)}, comments:comments.map((item):PostComment=>{ const name=item.author?.display_name||"کاربر میدان"; return {id:String(item.id),author:name,authorId:numericActorId(item.author?.id),authorType:item.author?.type||"user",verified:Boolean(item.author?.verified),initials:initials(name),timeAgo:relativeFa(item.created_at),content:plainText(item.body||""),isAuthor:item.author?.id===post.author?.id,avatarUrl:item.author?.avatar_url}; })};
  }catch{return null;}
 }
