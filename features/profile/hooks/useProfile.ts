@@ -16,6 +16,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [followStateReady, setFollowStateReady] = useState(canManage);
   const [followRequiresAuth, setFollowRequiresAuth] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
+  const [narrativePosts, setNarrativePosts] = useState<FeedPost[]>(profile.narrativePosts);
   const [likedNarrativeIds, setLikedNarrativeIds] = useState<Set<string>>(() => new Set(profile.narrativePosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
   const [isLoading] = useState(false);
   const [isSavingManagement, setIsSavingManagement] = useState(false);
@@ -68,10 +69,52 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     }
   };
 
+  const adjustLikeCount = (narrativeId: string, delta: number) => {
+    setNarrativePosts((current) => current.map((post) => post.id === narrativeId ? {
+      ...post,
+      stats: {
+        ...post.stats,
+        likes: Math.max(0, post.stats.likes + delta),
+      },
+    } : post));
+  };
+
+  const applyStats = (narrativeId: string, stats?: { likes?: number; reposts?: number; comments?: number; views?: number }) => {
+    if (!stats) return;
+    setNarrativePosts((current) => current.map((post) => post.id === narrativeId ? {
+      ...post,
+      stats: {
+        likes: stats.likes ?? post.stats.likes,
+        reposts: stats.reposts ?? post.stats.reposts,
+        comments: stats.comments ?? post.stats.comments,
+        views: stats.views ?? post.stats.views,
+      },
+    } : post));
+  };
+
   const toggleLike = async (narrativeId: string) => {
     const next = !likedNarrativeIds.has(narrativeId);
-    setLikedNarrativeIds((current) => { const updated = new Set(current); if (next) updated.add(narrativeId); else updated.delete(narrativeId); return updated; });
-    try { await meydanApi(`/narratives/${narrativeId}/like`, { method: next ? "PUT" : "DELETE" }); } catch { setLikedNarrativeIds((current) => { const updated = new Set(current); if (next) updated.delete(narrativeId); else updated.add(narrativeId); return updated; }); }
+    const delta = next ? 1 : -1;
+
+    setLikedNarrativeIds((current) => {
+      const updated = new Set(current);
+      if (next) updated.add(narrativeId); else updated.delete(narrativeId);
+      return updated;
+    });
+    adjustLikeCount(narrativeId, delta);
+
+    try {
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${narrativeId}/like`, { method: next ? "PUT" : "DELETE" });
+      applyStats(narrativeId, result.stats);
+    } catch (reason) {
+      setLikedNarrativeIds((current) => {
+        const updated = new Set(current);
+        if (next) updated.delete(narrativeId); else updated.add(narrativeId);
+        return updated;
+      });
+      adjustLikeCount(narrativeId, -delta);
+      if (isAuthApiError(reason)) window.location.assign("/auth");
+    }
   };
 
   const shareNarrative = async (post: FeedPost) => {
@@ -133,6 +176,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
 
   return {
     profile,
+    narrativePosts,
     selectedTab,
     expandedSections,
     isFollowing,
