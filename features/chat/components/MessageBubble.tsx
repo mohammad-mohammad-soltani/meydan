@@ -2,6 +2,7 @@
 import { CheckCheck, Clock3, Copy, CornerUpRight, Download, FileText, Forward, MoreVertical, Music2, Pencil, Trash2, TriangleAlert } from "lucide-react";
 import { useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
+import { createPortal } from "react-dom";
 import { attachmentSource, classifyChatAttachment } from "../chat-utils";
 import {
   getMessageActionButtonClass,
@@ -144,24 +145,27 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
         </button>
       </div>
 
-      {menuOpen ? (
-        <>
-          <button type="button" aria-label="بستن گزینه‌های پیام" onClick={closeMenu} className="fixed inset-0 z-30 cursor-default" />
-          <div
-            role="menu"
-            aria-label="گزینه‌های پیام"
-            className="fixed z-40 w-52 overflow-hidden rounded-panel border border-border bg-popover p-1 text-popover-foreground shadow-popover"
-            style={{ left: menuPosition.x, top: menuPosition.y }}
-          >
-            <div className="flex items-center justify-around border-b border-divider px-1 pb-1">{quickReactions.map((reaction) => <button key={reaction} type="button" aria-label={`واکنش ${reaction}`} onClick={() => action(() => onReact(message.id, reaction))} className="grid h-9 w-9 place-items-center rounded-full text-lg hover:bg-hover">{reaction}</button>)}</div>
-            <button role="menuitem" type="button" onClick={() => action(() => onReply(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs hover:bg-hover"><CornerUpRight className="h-4 w-4" />پاسخ</button>
-            <button role="menuitem" type="button" onClick={() => action(() => onCopy(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs hover:bg-hover"><Copy className="h-4 w-4" />کپی</button>
-            <button role="menuitem" type="button" onClick={() => action(() => onForward(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs hover:bg-hover"><Forward className="h-4 w-4" />فوروارد</button>
-            {isOwn ? <button role="menuitem" type="button" onClick={() => action(() => onEdit(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs hover:bg-hover"><Pencil className="h-4 w-4" />ویرایش</button> : null}
-            {isOwn ? <button role="menuitem" type="button" onClick={() => action(() => onDelete(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs text-danger hover:bg-danger-surface"><Trash2 className="h-4 w-4" />حذف پیام</button> : null}
-          </div>
-        </>
-      ) : null}
+      {menuOpen
+        ? createPortal(
+            <>
+              <button type="button" aria-label="بستن گزینه‌های پیام" onClick={closeMenu} className="fixed inset-0 z-30 cursor-default" />
+              <div
+                role="menu"
+                aria-label="گزینه‌های پیام"
+                className="fixed z-40 w-52 overflow-hidden rounded-panel border border-border bg-popover p-1 text-popover-foreground shadow-popover"
+                style={{ left: menuPosition.x, top: menuPosition.y }}
+              >
+                <div className="flex items-center justify-around border-b border-divider px-1 pb-1">{quickReactions.map((reaction) => <button key={reaction} type="button" aria-label={`واکنش ${reaction}`} onClick={() => action(() => onReact(message.id, reaction))} className="grid h-9 w-9 place-items-center rounded-full text-lg hover:bg-hover">{reaction}</button>)}</div>
+                <button role="menuitem" type="button" onClick={() => action(() => onReply(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs hover:bg-hover"><CornerUpRight className="h-4 w-4" />پاسخ</button>
+                <button role="menuitem" type="button" onClick={() => action(() => onCopy(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs hover:bg-hover"><Copy className="h-4 w-4" />کپی</button>
+                <button role="menuitem" type="button" onClick={() => action(() => onForward(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs hover:bg-hover"><Forward className="h-4 w-4" />فوروارد</button>
+                {isOwn ? <button role="menuitem" type="button" onClick={() => action(() => onEdit(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs hover:bg-hover"><Pencil className="h-4 w-4" />ویرایش</button> : null}
+                {isOwn ? <button role="menuitem" type="button" onClick={() => action(() => onDelete(message))} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-right text-xs text-danger hover:bg-danger-surface"><Trash2 className="h-4 w-4" />حذف پیام</button> : null}
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
