@@ -25,9 +25,11 @@ export type PostMedia = {
 export type MediaReflection = {
   id: string;
   outlet: string;
+  title: string;
   summary: string;
   accent: "blue" | "emerald" | "amber" | "red";
   url?: string;
+  avatarUrl?: string;
 };
 
 export type PostComment = {

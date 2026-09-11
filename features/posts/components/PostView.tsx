@@ -7,6 +7,7 @@ import {
 
 import { CommentsList } from "./CommentsList";
 import { CommentInput } from "./CommentInput";
+import { MediaReflections } from "./MediaReflections";
 import { PostHeader } from "./PostHeader";
 
 import { PostCard } from "@/features/feed/components/PostCard";
@@ -341,121 +342,11 @@ export function PostView({
             px-4
           "
         >
-          {state.post.reflections
-            .length ? (
-            <section className="space-y-2">
-              <div
-                className="
-                  flex
-                  items-center
-                  justify-between
-                "
-              >
-                <h2
-                  className="
-                    text-xs
-                    font-bold
-                    text-foreground
-                  "
-                >
-                  بازتاب در خبرگزاری‌ها و مطبوعات
-                </h2>
-
-                <span
-                  className="
-                    text-[10px]
-                    text-foreground-subtle
-                  "
-                >
-                  کلیک برای مطالعه
-                </span>
-              </div>
-
-              <div
-                className="
-                  grid
-                  grid-cols-2
-                  gap-2
-                "
-              >
-                {state.post.reflections.map(
-                  (
-                    reflection,
-                  ) => {
-                    const cardClassName = `
-                        block
-                        min-h-28
-                        rounded-card
-                        border
-                        border-border
-                        bg-card
-                        p-3
-                        text-right
-                        text-card-foreground
-                        shadow-xs
-                      `;
-
-                    const content = (
-                      <>
-                        <strong
-                          className="
-                            block
-                            text-[13px]
-                            font-extrabold
-                            leading-6
-                            text-foreground
-                          "
-                        >
-                          {
-                            reflection.outlet
-                          }
-                        </strong>
-
-                        <p
-                          className="
-                            mt-2
-                            line-clamp-3
-                            text-[11px]
-                            leading-6
-                            text-muted-foreground
-                          "
-                        >
-                          {
-                            reflection.summary
-                          }
-                        </p>
-                      </>
-                    );
-
-                    return reflection.url ? (
-                      <a
-                        key={
-                          reflection.id
-                        }
-                        href={
-                          reflection.url
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`${cardClassName} transition-colors hover:bg-hover`}
-                      >
-                        {content}
-                      </a>
-                    ) : (
-                      <article
-                        key={
-                          reflection.id
-                        }
-                        className={cardClassName}
-                      >
-                        {content}
-                      </article>
-                    );
-                  },
-                )}
-              </div>
-            </section>
-          ) : null}
+          <MediaReflections
+            reflections={
+              state.post.reflections
+            }
+          />
 
           <CommentsList
             comments={
