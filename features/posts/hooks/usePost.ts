@@ -56,12 +56,17 @@ export function usePost(post: PostDetail) {
 
   const toggleLike = async () => {
     const next = !liked;
+    const delta = next ? 1 : -1;
+
     setLiked(next);
+    setCounts((current) => ({ ...current, likes: Math.max(0, current.likes + delta) }));
+
     try {
       const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${post.id}/like`, { method: next ? "PUT" : "DELETE" });
       if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, comments: result.stats?.comments ?? current.comments }));
     } catch (reason) {
       setLiked(!next);
+      setCounts((current) => ({ ...current, likes: Math.max(0, current.likes - delta) }));
       if (isAuthApiError(reason)) redirectToLogin();
     }
   };
