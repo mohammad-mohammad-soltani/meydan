@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
+  SESSION_MAX_AGE,
   sessionCookieOptions,
 } from "@/lib/meydan-session";
 
@@ -106,8 +107,8 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
     });
   }
   if (refreshed && accessToken) {
-    result.cookies.set(ACCESS_COOKIE, accessToken, { ...sessionCookieOptions, maxAge: 15 * 60 });
-    if (refreshedRefreshToken) result.cookies.set(REFRESH_COOKIE, refreshedRefreshToken, { ...sessionCookieOptions, maxAge: 30 * 24 * 60 * 60 });
+    result.cookies.set(ACCESS_COOKIE, accessToken, { ...sessionCookieOptions, maxAge: SESSION_MAX_AGE });
+    if (refreshedRefreshToken) result.cookies.set(REFRESH_COOKIE, refreshedRefreshToken, { ...sessionCookieOptions, maxAge: SESSION_MAX_AGE });
   }
   if (response.status === 401) {
     result.cookies.delete(ACCESS_COOKIE);
