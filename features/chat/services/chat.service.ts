@@ -26,11 +26,7 @@ type ApiMessage = {
   reactions?: string[];
 };
 
-type ApiMe = {
-  account_type: "user" | "square";
-  profile?: { id?: string | number } | null;
-  square?: { owner_user_id?: string | number; id?: string | number } | null;
-};
+let cachedCurrentUserId = "";
 
 const avatarTones = ["red", "amber", "blue", "emerald", "violet", "slate"] as const;
 function avatarTone(id: string) {
@@ -181,15 +177,14 @@ export async function markConversationRead(conversationId: string, messageId: st
 }
 
 export async function getSocketTicket(): Promise<SocketTicket> {
-  const result = await meydanApi<{ ticket: string; expires_at: string; socket_url: string }>("/chat/socket-ticket", { method: "POST" });
-  return { ticket: result.ticket, expiresAt: result.expires_at, socketUrl: result.socket_url };
+  const result = await meydanApi<{ ticket: string; user_id: string | number; expires_at: string; socket_url: string }>("/chat/socket-ticket", { method: "POST" });
+  cachedCurrentUserId = String(result.user_id);
+  return { ticket: result.ticket, userId: cachedCurrentUserId, expiresAt: result.expires_at, socketUrl: result.socket_url };
 }
 
 export async function getCurrentUserId(): Promise<string> {
-  const me = await meydanApi<ApiMe>("/me");
-  const id = me.profile?.id || me.square?.owner_user_id || me.square?.id;
-  if (!id) throw new Error("Current chat user id is unavailable");
-  return String(id);
+  if (cachedCurrentUserId) return cachedCurrentUserId;
+  return (await getSocketTicket()).userId;
 }
 
 export async function getNotifications(): Promise<ChatNotification[]> {
