@@ -71,14 +71,16 @@ test("theme supports light, dark and pure-black modes", () => {
   assert.match(menu, /دارک/);
   assert.match(menu, /تیره/);
 
-  const globals = source("app/globals.css");
-  assert.match(globals, /html\.black/);
-  const blackBlock = globals.slice(globals.indexOf("html.black"));
+  const blackThemePath = path.join(root, "app/black-theme.css");
+  assert.ok(existsSync(blackThemePath), "app/black-theme.css must exist");
+  const blackBlock = readFileSync(blackThemePath, "utf8");
+  assert.match(blackBlock, /html\.black/);
   for (const token of ["--background", "--surface", "--surface-muted", "--surface-elevated", "--surface-sunken", "--input"]) {
     assert.match(blackBlock, new RegExp(`${token}:\\s*#000000`, "i"), `${token} must be pure black`);
   }
 
   const layout = source("app/layout.tsx");
+  assert.match(layout, /black-theme\.css/);
   assert.match(layout, /black/);
   assert.match(layout, /meydan-theme/);
 });
