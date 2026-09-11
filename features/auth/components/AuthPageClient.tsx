@@ -185,7 +185,7 @@ export default function AuthPageClient() {
   const [provinceId, setProvinceId] = useState<number | null>(null);
   const [cityId, setCityId] = useState<number | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
-  const [provinceLoading, setProvinceLoading] = useState(false);
+  const [provinceLoading, setProvinceLoading] = useState(true);
   const [cityLoading, setCityLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -199,7 +199,6 @@ export default function AuthPageClient() {
   useEffect(() => {
     if (step !== "register" || provinces.length) return;
     let cancelled = false;
-    setProvinceLoading(true);
     void getProvinces()
       .then((items) => {
         if (!cancelled) setProvinces(items);
@@ -216,13 +215,8 @@ export default function AuthPageClient() {
   }, [step, provinces.length]);
 
   useEffect(() => {
-    if (!provinceId) {
-      setCities([]);
-      setCityId(null);
-      return;
-    }
+    if (!provinceId) return;
     let cancelled = false;
-    setCityLoading(true);
     void getCities(provinceId)
       .then((items) => {
         if (cancelled) return;
@@ -351,7 +345,9 @@ export default function AuthPageClient() {
 
   const selectProvince = (id: number) => {
     setProvinceId(id);
+    setCities([]);
     setCityId(null);
+    setCityLoading(true);
     if (accountType === "square") setSelectedLocation(null);
   };
 
@@ -362,7 +358,11 @@ export default function AuthPageClient() {
 
   const selectMapLocation = (location: SelectedLocation) => {
     setSelectedLocation(location);
-    if (location.provinceId) setProvinceId(location.provinceId);
+    if (location.provinceId && location.provinceId !== provinceId) {
+      setProvinceId(location.provinceId);
+      setCities([]);
+      setCityLoading(true);
+    }
     if (location.cityId) setCityId(location.cityId);
   };
 
