@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 
 export const ACCESS_COOKIE = "meydan_access";
 export const REFRESH_COOKIE = "meydan_refresh";
+export const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
 
 export const sessionCookieOptions = {
   httpOnly: true,
