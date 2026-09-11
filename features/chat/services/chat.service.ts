@@ -122,6 +122,42 @@ export async function getMessages(conversationId: string, beforeId?: string): Pr
   return result.map(mapMessage);
 }
 
+export async function uploadChatAttachment(file: File): Promise<ChatAttachment> {
+  const started = await meydanApi<{ upload_id: string; chunk_size: number }>("/uploads", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      filename: file.name,
+      mime_type: file.type || "application/octet-stream",
+      size: file.size,
+      purpose: "chat",
+    }),
+  });
+
+  const chunkSize = Math.max(1, Number(started.chunk_size || 5 * 1024 * 1024));
+  try {
+    for (let offset = 0, index = 0; offset < file.size; offset += chunkSize, index += 1) {
+      await meydanApi(`/uploads/${started.upload_id}/chunks/${index}`, {
+        method: "PUT",
+        headers: { "content-type": "application/octet-stream" },
+        body: file.slice(offset, Math.min(file.size, offset + chunkSize)),
+      });
+    }
+    const completed = await meydanApi<{ media_id: number; url: string; size: number }>(`/uploads/${started.upload_id}/complete`, { method: "POST" });
+    return {
+      id: String(completed.media_id),
+      name: file.name,
+      mimeType: file.type || "application/octet-stream",
+      size: Number(completed.size || file.size),
+      url: completed.url,
+      previewUrl: completed.url,
+    };
+  } catch (error) {
+    await meydanApi(`/uploads/${started.upload_id}`, { method: "DELETE" }).catch(() => undefined);
+    throw error;
+  }
+}
+
 export async function sendMessage(
   conversationId: string,
   body: string,
