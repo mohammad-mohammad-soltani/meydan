@@ -1,10 +1,25 @@
 name: Chat UI CI
 
 on:
+  push:
+    paths:
+      - "features/chat/**"
+      - "features/podcasts/**"
+      - "app/(app)/podcasts/**"
+      - "tests/chat-utils.test.mjs"
+      - "tests/chat-message-menu.test.mjs"
+      - "tests/podcasts-search.test.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/chat-ui-ci.yml"
   pull_request:
     paths:
       - "features/chat/**"
+      - "features/podcasts/**"
+      - "app/(app)/podcasts/**"
       - "tests/chat-utils.test.mjs"
+      - "tests/chat-message-menu.test.mjs"
+      - "tests/podcasts-search.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -23,6 +38,8 @@ jobs:
           cache: npm
       - run: npm install --no-audit --no-fund
       - name: Run chat behavior tests
-        run: node --experimental-strip-types --test tests/chat-utils.test.mjs
+        run: node --experimental-strip-types --test tests/chat-utils.test.mjs tests/chat-message-menu.test.mjs
+      - name: Run podcasts behavior tests
+        run: node --experimental-strip-types --test tests/podcasts-search.test.mjs
       - name: Build frontend
         run: npm run build
