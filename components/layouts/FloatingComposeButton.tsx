@@ -4,10 +4,12 @@ import Link from "next/link";
 import { PenLine } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAudio } from "@/features/audio/AudioProvider";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
 
 export function FloatingComposeButton() {
   const pathname = usePathname();
   const { currentTrack } = useAudio();
+  const { requireAuth } = useAuthGate();
 
   const isVisible = pathname === "/home" || pathname === "/profile";
 
@@ -16,6 +18,9 @@ export function FloatingComposeButton() {
   return (
     <Link
       href="/compose"
+      onClick={(event) => {
+        if (!requireAuth("/compose")) event.preventDefault();
+      }}
       aria-label="نوشتن روایت تازه"
       title="نوشتن روایت"
       className={`
@@ -56,7 +61,6 @@ export function FloatingComposeButton() {
         }
       `}
     >
-      {/* Soft outer glow */}
       <span
         aria-hidden="true"
         className="
@@ -74,7 +78,6 @@ export function FloatingComposeButton() {
         "
       />
 
-      {/* Subtle inner highlight */}
       <span
         aria-hidden="true"
         className="
