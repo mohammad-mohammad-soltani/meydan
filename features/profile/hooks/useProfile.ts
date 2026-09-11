@@ -73,11 +73,17 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   };
 
   const openChat = async () => {
-    if (canManage || profile.accountType === "square" || isChatOpening) return;
+    if (canManage || isChatOpening) return;
     setIsChatOpening(true);
     setChatError(null);
     try {
-      const conversation = await createDirectConversation(profile.actorId);
+      let chatUserId = profile.actorId;
+      if (profile.accountType === "square") {
+        const square = await meydanApi<{ chat_user_id?: number | null }>(`/squares/${profile.actorId}`);
+        chatUserId = Number(square.chat_user_id || 0);
+        if (!chatUserId) throw new Error("Square chat target is unavailable");
+      }
+      const conversation = await createDirectConversation(chatUserId);
       window.location.assign(`/chat/${conversation.id}`);
     } catch (reason) {
       if (isAuthApiError(reason)) {
