@@ -54,6 +54,7 @@ export type MessageReply = {
 
 export type SocketTicket = {
   ticket: string;
+  userId: string;
   expiresAt: string;
   socketUrl: string;
 };
