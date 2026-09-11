@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   getMessageActionButtonClass,
@@ -41,4 +42,14 @@ test("hover action button sits outside the message bubble", () => {
   assert.match(peer, /left-full/);
   assert.doesNotMatch(own, /\bleft-1\b|\bright-1\b/);
   assert.doesNotMatch(peer, /\bleft-1\b|\bright-1\b/);
+});
+
+test("message menu is portaled to document.body so transformed chat containers cannot clip it", async () => {
+  const source = await readFile(
+    new URL("../features/chat/components/MessageBubble.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /createPortal/);
+  assert.match(source, /document\.body/);
 });
