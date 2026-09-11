@@ -1,3 +1,5 @@
+import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
+
 const DEFAULT_API_BASE =
   "https://meydan-api.nabzjahan.ir/wp-json/meydan/v1";
 
@@ -36,7 +38,45 @@ export function getMeydanApiBaseUrl(): string {
   ).replace(/\/$/, "");
 }
 
+export function requiresClientAuthentication(path: string, init?: RequestInit): boolean {
+  const method = (init?.method || "GET").toUpperCase();
+  const cleanPath = path.split("?")[0] || path;
+
+  if (method === "GET" || method === "HEAD") {
+    if (!path.startsWith("/timeline?")) return false;
+    const query = path.slice(path.indexOf("?") + 1);
+    return new URLSearchParams(query).get("mode") === "following";
+  }
+
+  // Sharing can remain a public browser action even when analytics recording fails.
+  if (/^\/narratives\/[^/]+\/share$/.test(cleanPath)) return false;
+
+  return (
+    cleanPath === "/narratives" ||
+    /^\/narratives\/[^/]+\/(like|repost|comments)$/.test(cleanPath) ||
+    /^\/actors\/[^/]+\/[^/]+\/follow$/.test(cleanPath) ||
+    /^\/initiatives\/[^/]+\/join$/.test(cleanPath) ||
+    cleanPath.startsWith("/chat/") ||
+    cleanPath === "/chat" ||
+    cleanPath.startsWith("/uploads") ||
+    cleanPath === "/me" ||
+    cleanPath.startsWith("/me/")
+  );
+}
+
+function redirectProtectedClientRequest(path: string, init?: RequestInit): void {
+  if (typeof window === "undefined" || !requiresClientAuthentication(path, init)) return;
+  if (document.documentElement.dataset.meydanAuthenticated === "true") return;
+
+  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  rememberReturnTo(returnTo);
+  window.location.assign(loginHref(returnTo));
+  throw new MeydanApiError("Authentication required", 401);
+}
+
 export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T> {
+  redirectProtectedClientRequest(path, init);
+
   const base = getMeydanApiBaseUrl();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
   const response = await fetch(url, {
