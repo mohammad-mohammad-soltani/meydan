@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import { actorKey, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
+import { createDirectConversation } from "@/features/chat/services/chat.service";
 import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileSection } from "../types";
 
@@ -16,6 +17,8 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [followStateReady, setFollowStateReady] = useState(canManage);
   const [followRequiresAuth, setFollowRequiresAuth] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
+  const [isChatOpening, setIsChatOpening] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
   const [narrativePosts, setNarrativePosts] = useState<FeedPost[]>(profile.narrativePosts);
   const [likedNarrativeIds, setLikedNarrativeIds] = useState<Set<string>>(() => new Set(profile.narrativePosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
   const [isLoading] = useState(false);
@@ -66,6 +69,29 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       if (isAuthApiError(reason)) window.location.assign("/auth");
     } finally {
       setIsFollowLoading(false);
+    }
+  };
+
+  const openChat = async () => {
+    if (canManage || isChatOpening) return;
+    setIsChatOpening(true);
+    setChatError(null);
+    try {
+      let chatUserId = profile.actorId;
+      if (profile.accountType === "square") {
+        const square = await meydanApi<{ chat_user_id?: number | null }>(`/squares/${profile.actorId}`);
+        chatUserId = Number(square.chat_user_id || 0);
+        if (!chatUserId) throw new Error("Square chat target is unavailable");
+      }
+      const conversation = await createDirectConversation(chatUserId);
+      window.location.assign(`/chat/${conversation.id}`);
+    } catch (reason) {
+      if (isAuthApiError(reason)) {
+        window.location.assign("/auth");
+        return;
+      }
+      setChatError("باز کردن گفتگو انجام نشد. دوباره تلاش کنید.");
+      setIsChatOpening(false);
     }
   };
 
@@ -183,12 +209,15 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     isFollowLoading,
     followStateReady,
     isManagementOpen,
+    isChatOpening,
+    chatError,
     likedNarrativeIds,
     isLoading,
     isSavingManagement,
     managementError,
     toggleSection,
     toggleFollowing,
+    openChat,
     openManagement: () => setIsManagementOpen(true),
     closeManagement: () => setIsManagementOpen(false),
     toggleLike,

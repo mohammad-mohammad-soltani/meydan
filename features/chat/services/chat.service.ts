@@ -1,77 +1,242 @@
-import type { ChatAttachment, ChatMessage, ChatNotification, Conversation } from "../types";
+import { meydanApi } from "@/lib/meydan-api";
+import type { ChatAttachment, ChatMessage, ChatNotification, Conversation, SocketTicket } from "../types";
 
-const currentUserId = "current-user";
-
-const conversations: Conversation[] = [
-  {
-    id: "tehran-enghelab",
-    participant: { id: "tehran-enghelab", name: "پایگاه میدان انقلاب", handle: "@tehran_enghelab", avatarLabel: "انقلاب", avatarTone: "red", isVerified: true, isOnline: true },
-    preview: "هماهنگی برای منبر ساعت ۲۱ نهایی شد.", updatedAt: "۱۱:۲۸", unreadCount: 14,
-  },
-  {
-    id: "yazd-chakhmaq",
-    participant: { id: "yazd-chakhmaq", name: "موکب امیرچخماق یزد", handle: "@yazd_chakhmaq", avatarLabel: "یزد", avatarTone: "amber" },
-    preview: "نقشه سیم‌کشی ارسال شد؛ خداقوت.", updatedAt: "۱۱:۱۵", unreadCount: 20,
-  },
-  { id: "code-explore", participant: { id: "code-explore", name: "گروه رسانه و فناوری", handle: "@media_tech", avatarLabel: "رسانه", avatarTone: "emerald" }, preview: "از API جدید برای دریافت گزارش‌ها استفاده کنید.", updatedAt: "۱۱:۱۴", unreadCount: 3 },
-  { id: "rah-dalileh", participant: { id: "rah-dalileh", name: "راهِ دلیله", handle: "@rahedalileh", avatarLabel: "ره", avatarTone: "slate", isVerified: true }, preview: "سم کوییم دیگر پایبند نیستیم؟! 🌐", updatedAt: "۱۱:۱۱", unreadCount: 202 },
-  { id: "dev-twitter", participant: { id: "dev-twitter", name: "اتاق خبرِ میدان", handle: "@meydan_news", avatarLabel: "خبر", avatarTone: "blue" }, preview: "گزارش زنده از میدان‌ها منتشر شد.", updatedAt: "۱۰:۵۲", unreadCount: 1 },
-  { id: "hosein-sabeti", participant: { id: "hosein-sabeti", name: "امیرحسین ثابتی", handle: "@sabeti", avatarLabel: "ث", avatarTone: "violet", isVerified: true }, preview: "آلبوم تصاویر مراسم در حاشیه اجلاس ارسال شد.", updatedAt: "۰۷:۳۸", unreadCount: 2 },
-  { id: "temp-number", participant: { id: "temp-number", name: "سامانه پاسخ‌گویی", handle: "@support", avatarLabel: "پ", avatarTone: "blue" }, preview: "🔴 اطلاعیه جدید برای مسئولان پایگاه‌ها", updatedAt: "۰۴:۵۲", unreadCount: 44 },
-  { id: "kanal-gheymat", participant: { id: "kanal-gheymat", name: "کانال گزارش‌های مردمی", handle: "@reports", avatarLabel: "گزارش", avatarTone: "red" }, preview: "وقتی بعد از مراسم باران می‌بارد، در خیابان…", updatedAt: "۰۲:۵۸", unreadCount: 6 },
-  { id: "linuxor", participant: { id: "linuxor", name: "شبکه داوطلبان", handle: "@volunteers", avatarLabel: "دو", avatarTone: "emerald" }, preview: "برای ناوبری ایستگاه‌ها، یک راهنما آماده است.", updatedAt: "۰۲:۳۶", unreadCount: 1 },
-];
-
-const messagesByConversation: Record<string, ChatMessage[]> = {
-  "tehran-enghelab": [
-    { id: "message-1", conversationId: "tehran-enghelab", senderId: "tehran-enghelab", body: "سلام، وقت‌تان بخیر. تجهیزات صوتیِ پایگاه بررسی و آماده شد.", sentAt: "۲۰:۱۰", status: "sent" },
-    { id: "message-2", conversationId: "tehran-enghelab", senderId: currentUserId, body: "خداقوت. فایل برنامه و زمان‌بندی نهایی را هم در بخش محتوا گذاشتم.", sentAt: "۲۰:۱۵", status: "sent" },
-    { id: "message-3", conversationId: "tehran-enghelab", senderId: "tehran-enghelab", body: "دریافت شد، ممنون. شروع برنامه ساعت ۲۱ خواهد بود.", sentAt: "۲۰:۱۷", status: "sent" },
-    { id: "message-4", conversationId: "tehran-enghelab", senderId: currentUserId, body: "عالی است. اگر موردی پیش آمد همین‌جا اطلاع دهید.", sentAt: "۲۰:۱۸", status: "sent" },
-  ],
-  "yazd-chakhmaq": [
-    { id: "message-3", conversationId: "yazd-chakhmaq", senderId: "yazd-chakhmaq", body: "نقشه سیم‌کشی محل موکب را ارسال کردیم. اگر نکته‌ای هست بفرمایید.", sentAt: "۱۹:۴۰", status: "sent" },
-  ],
+type ApiConversation = {
+  id: string | number;
+  type?: "direct" | "group";
+  participant: { id: string | number; name: string; handle: string; avatar_url?: string | null; verified?: boolean };
+  preview?: string;
+  updated_at?: string;
+  unread_count?: number;
+  last_message_id?: string | number | null;
 };
 
-const notifications: ChatNotification[] = [
-  { id: "notification-1", kind: "like", title: "پسندیده شدن روایت شما", description: "پایگاه میدان شهدا مشهد و ۸۴ نفر دیگر روایت «طومار ۵۰ متری تجدید بیعت» را پسندیدند.", createdAt: "۱۲ دقیقه پیش" },
-  { id: "notification-2", kind: "repost", title: "بازنشر روایت", description: "موکب امیرچخماق یزد روایت میدانی شما را در فید اختصاصی خود بازنشر کرد.", createdAt: "۲۸ دقیقه پیش" },
-  { id: "notification-3", kind: "message", title: "پیام مستقیم جدید", description: "پایگاه میدان انقلاب: هماهنگی برای منبر ساعت ۲۱ نهایی شد.", createdAt: "۴۰ دقیقه پیش", conversationId: "tehran-enghelab" },
-  { id: "notification-4", kind: "media", title: "بازتاب رسمی در مطبوعات", description: "مطلب شما در روزنامه عصر ایرانیان و عصر آنلاین درج شد.", createdAt: "۱ ساعت پیش" },
-  { id: "notification-5", kind: "mention", title: "دیدگاه و اشاره به شما", description: "علی حسینی: ما هم از امشب در میدان ولیعصر این ابتکار را شروع کردیم.", createdAt: "۲ ساعت پیش" },
-  { id: "notification-6", kind: "follow", title: "دنبال‌کننده جدید", description: "حجت‌الاسلام مهدی ماندگاری پایگاه میدان شما را دنبال کرد.", createdAt: "۳ ساعت پیش" },
-];
+type ApiMessage = {
+  id: string | number;
+  conversation_id: string | number;
+  sender_id: string | number;
+  client_id?: string;
+  body?: string;
+  created_at?: string;
+  edited_at?: string | null;
+  deleted_at?: string | null;
+  attachment?: { id?: string; name?: string; mime_type?: string; size?: number; url?: string } | null;
+  reply_to?: { id: string | number; body?: string; sender_name?: string } | null;
+  forwarded_from?: string | null;
+  reactions?: string[];
+};
 
-export async function getConversations(): Promise<Conversation[]> {
-  return conversations.map((conversation) => ({ ...conversation, participant: { ...conversation.participant } }));
+let cachedCurrentUserId = "";
+
+const avatarTones = ["red", "amber", "blue", "emerald", "violet", "slate"] as const;
+function avatarTone(id: string) {
+  let hash = 0;
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+  return avatarTones[Math.abs(hash) % avatarTones.length];
 }
 
-export async function getNotifications(): Promise<ChatNotification[]> {
-  return notifications.map((notification) => ({ ...notification }));
+function timeLabel(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
 }
 
-export async function getConversationById(conversationId: string): Promise<Conversation | null> {
-  const conversation = conversations.find((item) => item.id === conversationId);
-  return conversation ? { ...conversation, participant: { ...conversation.participant } } : null;
-}
-
-export async function getMessages(conversationId: string): Promise<ChatMessage[]> {
-  return (messagesByConversation[conversationId] ?? []).map((message) => ({ ...message }));
-}
-
-export async function sendMessage(conversationId: string, body: string, attachment?: ChatAttachment): Promise<ChatMessage> {
+function mapConversation(item: ApiConversation): Conversation {
+  const id = String(item.participant.id);
   return {
-    id: "message-" + crypto.randomUUID(),
-    conversationId,
-    senderId: currentUserId,
-    body,
-    sentAt: new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()),
-    status: "sent",
-    attachment,
+    id: String(item.id),
+    type: item.type,
+    participant: {
+      id,
+      name: item.participant.name || "کاربر میدان",
+      handle: item.participant.handle || `@user${id}`,
+      avatarLabel: (item.participant.name || "ک").slice(0, 2),
+      avatarTone: avatarTone(id),
+      avatarUrl: item.participant.avatar_url || undefined,
+      isVerified: Boolean(item.participant.verified),
+    },
+    preview: item.preview || "گفتگوی جدید",
+    updatedAt: timeLabel(item.updated_at),
+    unreadCount: Number(item.unread_count || 0),
+    lastMessageId: item.last_message_id ? String(item.last_message_id) : undefined,
   };
 }
 
-export function getCurrentUserId(): string {
-  return currentUserId;
+function mapMessage(item: ApiMessage): ChatMessage {
+  return {
+    id: String(item.id),
+    conversationId: String(item.conversation_id),
+    senderId: String(item.sender_id),
+    clientId: item.client_id,
+    body: item.body || "",
+    sentAt: timeLabel(item.created_at),
+    status: "sent",
+    attachment: item.attachment ? {
+      id: item.attachment.id || `attachment-${item.id}`,
+      name: item.attachment.name || "پیوست",
+      mimeType: item.attachment.mime_type || "application/octet-stream",
+      size: Number(item.attachment.size || 0),
+      url: item.attachment.url || undefined,
+      previewUrl: item.attachment.url || undefined,
+    } : undefined,
+    replyTo: item.reply_to ? {
+      id: String(item.reply_to.id),
+      body: item.reply_to.body || "",
+      senderName: item.reply_to.sender_name || "کاربر",
+    } : undefined,
+    forwardedFrom: item.forwarded_from || undefined,
+    editedAt: item.edited_at ? timeLabel(item.edited_at) : undefined,
+    deletedAt: item.deleted_at || undefined,
+    reactions: item.reactions || [],
+  };
 }
+
+export async function getConversations(): Promise<Conversation[]> {
+  const result = await meydanApi<ApiConversation[]>("/chat/conversations");
+  return result.map(mapConversation);
+}
+
+export async function createDirectConversation(participantUserId: string | number): Promise<Conversation> {
+  const result = await meydanApi<ApiConversation>("/chat/conversations", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ participant_user_id: Number(participantUserId) }),
+  });
+  return mapConversation(result);
+}
+
+export async function getConversationById(conversationId: string): Promise<Conversation | null> {
+  try {
+    const result = await meydanApi<ApiConversation>(`/chat/conversations/${conversationId}`);
+    return mapConversation(result);
+  } catch {
+    return null;
+  }
+}
+
+export async function getMessages(conversationId: string, beforeId?: string): Promise<ChatMessage[]> {
+  const params = new URLSearchParams({ limit: "50" });
+  if (beforeId) params.set("before_id", beforeId);
+  const result = await meydanApi<ApiMessage[]>(`/chat/conversations/${conversationId}/messages?${params}`);
+  return result.map(mapMessage);
+}
+
+export async function uploadChatAttachment(file: File): Promise<ChatAttachment> {
+  const started = await meydanApi<{ upload_id: string; chunk_size: number }>("/uploads", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      filename: file.name,
+      mime_type: file.type || "application/octet-stream",
+      size: file.size,
+      purpose: "chat",
+    }),
+  });
+
+  const chunkSize = Math.max(1, Number(started.chunk_size || 5 * 1024 * 1024));
+  try {
+    for (let offset = 0, index = 0; offset < file.size; offset += chunkSize, index += 1) {
+      await meydanApi(`/uploads/${started.upload_id}/chunks/${index}`, {
+        method: "PUT",
+        headers: { "content-type": "application/octet-stream" },
+        body: file.slice(offset, Math.min(file.size, offset + chunkSize)),
+      });
+    }
+    const completed = await meydanApi<{ media_id: number; url: string; size: number }>(`/uploads/${started.upload_id}/complete`, { method: "POST" });
+    return {
+      id: String(completed.media_id),
+      name: file.name,
+      mimeType: file.type || "application/octet-stream",
+      size: Number(completed.size || file.size),
+      url: completed.url,
+      previewUrl: completed.url,
+    };
+  } catch (error) {
+    await meydanApi(`/uploads/${started.upload_id}`, { method: "DELETE" }).catch(() => undefined);
+    throw error;
+  }
+}
+
+export async function sendMessage(
+  conversationId: string,
+  body: string,
+  attachment?: ChatAttachment,
+  options?: { clientId?: string; replyToId?: string; forwardedFromMessageId?: string },
+): Promise<ChatMessage> {
+  const result = await meydanApi<ApiMessage>(`/chat/conversations/${conversationId}/messages`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      client_id: options?.clientId || crypto.randomUUID(),
+      body,
+      reply_to_id: options?.replyToId,
+      forwarded_from_message_id: options?.forwardedFromMessageId,
+      attachment: attachment ? {
+        id: attachment.id,
+        name: attachment.name,
+        mime_type: attachment.mimeType,
+        size: attachment.size,
+        url: attachment.url,
+      } : undefined,
+    }),
+  });
+  return mapMessage(result);
+}
+
+export async function editMessage(messageId: string, body: string): Promise<ChatMessage> {
+  return mapMessage(await meydanApi<ApiMessage>(`/chat/messages/${messageId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ body }),
+  }));
+}
+
+export async function deleteMessage(messageId: string): Promise<void> {
+  await meydanApi(`/chat/messages/${messageId}`, { method: "DELETE" });
+}
+
+export async function setMessageReaction(messageId: string, reaction: string, active: boolean): Promise<ChatMessage> {
+  return mapMessage(await meydanApi<ApiMessage>(`/chat/messages/${messageId}/reaction`, {
+    method: active ? "PUT" : "DELETE",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ reaction }),
+  }));
+}
+
+export async function markConversationRead(conversationId: string, messageId: string): Promise<void> {
+  await meydanApi(`/chat/conversations/${conversationId}/read`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message_id: messageId }),
+  });
+}
+
+export async function getSocketTicket(): Promise<SocketTicket> {
+  const result = await meydanApi<{ ticket: string; user_id: string | number; expires_at: string; socket_url: string }>("/chat/socket-ticket", { method: "POST" });
+  cachedCurrentUserId = String(result.user_id);
+  return { ticket: result.ticket, userId: cachedCurrentUserId, expiresAt: result.expires_at, socketUrl: result.socket_url };
+}
+
+export async function getCurrentUserId(): Promise<string> {
+  if (cachedCurrentUserId) return cachedCurrentUserId;
+  return (await getSocketTicket()).userId;
+}
+
+export async function getNotifications(): Promise<ChatNotification[]> {
+  try {
+    const items = await meydanApi<Array<{ id: string | number; type?: string; title?: string; body?: string; created_at?: string; deep_link?: string }>>("/notifications?limit=50");
+    return items.map((item) => ({
+      id: String(item.id),
+      kind: (["like", "repost", "message", "media", "mention", "follow"].includes(item.type || "") ? item.type : "message") as ChatNotification["kind"],
+      title: item.title || "اعلان جدید",
+      description: item.body || "",
+      createdAt: timeLabel(item.created_at),
+      conversationId: item.deep_link?.match(/\/chat\/(\d+)/)?.[1],
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export { mapMessage };

@@ -1,6 +1,5 @@
 "use client";
 
-import { getCurrentUserId } from "../services/chat.service";
 import { useRouter } from "next/navigation";
 import { Check, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -24,12 +23,13 @@ export function ConversationView({ conversationId, conversation, messages }: { c
   };
 
   if (chat.isLoading) return <section className="flex min-h-0 flex-1 items-center justify-center text-xs text-muted-foreground">در حال باز کردن گفتگو...</section>;
-  if (!chat.conversation) return <section className="flex min-h-0 flex-1 items-center justify-center text-xs text-muted-foreground">این گفتگو پیدا نشد.</section>;
+  if (!chat.conversation) return <section className="flex min-h-0 flex-1 items-center justify-center text-xs text-muted-foreground">{chat.error || "این گفتگو پیدا نشد."}</section>;
 
   return (
     <section className={`relative isolate flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-surface-sunken before:pointer-events-none before:absolute before:inset-0 before:z-0 before:bg-[url('/images/patterns/resistance-chat-pattern-v2.png')] before:bg-[length:512px_512px] before:bg-repeat before:bg-center before:opacity-10 [&>*]:relative [&>*]:z-[1] ${isLeaving ? "ui-view-leave" : "ui-view-enter"}`}>
       <ChatHeader conversation={chat.conversation} isLeaving={isLeaving} onBack={leaveConversation} />
-      <MessageList messages={chat.messages} currentUserId={getCurrentUserId()} onReply={chat.startReply} onCopy={chat.copyMessage} onEdit={chat.startEdit} onDelete={chat.requestDelete} onForward={chat.requestForward} onReact={chat.toggleReaction} />
+      {chat.isPeerTyping ? <p className="border-b border-border bg-surface-glass px-4 py-1 text-[10px] text-verified">{chat.conversation.participant.name} در حال نوشتن است…</p> : !chat.isConnected ? <p className="border-b border-border bg-warning-surface px-4 py-1 text-[10px] text-warning">در حال اتصال مجدد…</p> : null}
+      <MessageList messages={chat.messages} currentUserId={chat.currentUserId} onReply={chat.startReply} onCopy={chat.copyMessage} onEdit={chat.startEdit} onDelete={chat.requestDelete} onForward={chat.requestForward} onReact={chat.toggleReaction} />
       {chat.error ? <p className="bg-danger-surface px-4 pb-2 text-[10px] text-danger-foreground">{chat.error}</p> : null}
       <MessageInput value={chat.input} attachment={chat.attachment} replyingTo={chat.replyingTo} editingMessage={chat.editingMessage} notice={chat.notice} isSending={chat.isSending} onChange={chat.setInput} onSubmit={chat.send} onAttachmentSelected={chat.attachFile} onClearAttachment={chat.clearAttachment} onCancelReply={chat.cancelReply} onCancelEdit={chat.cancelEdit} />
 
