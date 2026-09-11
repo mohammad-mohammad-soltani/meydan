@@ -5,7 +5,7 @@ export const LIVE_MAP_THEME = {
   mapLibreCssUrl:
     "https://unpkg.com/maplibre-gl@5.14.0/dist/maplibre-gl.css",
   leafletBridgeScriptUrl:
-    "https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js",
+    "https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.3/leaflet-maplibre-gl.js",
   provincesGeoJsonUrl:
     "https://cdn.jsdelivr.net/gh/hosseinhabibi2004/iran-geojson@master/data/provinces/provinces.min.geojson",
   attribution: "OpenFreeMap © OpenMapTiles · Data © OpenStreetMap",
