@@ -4,12 +4,11 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { Check, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { participantProfileHref } from "../chat-utils";
+import { chatContactHref } from "../chat-utils";
 import { useConversation } from "../hooks/useConversation";
-import { getConversationHistory, searchConversationMessages, setConversationMuted } from "../services/chat.service";
+import { searchConversationMessages, setConversationMuted } from "../services/chat.service";
 import type { ChatMessage, Conversation } from "../types";
 import { ChatHeader } from "./ChatHeader";
-import { ChatUserInfo } from "./ChatUserInfo";
 import { ConversationSearch } from "./ConversationSearch";
 import { MessageInput } from "./MessageInput";
 import { MessageList } from "./MessageList";
@@ -18,8 +17,7 @@ export function ConversationView({ conversationId, conversation, messages }: { c
   const chat = useConversation(conversationId, conversation, messages);
   const router = useRouter();
   const [isLeaving, setIsLeaving] = useState(false);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [sharedMessages, setSharedMessages] = useState<ChatMessage[]>([]);
+  const [isOpeningInfo, setIsOpeningInfo] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ChatMessage[]>([]);
@@ -28,6 +26,9 @@ export function ConversationView({ conversationId, conversation, messages }: { c
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => { router.prefetch("/chat"); }, [router]);
+  useEffect(() => {
+    router.prefetch(chatContactHref(conversationId) as Route);
+  }, [conversationId, router]);
   useEffect(() => { if (chat.conversation) setMuted(Boolean(chat.conversation.notificationsMuted)); }, [chat.conversation?.id, chat.conversation?.notificationsMuted]);
 
   useEffect(() => {
@@ -53,17 +54,10 @@ export function ConversationView({ conversationId, conversation, messages }: { c
     window.setTimeout(() => router.push("/chat"), 220);
   };
 
-  const openProfile = () => {
-    if (!chat.conversation) return;
-    router.push(participantProfileHref(chat.conversation.participant) as Route);
-  };
-
   const openInfo = () => {
-    setIsInfoOpen(true);
-    if (sharedMessages.length) return;
-    void getConversationHistory(conversationId, 300)
-      .then(setSharedMessages)
-      .catch(() => setSharedMessages(chat.messages));
+    if (isOpeningInfo || !chat.conversation) return;
+    setIsOpeningInfo(true);
+    window.setTimeout(() => router.push(chatContactHref(conversationId) as Route), 140);
   };
 
   const toggleMute = async () => {
@@ -87,16 +81,14 @@ export function ConversationView({ conversationId, conversation, messages }: { c
   const conversationForUi: Conversation = { ...chat.conversation, notificationsMuted: muted };
 
   return (
-    <section className={`relative isolate flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-surface-sunken before:pointer-events-none before:absolute before:inset-0 before:z-0 before:bg-[url('/images/patterns/resistance-chat-pattern-v2.png')] before:bg-[length:512px_512px] before:bg-repeat before:bg-center before:opacity-10 [&>*]:relative [&>*]:z-[1] ${isLeaving ? "ui-view-leave" : "ui-view-enter"}`}>
-      <ChatHeader conversation={conversationForUi} isLeaving={isLeaving} onBack={leaveConversation} onOpenInfo={openInfo} onOpenProfile={openProfile} onOpenSearch={() => setIsSearchOpen(true)} onToggleMute={() => void toggleMute()} />
+    <section className={`relative isolate flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-surface-sunken before:pointer-events-none before:absolute before:inset-0 before:z-0 before:bg-[url('/images/patterns/resistance-chat-pattern-v2.png')] before:bg-[length:512px_512px] before:bg-repeat before:bg-center before:opacity-10 [&>*]:relative [&>*]:z-[1] ${isLeaving ? "ui-view-leave" : isOpeningInfo ? "ui-opening" : "ui-view-enter"}`}>
+      <ChatHeader conversation={conversationForUi} isLeaving={isLeaving || isOpeningInfo} onBack={leaveConversation} onOpenInfo={openInfo} onOpenProfile={openInfo} onOpenSearch={() => setIsSearchOpen(true)} onToggleMute={() => void toggleMute()} />
       {isSearchOpen ? <ConversationSearch query={searchQuery} resultCount={searchResults.length} isLoading={isSearching} onChange={setSearchQuery} onClose={() => { setIsSearchOpen(false); setSearchQuery(""); setSearchResults([]); }} /> : null}
       {chat.isPeerTyping ? <p className="border-b border-border bg-surface-glass px-4 py-1 text-[10px] text-verified">{chat.conversation.participant.name} در حال نوشتن است…</p> : !chat.isConnected ? <p className="border-b border-border bg-warning-surface px-4 py-1 text-[10px] text-warning">در حال اتصال مجدد…</p> : null}
       <MessageList messages={displayedMessages} currentUserId={chat.currentUserId} onReply={chat.startReply} onCopy={chat.copyMessage} onEdit={chat.startEdit} onDelete={chat.requestDelete} onForward={chat.requestForward} onReact={chat.toggleReaction} />
       {isSearchOpen && searchQuery.trim() && !isSearching && !searchResults.length ? <p className="absolute left-1/2 top-32 z-20 -translate-x-1/2 rounded-full bg-popover px-4 py-2 text-xs text-muted-foreground shadow-sm">نتیجه‌ای پیدا نشد.</p> : null}
       {chat.error || actionError ? <p className="bg-danger-surface px-4 pb-2 text-[10px] text-danger-foreground">{actionError || chat.error}</p> : null}
       <MessageInput value={chat.input} attachment={chat.attachment} replyingTo={chat.replyingTo} editingMessage={chat.editingMessage} notice={chat.notice} isSending={chat.isSending} onChange={chat.setInput} onSubmit={chat.send} onAttachmentSelected={chat.attachFile} onClearAttachment={chat.clearAttachment} onCancelReply={chat.cancelReply} onCancelEdit={chat.cancelEdit} />
-
-      {isInfoOpen ? <ChatUserInfo conversation={conversationForUi} messages={sharedMessages.length ? sharedMessages : chat.messages} muted={muted} onClose={() => setIsInfoOpen(false)} onToggleMute={() => void toggleMute()} onOpenProfile={(href) => router.push(href as Route)} /> : null}
 
       {chat.messageToDelete ? (
         <div role="dialog" aria-modal="true" aria-label="حذف پیام" className="fixed inset-0 z-50 grid place-items-end bg-overlay p-3 sm:place-items-center">
