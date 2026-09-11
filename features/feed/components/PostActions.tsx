@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import type { Route } from "next";
 import { Eye, Heart, MessageCircle, Share2 } from "lucide-react";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
 
 type PostActionsProps = {
   postId: string;
@@ -17,6 +20,8 @@ const formatCount = (value: number) => value >= 1000 ? (value / 1000).toFixed(1)
 const actionBase = "pointer-events-auto inline-flex h-8 w-full items-center justify-center gap-1 rounded-full transition-colors";
 
 export function PostActions({ postId, likes, comments, views, liked, onLike, onShare, className = "" }: PostActionsProps) {
+  const { requireAuth } = useAuthGate();
+
   return (
     <div dir="ltr" className={`feed-post-actions pointer-events-auto relative z-20 mt-3 grid h-10 grid-cols-4 items-center rounded-2xl border border-border bg-surface-glass px-1 text-icon-muted shadow-xs ${className}`}>
       <button type="button" onClick={(event) => { event.stopPropagation(); onShare(); }} aria-label="اشتراک‌گذاری روایت" className={`${actionBase} hover:bg-info-surface hover:text-info`}><Share2 className="h-[17px] w-[17px]" /></button>
@@ -39,7 +44,7 @@ export function PostActions({ postId, likes, comments, views, liked, onLike, onS
       <span aria-label={`${views} بازدید`} className={`${actionBase} text-icon-muted`}>
         <Eye className="h-[17px] w-[17px]" /><span className="text-xs">{formatCount(views)}</span>
       </span>
-      <button type="button" onClick={(event) => { event.stopPropagation(); onLike(); }} aria-label="پسندیدن روایت" aria-pressed={liked} className={`${actionBase} hover:bg-brand-muted ${liked ? "text-brand" : "hover:text-brand"}`}>
+      <button type="button" onClick={(event) => { event.stopPropagation(); if (!requireAuth()) return; onLike(); }} aria-label="پسندیدن روایت" aria-pressed={liked} className={`${actionBase} hover:bg-brand-muted ${liked ? "text-brand" : "hover:text-brand"}`}>
         <Heart className={`h-[17px] w-[17px] ${liked ? "fill-current" : ""}`} /><span className="text-xs">{formatCount(likes)}</span>
       </button>
     </div>
