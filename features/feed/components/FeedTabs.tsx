@@ -1,3 +1,6 @@
+"use client";
+
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import type { FeedTab } from "../types";
 
 type FeedTabsProps = {
@@ -6,6 +9,7 @@ type FeedTabsProps = {
 };
 
 export function FeedTabs({ activeTab, onChange }: FeedTabsProps) {
+  const { requireAuth } = useAuthGate();
   const tabClass = (active: boolean) => `relative z-10 flex-1 px-2 py-3 text-xs font-black transition-colors duration-200 ${active ? "text-brand" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`;
 
   return (
@@ -13,7 +17,7 @@ export function FeedTabs({ activeTab, onChange }: FeedTabsProps) {
       <button role="tab" type="button" onClick={() => onChange("for-you")} aria-selected={activeTab === "for-you"} className={tabClass(activeTab === "for-you")}>
         برای شما
       </button>
-      <button role="tab" type="button" onClick={() => onChange("following")} aria-selected={activeTab === "following"} className={tabClass(activeTab === "following")}>
+      <button role="tab" type="button" onClick={() => { if (requireAuth("/home")) onChange("following"); }} aria-selected={activeTab === "following"} className={tabClass(activeTab === "following")}>
         دنبال‌شده‌ها
       </button>
       <span aria-hidden="true" className={`pointer-events-none absolute bottom-0 right-0 h-0.5 w-1/2 bg-brand transition-transform duration-300 ease-out ${activeTab === "following" ? "-translate-x-full" : "translate-x-0"}`} />
