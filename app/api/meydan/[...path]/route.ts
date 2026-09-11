@@ -5,6 +5,8 @@ import {
   sessionCookieOptions,
 } from "@/lib/meydan-session";
 
+const GUEST_COOKIE = "meydan_guest";
+
 const apiBase = () => {
   const value =
     process.env.MEYDAN_API_BASE_URL ||
@@ -12,6 +14,11 @@ const apiBase = () => {
   if (!value) throw new Error("MEYDAN_API_BASE_URL is not configured.");
   return value.replace(/\/$/, "");
 };
+
+function upstreamCookie(response: Response, name: string): string | undefined {
+  const setCookie = response.headers.get("set-cookie") || "";
+  return setCookie.match(new RegExp(`(?:^|,\\s*)${name}=([^;]+)`))?.[1];
+}
 
 async function upstream(
   request: NextRequest,
@@ -24,8 +31,10 @@ async function upstream(
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
   const idempotencyKey = request.headers.get("idempotency-key");
+  const guestId = request.cookies.get(GUEST_COOKIE)?.value;
   if (contentType) headers.set("content-type", contentType);
   if (idempotencyKey) headers.set("idempotency-key", idempotencyKey);
+  if (guestId) headers.set("cookie", `${GUEST_COOKIE}=${guestId}`);
   headers.set("accept", "application/json");
   if (accessToken) headers.set("authorization", `Bearer ${accessToken}`);
 
@@ -52,7 +61,7 @@ async function refresh(refreshToken: string) {
   if (!response.ok || !body?.data?.access_token) return undefined;
   return {
     accessToken: body.data.access_token,
-    refreshToken: response.headers.get("set-cookie")?.match(/(?:^|,\s*)meydan_refresh=([^;]+)/)?.[1],
+    refreshToken: upstreamCookie(response, REFRESH_COOKIE),
   };
 }
 
@@ -79,6 +88,7 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
     }
   }
 
+  const guestId = upstreamCookie(response, GUEST_COOKIE);
   const responseBody = await response.arrayBuffer();
   const responseHeaders = new Headers({
     "content-type": response.headers.get("content-type") || "application/json; charset=utf-8",
@@ -89,6 +99,12 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
     status: response.status,
     headers: responseHeaders,
   });
+  if (guestId) {
+    result.cookies.set(GUEST_COOKIE, guestId, {
+      ...sessionCookieOptions,
+      maxAge: 365 * 24 * 60 * 60,
+    });
+  }
   if (refreshed && accessToken) {
     result.cookies.set(ACCESS_COOKIE, accessToken, { ...sessionCookieOptions, maxAge: 15 * 60 });
     if (refreshedRefreshToken) result.cookies.set(REFRESH_COOKIE, refreshedRefreshToken, { ...sessionCookieOptions, maxAge: 30 * 24 * 60 * 60 });
