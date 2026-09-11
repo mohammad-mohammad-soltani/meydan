@@ -1,13 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
+import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import { actorKey, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
 import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileSection } from "../types";
 
+function redirectToLogin() {
+  if (typeof window === "undefined") return;
+  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  rememberReturnTo(returnTo);
+  window.location.assign(loginHref(returnTo));
+}
+
 export function useProfile(profile: ProfileDetails, canManage = false) {
+  const { requireAuth } = useAuthGate();
   const selectedTab = profile.initialTab ?? "square";
   const targetActorType: ActorType = profile.accountType === "square" ? "square" : "user";
   const targetActorKey = actorKey(targetActorType, profile.actorId);
@@ -55,8 +65,9 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
 
   const toggleFollowing = async () => {
     if (canManage || isFollowLoading || !followStateReady) return;
+    if (!requireAuth()) return;
     if (followRequiresAuth) {
-      window.location.assign("/auth");
+      redirectToLogin();
       return;
     }
     const next = !isFollowing;
@@ -66,7 +77,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       await setActorFollowing(targetActorType, profile.actorId, next);
     } catch (reason) {
       setIsFollowing(!next);
-      if (isAuthApiError(reason)) window.location.assign("/auth");
+      if (isAuthApiError(reason)) redirectToLogin();
     } finally {
       setIsFollowLoading(false);
     }
@@ -74,6 +85,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
 
   const openChat = async () => {
     if (canManage || isChatOpening) return;
+    if (!requireAuth()) return;
     setIsChatOpening(true);
     setChatError(null);
     try {
@@ -87,7 +99,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       window.location.assign(`/chat/${conversation.id}`);
     } catch (reason) {
       if (isAuthApiError(reason)) {
-        window.location.assign("/auth");
+        redirectToLogin();
         return;
       }
       setChatError("باز کردن گفتگو انجام نشد. دوباره تلاش کنید.");
@@ -119,6 +131,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   };
 
   const toggleLike = async (narrativeId: string) => {
+    if (!requireAuth()) return;
     const next = !likedNarrativeIds.has(narrativeId);
     const delta = next ? 1 : -1;
 
@@ -139,7 +152,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         return updated;
       });
       adjustLikeCount(narrativeId, -delta);
-      if (isAuthApiError(reason)) window.location.assign("/auth");
+      if (isAuthApiError(reason)) redirectToLogin();
     }
   };
 
@@ -151,17 +164,20 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   };
 
   const saveUserDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
+    if (!requireAuth("/profile/edit")) return;
     setIsSavingManagement(true);
     setManagementError(null);
     try {
       await meydanApi("/me/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ full_name: input.name, headline: input.subtitle, about: input.about, skills: input.skills }) });
       window.location.reload();
-    } catch {
-      setManagementError("ذخیره‌سازی انجام نشد. دوباره تلاش کنید.");
+    } catch (reason) {
+      if (isAuthApiError(reason)) redirectToLogin();
+      else setManagementError("ذخیره‌سازی انجام نشد. دوباره تلاش کنید.");
     } finally { setIsSavingManagement(false); }
   };
 
   const saveSquareDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
+    if (!requireAuth("/profile/edit")) return;
     setIsSavingManagement(true);
     setManagementError(null);
     try {
@@ -176,14 +192,16 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         }),
       });
       window.location.reload();
-    } catch {
-      setManagementError("ذخیره‌سازی انجام نشد. دوباره تلاش کنید.");
+    } catch (reason) {
+      if (isAuthApiError(reason)) redirectToLogin();
+      else setManagementError("ذخیره‌سازی انجام نشد. دوباره تلاش کنید.");
     } finally {
       setIsSavingManagement(false);
     }
   };
 
   const createSchedule = async (input: { title: string; startsAt: string }) => {
+    if (!requireAuth("/profile/edit")) return;
     setIsSavingManagement(true);
     setManagementError(null);
     try {
@@ -193,8 +211,9 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         body: JSON.stringify({ title: input.title, starts_at: input.startsAt }),
       });
       window.location.reload();
-    } catch {
-      setManagementError("ثبت برنامه انجام نشد. دوباره تلاش کنید.");
+    } catch (reason) {
+      if (isAuthApiError(reason)) redirectToLogin();
+      else setManagementError("ثبت برنامه انجام نشد. دوباره تلاش کنید.");
     } finally {
       setIsSavingManagement(false);
     }
