@@ -32,12 +32,10 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
           <div className="mt-3 flex items-center gap-2">
             {canEdit ? <Link href={"/profile/edit" as Route} className="inline-flex min-h-10 items-center rounded-pill border border-border px-4 text-xs font-black text-foreground hover:bg-hover">ویرایش پروفایل</Link> : (
               <>
-                {accountType !== "square" ? (
-                  <button type="button" disabled={isChatOpening} onClick={onMessage} aria-label="ارسال پیام" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-3 text-xs font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
-                    {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
-                    پیام
-                  </button>
-                ) : null}
+                <button type="button" disabled={isChatOpening} onClick={onMessage} aria-label="ارسال پیام" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-3 text-xs font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
+                  {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
+                  پیام
+                </button>
                 <button type="button" disabled={isFollowLoading || !followStateReady} onClick={onToggleFollow} className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border px-4 text-xs font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
                   {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
                   {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
