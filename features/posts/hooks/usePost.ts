@@ -17,25 +17,14 @@ export function usePost(post: PostDetail) {
   const [isLoading] = useState(false);
   const [counts, setCounts] = useState({ likes: post.likes, reposts: post.reposts, comments: post.commentsCount });
 
-  // بعد از refresh مقدار viewer_state را دوباره از API می‌گیریم.
-  // قبلاً عدد لایک درست بود ولی state کاربر از props اولیه false می‌ماند.
   useEffect(() => {
     let active = true;
 
-    meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number }; viewer_state?: { liked?: boolean; reposted?: boolean } }>(`/narratives/${post.id}`)
+    meydanApi<{ viewer_state?: { liked?: boolean; reposted?: boolean } }>(`/narratives/${post.id}`)
       .then((result) => {
         if (!active) return;
-
         setLiked(Boolean(result.viewer_state?.liked));
         setReposted(Boolean(result.viewer_state?.reposted));
-
-        if (result.stats) {
-          setCounts((current) => ({
-            likes: result.stats?.likes ?? current.likes,
-            reposts: result.stats?.reposts ?? current.reposts,
-            comments: result.stats?.comments ?? current.comments,
-          }));
-        }
       })
       .catch(() => undefined);
 
@@ -49,7 +38,7 @@ export function usePost(post: PostDetail) {
     if (!content) return;
     setCommentDraft("");
     try {
-      const comment = await meydanApi<{ id: number; author?: { display_name?: string } | null; body: string; created_at?: string }>(`/narratives/${post.id}/comments`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() }, body: JSON.stringify({ body: content }) });
+      const comment = await meydanApi<{ id: number; author?: { display_name?: string } | null; body: string }>(`/narratives/${post.id}/comments`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() }, body: JSON.stringify({ body: content }) });
       setComments((current) => [{ id: String(comment.id), author: comment.author?.display_name || "شما", initials: "ش", timeAgo: "همین حالا", content: comment.body }, ...current]);
       setCounts((current) => ({ ...current, comments: current.comments + 1 }));
     } catch (reason) {
