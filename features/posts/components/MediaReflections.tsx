@@ -2,6 +2,7 @@
 
 import { ExternalLink, Newspaper, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 import type { MediaReflection } from "../types";
 
@@ -105,8 +106,11 @@ function ReflectionsModal({
   onClose: () => void;
 }) {
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -115,22 +119,25 @@ function ReflectionsModal({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="media-reflections-title"
-      className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/50 backdrop-blur-[2px] sm:items-center sm:p-5"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black/50 p-4 backdrop-blur-[2px]"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section className="flex max-h-[82dvh] w-full flex-col overflow-hidden rounded-t-[24px] border border-border bg-background shadow-2xl sm:max-w-xl sm:rounded-[24px]">
+      <section className="flex max-h-[82dvh] w-full max-w-xl flex-col overflow-hidden rounded-[24px] border border-border bg-background shadow-2xl">
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-divider bg-background/95 px-4 py-3 backdrop-blur">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
@@ -165,7 +172,8 @@ function ReflectionsModal({
           </div>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
