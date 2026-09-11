@@ -1,5 +1,5 @@
 const DEFAULT_API_BASE =
-  "https://meydan-backend-1362642112.style.dev/wp-json/meydan/v1";
+  "https://meydan-api.nabzjahan.ir/wp-json/meydan/v1";
 
 export type ApiEnvelope<T> = {
   data: T;
