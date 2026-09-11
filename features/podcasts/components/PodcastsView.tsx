@@ -1,15 +1,108 @@
-import { Headphones } from "lucide-react";
+"use client";
 
-const episodes = [
-  { id: "field-voice", title: "صدای میدان؛ گزارش شب دوازدهم", duration: "۱۸ دقیقه", description: "گفت‌وگو با هماهنگ‌کنندگان پایگاه‌های مردمی." },
-  { id: "city-story", title: "روایت شهر؛ ابتکارهای کوچک محلی", duration: "۲۴ دقیقه", description: "مرور تجربه‌های موفق محله‌ها و میدان‌ها." },
-];
+import Link from "next/link";
+import type { Route } from "next";
+import { Headphones, Music2, Search, X } from "lucide-react";
+import { useState } from "react";
+import type { ContentItem } from "@/features/content/types";
+import { filterPodcastItems } from "../search";
 
-export function PodcastsView() {
+export function PodcastsView({ items }: { items: ContentItem[] }) {
+  const [query, setQuery] = useState("");
+  const filteredItems = filterPodcastItems(items, query);
+
   return (
-    <section className="space-y-4 bg-background p-4 text-foreground" aria-labelledby="podcasts-title">
-      <header><h1 id="podcasts-title" className="text-base font-black text-foreground">رادیو میدان</h1><p className="mt-1 text-xs text-muted-foreground">گفت‌وگوها و روایت‌های صوتی منتخب.</p></header>
-      <div className="space-y-3">{episodes.map((episode) => <article key={episode.id} className="rounded-card border border-border bg-card p-4 text-card-foreground shadow-xs"><div className="flex items-start gap-3"><span className="rounded-xl bg-brand-muted p-2 text-brand"><Headphones className="h-5 w-5" /></span><div><h2 className="text-sm font-bold text-foreground">{episode.title}</h2><p className="mt-1 text-xs leading-6 text-muted-foreground">{episode.description}</p><span className="mt-2 block text-[11px] font-bold text-brand">{episode.duration}</span></div></div></article>)}</div>
+    <section
+      className="min-h-full bg-background pb-24 text-foreground"
+      aria-labelledby="podcasts-title"
+      dir="rtl"
+    >
+      <header className="sticky top-0 z-20 border-b border-divider bg-surface-glass px-4 py-4 backdrop-blur-md">
+        <div className="flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-success-surface text-success">
+            <Music2 className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 id="podcasts-title" className="text-base font-black text-foreground">
+              دم‌ها و سرودهای حماسی کشوری
+            </h1>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              همه آثار صوتی آماده پخش در میدان
+            </p>
+          </div>
+        </div>
+
+        <div className="relative mt-4">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon-muted"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="جست‌وجو در عنوان، توضیحات یا نام اجراکننده…"
+            aria-label="جست‌وجوی آثار صوتی"
+            className="h-11 w-full rounded-control border border-input-border bg-input pr-10 pl-10 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-foreground-subtle focus:border-ring focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="پاک کردن جست‌وجو"
+              className="absolute left-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-icon"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
+
+        <p className="mt-2 text-[10px] font-bold text-muted-foreground">
+          {filteredItems.length.toLocaleString("fa-IR")} اثر
+        </p>
+      </header>
+
+      <div className="space-y-2.5 px-3 py-4 sm:px-4">
+        {filteredItems.length ? (
+          filteredItems.map((item) => (
+            <Link
+              key={item.apiId}
+              href={`/content/${item.id}` as Route}
+              className="group flex items-center gap-3 rounded-[16px] border border-border bg-surface p-3 text-right transition-[background-color,border-color,transform] hover:border-border-strong hover:bg-hover active:scale-[0.99]"
+            >
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-success-surface text-success transition-transform group-hover:scale-105">
+                <Headphones className="h-5 w-5" aria-hidden="true" />
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-sm font-black text-foreground">
+                  {item.title}
+                </h2>
+                <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
+                  {item.author ? `${item.author} · ` : ""}
+                  {item.subtitle || item.description}
+                </p>
+              </div>
+
+              {item.media.duration ? (
+                <span className="shrink-0 rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold text-foreground-secondary">
+                  {item.media.duration}
+                </span>
+              ) : null}
+            </Link>
+          ))
+        ) : (
+          <div className="rounded-[18px] border border-dashed border-border bg-surface-muted px-5 py-10 text-center">
+            <Search className="mx-auto h-6 w-6 text-icon-muted" aria-hidden="true" />
+            <p className="mt-3 text-sm font-black text-foreground">
+              نتیجه‌ای پیدا نشد
+            </p>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              عبارت دیگری برای جست‌وجو امتحان کنید.
+            </p>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
