@@ -31,10 +31,7 @@ export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestion
   );
 
   return (
-    <div
-      id="view-feed"
-      className="relative min-h-full bg-background text-foreground [&_article_svg.fill-warning]:hidden"
-    >
+    <div id="view-feed" className="relative min-h-full bg-background text-foreground">
       <FeedTabs activeTab={feed.activeTab} onChange={feed.setActiveTab} />
 
       {feed.activeTab === "for-you" ? (
