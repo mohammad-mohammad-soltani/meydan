@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  chatContactHref,
   classifyChatAttachment,
   collectConversationSharedItems,
   filterChatMessages,
@@ -38,4 +39,8 @@ test("collects telegram-style Media, Files and Links without stories", () => {
 
 test("builds the real Meydan user profile route", () => {
   assert.equal(participantProfileHref({ id: "42" }), "/profile/user/42");
+});
+
+test("builds a dedicated full-screen contact page inside the conversation", () => {
+  assert.equal(chatContactHref("123"), "/chat/123/info");
 });
