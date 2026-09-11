@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { FolderKanban, Home, LogIn, Map, Mic, Search, UserCheck } from "lucide-react";
 import { MiniPlayer } from "@/features/audio/MiniPlayer";
+import { PostLoginReturn } from "@/components/providers/AuthReturnToBridge";
 import { BottomNavigation } from "./BottomNavigation";
 import { FloatingComposeButton } from "./FloatingComposeButton";
 import { MobileHeader } from "./MobileHeader";
@@ -20,6 +21,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full justify-center bg-background text-foreground">
+      <PostLoginReturn />
       <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between border-l border-border bg-surface p-4 lg:flex">
         <div className="space-y-6">
           <Link href="/home" className="flex items-center gap-3 px-2">
