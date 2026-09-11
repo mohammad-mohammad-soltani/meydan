@@ -29,7 +29,16 @@ type ApiMessage = {
   created_at?: string;
   edited_at?: string | null;
   deleted_at?: string | null;
-  attachment?: { id?: string; name?: string; mime_type?: string; size?: number; url?: string } | null;
+  attachment?: {
+    id?: string;
+    name?: string;
+    mime_type?: string;
+    mimeType?: string;
+    size?: number;
+    url?: string;
+    preview_url?: string;
+    previewUrl?: string;
+  } | null;
   reply_to?: { id: string | number; body?: string; sender_name?: string } | null;
   forwarded_from?: string | null;
   reactions?: string[];
@@ -76,6 +85,7 @@ function mapConversation(item: ApiConversation): Conversation {
 }
 
 function mapMessage(item: ApiMessage): ChatMessage {
+  const attachmentUrl = item.attachment?.url || item.attachment?.preview_url || item.attachment?.previewUrl;
   return {
     id: String(item.id),
     conversationId: String(item.conversation_id),
@@ -87,10 +97,10 @@ function mapMessage(item: ApiMessage): ChatMessage {
     attachment: item.attachment ? {
       id: item.attachment.id || `attachment-${item.id}`,
       name: item.attachment.name || "پیوست",
-      mimeType: item.attachment.mime_type || "application/octet-stream",
+      mimeType: item.attachment.mime_type || item.attachment.mimeType || "application/octet-stream",
       size: Number(item.attachment.size || 0),
-      url: item.attachment.url || undefined,
-      previewUrl: item.attachment.url || undefined,
+      url: attachmentUrl || undefined,
+      previewUrl: attachmentUrl || undefined,
     } : undefined,
     replyTo: item.reply_to ? {
       id: String(item.reply_to.id),
