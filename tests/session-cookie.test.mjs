@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { SESSION_MAX_AGE } from "../lib/meydan-session.ts";
+import { SESSION_MAX_AGE } from "../lib/meydan-session-config.ts";
 
 const THIRTY_DAYS = 30 * 24 * 60 * 60;
 
