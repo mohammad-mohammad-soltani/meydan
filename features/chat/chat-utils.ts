@@ -70,3 +70,7 @@ export function participantProfileHref(participant: Pick<ChatUser, "id"> & Parti
   const id = participant.profileId || participant.id;
   return `/profile/${type}/${id}`;
 }
+
+export function chatContactHref(conversationId: string | number): string {
+  return `/chat/${String(conversationId)}/info`;
+}
