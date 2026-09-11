@@ -6,13 +6,31 @@ export const LIVE_MAP_THEME = {
     "https://unpkg.com/maplibre-gl@5.14.0/dist/maplibre-gl.css",
   leafletBridgeScriptUrl:
     "https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.3/leaflet-maplibre-gl.js",
+  rtlTextPluginUrl:
+    "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js",
+  /** Self-hosted SDF ranges generated from app/fonts/IRANSansXV.woff2. */
+  glyphsUrl: "/fonts/{fontstack}/{range}.pbf",
   provincesGeoJsonUrl:
     "https://cdn.jsdelivr.net/gh/hosseinhabibi2004/iran-geojson@master/data/provinces/provinces.min.geojson",
   attribution: "OpenFreeMap © OpenMapTiles · Data © OpenStreetMap",
+  /**
+   * Map labels render from SDF glyph ranges, not the app's woff2, so IRANSansXV
+   * is self-hosted under public/fonts/IRANSansXV as generated {range}.pbf files.
+   * The name must match the glyphsUrl {fontstack} directory.
+   */
+  labelFontStack: ["IRANSansXV"],
   background: "#171a1b",
   provinceStroke: "#e5483f",
   provinceFill: "#272a2b",
   pin: "#e5544b",
+  /**
+   * Label colors are set here because the upstream style targets a light
+   * basemap; its near-black text would be invisible on this dark background.
+   */
+  placeLabel: "#d8d4cf",
+  roadLabel: "#a8a29c",
+  waterLabel: "#8fb6c9",
+  labelHalo: "rgba(16,18,19,.85)",
 } as const;
 
 export function makeProvinceStyle() {

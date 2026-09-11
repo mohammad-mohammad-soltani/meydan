@@ -2,18 +2,18 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { FolderKanban, Home, Map, Mic, Search, UserCheck } from "lucide-react";
+import { FolderKanban, Home, LogIn, Map, Mic, Search, UserCheck } from "lucide-react";
 import { MiniPlayer } from "@/features/audio/MiniPlayer";
 import { BottomNavigation } from "./BottomNavigation";
 import { FloatingComposeButton } from "./FloatingComposeButton";
 import { MobileHeader } from "./MobileHeader";
 import { usePathname } from "next/navigation";
 
-type AppShellProps = { children: ReactNode };
+type AppShellProps = { children: ReactNode; isAuthenticated?: boolean };
 
 const desktopLinkClass = "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground";
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
   const pathname = usePathname();
   const isPostPage = pathname.startsWith("/posts/");
   const isComposePage = pathname === "/compose";
@@ -32,7 +32,11 @@ export function AppShell({ children }: AppShellProps) {
             <Link href="/speakers" className={desktopLinkClass}><Mic className="h-5 w-5" />اعزام سخنران</Link>
             <Link href="/map" className={desktopLinkClass}><Map className="h-5 w-5" />نقشه زنده</Link>
             <Link href="/explore" className={desktopLinkClass}><Search className="h-5 w-5" />کاوش و جستجو</Link>
-            <Link href="/profile" className={desktopLinkClass}><UserCheck className="h-5 w-5" />نمایه</Link>
+            {isAuthenticated ? (
+              <Link href="/profile" className={desktopLinkClass}><UserCheck className="h-5 w-5" />نمایه</Link>
+            ) : (
+              <Link href="/auth" className={desktopLinkClass}><LogIn className="h-5 w-5" />ورود</Link>
+            )}
           </nav>
         </div>
       </aside>
@@ -41,7 +45,7 @@ export function AppShell({ children }: AppShellProps) {
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar">{children}</main>
         <FloatingComposeButton />
         <MiniPlayer />
-        {!isPostPage ? <BottomNavigation /> : null}
+        {!isPostPage ? <BottomNavigation isAuthenticated={isAuthenticated} /> : null}
       </div>
       <aside className="hidden h-screen w-72 shrink-0 space-y-4 overflow-y-auto border-r border-border bg-surface p-4 lg:flex lg:flex-col"><div className="rounded-card border border-border bg-card p-3.5 text-xs text-card-foreground shadow-xs"><h2 className="font-black">ترندهای داغ میادین</h2><p className="mt-2 text-muted-foreground">نمای مشترک اطلاعات و روندهای میدانی</p></div></aside>
     </div>

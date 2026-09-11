@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { FolderKanban, Home, Map, Search, UserCheck } from "lucide-react";
+import { FolderKanban, Home, LogIn, Map, Search, UserCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const items = [
@@ -10,14 +10,27 @@ const items = [
   { href: "/content", label: "محتوا", icon: FolderKanban, match: (path: string) => path === "/content" },
   { href: "/map", label: "نقشه زنده", icon: Map, match: (path: string) => path === "/map" },
   { href: "/explore", label: "کاوش", icon: Search, match: (path: string) => path === "/explore" },
-  { href: "/profile", label: "نمایه", icon: UserCheck, match: (path: string) => path === "/profile" },
 ];
 
-export function BottomNavigation() {
+type BottomNavigationProps = { isAuthenticated?: boolean };
+
+export function BottomNavigation({ isAuthenticated = false }: BottomNavigationProps) {
   const pathname = usePathname();
   const isConversationRoute = pathname.startsWith("/chat/");
 
   if (isConversationRoute) return null;
+
+  const links = isAuthenticated
+    ? [...items, { href: "/profile", label: "نمایه", icon: UserCheck, match: (path: string) => path === "/profile" }]
+    : [
+        ...items,
+        {
+          href: "/auth",
+          label: "ورود",
+          icon: LogIn,
+          match: (path: string) => path === "/auth" || path.startsWith("/auth/"),
+        },
+      ];
 
   return (
     <nav
@@ -25,7 +38,7 @@ export function BottomNavigation() {
       aria-label="ناوبری اصلی"
       className="relative z-50 grid w-full shrink-0 grid-cols-5 items-center gap-1.5 border-t border-border bg-surface-glass px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-icon-muted backdrop-blur lg:hidden"
     >
-      {items.map(({ href, label, icon: Icon, match }) => {
+      {links.map(({ href, label, icon: Icon, match }) => {
         const active = match(pathname);
         return (
           <Link

@@ -14,3 +14,7 @@ export async function accessTokenHeader(): Promise<Record<string, string>> {
   const token = (await cookies()).get(ACCESS_COOKIE)?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
+
+export async function isAuthenticated(): Promise<boolean> {
+  return Boolean((await cookies()).get(ACCESS_COOKIE)?.value);
+}
