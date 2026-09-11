@@ -1,3 +1,5 @@
+import type { Route } from "next";
+
 export const DEFAULT_RETURN_TO = "/profile";
 export const RETURN_TO_STORAGE_KEY = "meydan-return-to";
 
@@ -17,8 +19,8 @@ export function sanitizeReturnTo(
   }
 }
 
-export function loginHref(returnTo = DEFAULT_RETURN_TO): string {
-  return `/auth?returnTo=${encodeURIComponent(sanitizeReturnTo(returnTo))}`;
+export function loginHref(returnTo = DEFAULT_RETURN_TO): Route {
+  return `/auth?returnTo=${encodeURIComponent(sanitizeReturnTo(returnTo))}` as Route;
 }
 
 export function rememberReturnTo(returnTo: string): void {
