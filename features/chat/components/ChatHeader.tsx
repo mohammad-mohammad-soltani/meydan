@@ -18,12 +18,13 @@ export function ChatHeader({ conversation, isLeaving, onBack }: ChatHeaderProps)
   const { participant } = conversation;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const closeMenu = () => setIsMenuOpen(false);
+  const avatar = participant.avatarUrl || chatAvatar(participant.avatarTone);
 
   return (
     <header className="relative z-30 flex h-[62px] shrink-0 items-center justify-between border-b border-border bg-surface-glass px-3 shadow-xs backdrop-blur-md">
       <div className="flex min-w-0 items-center gap-2">
         <button type="button" onClick={onBack} disabled={isLeaving} aria-label="بازگشت به گفتگوها" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:text-disabled-foreground"><ArrowRight className="h-6 w-6" /></button>
-        <Image src={chatAvatar(participant.avatarTone)} alt="" width={42} height={42} className="h-[42px] w-[42px] shrink-0 rounded-full object-cover" />
+        <Image src={avatar} alt="" width={42} height={42} unoptimized={typeof avatar === "string" && avatar.startsWith("http")} className="h-[42px] w-[42px] shrink-0 rounded-full object-cover" />
         <div className="min-w-0">
           <div className="flex items-center gap-1"><h1 className="truncate text-[15px] font-extrabold text-foreground">{participant.name}</h1>{participant.isVerified ? <BadgeCheck className="h-3.5 w-3.5 shrink-0 fill-verified text-on-solid" aria-label="تأییدشده" /> : null}</div>
           <p className="truncate text-[11px] text-verified">{participant.isOnline ? "آنلاین" : "آخرین بازدید اخیراً"}</p>
