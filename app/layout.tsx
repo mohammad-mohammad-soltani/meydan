@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import "./black-theme.css";
 import "./persian-digits.css";
 import "leaflet/dist/leaflet.css";
 
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="fa" dir="rtl" className={iranSans.variable} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: "(() => {\n  try {\n    const theme = window.localStorage.getItem(\"meydan-theme\");\n    const isDark = theme !== \"light\";\n    document.documentElement.classList.toggle(\"dark\", isDark);\n    document.documentElement.style.colorScheme = isDark ? \"dark\" : \"light\";\n  } catch {\n    document.documentElement.classList.add(\"dark\");\n    document.documentElement.style.colorScheme = \"dark\";\n  }\n})();" }} />
+        <script dangerouslySetInnerHTML={{ __html: "(() => {\n  try {\n    const stored = window.localStorage.getItem(\"meydan-theme\");\n    const theme = stored === \"light\" || stored === \"black\" ? stored : \"dark\";\n    document.documentElement.classList.toggle(\"dark\", theme === \"dark\");\n    document.documentElement.classList.toggle(\"black\", theme === \"black\");\n    document.documentElement.style.colorScheme = theme === \"light\" ? \"light\" : \"dark\";\n  } catch {\n    document.documentElement.classList.add(\"dark\");\n    document.documentElement.classList.remove(\"black\");\n    document.documentElement.style.colorScheme = \"dark\";\n  }\n})();" }} />
       </head>
       <body className="min-h-screen bg-background text-foreground transition-colors duration-150">
         {children}
