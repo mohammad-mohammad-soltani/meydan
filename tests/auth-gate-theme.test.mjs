@@ -42,11 +42,15 @@ test("compose and chat routes have server-side authentication guards", () => {
   assert.match(readFileSync(chatLayout, "utf8"), /isAuthenticated/);
 });
 
-test("successful login returns to a sanitized intended path", () => {
-  const auth = source("app/auth/page.tsx");
-  assert.match(auth, /sanitizeReturnTo/);
-  assert.match(auth, /returnTo/);
-  assert.doesNotMatch(auth, /result\.authenticated\)[\s\S]{0,120}router\.replace\("\/profile"\)/);
+test("login flow preserves and consumes a sanitized return target", () => {
+  const bridgePath = path.join(root, "components/providers/AuthReturnToBridge.tsx");
+  assert.ok(existsSync(bridgePath), "AuthReturnToBridge must exist");
+  const bridge = readFileSync(bridgePath, "utf8");
+  assert.match(bridge, /sanitizeReturnTo/);
+  assert.match(bridge, /sessionStorage/);
+  assert.match(bridge, /returnTo/);
+  assert.match(source("app/auth/layout.tsx"), /AuthReturnToCapture/);
+  assert.match(source("components/layouts/AppShell.tsx"), /PostLoginReturn/);
 });
 
 test("theme supports light, dark and pure-black modes", () => {
