@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowRight, BadgeCheck, Check, LoaderCircle, MoreHorizontal, UserRoundPlus } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, LoaderCircle, MessageCircle, MoreHorizontal, UserRoundPlus } from "lucide-react";
 import type { ProfileDetails } from "../types";
 
 type ProfileHeaderProps = {
@@ -10,10 +10,12 @@ type ProfileHeaderProps = {
   isFollowing?: boolean;
   isFollowLoading?: boolean;
   followStateReady?: boolean;
+  isChatOpening?: boolean;
   onToggleFollow?: () => void;
+  onMessage?: () => void;
 };
 
-export function ProfileHeader({ profile, canEdit = false, isFollowing = false, isFollowLoading = false, followStateReady = true, onToggleFollow }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, canEdit = false, isFollowing = false, isFollowLoading = false, followStateReady = true, isChatOpening = false, onToggleFollow, onMessage }: ProfileHeaderProps) {
   const { identity, accountType, narratives } = profile;
   const postLabel = accountType === "square" ? new Intl.NumberFormat("fa-IR").format(narratives.length) : profile.resumeStats[0]?.value || "۰";
 
@@ -29,10 +31,18 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
           <div className="-mt-12 grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-surface bg-surface-muted text-3xl font-black text-foreground sm:-mt-14 sm:h-28 sm:w-28">{identity.avatar ? <Image src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} height={112} unoptimized={identity.avatar.startsWith("http")} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}</div>
           <div className="mt-3 flex items-center gap-2">
             {canEdit ? <Link href={"/profile/edit" as Route} className="inline-flex min-h-10 items-center rounded-pill border border-border px-4 text-xs font-black text-foreground hover:bg-hover">ویرایش پروفایل</Link> : (
-              <button type="button" disabled={isFollowLoading || !followStateReady} onClick={onToggleFollow} className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border px-4 text-xs font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
-                {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
-                {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
-              </button>
+              <>
+                {accountType !== "square" ? (
+                  <button type="button" disabled={isChatOpening} onClick={onMessage} aria-label="ارسال پیام" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-3 text-xs font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
+                    {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
+                    پیام
+                  </button>
+                ) : null}
+                <button type="button" disabled={isFollowLoading || !followStateReady} onClick={onToggleFollow} className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border px-4 text-xs font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
+                  {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
+                  {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
+                </button>
+              </>
             )}
             <button type="button" aria-label="گزینه‌های بیشتر" className="grid h-10 w-10 place-items-center rounded-full border border-border text-icon hover:bg-hover"><MoreHorizontal className="h-5 w-5" /></button>
           </div>
