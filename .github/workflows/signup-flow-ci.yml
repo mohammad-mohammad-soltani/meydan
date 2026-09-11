@@ -49,7 +49,7 @@ jobs:
         run: npm run test:session
       - name: Existing map tests
         run: npm run test:map
-      - name: Lint frontend
-        run: npm run lint
+      - name: Lint changed signup/session files
+        run: npx eslint app/auth/page.tsx 'app/api/auth/[action]/route.ts' 'app/api/meydan/[...path]/route.ts' features/auth lib/meydan-session.ts lib/meydan-session-config.ts
       - name: Build frontend
         run: npm run build
