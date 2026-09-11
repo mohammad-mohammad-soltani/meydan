@@ -32,6 +32,7 @@ export type ProfileReply = { id: string; narrativeId: string; content: string; t
 
 export type ProfileDetails = {
   actorId: number;
+  chatUserId?: number;
   accountType: ProfileTab;
   provinceId?: number;
   cityId?: number;
