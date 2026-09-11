@@ -1,0 +1,47 @@
+name: Signup Flow CI
+
+on:
+  push:
+    paths:
+      - "app/auth/**"
+      - "app/api/auth/**"
+      - "app/api/meydan/**"
+      - "features/auth/**"
+      - "features/profile/components/LocationPickerMap.tsx"
+      - "lib/meydan-session.ts"
+      - "tests/registration.test.mjs"
+      - "tests/session-cookie.test.mjs"
+      - "package.json"
+      - ".github/workflows/signup-flow-ci.yml"
+  pull_request:
+    paths:
+      - "app/auth/**"
+      - "app/api/auth/**"
+      - "app/api/meydan/**"
+      - "features/auth/**"
+      - "features/profile/components/LocationPickerMap.tsx"
+      - "lib/meydan-session.ts"
+      - "tests/registration.test.mjs"
+      - "tests/session-cookie.test.mjs"
+      - "package.json"
+      - ".github/workflows/signup-flow-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-signup-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - name: Registration behavior tests
+        run: npm run test:registration
+      - name: Session cookie tests
+        run: npm run test:session
+      - name: Build frontend
+        run: npm run build
