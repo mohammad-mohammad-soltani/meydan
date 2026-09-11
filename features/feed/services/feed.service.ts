@@ -81,15 +81,17 @@ function numericActorId(value?: string): number {
   return Number(match?.[1] || 0);
 }
 
-function mediaReflectionSummary(reflections: NonNullable<ApiNarrative["media_reflections"]>): string {
-  const outlets = Array.from(
+function mediaReflectionOutlets(reflections: NonNullable<ApiNarrative["media_reflections"]>): string[] {
+  return Array.from(
     new Set(
       reflections
         .map((reflection) => reflection.outlet?.trim())
         .filter((outlet): outlet is string => Boolean(outlet)),
     ),
   );
+}
 
+function mediaReflectionSummary(outlets: string[]): string {
   if (!outlets.length) return "";
 
   if (outlets.length === 1) {
@@ -110,7 +112,8 @@ function mediaReflectionSummary(reflections: NonNullable<ApiNarrative["media_ref
 function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): FeedPost {
   const reflections = item.media_reflections || [];
   const reflection = reflections[0];
-  const reflectionSummary = mediaReflectionSummary(reflections);
+  const reflectionOutlets = mediaReflectionOutlets(reflections);
+  const reflectionSummary = mediaReflectionSummary(reflectionOutlets);
   const visual = item.attachments?.some(
     (attachment) => attachment.type === "image" || attachment.type === "video",
   );
@@ -158,6 +161,7 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
     mediaReflection: reflection
       ? {
           outlet: reflection.outlet,
+          outlets: reflectionOutlets,
           headline: reflectionSummary || reflection.title,
           url: reflections.length === 1 ? reflection.url : undefined,
         }
