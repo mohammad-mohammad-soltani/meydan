@@ -28,7 +28,7 @@ export function ProfileView({ initialProfile, canManage = true }: { initialProfi
         <ProfileInfo profile={profile.profile} tab={profile.selectedTab} expandedSections={profile.expandedSections} onToggleSection={profile.toggleSection} />
         {isSquareAccount ? <SquareLocationCard profile={profile.profile} /> : null}
         {isSquareAccount ? <SquareSchedule items={profile.profile.schedule} canManage={canManage} /> : null}
-        <ProfileActivity posts={profile.profile.narrativePosts} replies={profile.profile.replies} likedPostIds={profile.likedNarrativeIds} onLike={(postId) => void profile.toggleLike(postId)} onShare={(post) => void profile.shareNarrative(post)} />
+        <ProfileActivity posts={profile.narrativePosts} replies={profile.profile.replies} likedPostIds={profile.likedNarrativeIds} onLike={(postId) => void profile.toggleLike(postId)} onShare={(post) => void profile.shareNarrative(post)} />
       </div>
       {profile.isLoading ? <p className="px-4 text-xs text-muted-foreground">در حال دریافت پروفایل…</p> : null}
       {canManage && profile.isManagementOpen ? (
