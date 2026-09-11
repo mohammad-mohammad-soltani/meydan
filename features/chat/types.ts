@@ -9,6 +9,8 @@ export type ChatUser = {
   avatarUrl?: string;
   isVerified?: boolean;
   isOnline?: boolean;
+  profileType?: "user" | "square";
+  profileId?: string;
 };
 
 export type Conversation = {
@@ -19,6 +21,7 @@ export type Conversation = {
   updatedAt: string;
   unreadCount: number;
   lastMessageId?: string;
+  notificationsMuted?: boolean;
 };
 
 export type ChatMessage = {
