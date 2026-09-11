@@ -62,8 +62,6 @@ export function ConnectedGoodActionCard({
     setJoined(initialJoined);
     setParticipantCount(initialParticipantCount ?? null);
 
-    if (initialParticipantCount !== undefined) return;
-
     let active = true;
     void meydanApi<InitiativeResponse>(`/initiatives/${initiativeId}`)
       .then((initiative) => {
