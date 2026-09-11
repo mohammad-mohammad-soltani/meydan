@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ProvinceAggregate, SquareMarker } from "../services/map.service";
+import { addOpenFreeMapBasemap } from "../services/openfreemap-basemap";
 import {
   LIVE_MAP_THEME,
   makePinHtml,
@@ -98,16 +99,19 @@ export function MapFrame({
         worldCopyJump: false,
       }).setView(iranCenter, initialZoom);
 
-      L.tileLayer(LIVE_MAP_THEME.tileUrl, {
-        maxZoom: 20,
-        subdomains: "abcd",
-      }).addTo(instance);
+      map.current = instance;
 
       const syncScale = () => setScale(nextScale(instance));
       instance.on("zoomend moveend", syncScale);
       syncScale();
 
-      map.current = instance;
+      try {
+        await addOpenFreeMapBasemap(L, instance);
+      } catch (error) {
+        console.error("Unable to load OpenFreeMap basemap", error);
+      }
+
+      if (disposed || !map.current) return;
       setReady(true);
 
       try {
@@ -398,14 +402,25 @@ export function MapFrame({
         </div>
       </div>
 
-      <a
-        href="https://www.openstreetmap.org/copyright"
-        target="_blank"
-        rel="noreferrer"
-        className="absolute bottom-1 left-1/2 z-[450] -translate-x-1/2 text-[8px] text-white/30 transition hover:text-white/55"
-      >
-        © OpenStreetMap · © CARTO
-      </a>
+      <div className="absolute bottom-1 left-1/2 z-[450] flex -translate-x-1/2 items-center gap-1 whitespace-nowrap text-[8px] text-white/30">
+        <a
+          href="https://openfreemap.org"
+          target="_blank"
+          rel="noreferrer"
+          className="transition hover:text-white/55"
+        >
+          OpenFreeMap © OpenMapTiles
+        </a>
+        <span>·</span>
+        <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noreferrer"
+          className="transition hover:text-white/55"
+        >
+          Data © OpenStreetMap
+        </a>
+      </div>
 
       {!ready ? (
         <div className="absolute inset-0 z-[600] grid place-items-center bg-[#171a1b]">

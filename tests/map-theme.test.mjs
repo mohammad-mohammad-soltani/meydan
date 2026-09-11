@@ -6,8 +6,11 @@ import {
   makeProvinceStyle,
 } from "../features/map/map-theme.ts";
 
-test("live map theme matches the dark red reference treatment", () => {
-  assert.match(LIVE_MAP_THEME.tileUrl, /dark_nolabels/);
+test("live map uses the keyless OpenFreeMap dark vector style", () => {
+  assert.equal(LIVE_MAP_THEME.styleUrl, "https://tiles.openfreemap.org/styles/dark");
+  assert.match(LIVE_MAP_THEME.mapLibreScriptUrl, /maplibre-gl@5\.14\.0/);
+  assert.match(LIVE_MAP_THEME.leafletBridgeScriptUrl, /maplibre-gl-leaflet@0\.0\.22/);
+  assert.doesNotMatch(JSON.stringify(LIVE_MAP_THEME), /carto|api[_-]?key/i);
   assert.equal(LIVE_MAP_THEME.background, "#171a1b");
   assert.equal(LIVE_MAP_THEME.provinceStroke, "#e5483f");
   assert.equal(LIVE_MAP_THEME.provinceFill, "#272a2b");

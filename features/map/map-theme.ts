@@ -1,7 +1,14 @@
 export const LIVE_MAP_THEME = {
-  tileUrl: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
+  styleUrl: "https://tiles.openfreemap.org/styles/dark",
+  mapLibreScriptUrl:
+    "https://unpkg.com/maplibre-gl@5.14.0/dist/maplibre-gl.js",
+  mapLibreCssUrl:
+    "https://unpkg.com/maplibre-gl@5.14.0/dist/maplibre-gl.css",
+  leafletBridgeScriptUrl:
+    "https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js",
   provincesGeoJsonUrl:
     "https://cdn.jsdelivr.net/gh/hosseinhabibi2004/iran-geojson@master/data/provinces/provinces.min.geojson",
+  attribution: "OpenFreeMap © OpenMapTiles · Data © OpenStreetMap",
   background: "#171a1b",
   provinceStroke: "#e5483f",
   provinceFill: "#272a2b",
