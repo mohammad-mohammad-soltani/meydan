@@ -6,14 +6,14 @@ import {
 } from "@/lib/meydan-session";
 
 const GUEST_COOKIE = "meydan_guest";
+const DEFAULT_API_BASE = "https://meydan-api.nabzjahan.ir/wp-json/meydan/v1";
 
-const apiBase = () => {
-  const value =
+const apiBase = () =>
+  (
     process.env.MEYDAN_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_MEYDAN_API_BASE_URL;
-  if (!value) throw new Error("MEYDAN_API_BASE_URL is not configured.");
-  return value.replace(/\/$/, "");
-};
+    process.env.NEXT_PUBLIC_MEYDAN_API_BASE_URL ||
+    DEFAULT_API_BASE
+  ).replace(/\/$/, "");
 
 function upstreamCookie(response: Response, name: string): string | undefined {
   const setCookie = response.headers.get("set-cookie") || "";
