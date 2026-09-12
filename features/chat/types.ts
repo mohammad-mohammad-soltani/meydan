@@ -55,7 +55,7 @@ export type SocketTicket = {
   socketUrl: string;
 };
 
-export type ChatNotificationKind = "like" | "repost" | "message" | "media" | "mention" | "follow" | "comment" | "join_field" | "system";
+export type ChatNotificationKind = "like" | "repost" | "media" | "mention" | "follow" | "comment" | "initiative" | "system";
 
 export type ChatNotification = {
   id: string;
@@ -63,7 +63,6 @@ export type ChatNotification = {
   title: string;
   description: string;
   createdAt: string;
-  conversationId?: string;
   actor?: ChatUser;
   unread: boolean;
   targetUrl?: string;
