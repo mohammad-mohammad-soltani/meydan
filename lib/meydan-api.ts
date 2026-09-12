@@ -42,6 +42,10 @@ export function requiresClientAuthentication(path: string, init?: RequestInit): 
   const method = (init?.method || "GET").toUpperCase();
   const cleanPath = path.split("?")[0] || path;
 
+  if (cleanPath === "/notifications" || cleanPath.startsWith("/notifications/")) {
+    return true;
+  }
+
   if (method === "GET" || method === "HEAD") {
     if (!path.startsWith("/timeline?")) return false;
     const query = path.slice(path.indexOf("?") + 1);
