@@ -2,14 +2,31 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { FolderKanban, Home, LogIn, Map, Search, UserCheck } from "lucide-react";
+import { FolderKanban, Home, LogIn, Map, MessageCircle, UserCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { NavBadge } from "./NavBadge";
 
-const items = [
+type NavLink = {
+  href: string;
+  label: string;
+  icon: typeof Home;
+  match: (path: string) => boolean;
+  /** Show the unread counter. */
+  badge?: boolean;
+};
+
+// Explore moved to the mobile header, so chat takes its slot here.
+const items: NavLink[] = [
   { href: "/home", label: "خانه", icon: Home, match: (path: string) => path === "/home" },
   { href: "/content", label: "محتوا", icon: FolderKanban, match: (path: string) => path === "/content" },
   { href: "/map", label: "نقشه زنده", icon: Map, match: (path: string) => path === "/map" },
-  { href: "/explore", label: "کاوش", icon: Search, match: (path: string) => path === "/explore" },
+  {
+    href: "/chat",
+    label: "گفتگو",
+    icon: MessageCircle,
+    match: (path: string) => path === "/chat" || path.startsWith("/chat/"),
+    badge: true,
+  },
 ];
 
 type BottomNavigationProps = { isAuthenticated?: boolean };
@@ -20,7 +37,7 @@ export function BottomNavigation({ isAuthenticated = false }: BottomNavigationPr
 
   if (isConversationRoute) return null;
 
-  const links = isAuthenticated
+  const links: NavLink[] = isAuthenticated
     ? [...items, { href: "/profile", label: "نمایه", icon: UserCheck, match: (path: string) => path === "/profile" }]
     : [
         ...items,
@@ -38,7 +55,7 @@ export function BottomNavigation({ isAuthenticated = false }: BottomNavigationPr
       aria-label="ناوبری اصلی"
       className="relative z-50 grid w-full shrink-0 grid-cols-5 items-center gap-1.5 border-t border-border bg-surface-glass px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-icon-muted backdrop-blur lg:hidden"
     >
-      {links.map(({ href, label, icon: Icon, match }) => {
+      {links.map(({ href, label, icon: Icon, match, badge }) => {
         const active = match(pathname);
         return (
           <Link
@@ -47,7 +64,10 @@ export function BottomNavigation({ isAuthenticated = false }: BottomNavigationPr
             aria-current={active ? "page" : undefined}
             className={`flex min-h-11 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 font-bold transition-colors ${active ? "bg-brand-muted text-brand" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`}
           >
-            <Icon className="h-5 w-5 shrink-0" />
+            <span className="relative">
+              <Icon className="h-5 w-5 shrink-0" />
+              {badge ? <NavBadge className="absolute -right-3 -top-2" /> : null}
+            </span>
             <span className="whitespace-nowrap text-[9px]">{label}</span>
           </Link>
         );

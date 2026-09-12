@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, ChevronLeft, LoaderCircle, MapPin, X } from "lucide-react";
+import type { Route } from "next";
+import { CalendarDays, Camera, ChevronLeft, LoaderCircle, MapPin, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { meydanApi } from "@/lib/meydan-api";
 import { getCityMap } from "@/features/map/services/map.service";
@@ -11,8 +12,7 @@ import { uploadNarrativeFile } from "@/lib/meydan-upload";
 import { ImageCropDialog } from "./ImageCropDialog";
 import { LocationPickerMap } from "@/features/map/components/LocationPickerMap";
 import type { SelectedLocation } from "@/features/map/types";
-import { PersianDatePicker } from "./PersianDatePicker";
-import { ScheduleEditor } from "./ScheduleEditor";
+import { PersianDatePicker } from "@/components/shared/PersianDatePicker";
 import type { ProfileDetails } from "../types";
 
 export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
@@ -269,9 +269,13 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
             <textarea rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
           </Field>
           {isSquare ? (
-            <Field label="تاریخ شروع فعالیت میدان">
-              <PersianDatePicker value={startDate} onChange={setStartDate} />
-            </Field>
+            <FieldGroup label="تاریخ شروع فعالیت میدان">
+              <PersianDatePicker
+                value={startDate}
+                onChange={setStartDate}
+                ariaLabel="انتخاب تاریخ شروع فعالیت میدان"
+              />
+            </FieldGroup>
           ) : null}
           {isSquare ? (
             <div>
@@ -300,7 +304,25 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
               ) : null}
             </div>
           ) : null}
-          {isSquare ? <ScheduleEditor initialItems={profile.schedule} /> : null}
+          {isSquare ? (
+            <Link
+              href={"/profile/schedule" as Route}
+              className="flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-3.5 py-3 transition-colors hover:bg-hover"
+            >
+              <span className="flex min-w-0 items-center gap-2.5">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-muted text-brand">
+                  <CalendarDays aria-hidden="true" className="h-4 w-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-xs font-black text-foreground">سین برنامه</span>
+                  <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
+                    افزودن، جابه‌جایی و حذف برنامه‌های میدان
+                  </span>
+                </span>
+              </span>
+              <ChevronLeft aria-hidden="true" className="h-4 w-4 shrink-0 text-icon-muted" />
+            </Link>
+          ) : null}
           <Field label="مهارت‌ها">
             <input
               value={skills}
@@ -323,5 +345,18 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
         {children}
       </span>
     </label>
+  );
+}
+
+/**
+ * Same look as `Field`, but for controls that are themselves interactive
+ * (like the date picker): a `<label>` must not wrap other buttons.
+ */
+function FieldGroup({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="text-xs text-foreground-subtle">
+      <span className="mb-1.5 block px-1">{label}</span>
+      <div className="block">{children}</div>
+    </div>
   );
 }

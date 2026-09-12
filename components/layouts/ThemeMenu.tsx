@@ -2,11 +2,8 @@
 
 import { Check, Circle, Moon, Sun } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import {
-  applyTheme,
-  readStoredTheme,
-  type ThemeName,
-} from "@/lib/theme";
+import { applyTheme, type ThemeName } from "@/lib/theme";
+import { useTheme } from "./useTheme";
 
 const options: Array<{
   value: ThemeName;
@@ -21,13 +18,7 @@ const options: Array<{
 export function ThemeMenu() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<ThemeName>("dark");
-
-  useEffect(() => {
-    const current = readStoredTheme();
-    applyTheme(current, false);
-    setTheme(current);
-  }, []);
+  const theme = useTheme();
 
   useEffect(() => {
     if (!open) return;
@@ -73,7 +64,6 @@ export function ThemeMenu() {
                 aria-checked={active}
                 onClick={() => {
                   applyTheme(value);
-                  setTheme(value);
                   setOpen(false);
                 }}
                 className={`flex min-h-10 w-full items-center gap-2 rounded-xl px-2.5 text-right text-xs font-black transition-colors ${

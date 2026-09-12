@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { mapApiNotification, mergeNotification, shouldRefreshNotificationFromApi, type ApiNotificationLike } from "../chat-utils";
+import { useUnreadCounts } from "../providers/UnreadProvider";
 import { getChatSocket } from "../realtime/socket";
 import { getConversations } from "../services/chat.service";
 import {
@@ -17,6 +18,10 @@ export type ChatSection = "conversations" | "notifications";
 const MESSAGE_NOTIFICATION_TYPES = new Set(["message", "chat_message", "direct_message"]);
 
 export function useChat(initialConversations: Conversation[] = [], initialNotifications: ChatNotification[] = []) {
+  // Reading a notification must also move the navigation badge: the API emits
+  // no socket event for the actor's own read, so the shared counter is asked to
+  // re-read itself right after the write succeeds.
+  const { refresh: refreshUnreadCounts } = useUnreadCounts();
   const [section, setSectionState] = useState<ChatSection>("conversations");
   const [conversations, setConversations] = useState(initialConversations);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -67,20 +72,24 @@ export function useChat(initialConversations: Conversation[] = [], initialNotifi
     try {
       const updated = await markNotificationRead(notificationId);
       setNotifications((current) => current.map((item) => item.id === notificationId ? updated : item));
+      refreshUnreadCounts();
     } catch {
       await refreshNotifications();
+      refreshUnreadCounts();
     }
-  }, [refreshNotifications]);
+  }, [refreshNotifications, refreshUnreadCounts]);
 
   const readAllNotifications = useCallback(async () => {
     setNotifications((current) => current.map((item) => ({ ...item, unread: false })));
     setUnreadNotificationCount(0);
     try {
       await markAllNotificationsRead();
+      refreshUnreadCounts();
     } catch {
       await refreshNotifications();
+      refreshUnreadCounts();
     }
-  }, [refreshNotifications]);
+  }, [refreshNotifications, refreshUnreadCounts]);
 
   useEffect(() => {
     let active = true;

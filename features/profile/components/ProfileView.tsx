@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import Link from "next/link";
+import type { Route } from "next";
+import { CalendarDays, X } from "lucide-react";
 import { ProfileActivity } from "./ProfileActivity";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileInfo } from "./ProfileInfo";
@@ -10,7 +12,7 @@ import { SquareSchedule } from "./SquareSchedule";
 import { useProfile } from "../hooks/useProfile";
 import type { ProfileDetails } from "../types";
 
-export function ProfileView({ initialProfile, canManage = true }: { initialProfile: ProfileDetails; canManage?: boolean }) {
+export function ProfileView({ initialProfile, canManage = true, canInvite = false, inviteVenue = "" }: { initialProfile: ProfileDetails; canManage?: boolean; /** Viewer is a square account allowed to invite this speaker. */ canInvite?: boolean; /** The inviting square's own venue, previewed in the composer. */ inviteVenue?: string }) {
   const profile = useProfile(initialProfile, canManage);
   const isSquare = profile.selectedTab === "square";
   const isSquareAccount = profile.profile.accountType === "square";
@@ -18,13 +20,11 @@ export function ProfileView({ initialProfile, canManage = true }: { initialProfi
   const [subtitle, setSubtitle] = useState(initialProfile.identity.subtitle);
   const [about, setAbout] = useState(initialProfile.about);
   const [skills, setSkills] = useState(initialProfile.skills.join("، "));
-  const [scheduleTitle, setScheduleTitle] = useState("");
-  const [scheduleStartsAt, setScheduleStartsAt] = useState("");
 
   return (
     <section id="view-combined-profile" className="min-h-dvh bg-background pb-20 text-foreground">
       <div className="mx-auto w-full max-w-2xl border-x border-divider bg-surface">
-        <ProfileHeader profile={profile.profile} canEdit={canManage} isFollowing={profile.isFollowing} isFollowLoading={profile.isFollowLoading} followStateReady={profile.followStateReady} isChatOpening={profile.isChatOpening} onToggleFollow={() => void profile.toggleFollowing()} onMessage={() => void profile.openChat()} />
+        <ProfileHeader profile={profile.profile} canEdit={canManage} isFollowing={profile.isFollowing} isFollowLoading={profile.isFollowLoading} followStateReady={profile.followStateReady} isChatOpening={profile.isChatOpening} onToggleFollow={() => void profile.toggleFollowing()} onMessage={() => void profile.openChat()} canInvite={canInvite} inviteVenue={inviteVenue} />
         {profile.chatError ? <p role="alert" className="border-b border-divider bg-danger-surface px-4 py-2 text-xs text-danger-foreground">{profile.chatError}</p> : null}
         <ProfileInfo profile={profile.profile} tab={profile.selectedTab} expandedSections={profile.expandedSections} onToggleSection={profile.toggleSection} />
         {isSquareAccount ? <SquareLocationCard profile={profile.profile} /> : null}
@@ -43,12 +43,15 @@ export function ProfileView({ initialProfile, canManage = true }: { initialProfi
               <label className="block text-xs font-bold text-foreground-secondary">توانمندی‌ها<input value={skills} onChange={(event) => setSkills(event.target.value)} placeholder="با ، جدا کنید" className="mt-1.5 min-h-10 w-full rounded-control border border-input-border bg-input px-3 text-sm text-foreground outline-none placeholder:text-placeholder focus:border-brand" /></label>
               <button type="submit" disabled={profile.isSavingManagement} className="min-h-10 w-full rounded-pill bg-brand px-4 text-xs font-black text-brand-foreground transition-colors hover:bg-brand-hover disabled:bg-disabled">{profile.isSavingManagement ? "در حال ذخیره…" : "ذخیره مشخصات"}</button>
             </form>
-            {isSquare ? <form className="mt-5 border-t border-divider pt-4" onSubmit={(event) => { event.preventDefault(); if (scheduleTitle && scheduleStartsAt) void profile.createSchedule({ title: scheduleTitle, startsAt: scheduleStartsAt }); }}>
-              <p className="text-xs font-black text-foreground">ثبت برنامه جدید</p>
-              <input required value={scheduleTitle} onChange={(event) => setScheduleTitle(event.target.value)} placeholder="عنوان برنامه" className="mt-2 min-h-10 w-full rounded-control border border-input-border bg-input px-3 text-sm text-foreground outline-none placeholder:text-placeholder focus:border-brand" />
-              <input required type="datetime-local" value={scheduleStartsAt} onChange={(event) => setScheduleStartsAt(event.target.value)} className="mt-2 min-h-10 w-full rounded-control border border-input-border bg-input px-3 text-xs text-foreground outline-none focus:border-brand" />
-              <button type="submit" disabled={profile.isSavingManagement} className="mt-2 min-h-10 w-full rounded-pill border border-brand-border px-4 text-xs font-black text-brand transition-colors hover:bg-brand-muted disabled:border-disabled disabled:text-disabled-foreground">ثبت برنامه</button>
-            </form> : null}
+            {isSquare ? (
+              <Link
+                href={"/profile/schedule" as Route}
+                className="mt-5 flex min-h-11 items-center justify-center gap-2 rounded-pill border border-brand-border px-4 text-xs font-black text-brand transition-colors hover:bg-brand-muted"
+              >
+                <CalendarDays aria-hidden="true" className="h-4 w-4" />
+                مدیریت سین برنامه
+              </Link>
+            ) : null}
             {profile.managementError ? <p role="alert" className="mt-3 text-xs text-danger">{profile.managementError}</p> : null}
           </div>
         </div>

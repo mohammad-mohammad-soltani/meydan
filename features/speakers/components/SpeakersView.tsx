@@ -2,57 +2,106 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Inbox, Mic } from "lucide-react";
 import { SpeakerCard } from "./SpeakerCard";
 import { SpeakersFilters } from "./SpeakersFilters";
 import { SpeakersSearch } from "./SpeakersSearch";
 import { useSpeakers } from "../hooks/useSpeakers";
 import type { Speaker, SpeakerCategory } from "../types";
 
-/** Read-only directory; invitations are created from /speaker-invitations. */
+/** Directory of curated speakers with per-row invitations and profile links. */
 export function SpeakersView({
   initialSpeakers,
   categories,
+  canInvite = false,
+  venue = "",
 }: {
   initialSpeakers: Speaker[];
   categories: SpeakerCategory[];
+  /** True only for a signed-in square account; the API enforces it as well. */
+  canInvite?: boolean;
+  /** The inviting square's own address, previewed in the composer. */
+  venue?: string;
 }) {
   const speakers = useSpeakers(initialSpeakers, categories);
+  const shown = speakers.speakers.length;
 
   return (
-    <section id="view-speakers" className="min-h-full space-y-4 bg-background p-4 pb-24 text-foreground">
-      <header className="flex items-start justify-between border-b border-divider pb-3">
-        <div className="flex items-start gap-2">
-          <Link href="/content" aria-label="بازگشت به محتوا" className="mt-0.5 text-icon-muted transition-colors hover:text-brand">
+    <section id="view-speakers" className="min-h-full bg-background text-foreground">
+      <header className="bg-gradient-to-l from-brand-muted via-surface to-surface px-4 py-3.5">
+        <div className="flex items-start gap-2.5">
+          <Link
+            href="/content"
+            aria-label="بازگشت به محتوا"
+            className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand"
+          >
             <ArrowRight className="h-5 w-5" />
           </Link>
-          <div>
-            <h1 className="text-sm font-black text-foreground">فهرست خطبا و سخنرانان جهاد تبیین</h1>
-            <p className="mt-1 text-[10px] text-muted-foreground">جستجو و بررسی سوابق سخنرانان</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="flex items-center gap-1.5 text-sm font-black text-foreground">
+              <Mic aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />
+              فهرست خطبا و سخنرانان جهاد تبیین
+            </h1>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {initialSpeakers.length.toLocaleString("fa-IR")} سخنران در فهرست · جستجو بر اساس نام، موضوع یا شهر
+            </p>
           </div>
+          <Link
+            href={"/speaker-invitations" as Route}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-brand-border bg-surface px-3 py-1.5 text-[10px] font-black text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
+          >
+            <Inbox aria-hidden="true" className="h-3.5 w-3.5" />
+            دعوت‌های من
+          </Link>
         </div>
-        <Link
-          href={"/speaker-invitations" as Route}
-          className="inline-flex shrink-0 items-center gap-1 rounded-pill bg-brand-muted px-2.5 py-1 text-[10px] font-bold text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
-        >
-          دعوت‌های من
-        </Link>
       </header>
 
-      <SpeakersSearch value={speakers.query} onChange={speakers.setQuery} />
-      <SpeakersFilters activeFilter={speakers.filter} onChange={speakers.setFilter} options={speakers.categories} />
+      <div className="sticky top-0 z-30 space-y-2 border-b border-border bg-surface-glass px-4 py-2.5 backdrop-blur-md">
+        <SpeakersSearch value={speakers.query} onChange={speakers.setQuery} />
+        <SpeakersFilters activeFilter={speakers.filter} onChange={speakers.setFilter} options={speakers.categories} />
+      </div>
 
-      <div className="divide-y divide-divider">
+      <main className="space-y-3 p-4 pb-24">
+        {!speakers.isLoading && initialSpeakers.length > 0 ? (
+          <p className="px-1 text-[10px] font-bold text-foreground-subtle">
+            نمایش {shown.toLocaleString("fa-IR")} از {initialSpeakers.length.toLocaleString("fa-IR")} سخنران
+          </p>
+        ) : null}
+
         {speakers.isLoading ? (
-          <p className="py-6 text-center text-xs text-muted-foreground">در حال دریافت فهرست…</p>
-        ) : speakers.speakers.length ? (
-          speakers.speakers.map((speaker) => <SpeakerCard key={speaker.id} speaker={speaker} />)
+          <div className="space-y-3" aria-busy="true">
+            {[0, 1, 2].map((index) => (
+              <div key={index} className="h-28 animate-pulse rounded-card border border-border bg-card" />
+            ))}
+          </div>
+        ) : shown ? (
+          speakers.speakers.map((speaker) => (
+            <SpeakerCard key={speaker.id} speaker={speaker} canInvite={canInvite} venue={venue} />
+          ))
         ) : (
-          <div className="rounded-control border border-dashed border-border-strong p-6 text-center text-xs text-muted-foreground">
-            سخنرانی با این مشخصات پیدا نشد.
+          <div className="grid min-h-56 place-items-center rounded-card border border-dashed border-border-strong px-6 text-center">
+            <div>
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-brand-muted text-brand">
+                <Mic aria-hidden="true" className="h-6 w-6" />
+              </div>
+              <p className="mt-4 text-sm font-bold text-foreground">سخنرانی با این مشخصات پیدا نشد</p>
+              <p className="mx-auto mt-2 max-w-xs text-xs leading-6 text-foreground-subtle">
+                عبارت جستجو را کوتاه‌تر کنید یا دسته‌بندی دیگری را انتخاب کنید.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  speakers.setQuery("");
+                  speakers.setFilter("all");
+                }}
+                className="mx-auto mt-4 inline-flex min-h-9 items-center rounded-pill border border-brand-border bg-brand-muted px-4 text-[11px] font-black text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
+              >
+                پاک کردن فیلترها
+              </button>
+            </div>
           </div>
         )}
-      </div>
+      </main>
     </section>
   );
 }

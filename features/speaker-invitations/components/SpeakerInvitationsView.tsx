@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { ArrowRight, Inbox, LoaderCircle, Send } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { ArrowRight, Check, Inbox, LoaderCircle, Send, Sparkles } from "lucide-react";
 import { isAuthApiError } from "@/lib/meydan-api";
 import { InvitationCard } from "./InvitationCard";
 import { InviteSpeakerForm } from "./InviteSpeakerForm";
@@ -21,8 +22,8 @@ import type {
 } from "../types";
 
 const tabs: Array<{ id: InvitationBox; label: string; icon: typeof Inbox }> = [
-  { id: "received", label: "دعوت‌های دریافتی", icon: Inbox },
-  { id: "sent", label: "دعوت‌های ارسالی", icon: Send },
+  { id: "received", label: "دریافتی", icon: Inbox },
+  { id: "sent", label: "ارسالی", icon: Send },
 ];
 
 export function SpeakerInvitationsView({
@@ -45,33 +46,55 @@ export function SpeakerInvitationsView({
   const [sent, setSent] = useState(initialSent);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const [composerOpen, setComposerOpen] = useState(false);
   const [speakers, setSpeakers] = useState<InvitableSpeaker[]>([]);
   const [speakersLoading, setSpeakersLoading] = useState(false);
   const [speakersError, setSpeakersError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const items = box === "received" ? received : sent;
+  const pendingCount = received.filter((item) => item.status === "pending").length;
 
-  const refresh = useCallback(async (target: InvitationBox) => {
-    setIsLoading(true);
-    setError(null);
+  const refresh = useCallback(async (target: InvitationBox, options: { silent?: boolean } = {}) => {
+    const silent = Boolean(options.silent);
+    if (!silent) {
+      setIsLoading(true);
+      setError(null);
+    }
     try {
       const next = await getSpeakerInvitations(target);
       if (target === "received") setReceived(next);
       else setSent(next);
     } catch (reason) {
+      // A silent refresh must never replace good server-rendered data.
+      if (silent) return;
       if (isAuthApiError(reason)) {
         setError("برای مشاهده دعوت‌ها باید وارد شوید.");
       } else {
         setError("دریافت دعوت‌ها انجام نشد.");
       }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, []);
+
+  // The server render can ship empty lists (for example when the access token
+  // had to be refreshed by the API proxy), which used to leave the tab counters
+  // blank until the visitor switched tabs. Re-read both boxes once on mount so
+  // the badges are right from the first paint.
+  useEffect(() => {
+    // Deferred to a macrotask so it runs after the first paint and never
+    // updates state synchronously inside the effect.
+    const timer = window.setTimeout(() => {
+      void refresh("received", { silent: true });
+      void refresh("sent", { silent: true });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [refresh]);
 
   // Initial data arrives from the server component, so a refetch is only needed
   // when the viewer switches boxes — handled here rather than in an effect.
@@ -94,19 +117,23 @@ export function SpeakerInvitationsView({
   }, []);
 
   const openComposer = () => {
+    setSubmitError(null);
     setComposerOpen(true);
     void loadSpeakers("");
   };
 
   const submitInvitation = async (input: CreateInvitationInput) => {
     setSubmitting(true);
+    setSubmitError(null);
     try {
       await createInvitation(input);
       setComposerOpen(false);
       setBox("sent");
       await refresh("sent");
+      setNotice("دعوت‌نامه ارسال شد.");
+      window.setTimeout(() => setNotice(null), 3600);
     } catch (reason) {
-      setSpeakersError(isAuthApiError(reason) ? "برای ارسال دعوت باید وارد شوید." : "ثبت دعوت انجام نشد. دوباره تلاش کنید.");
+      setSubmitError(isAuthApiError(reason) ? "برای ارسال دعوت باید وارد شوید." : "ثبت دعوت انجام نشد. دوباره تلاش کنید.");
     } finally {
       setSubmitting(false);
     }
@@ -120,6 +147,8 @@ export function SpeakerInvitationsView({
       setReceived((current) => current.map((item) => (item.id === id ? updated : item)));
       // An accepted invitation releases contact details for the inviter's copy too.
       setSent((current) => current.map((item) => (item.id === id ? { ...item, status: updated.status } : item)));
+      setNotice(status === "accepted" ? "دعوت پذیرفته شد." : "دعوت رد شد.");
+      window.setTimeout(() => setNotice(null), 3600);
     } catch {
       setError("ثبت پاسخ انجام نشد. دوباره تلاش کنید.");
       await refresh("received");
@@ -134,6 +163,8 @@ export function SpeakerInvitationsView({
     try {
       const updated = await cancelInvitation(id);
       setSent((current) => current.map((item) => (item.id === id ? updated : item)));
+      setNotice("دعوت لغو شد.");
+      window.setTimeout(() => setNotice(null), 3600);
     } catch {
       setError("لغو دعوت انجام نشد.");
       await refresh("sent");
@@ -144,8 +175,8 @@ export function SpeakerInvitationsView({
 
   return (
     <section className="ui-enter flex min-h-full flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border bg-surface-glass px-4 pt-3 backdrop-blur-md">
-        <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-30 border-b border-border bg-surface-glass px-4 pt-3 backdrop-blur-md pb-3">
+        <div className="flex items-start gap-2.5">
           <button
             type="button"
             onClick={() => window.history.length > 1 && window.history.back()}
@@ -154,12 +185,15 @@ export function SpeakerInvitationsView({
           >
             <ArrowRight className="h-5 w-5" />
           </button>
-          <h1 className="min-w-0 flex-1 truncate text-sm font-black text-foreground">دعوت‌های سخنرانی</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-sm font-black text-foreground">دعوت‌های سخنرانی</h1>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">مدیریت دعوت‌های دریافتی و ارسالی</p>
+          </div>
           {canInvite ? (
             <button
               type="button"
               onClick={openComposer}
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-pill bg-brand px-3 text-[11px] font-black text-brand-foreground transition-colors hover:bg-brand-hover"
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-pill bg-brand px-3 text-[11px] font-black text-brand-foreground transition-colors hover:bg-brand-hover"
             >
               <Send className="h-3.5 w-3.5" />
               دعوت جدید
@@ -167,12 +201,10 @@ export function SpeakerInvitationsView({
           ) : null}
         </div>
 
-        <div role="tablist" aria-label="دعوت‌های دریافتی و ارسالی" className="mt-2.5 flex border-b border-border">
+        <div role="tablist" aria-label="دعوت‌های دریافتی و ارسالی" className="mt-3 flex gap-1.5 rounded-pill bg-surface-muted p-1">
           {tabs.map((tab) => {
             const active = box === tab.id;
-            const count = tab.id === "received"
-              ? received.filter((item) => item.status === "pending").length
-              : sent.length;
+            const count = tab.id === "received" ? pendingCount : sent.length;
             return (
               <button
                 key={tab.id}
@@ -180,18 +212,18 @@ export function SpeakerInvitationsView({
                 role="tab"
                 aria-selected={active}
                 onClick={() => selectBox(tab.id)}
-                className={`relative flex min-h-11 flex-1 items-center justify-center gap-1.5 px-2 text-xs font-black transition-colors ${active ? "text-brand" : "text-foreground-secondary hover:text-foreground"}`}
+                className={`flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-pill px-2 text-xs font-black transition-colors ${
+                  active ? "bg-brand text-brand-foreground shadow-xs" : "text-foreground-secondary hover:bg-hover hover:text-foreground"
+                }`}
               >
                 <tab.icon aria-hidden="true" className="h-4 w-4" />
                 {tab.label}
                 {count > 0 ? (
-                  <span className="rounded-full bg-brand-muted px-1.5 text-[10px] font-black text-brand">
+                  <span
+                    className={`rounded-full px-1.5 text-[10px] font-black ${active ? "bg-brand-foreground/20 text-brand-foreground" : "bg-brand-muted text-brand"}`}
+                  >
                     {count.toLocaleString("fa-IR")}
                   </span>
-                ) : null}
-                {/* One shared indicator sliding between the two columns. */}
-                {active ? (
-                  <span aria-hidden="true" className="absolute bottom-0 right-0 h-[3px] w-full rounded-full bg-brand" />
                 ) : null}
               </button>
             );
@@ -199,7 +231,7 @@ export function SpeakerInvitationsView({
         </div>
       </header>
 
-      <main className="flex-1 space-y-2 p-4">
+      <main className="flex-1 space-y-3 p-4">
         {error ? (
           <p role="alert" className="rounded-control bg-danger-surface px-3 py-2 text-xs font-bold text-danger-foreground">
             {error}
@@ -207,13 +239,13 @@ export function SpeakerInvitationsView({
         ) : null}
 
         {isLoading ? (
-          <div className="space-y-2" aria-busy="true" aria-label="در حال دریافت دعوت‌ها">
+          <div className="space-y-3" aria-busy="true" aria-label="در حال دریافت دعوت‌ها">
             {[0, 1, 2].map((index) => (
-              <div key={index} className="h-24 animate-pulse rounded-card border border-border bg-card" />
+              <div key={index} className="h-28 animate-pulse rounded-card border border-border bg-card" />
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="grid min-h-56 place-items-center px-6 text-center">
+          <div className="grid min-h-64 place-items-center px-6 text-center">
             <div>
               <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-brand-muted text-brand">
                 <Inbox aria-hidden="true" className="h-6 w-6" />
@@ -224,13 +256,23 @@ export function SpeakerInvitationsView({
               <p className="mx-auto mt-2 max-w-xs text-xs leading-6 text-foreground-subtle">
                 {box === "received"
                   ? "دعوت‌هایی که برای شما ارسال شود در این بخش نمایش داده می‌شود."
-                  : "می‌توانید از دکمه «دعوت جدید» یک سخنران را دعوت کنید."}
+                  : "سخنرانان تأییدشده را از فهرست سخنرانان دعوت کنید."}
               </p>
+              {box === "sent" && canInvite ? (
+                <button
+                  type="button"
+                  onClick={openComposer}
+                  className="mx-auto mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-pill bg-brand px-5 text-xs font-black text-brand-foreground transition-colors hover:bg-brand-hover"
+                >
+                  <Sparkles aria-hidden="true" className="h-4 w-4" />
+                  دعوت سخنران
+                </button>
+              ) : null}
             </div>
           </div>
         ) : (
           items.map((invitation) => (
-            <div key={invitation.id}>
+            <div key={invitation.id} className="space-y-1">
               <InvitationCard
                 invitation={invitation}
                 perspective={box === "received" ? "speaker" : "inviter"}
@@ -243,7 +285,7 @@ export function SpeakerInvitationsView({
                   type="button"
                   disabled={busyId === invitation.id}
                   onClick={() => void cancel(invitation.id)}
-                  className="mt-1 text-[10px] font-bold text-foreground-subtle transition-colors hover:text-danger-foreground disabled:opacity-60"
+                  className="px-1 text-[10px] font-bold text-foreground-subtle transition-colors hover:text-danger-foreground disabled:opacity-60"
                 >
                   لغو دعوت
                 </button>
@@ -254,7 +296,7 @@ export function SpeakerInvitationsView({
 
         {isLoading && items.length > 0 ? (
           <p className="flex items-center justify-center gap-2 py-3 text-[11px] text-muted-foreground">
-            <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+            <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
             به‌روزرسانی…
           </p>
         ) : null}
@@ -265,6 +307,7 @@ export function SpeakerInvitationsView({
           speakers={speakers}
           speakersLoading={speakersLoading}
           speakersError={speakersError}
+          submitError={submitError}
           categories={categories}
           venue={venue}
           busy={submitting}
@@ -273,6 +316,20 @@ export function SpeakerInvitationsView({
           onSubmit={submitInvitation}
         />
       ) : null}
+
+      {notice
+        ? createPortal(
+            <p
+              role="status"
+              aria-live="polite"
+              className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-1/2 z-[110] flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-solid-dark px-4 py-2.5 text-xs font-bold text-on-solid shadow-dialog lg:bottom-5"
+            >
+              <Check aria-hidden="true" className="h-4 w-4 text-success" />
+              {notice}
+            </p>,
+            document.body,
+          )
+        : null}
     </section>
   );
 }

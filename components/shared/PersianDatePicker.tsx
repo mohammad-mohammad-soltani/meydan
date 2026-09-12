@@ -64,6 +64,14 @@ function isoDateInTehran(date: Date) {
     .padStart(2, "0")}-${value.day.toString().padStart(2, "0")}`;
 }
 
+/**
+ * Today in Tehran as `YYYY-MM-DD`. Callers should seed date state with this so
+ * a device in another timezone cannot start on a day the picker shows as past.
+ */
+export function tehranTodayIso(): string {
+  return isoDateInTehran(new Date());
+}
+
 function isoToDate(value?: string) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const date = new Date(`${value}T00:00:00Z`);
@@ -104,19 +112,34 @@ function shiftMonth(year: number, month: number, delta: number) {
   };
 }
 
-function formattedPersianDate(value?: string) {
+/** `"past"` blocks future days, `"future"` blocks past days, `"any"` blocks nothing. */
+export type PersianDateRange = "past" | "future" | "any";
+
+function formattedPersianDate(value: string | undefined, placeholder: string) {
   const date = isoToDate(value);
-  if (!date) return "انتخاب تاریخ شمسی";
+  if (!date) return placeholder;
   const selected = persianDate(date);
   return `${toPersianNumber(selected.day)} ${MONTHS[selected.month - 1]} ${toPersianNumber(selected.year)}`;
 }
 
+/**
+ * Jalali (Solar Hijri) calendar picker. The selected value stays a Gregorian
+ * `YYYY-MM-DD` string because that is what the API validates against; only the
+ * UI is Persian.
+ */
 export function PersianDatePicker({
   value,
   onChange,
+  ariaLabel = "انتخاب تاریخ",
+  placeholder = "انتخاب تاریخ شمسی",
+  allow = "past",
 }: {
   value?: string;
   onChange: (value: string) => void;
+  /** Accessible name of the calendar popover. */
+  ariaLabel?: string;
+  placeholder?: string;
+  allow?: PersianDateRange;
 }) {
   const rootRef = useRef<HTMLSpanElement>(null);
   const selectedDate = useMemo(() => isoToDate(value), [value]);
@@ -135,12 +158,15 @@ export function PersianDatePicker({
     selectedPersian?.month ?? todayPersian.month,
   );
 
-  useEffect(() => {
-    if (!open) return;
-    const target = selectedPersian ?? todayPersian;
-    setViewYear(target.year);
-    setViewMonth(target.month);
-  }, [open, selectedPersian, todayPersian]);
+  // Reset the visible month when the popover opens (event handler, not effect).
+  const toggleOpen = () => {
+    if (!open) {
+      const target = selectedPersian ?? todayPersian;
+      setViewYear(target.year);
+      setViewMonth(target.month);
+    }
+    setOpen(!open);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -178,11 +204,15 @@ export function PersianDatePicker({
     setViewMonth(next.month);
   };
 
+  const blocked = (iso: string) =>
+    (allow === "past" && iso > todayIso) ||
+    (allow === "future" && iso < todayIso);
+
   const chooseDay = (day: number) => {
     if (!firstGregorian) return;
     const date = new Date(firstGregorian.getTime() + (day - 1) * DAY_MS);
     const iso = date.toISOString().slice(0, 10);
-    if (iso > todayIso) return;
+    if (blocked(iso)) return;
     onChange(iso);
     setOpen(false);
   };
@@ -198,7 +228,7 @@ export function PersianDatePicker({
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
+        onClick={toggleOpen}
         className={`flex min-h-12 w-full items-center gap-2 rounded-control border bg-input px-3 text-right text-sm outline-none transition-colors ${
           open
             ? "border-brand ring-2 ring-brand/10"
@@ -207,7 +237,7 @@ export function PersianDatePicker({
       >
         <CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />
         <span className={`min-w-0 flex-1 ${value ? "text-foreground" : "text-foreground-subtle"}`}>
-          {formattedPersianDate(value)}
+          {formattedPersianDate(value, placeholder)}
         </span>
         {value ? (
           <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-success" />
@@ -217,7 +247,7 @@ export function PersianDatePicker({
       {open ? (
         <span
           role="dialog"
-          aria-label="انتخاب تاریخ شروع فعالیت میدان"
+          aria-label={ariaLabel}
           className="absolute inset-x-0 top-full z-[9999] mt-2 block rounded-panel border border-border bg-popover p-3 text-popover-foreground shadow-dialog"
         >
           <span className="flex items-center justify-between gap-2">
@@ -271,7 +301,7 @@ export function PersianDatePicker({
               const iso = date.toISOString().slice(0, 10);
               const selected = iso === value;
               const isToday = iso === todayIso;
-              const disabled = iso > todayIso;
+              const disabled = blocked(iso);
               const weekday = (date.getUTCDay() + 1) % 7;
 
               return (

@@ -7,7 +7,10 @@ export type FeedAttachment = {
   label: string;
   detail: string;
   icon: "image" | "video" | "article" | "microphone" | "bolt";
+  /** Image/video source. */
   previewSrc?: string;
+  /** Audio source; plays through the shared bottom player. */
+  audioSrc?: string;
   previewAlt?: string;
   width?: number;
   height?: number;

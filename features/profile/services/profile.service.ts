@@ -363,6 +363,11 @@ function mapNarrativePost(
         ? attachment.url
         : undefined,
 
+    audioSrc:
+      attachment.type === "audio"
+        ? attachment.url
+        : undefined,
+
     previewAlt:
       attachment.label ||
       identity.name,

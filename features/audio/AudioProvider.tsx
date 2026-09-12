@@ -14,7 +14,8 @@ import type { AudioState, AudioTrack, PlayTrackOptions } from "./types";
 
 const POSITION_STORAGE_KEY = "meydan-audio-positions-v1";
 const POSITION_WRITE_INTERVAL_MS = 1000;
-const ANALYSER_BAR_COUNT = 24;
+const LEVEL_BAR_COUNT = 24;
+const LEVEL_FRAME_INTERVAL_MS = 110;
 
 const initialState: AudioState = {
   currentTrack: null,
@@ -106,10 +107,8 @@ function bufferedEnd(audio: HTMLAudioElement): number {
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const analyserFrameRef = useRef<number | null>(null);
+  const levelsFrameRef = useRef<number | null>(null);
+  const levelsStartedAtRef = useRef(0);
   const trackRef = useRef<AudioTrack | null>(null);
   const queueRef = useRef<AudioTrack[]>([]);
   const playTrackRef = useRef<
@@ -119,74 +118,52 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const lastPositionWriteRef = useRef(0);
   const [state, setState] = useState<AudioState>(initialState);
 
-  const stopAnalyserLoop = useCallback(() => {
-    if (analyserFrameRef.current !== null) {
-      cancelAnimationFrame(analyserFrameRef.current);
-      analyserFrameRef.current = null;
+  const stopLevels = useCallback(() => {
+    if (levelsFrameRef.current !== null) {
+      cancelAnimationFrame(levelsFrameRef.current);
+      levelsFrameRef.current = null;
     }
   }, []);
 
-  const startAnalyserLoop = useCallback(() => {
-    if (analyserFrameRef.current !== null) return;
-    const analyser = analyserRef.current;
-    if (!analyser) return;
+  /**
+   * Visualiser levels for the equalizer UIs.
+   *
+   * These are generated, not measured. Routing the <audio> element through a
+   * Web Audio `MediaElementAudioSourceNode` would give real spectrum data, but
+   * the API serves uploads from another origin without CORS headers, and the
+   * spec makes that node output **silence** for cross-origin sources — which
+   * muted the player and froze the equalizer at zero. Playing the element
+   * directly keeps full volume everywhere, so the bars are animated instead.
+   */
+  const startLevels = useCallback(() => {
+    if (levelsFrameRef.current !== null) return;
+    levelsStartedAtRef.current = performance.now();
+    let lastFrame = 0;
 
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    let frameCount = 0;
-
-    const tick = () => {
+    const tick = (now: number) => {
       const audio = audioRef.current;
       if (!audio || audio.paused || audio.ended) {
-        analyserFrameRef.current = null;
+        levelsFrameRef.current = null;
         return;
       }
 
-      analyser.getByteFrequencyData(data);
-      frameCount += 1;
-      if (frameCount % 2 === 0) {
-        const step = Math.max(1, Math.floor(data.length / ANALYSER_BAR_COUNT));
-        const levels = Array.from({ length: ANALYSER_BAR_COUNT }, (_, index) => {
-          const value = data[Math.min(data.length - 1, index * step)] ?? 0;
-          return Math.max(10, Math.round((value / 255) * 100));
+      if (now - lastFrame >= LEVEL_FRAME_INTERVAL_MS) {
+        lastFrame = now;
+        const elapsed = (now - levelsStartedAtRef.current) / 1000;
+        const levels = Array.from({ length: LEVEL_BAR_COUNT }, (_, index) => {
+          const wave =
+            Math.sin(elapsed * 3.1 + index * 0.55) * 0.45 +
+            Math.sin(elapsed * 1.7 + index * 1.15) * 0.3 +
+            Math.sin(elapsed * 5.3 + index * 0.23) * 0.25;
+          return Math.round(26 + Math.abs(wave) * 64);
         });
         setState((current) => ({ ...current, levels }));
       }
 
-      analyserFrameRef.current = requestAnimationFrame(tick);
+      levelsFrameRef.current = requestAnimationFrame(tick);
     };
 
-    analyserFrameRef.current = requestAnimationFrame(tick);
-  }, []);
-
-  const ensureAudioGraph = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio || typeof window === "undefined") return;
-
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as typeof window & { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (!AudioContextClass) return;
-
-    let context = audioContextRef.current;
-    let analyser = analyserRef.current;
-
-    if (!context || !analyser) {
-      context = new AudioContextClass();
-      analyser = context.createAnalyser();
-      analyser.fftSize = 128;
-      analyser.smoothingTimeConstant = 0.78;
-
-      const source = context.createMediaElementSource(audio);
-      source.connect(analyser);
-      analyser.connect(context.destination);
-
-      audioContextRef.current = context;
-      analyserRef.current = analyser;
-      sourceRef.current = source;
-    }
-
-    if (context.state !== "running") await context.resume();
+    levelsFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
   const play = useCallback(async () => {
@@ -196,14 +173,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     setState((current) => ({ ...current, error: null }));
 
     try {
-      await ensureAudioGraph();
-    } catch {
-      // The analyser is progressive enhancement. Native audio remains usable.
-    }
-
-    try {
       await audio.play();
-      startAnalyserLoop();
+      startLevels();
     } catch {
       setState((current) => ({
         ...current,
@@ -211,7 +182,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         error: "مرورگر نتوانست پخش صوت را شروع کند. دوباره تلاش کنید.",
       }));
     }
-  }, [ensureAudioGraph, startAnalyserLoop]);
+  }, [startLevels]);
 
   const pause = useCallback(() => {
     audioRef.current?.pause();
@@ -345,9 +316,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     trackRef.current = null;
     queueRef.current = [];
     pendingRestoreRef.current = false;
-    stopAnalyserLoop();
+    stopLevels();
     setState(initialState);
-  }, [stopAnalyserLoop]);
+  }, [stopLevels]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -408,16 +379,16 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       setState((current) => ({ ...current, isReady: false }));
     const handlePlay = () => {
       setState((current) => ({ ...current, isPlaying: true, error: null }));
-      startAnalyserLoop();
+      startLevels();
     };
     const handlePause = () => {
       setState((current) => ({ ...current, isPlaying: false, levels: [] }));
-      stopAnalyserLoop();
+      stopLevels();
     };
     const handleEnded = () => {
       const track = trackRef.current;
       if (track) writeStoredPosition(track, 0);
-      stopAnalyserLoop();
+      stopLevels();
       setState((current) => ({
         ...current,
         isPlaying: false,
@@ -431,7 +402,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       if (nextTrack) void playTrackRef.current?.(nextTrack, { queue });
     };
     const handleError = () => {
-      stopAnalyserLoop();
+      stopLevels();
       setState((current) => ({
         ...current,
         isPlaying: false,
@@ -474,7 +445,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("error", handleError);
       audio.removeEventListener("emptied", handleEmptied);
     };
-  }, [startAnalyserLoop, stopAnalyserLoop]);
+  }, [startLevels, stopLevels]);
 
   useEffect(() => {
     const persistPosition = () => {
@@ -544,13 +515,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     return () => {
       audioRef.current?.pause();
-      stopAnalyserLoop();
-      sourceRef.current?.disconnect();
-      analyserRef.current?.disconnect();
-      const context = audioContextRef.current;
-      if (context && context.state !== "closed") void context.close();
+      stopLevels();
     };
-  }, [stopAnalyserLoop]);
+  }, [stopLevels]);
 
   const currentIndex = state.currentTrack
     ? state.queue.findIndex((track) => track.id === state.currentTrack?.id)

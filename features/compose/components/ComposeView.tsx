@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ImageIcon, Mic, Save, Trash2, Video, X } from "lucide-react";
+import { ChevronRight, ImagePlus, LoaderCircle, Save, Trash2, UploadCloud } from "lucide-react";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
-import { uploadNarrativeFile } from "@/lib/meydan-upload";
+import { ComposeMediaGrid } from "./ComposeMediaGrid";
+import { MAX_COMPOSE_MEDIA, useComposeMedia } from "../hooks/useComposeMedia";
 
 const MAX_CHARACTERS = 280;
 const DRAFT_KEY = "meydan-compose-draft";
+/** One picker for everything; the composer sorts the files by type. */
+const MEDIA_ACCEPT = "image/*,video/*,audio/*";
 
 type ViewerState = {
   accountType: "user" | "square" | "";
@@ -26,13 +29,15 @@ export function ComposeView() {
 
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
-  const [attachment, setAttachment] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isEcho, setIsEcho] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState("");
   const [viewer, setViewer] = useState<ViewerState>({ accountType: "" });
+
+  const { media, notice, addFiles, remove, retry, reset, isUploading, hasUploadError, readyAttachments, isReady } =
+    useComposeMedia();
 
   useEffect(() => {
     const stored = window.localStorage.getItem(DRAFT_KEY);
@@ -67,19 +72,11 @@ export function ComposeView() {
       .catch(() => undefined);
   }, []);
 
-  useEffect(() => {
-    if (!attachment) {
-      queueMicrotask(() => setPreviewUrl(null));
-      return;
-    }
-    const url = URL.createObjectURL(attachment);
-    queueMicrotask(() => setPreviewUrl(url));
-    return () => URL.revokeObjectURL(url);
-  }, [attachment]);
-
   const body = [title.trim(), text.trim()].filter(Boolean).join("\n\n");
-  const hasContent = body.length > 0 || Boolean(attachment);
-  const canPublish = hasContent && text.length <= MAX_CHARACTERS && !isPublishing;
+  const hasContent = body.length > 0 || media.length > 0;
+  const atCapacity = media.length >= MAX_COMPOSE_MEDIA;
+  const canPublish =
+    hasContent && text.length <= MAX_CHARACTERS && !isPublishing && !isUploading && !hasUploadError && isReady;
 
   const goBack = () => {
     if (window.history.length > 1) router.back();
@@ -95,15 +92,14 @@ export function ComposeView() {
     window.localStorage.removeItem(DRAFT_KEY);
     setTitle("");
     setText("");
-    setAttachment(null);
     setIsEcho(false);
+    reset();
     goBack();
   };
 
-  const chooseFile = (accept: string) => {
+  const openPicker = () => {
     const input = fileInputRef.current;
     if (!input) return;
-    input.accept = accept;
     input.value = "";
     input.click();
   };
@@ -113,21 +109,20 @@ export function ComposeView() {
     setIsPublishing(true);
     setPublishError("");
     try {
-      const mediaId = attachment ? await uploadNarrativeFile(attachment) : undefined;
       await meydanApi("/narratives", {
         method: "POST",
         headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
         body: JSON.stringify({
           body,
           is_echo: isEcho,
-          attachments: mediaId ? [{ media_id: mediaId, label: attachment?.name }] : [],
+          attachments: readyAttachments,
         }),
       });
       window.localStorage.removeItem(DRAFT_KEY);
       setTitle("");
       setText("");
-      setAttachment(null);
       setIsEcho(false);
+      reset();
       router.push("/home");
       router.refresh();
     } catch (error) {
@@ -144,7 +139,23 @@ export function ComposeView() {
   };
 
   return (
-    <section dir="rtl" className="flex min-h-full flex-1 flex-col bg-background text-foreground" aria-label="ثبت روایت یا ایده جدید">
+    <section
+      dir="rtl"
+      aria-label="ثبت روایت یا ایده جدید"
+      className="relative flex min-h-full flex-1 flex-col bg-background text-foreground"
+      onDragEnter={(event) => {
+        if (event.dataTransfer?.types?.includes("Files")) setDragging(true);
+      }}
+      onDragOver={(event) => event.preventDefault()}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setDragging(false);
+        if (event.dataTransfer?.files?.length) addFiles(event.dataTransfer.files);
+      }}
+    >
       <div className="flex items-center justify-between gap-3 border-b border-divider px-4 py-4">
         <div className="flex min-w-0 items-center gap-2">
           <button type="button" onClick={requestClose} aria-label="بازگشت" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand">
@@ -152,8 +163,13 @@ export function ComposeView() {
           </button>
           <h1 className="truncate text-sm font-black text-foreground sm:text-base">ثبت روایت یا ایده جدید</h1>
         </div>
-        <button type="button" onClick={() => void publish()} disabled={!canPublish} className="shrink-0 rounded-full bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground sm:px-5">
-          {isPublishing ? "در حال انتشار…" : viewer.accountType === "square" ? "انتشار به نام میدان" : "انتشار"}
+        <button
+          type="button"
+          onClick={() => void publish()}
+          disabled={!canPublish}
+          className="shrink-0 rounded-full bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground sm:px-5"
+        >
+          {isPublishing ? "در حال انتشار…" : isUploading ? "در حال بارگذاری…" : viewer.accountType === "square" ? "انتشار به نام میدان" : "انتشار"}
         </button>
       </div>
 
@@ -169,49 +185,98 @@ export function ComposeView() {
 
         <div className="space-y-3 pt-5">
           <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="تیتر یا موضوع اصلی روایت..." aria-label="تیتر روایت" className="min-h-14 w-full rounded-2xl border border-input-border bg-input px-4 text-sm font-bold text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand" />
-          <textarea value={text} onChange={(event) => setText(event.target.value)} maxLength={MAX_CHARACTERS} placeholder="شرح ماجرا، حال‌وهوای امشب میدان، نیازها یا دستاوردها..." rows={7} aria-label="شرح روایت" className="min-h-44 w-full resize-none rounded-2xl border border-input-border bg-input p-4 text-sm leading-7 text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand" />
+          <textarea
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            onPaste={(event) => {
+              const files = Array.from(event.clipboardData?.files ?? []);
+              if (!files.length) return;
+              event.preventDefault();
+              addFiles(files);
+            }}
+            maxLength={MAX_CHARACTERS}
+            placeholder="شرح ماجرا، حال‌وهوای امشب میدان، نیازها یا دستاوردها..."
+            rows={7}
+            aria-label="شرح روایت"
+            className="min-h-44 w-full resize-none rounded-2xl border border-input-border bg-input p-4 text-sm leading-7 text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand"
+          />
         </div>
 
-        <div className="mt-4 rounded-2xl border border-border bg-surface px-3 py-3.5">
-          <span className="block text-[11px] font-black text-foreground-secondary">پیوست‌های چندرسانه‌ای:</span>
-          <input ref={fileInputRef} type="file" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] ?? null)} />
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-            <button type="button" onClick={() => chooseFile("image/*")} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
-              <ImageIcon className="h-4 w-4" />عکس
-            </button>
-            <button type="button" onClick={() => chooseFile("video/*")} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
-              <Video className="h-4 w-4" />ویدیو
-            </button>
-            <button type="button" onClick={() => chooseFile("audio/*")} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-surface-muted px-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-brand">
-              <Mic className="h-4 w-4" />صوت
-            </button>
+        <div className="mt-4 rounded-2xl border border-border bg-surface p-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[11px] font-black text-foreground-secondary">پیوست‌های چندرسانه‌ای</span>
+            <span className="inline-flex items-center gap-2">
+              {isUploading ? (
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-brand">
+                  <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
+                  در حال بارگذاری…
+                </span>
+              ) : null}
+              <span className={`rounded-pill px-2.5 py-1 text-[10px] font-black tabular-nums ${media.length ? "bg-brand-muted text-brand" : "bg-surface-muted text-muted-foreground"}`}>
+                {media.length.toLocaleString("fa-IR")} از {MAX_COMPOSE_MEDIA.toLocaleString("fa-IR")}
+              </span>
+            </span>
           </div>
 
-          {previewUrl && attachment ? (
-            <div className="ui-enter relative mt-3 overflow-hidden rounded-xl border border-border bg-surface-muted">
-              {attachment.type.startsWith("video/") ? (
-                <video src={previewUrl} controls className="max-h-72 w-full bg-surface-sunken object-contain" />
-              ) : attachment.type.startsWith("audio/") ? (
-                <div className="p-3"><audio src={previewUrl} controls className="w-full" /></div>
-              ) : (
-                <img src={previewUrl} alt="پیش‌نمایش فایل انتخاب‌شده" className="max-h-72 w-full object-cover" />
-              )}
-              <button type="button" onClick={() => setAttachment(null)} aria-label="حذف فایل پیوست" className="absolute left-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-scrim text-on-solid shadow-sm backdrop-blur">
-                <X className="h-4 w-4" />
-              </button>
-              <div className="border-t border-divider px-3 py-2 text-[10px] text-muted-foreground">{attachment.name}</div>
-            </div>
+          {/* One picker for images, video and audio. */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={MEDIA_ACCEPT}
+            className="hidden"
+            onChange={(event) => {
+              if (event.target.files?.length) addFiles(event.target.files);
+              event.target.value = "";
+            }}
+          />
+
+          <button
+            type="button"
+            disabled={atCapacity}
+            onClick={openPicker}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-brand-border bg-brand-muted/60 px-4 py-3 text-xs font-black text-brand transition-colors hover:border-brand hover:bg-brand-muted disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-disabled-foreground"
+          >
+            <ImagePlus aria-hidden="true" className="h-4 w-4" />
+            {media.length ? "افزودن پیوست بیشتر" : "افزودن عکس، ویدیو یا صوت"}
+          </button>
+
+          <p className="mt-2 text-center text-[10px] leading-5 text-foreground-subtle">
+            تا {MAX_COMPOSE_MEDIA.toLocaleString("fa-IR")} فایل، ترکیبی از عکس، ویدیو و صوت · می‌توانی فایل‌ها را همین‌جا رها کنی یا از کلیپ‌بورد بچسبانی
+          </p>
+
+          <ComposeMediaGrid media={media} onRemove={remove} onRetry={retry} />
+
+          {notice ? (
+            <p role="status" aria-live="polite" className="mt-2 text-center text-[11px] font-bold text-warning-foreground">
+              {notice}
+            </p>
+          ) : null}
+
+          {hasUploadError ? (
+            <p role="alert" className="mt-2 text-center text-[11px] font-bold text-danger">
+              یکی از فایل‌ها بارگذاری نشد؛ «تلاش دوباره» را بزن یا حذفش کن.
+            </p>
           ) : null}
         </div>
 
         {publishError ? <p role="alert" className="mt-3 text-xs font-bold text-danger">{publishError}</p> : null}
       </div>
 
+      {dragging ? (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-2 z-30 grid place-items-center rounded-3xl border-2 border-dashed border-brand bg-brand-muted/80 backdrop-blur-sm">
+          <span className="flex flex-col items-center gap-2 text-xs font-black text-brand">
+            <UploadCloud className="h-7 w-7" />
+            برای پیوست رها کن
+          </span>
+        </div>
+      ) : null}
+
       {exitOpen ? (
         <div role="dialog" aria-modal="true" aria-label="ذخیره پیش‌نویس" className="fixed inset-0 z-[70] flex items-end justify-center bg-overlay p-3 sm:items-center">
           <div className="w-full max-w-sm rounded-panel border border-border bg-popover p-4 text-popover-foreground shadow-dialog">
             <h2 className="text-sm font-black">پیش‌نویس ذخیره شود؟</h2>
-            <p className="mt-2 text-xs leading-6 text-muted-foreground">متن روایت به‌صورت خودکار روی این دستگاه ذخیره شده و می‌توانی بعداً ادامه بدهی.</p>
+            <p className="mt-2 text-xs leading-6 text-muted-foreground">متن روایت به‌صورت خودکار روی این دستگاه ذخیره شده و می‌توانی بعداً ادامه بدهی. فایل‌های پیوست ذخیره نمی‌شوند.</p>
             <div className="mt-4 grid gap-2">
               <button type="button" onClick={goBack} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand px-4 text-xs font-black text-brand-foreground"><Save className="h-4 w-4" />ذخیره و خروج</button>
               <button type="button" onClick={discardAndExit} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-danger-border bg-danger-surface px-4 text-xs font-black text-danger"><Trash2 className="h-4 w-4" />حذف پیش‌نویس</button>

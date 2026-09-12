@@ -5,6 +5,7 @@ import type { ClipboardEvent, FormEvent, KeyboardEvent, ReactNode } from "react"
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   CircleAlert,
   LoaderCircle,
@@ -341,6 +342,18 @@ export default function AuthPage() {
     setStep("phone");
   };
 
+  // Desktop has no bottom navigation, so the form gets its own way back. Only
+  // step back in history when the page was reached from this same site;
+  // otherwise a direct open would leave the app.
+  const goBack = () => {
+    const sameSiteReferrer =
+      typeof document !== "undefined" &&
+      document.referrer !== "" &&
+      document.referrer.startsWith(window.location.origin);
+    if (sameSiteReferrer && window.history.length > 1) router.back();
+    else router.push("/home");
+  };
+
   return (
     <main className="relative min-h-[100dvh] overflow-x-hidden bg-background text-foreground">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -404,6 +417,18 @@ export default function AuthPage() {
                 <p className="text-sm font-black text-foreground">میدانِ خیابان</p>
                 <p className="text-[9px] font-bold text-muted-foreground">شبکه سراسری میادین ایران</p>
               </div>
+            </div>
+
+            <div className="mb-3 hidden lg:flex">
+              <button
+                type="button"
+                onClick={goBack}
+                aria-label="بازگشت"
+                className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-border bg-surface px-4 text-xs font-black text-foreground-secondary shadow-xs outline-none transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                بازگشت
+              </button>
             </div>
 
             <div className="rounded-panel border border-border bg-card p-5 text-card-foreground shadow-dialog sm:p-7">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Search } from "lucide-react";
 import { ThemeMenu } from "./ThemeMenu";
 
 export function MobileHeader() {
@@ -26,6 +27,14 @@ export function MobileHeader() {
         </span>
       </Link>
       <div className="flex shrink-0 items-center gap-2">
+        {/* Explore lives here on mobile now that chat owns its bottom-nav slot. */}
+        <Link
+          href="/explore"
+          aria-label="کاوش و جستجو"
+          className="grid h-11 w-11 place-items-center rounded-full border border-border bg-surface-muted text-icon transition-colors hover:bg-hover hover:text-brand"
+        >
+          <Search aria-hidden="true" className="h-4 w-4" />
+        </Link>
         <ThemeMenu />
       </div>
     </header>

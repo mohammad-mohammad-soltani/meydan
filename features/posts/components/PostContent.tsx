@@ -1,10 +1,10 @@
-import { Camera, Newspaper, Video } from "lucide-react";
+import { Camera, Mic, Newspaper, Video } from "lucide-react";
 import { PostAuthorInfo } from "./PostHeader";
 import type { PostDetail, PostMediaKind } from "../types";
 
 type PostContentProps = { post: PostDetail };
 
-const mediaIcons: Record<PostMediaKind, typeof Camera> = { image: Camera, video: Video, article: Newspaper };
+const mediaIcons: Record<PostMediaKind, typeof Camera> = { image: Camera, video: Video, microphone: Mic, article: Newspaper };
 
 export function PostContent({ post }: PostContentProps) {
   return (

@@ -93,8 +93,17 @@ function mapInvitation(item: ApiInvitation): SpeakerInvitation {
   };
 }
 
-export async function getSpeakerInvitations(box: InvitationBox): Promise<SpeakerInvitation[]> {
-  const items = await meydanApi<ApiInvitation[]>(`/speaker-invitations?box=${box}`);
+/**
+ * `headers` is required when this runs on the server: `meydanApi` only attaches
+ * an `Authorization` header when the caller passes one, so a server render must
+ * forward the session (`accessTokenHeader()`) or the API answers 401 and the
+ * page ships empty lists.
+ */
+export async function getSpeakerInvitations(
+  box: InvitationBox,
+  headers?: HeadersInit,
+): Promise<SpeakerInvitation[]> {
+  const items = await meydanApi<ApiInvitation[]>(`/speaker-invitations?box=${box}`, { headers });
   return (items || []).map(mapInvitation);
 }
 
@@ -138,8 +147,10 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Sp
 }
 
 /** Admin-editable category list for the picker filter. */
-export async function getInvitableCategories(): Promise<SpeakerCategory[]> {
-  const items = await meydanApi<Array<{ slug?: string | null; name?: string | null }>>("/speaker-categories");
+export async function getInvitableCategories(headers?: HeadersInit): Promise<SpeakerCategory[]> {
+  const items = await meydanApi<Array<{ slug?: string | null; name?: string | null }>>("/speaker-categories", {
+    headers,
+  });
   return (items || [])
     .filter((item): item is { slug: string; name?: string | null } => Boolean(item?.slug))
     .map((item) => ({ slug: String(item.slug), name: String(item.name || item.slug) }));

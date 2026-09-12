@@ -151,6 +151,7 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
         attachment.type === "image" || attachment.type === "video"
           ? attachment.url
           : undefined,
+      audioSrc: attachment.type === "audio" ? attachment.url : undefined,
       previewAlt:
         attachment.type === "image" || attachment.type === "video"
           ? attachment.label || item.author?.display_name

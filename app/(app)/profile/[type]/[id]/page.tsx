@@ -13,5 +13,14 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const profile = await hydrateSquareProfileMeta(rawProfile);
   const mine = await getProfileDetails().catch(() => null);
   const canManage = Boolean(mine && mine.actorId === profile.actorId && mine.accountType === profile.accountType);
-  return <ProfileView initialProfile={profile} canManage={canManage} />;
+  // Only a square account invites, and its own address is the invitation venue.
+  const viewerIsSquare = mine?.accountType === "square";
+  return (
+    <ProfileView
+      initialProfile={profile}
+      canManage={canManage}
+      canInvite={viewerIsSquare}
+      inviteVenue={viewerIsSquare ? mine?.identity.location || "" : ""}
+    />
+  );
 }

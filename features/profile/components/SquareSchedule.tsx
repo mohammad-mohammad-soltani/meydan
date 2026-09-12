@@ -21,7 +21,7 @@ export function SquareSchedule({
         </h2>
         {canManage ? (
           <Link
-            href={"/profile/edit" as Route}
+            href={"/profile/schedule" as Route}
             className="text-[11px] font-bold text-brand hover:underline"
           >
             مدیریت برنامه‌ها
@@ -31,7 +31,7 @@ export function SquareSchedule({
       {items.length === 0 ? (
         <p className="mt-3 rounded-card border border-dashed border-border bg-surface-muted px-3 py-4 text-center text-[11px] leading-6 text-muted-foreground">
           {canManage
-            ? "هنوز برنامه‌ای ثبت نشده؛ از بخش ویرایش پروفایل اولین برنامه را اضافه کنید."
+            ? "هنوز برنامه‌ای ثبت نشده؛ از «سین برنامه» اولین برنامه را اضافه کنید."
             : "هنوز برنامه‌ای برای این میدان اعلام نشده است."}
         </p>
       ) : (

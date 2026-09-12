@@ -16,7 +16,7 @@ export function SpeakersFilters({ activeFilter, onChange, options }: SpeakersFil
   ];
 
   return (
-    <div className="flex gap-2 overflow-x-auto py-1 no-scrollbar" role="group" aria-label="فیلتر دسته‌بندی سخنرانان">
+    <div className="flex gap-2 overflow-x-auto py-0.5 no-scrollbar" role="group" aria-label="فیلتر دسته‌بندی سخنرانان">
       {chips.map((chip) => {
         const active = activeFilter === chip.id;
         return (
@@ -25,10 +25,10 @@ export function SpeakersFilters({ activeFilter, onChange, options }: SpeakersFil
             type="button"
             aria-pressed={active}
             onClick={() => onChange(chip.id)}
-            className={`inline-flex min-h-9 shrink-0 items-center rounded-pill border px-3 py-1.5 text-[11px] font-black transition-colors ${
+            className={`inline-flex min-h-9 shrink-0 items-center rounded-pill border px-3.5 py-1.5 text-[11px] font-black transition-colors ${
               active
-                ? "border-brand-border bg-selected text-selected-foreground"
-                : "border-border bg-surface text-muted-foreground hover:bg-hover hover:text-foreground"
+                ? "border-brand bg-brand text-brand-foreground shadow-xs"
+                : "border-border bg-surface text-muted-foreground hover:border-brand-border hover:bg-hover hover:text-foreground"
             }`}
           >
             {chip.label}

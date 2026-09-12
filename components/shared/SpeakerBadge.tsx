@@ -7,25 +7,34 @@ const sizes = {
 } as const;
 
 /**
- * Red verified-speaker badge. Separate from the blue account badge so a
- * verified speaker is distinguishable from a verified account.
+ * Brand-red speaker badge, separate from the blue account badge so a verified
+ * speaker stays distinguishable from a verified account. The fill reads
+ * `--brand` so it always matches the site's brand red in every theme.
+ *
+ * `always` is for curated speaker rows where the row itself proves the actor is
+ * a speaker even when the API did not flag it as verified; the accessible label
+ * then only claims the speaker role and drops the verification claim.
  */
 export function SpeakerBadge({
   verified,
+  always = false,
   size = "sm",
   className = "",
 }: {
   verified?: boolean;
+  always?: boolean;
   size?: keyof typeof sizes;
   className?: string;
 }) {
-  if (!verified) return null;
+  if (!verified && !always) return null;
+
+  const label = verified ? "سخنران تأییدشده" : "سخنران";
 
   return (
-    <span title="سخنران تأییدشده" className="inline-flex shrink-0">
+    <span title={label} className="inline-flex shrink-0">
       <BadgeCheck
-        aria-label="سخنران تأییدشده"
-        className={`${sizes[size]} shrink-0 fill-speaker text-on-solid ${className}`}
+        aria-label={label}
+        className={`${sizes[size]} shrink-0 fill-brand text-brand-foreground ${className}`}
       />
     </span>
   );

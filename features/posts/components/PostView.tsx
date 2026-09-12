@@ -25,6 +25,7 @@ import type { PostDetail } from "../types";
 const mediaDetails = {
   image: "گزارش تصویری",
   video: "ویدیو",
+  microphone: "فایل صوتی",
   article: "سند و گزارش",
 } as const;
 
@@ -119,6 +120,9 @@ function toFeedPost(
 
         previewSrc:
           media.previewSrc,
+
+        audioSrc:
+          media.audioSrc,
 
         previewAlt:
           media.previewAlt,

@@ -7,7 +7,14 @@ type UploadComplete = { media_id: number };
 // below that ceiling because browser uploads are proxied through /api/meydan.
 const MAX_PROXY_SAFE_CHUNK_SIZE = 4 * 1024 * 1024;
 
-export async function uploadNarrativeFile(file: File, purpose: "narrative" | "avatar" | "cover" = "narrative"): Promise<number> {
+/** Receives the uploaded fraction (0‥1) after every chunk. */
+export type UploadProgressHandler = (fraction: number) => void;
+
+export async function uploadNarrativeFile(
+  file: File,
+  purpose: "narrative" | "avatar" | "cover" = "narrative",
+  onProgress?: UploadProgressHandler,
+): Promise<number> {
   const started = await meydanApi<UploadStart>("/uploads", {
     method: "POST",
     headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
@@ -19,17 +26,21 @@ export async function uploadNarrativeFile(file: File, purpose: "narrative" | "av
       ? Math.min(started.chunk_size, MAX_PROXY_SAFE_CHUNK_SIZE)
       : MAX_PROXY_SAFE_CHUNK_SIZE;
 
+  if (file.size === 0) onProgress?.(1);
+
   for (let offset = 0, index = 0; offset < file.size; offset += chunkSize, index += 1) {
     await meydanApi(`/uploads/${started.upload_id}/chunks/${index}`, {
       method: "PUT",
       headers: { "content-type": "application/octet-stream" },
       body: file.slice(offset, offset + chunkSize),
     });
+    onProgress?.(Math.min(1, Math.min(offset + chunkSize, file.size) / file.size));
   }
 
   const completed = await meydanApi<UploadComplete>(`/uploads/${started.upload_id}/complete`, {
     method: "POST",
     headers: { "idempotency-key": crypto.randomUUID() },
   });
+  onProgress?.(1);
   return completed.media_id;
 }

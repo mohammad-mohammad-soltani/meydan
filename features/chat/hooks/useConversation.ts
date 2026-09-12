@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useUnreadCounts } from "../providers/UnreadProvider";
 import { getChatSocket } from "../realtime/socket";
 import {
   deleteMessage,
@@ -50,6 +51,11 @@ function upsertMessage(list: ChatMessage[], incoming: ChatMessage) {
 }
 
 export function useConversation(conversationId: string, initialConversation: Conversation | null = null, initialMessages: ChatMessage[] = []) {
+  // Reading a conversation clears its unread messages, so the shared badge has
+  // to re-read itself: the realtime server's `receipt:read` is broadcast only
+  // to the *other* participants, never back to the reader.
+  const { refresh: refreshUnreadCounts } = useUnreadCounts();
+  const lastMarkedReadRef = useRef("");
   const [conversation, setConversation] = useState(initialConversation);
   const [messages, setMessages] = useState(initialMessages);
   const [currentUserId, setCurrentUserId] = useState("");
@@ -159,9 +165,15 @@ export function useConversation(conversationId: string, initialConversation: Con
     if (!currentUserId || !messages.length) return;
     const lastIncoming = [...messages].reverse().find((message) => message.senderId !== currentUserId && message.status === "sent");
     if (!lastIncoming) return;
-    void markConversationRead(conversationId, lastIncoming.id).catch(() => undefined);
+    // Skip the redundant write when the same message was already marked read.
+    const readKey = `${conversationId}:${lastIncoming.id}`;
+    if (lastMarkedReadRef.current === readKey) return;
+    lastMarkedReadRef.current = readKey;
+    void markConversationRead(conversationId, lastIncoming.id)
+      .then(() => refreshUnreadCounts())
+      .catch(() => undefined);
     void getChatSocket().then((socket) => socket.emit("receipt:read", { conversationId, messageId: lastIncoming.id })).catch(() => undefined);
-  }, [conversationId, currentUserId, messages]);
+  }, [conversationId, currentUserId, messages, refreshUnreadCounts]);
 
   useEffect(() => {
     if (!currentUserId || !conversation?.id) return;

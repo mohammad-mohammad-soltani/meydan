@@ -1,4 +1,4 @@
-export type PostMediaKind = "image" | "video" | "article";
+export type PostMediaKind = "image" | "video" | "microphone" | "article";
 export type ReactionKind = "like" | "repost";
 
 export type PostAuthor = {
@@ -19,6 +19,8 @@ export type PostMedia = {
   kind: PostMediaKind;
   detail?: string;
   previewSrc?: string;
+  /** Audio source; plays through the shared bottom player. */
+  audioSrc?: string;
   previewAlt?: string;
   width?: number;
   height?: number;

@@ -200,25 +200,6 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     }
   };
 
-  const createSchedule = async (input: { title: string; startsAt: string }) => {
-    if (!requireAuth("/profile/edit")) return;
-    setIsSavingManagement(true);
-    setManagementError(null);
-    try {
-      await meydanApi("/me/square/schedule", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title: input.title, starts_at: input.startsAt }),
-      });
-      window.location.reload();
-    } catch (reason) {
-      if (isAuthApiError(reason)) redirectToLogin();
-      else setManagementError("ثبت برنامه انجام نشد. دوباره تلاش کنید.");
-    } finally {
-      setIsSavingManagement(false);
-    }
-  };
-
   return {
     profile,
     narrativePosts,
@@ -243,6 +224,5 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     shareNarrative,
     saveSquareDetails,
     saveUserDetails,
-    createSchedule,
   };
 }
