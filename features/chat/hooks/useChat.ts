@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { mapApiNotification, mergeNotification, type ApiNotificationLike } from "../chat-utils";
+import { mapApiNotification, mergeNotification, shouldRefreshNotificationFromApi, type ApiNotificationLike } from "../chat-utils";
 import { getChatSocket } from "../realtime/socket";
 import { getConversations } from "../services/chat.service";
 import {
@@ -103,7 +103,9 @@ export function useChat(initialConversations: Conversation[] = [], initialNotifi
       if (MESSAGE_NOTIFICATION_TYPES.has(String(payload.type || "").toLowerCase())) return;
       const incoming = mapApiNotification(payload);
       setNotifications((current) => mergeNotification(current, incoming));
-      if (incoming.unread) setUnreadNotificationCount((count) => count + 1);
+      if (shouldRefreshNotificationFromApi(incoming) || incoming.unread) {
+        void refreshNotifications();
+      }
     };
     const onNotificationUpdated = () => void refreshNotifications();
 
