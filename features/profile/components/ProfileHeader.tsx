@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowRight, BadgeCheck, Check, LoaderCircle, MessageCircle, MoreHorizontal, UserRoundPlus } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, BadgeCheck, Check, LoaderCircle, MessageCircle, UserRoundPlus } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
+import { ProfileActionsMenu } from "./ProfileActionsMenu";
 import type { ProfileDetails } from "../types";
 
 type ProfileHeaderProps = {
@@ -20,6 +22,7 @@ type ProfileHeaderProps = {
 
 export function ProfileHeader({ profile, canEdit = false, isFollowing = false, isFollowLoading = false, followStateReady = true, isChatOpening = false, onToggleFollow, onMessage }: ProfileHeaderProps) {
   const { requireAuth } = useAuthGate();
+  const [notice, setNotice] = useState("");
   const { identity, accountType, narratives } = profile;
   const postLabel = accountType === "square" ? new Intl.NumberFormat("fa-IR").format(narratives.length) : profile.resumeStats[0]?.value || "۰";
 
@@ -46,7 +49,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
                 </button>
               </>
             )}
-            <button type="button" aria-label="گزینه‌های بیشتر" className="grid h-10 w-10 place-items-center rounded-full border border-border text-icon hover:bg-hover"><MoreHorizontal className="h-5 w-5" /></button>
+            <ProfileActionsMenu profile={profile} canEdit={canEdit} onNotice={setNotice} />
           </div>
         </div>
         <div className="mt-2">
@@ -54,6 +57,19 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
           <p dir="ltr" className="mt-0.5 text-left text-sm text-foreground-subtle">@{identity.handle}</p>
         </div>
       </div>
+
+      <p
+        role="status"
+        aria-live="polite"
+        className={`fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-1/2 z-[60] -translate-x-1/2 rounded-full bg-solid-dark px-4 py-2.5 text-center text-xs font-bold text-on-solid shadow-dialog transition lg:bottom-5 ${
+          notice ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+          <Check aria-hidden="true" className="h-4 w-4 text-success" />
+          {notice || "انجام شد"}
+        </span>
+      </p>
     </header>
   );
 }
