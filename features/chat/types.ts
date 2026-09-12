@@ -34,9 +34,6 @@ export type ChatMessage = {
   status: MessageStatus;
   attachment?: ChatAttachment;
   replyTo?: MessageReply;
-  forwardedFrom?: string;
-  editedAt?: string;
-  deletedAt?: string;
   reactions?: string[];
 };
 
@@ -49,11 +46,7 @@ export type ChatAttachment = {
   url?: string;
 };
 
-export type MessageReply = {
-  id: string;
-  body: string;
-  senderName: string;
-};
+export type MessageReply = { id: string; body: string; senderName: string };
 
 export type SocketTicket = {
   ticket: string;
@@ -62,7 +55,7 @@ export type SocketTicket = {
   socketUrl: string;
 };
 
-export type ChatNotificationKind = "like" | "repost" | "message" | "media" | "mention" | "follow";
+export type ChatNotificationKind = "like" | "repost" | "message" | "media" | "mention" | "follow" | "comment" | "join_field" | "system";
 
 export type ChatNotification = {
   id: string;
@@ -72,6 +65,6 @@ export type ChatNotification = {
   createdAt: string;
   conversationId?: string;
   actor?: ChatUser;
-  unread?: boolean;
+  unread: boolean;
   targetUrl?: string;
 };
