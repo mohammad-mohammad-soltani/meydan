@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import * as chatUtils from "../features/chat/chat-utils.ts";
 import {
   chatContactHref,
   classifyChatAttachment,
@@ -43,4 +44,45 @@ test("builds the real Meydan user profile route", () => {
 
 test("builds a dedicated full-screen contact page inside the conversation", () => {
   assert.equal(chatContactHref("123"), "/chat/123/info");
+});
+
+test("maps backend notifications into unread UI notifications with actor and deep link", () => {
+  assert.equal(typeof chatUtils.mapApiNotification, "function");
+  const notification = chatUtils.mapApiNotification({
+    id: 91,
+    type: "comment_reply",
+    title: "پاسخ جدید",
+    body: "علی به نظر شما پاسخ داد.",
+    created_at: "2026-09-12T10:30:00Z",
+    read_at: null,
+    deep_link: "/posts/17#comment-91",
+    actor: { id: "user_8", type: "user", numeric_id: 8, display_name: "علی", avatar_url: "https://cdn.example/avatar.jpg", verified: false },
+  });
+  assert.equal(notification.id, "91");
+  assert.equal(notification.kind, "comment");
+  assert.equal(notification.unread, true);
+  assert.equal(notification.targetUrl, "/posts/17#comment-91");
+  assert.equal(notification.actor?.name, "علی");
+});
+
+test("supports non-message social notification kinds including good-work joins and system notices", () => {
+  assert.equal(typeof chatUtils.notificationKind, "function");
+  assert.equal(chatUtils.notificationKind("like"), "like");
+  assert.equal(chatUtils.notificationKind("repost"), "repost");
+  assert.equal(chatUtils.notificationKind("comment"), "comment");
+  assert.equal(chatUtils.notificationKind("comment_reply"), "comment");
+  assert.equal(chatUtils.notificationKind("mention"), "mention");
+  assert.equal(chatUtils.notificationKind("follow"), "follow");
+  assert.equal(chatUtils.notificationKind("initiative_join"), "initiative");
+  assert.equal(chatUtils.notificationKind("admin_notice"), "system");
+});
+
+test("merges realtime notifications without duplicates and preserves newest first", () => {
+  assert.equal(typeof chatUtils.mergeNotification, "function");
+  const current = [
+    { id: "1", kind: "like", title: "قدیمی", description: "", createdAt: "۱۰:۰۰", unread: true },
+  ];
+  const next = { id: "2", kind: "follow", title: "جدید", description: "", createdAt: "۱۰:۰۱", unread: true };
+  assert.deepEqual(chatUtils.mergeNotification(current, next).map((item) => item.id), ["2", "1"]);
+  assert.equal(chatUtils.mergeNotification([next, ...current], next).length, 2);
 });
