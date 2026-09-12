@@ -71,4 +71,7 @@ export type ChatNotification = {
   description: string;
   createdAt: string;
   conversationId?: string;
+  actor?: ChatUser;
+  unread?: boolean;
+  targetUrl?: string;
 };
