@@ -10,6 +10,7 @@ import type { ChatNotification, Conversation } from "../types";
 export function ChatView({ conversations, notifications }: { conversations: Conversation[]; notifications: ChatNotification[] }) {
   const chat = useChat(conversations, notifications);
   const [query, setQuery] = useState("");
+  const unreadNotifications = notifications.filter((item) => item.unread).length;
 
   const visibleConversations = useMemo(() => {
     const term = query.trim();
@@ -21,21 +22,12 @@ export function ChatView({ conversations, notifications }: { conversations: Conv
     <section className="min-h-full bg-background pb-4 text-foreground" aria-label="پیام‌ها و اعلان‌ها">
       <header className="sticky top-0 z-20 border-b border-border bg-surface-glass px-4 pt-4 backdrop-blur-md">
         <div className="grid grid-cols-2 text-center">
-          <button
-            type="button"
-            onClick={() => chat.setSection("conversations")}
-            className={`relative flex h-12 items-center justify-center gap-2 text-sm font-bold transition-colors ${chat.section === "conversations" ? "text-primary" : "text-muted"}`}
-          >
-            <MessageCircle className="h-4 w-4" />
-            گفتگوها
+          <button type="button" onClick={() => chat.setSection("conversations")} className={`relative flex h-12 items-center justify-center gap-2 text-sm font-bold transition-colors ${chat.section === "conversations" ? "text-primary" : "text-muted"}`}>
+            <MessageCircle className="h-4 w-4" /> گفتگوها
             {chat.section === "conversations" ? <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" /> : null}
           </button>
-          <button
-            type="button"
-            onClick={() => chat.setSection("notifications")}
-            className={`relative flex h-12 items-center justify-center gap-2 text-sm font-bold transition-colors ${chat.section === "notifications" ? "text-primary" : "text-muted"}`}
-          >
-            <Bell className="h-4 w-4" />
+          <button type="button" onClick={() => chat.setSection("notifications")} className={`relative flex h-12 items-center justify-center gap-2 text-sm font-bold transition-colors ${chat.section === "notifications" ? "text-primary" : "text-muted"}`}>
+            <span className="relative"><Bell className="h-4 w-4" />{unreadNotifications > 0 ? <span className="absolute -right-3 -top-3 rounded-full bg-danger px-1.5 text-[9px] text-white">{unreadNotifications}</span> : null}</span>
             اعلان‌ها
             {chat.section === "notifications" ? <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" /> : null}
           </button>
@@ -50,13 +42,7 @@ export function ChatView({ conversations, notifications }: { conversations: Conv
         ) : null}
       </header>
 
-      {chat.section === "conversations" ? (
-        <ConversationList conversations={visibleConversations} isLoading={chat.isLoading} />
-      ) : (
-        <div className="px-4 py-3">
-          <NotificationsList notifications={chat.notifications} />
-        </div>
-      )}
+      {chat.section === "conversations" ? <ConversationList conversations={visibleConversations} isLoading={chat.isLoading} /> : <div className="px-4 py-3"><NotificationsList notifications={chat.notifications} /></div>}
     </section>
   );
 }
