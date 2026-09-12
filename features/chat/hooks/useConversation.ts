@@ -10,8 +10,10 @@ import {
   getConversations,
   getCurrentUserId,
   getMessages,
+  mapMessage,
   markConversationRead,
   sendMessage,
+  setConversationTyping,
   setMessageReaction,
   uploadChatAttachment,
 } from "../services/chat.service";
@@ -27,19 +29,12 @@ function normalizeRealtimeMessage(message: ChatMessage): ChatMessage {
   return { ...message, id: String(message.id), conversationId: String(message.conversationId), senderId: String(message.senderId), sentAt: timeLabel(message.sentAt), status: "sent" };
 }
 
-function messageExcerpt(message: ChatMessage) {
-  return message.body || message.attachment?.name || "فایل پیوست‌شده";
+function realtimeMessage(raw: unknown): ChatMessage {
+  return normalizeRealtimeMessage(mapMessage(raw as never));
 }
 
-function emitAck<T>(socket: Awaited<ReturnType<typeof getChatSocket>>, event: string, payload: unknown, timeoutMs = 9000): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error("socket timeout")), timeoutMs);
-    socket.emit(event, payload, (response: T & { ok?: boolean; error?: string }) => {
-      window.clearTimeout(timer);
-      if (response && response.ok === false) reject(new Error(response.error || "socket error"));
-      else resolve(response);
-    });
-  });
+function messageExcerpt(message: ChatMessage) {
+  return message.body || message.attachment?.name || "فایل پیوست‌شده";
 }
 
 function upsertMessage(list: ChatMessage[], incoming: ChatMessage) {
@@ -51,9 +46,6 @@ function upsertMessage(list: ChatMessage[], incoming: ChatMessage) {
 }
 
 export function useConversation(conversationId: string, initialConversation: Conversation | null = null, initialMessages: ChatMessage[] = []) {
-  // Reading a conversation clears its unread messages, so the shared badge has
-  // to re-read itself: the realtime server's `receipt:read` is broadcast only
-  // to the *other* participants, never back to the reader.
   const { refresh: refreshUnreadCounts } = useUnreadCounts();
   const lastMarkedReadRef = useRef("");
   const [conversation, setConversation] = useState(initialConversation);
@@ -74,6 +66,7 @@ export function useConversation(conversationId: string, initialConversation: Con
   const [messageToForward, setMessageToForward] = useState<ChatMessage | null>(null);
   const [forwardTargets, setForwardTargets] = useState<Conversation[]>([]);
   const typingTimer = useRef<number | null>(null);
+  const typingActive = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -101,20 +94,22 @@ export function useConversation(conversationId: string, initialConversation: Con
     let disposed = false;
     let socketRef: Awaited<ReturnType<typeof getChatSocket>> | null = null;
 
-    const onCreated = (raw: ChatMessage) => {
-      const message = normalizeRealtimeMessage(raw);
+    const onCreated = (raw: unknown) => {
+      const message = realtimeMessage(raw);
       if (message.conversationId !== conversationId) return;
       setMessages((current) => upsertMessage(current, message));
     };
-    const onUpdated = (raw: ChatMessage) => {
-      const message = normalizeRealtimeMessage(raw);
+    const onUpdated = (raw: unknown) => {
+      const message = realtimeMessage(raw);
+      if (message.conversationId !== conversationId) return;
       setMessages((current) => current.map((item) => item.id === message.id ? { ...item, ...message } : item));
     };
     const onDeleted = ({ messageId, conversationId: eventConversationId }: { messageId: string; conversationId: string }) => {
       if (String(eventConversationId) !== conversationId) return;
       setMessages((current) => current.filter((message) => message.id !== String(messageId)));
     };
-    const onReaction = ({ messageId, reactions }: { messageId: string; reactions: string[] }) => {
+    const onReaction = ({ messageId, conversationId: eventConversationId, reactions }: { messageId: string; conversationId?: string; reactions: string[] }) => {
+      if (eventConversationId && String(eventConversationId) !== conversationId) return;
       setMessages((current) => current.map((message) => message.id === String(messageId) ? { ...message, reactions } : message));
     };
     const onTyping = ({ conversationId: eventConversationId, userId, typing }: { conversationId: string; userId: string; typing: boolean }) => {
@@ -125,7 +120,6 @@ export function useConversation(conversationId: string, initialConversation: Con
     };
     const onConnect = () => {
       setIsConnected(true);
-      socketRef?.emit("conversation:join", { conversationId });
       void getMessages(conversationId).then((fresh) => !disposed && setMessages((current) => fresh.reduce(upsertMessage, current))).catch(() => undefined);
     };
     const onDisconnect = () => setIsConnected(false);
@@ -142,14 +136,11 @@ export function useConversation(conversationId: string, initialConversation: Con
       socket.on("connect", onConnect);
       socket.on("disconnect", onDisconnect);
       setIsConnected(socket.connected);
-      socket.emit("conversation:join", { conversationId });
     }).catch(() => setIsConnected(false));
 
     return () => {
       disposed = true;
-      if (typingTimer.current) window.clearTimeout(typingTimer.current);
       if (!socketRef) return;
-      socketRef.emit("conversation:leave", { conversationId });
       socketRef.off("message:created", onCreated);
       socketRef.off("message:updated", onUpdated);
       socketRef.off("message:deleted", onDeleted);
@@ -165,29 +156,44 @@ export function useConversation(conversationId: string, initialConversation: Con
     if (!currentUserId || !messages.length) return;
     const lastIncoming = [...messages].reverse().find((message) => message.senderId !== currentUserId && message.status === "sent");
     if (!lastIncoming) return;
-    // Skip the redundant write when the same message was already marked read.
     const readKey = `${conversationId}:${lastIncoming.id}`;
     if (lastMarkedReadRef.current === readKey) return;
     lastMarkedReadRef.current = readKey;
     void markConversationRead(conversationId, lastIncoming.id)
       .then(() => refreshUnreadCounts())
       .catch(() => undefined);
-    void getChatSocket().then((socket) => socket.emit("receipt:read", { conversationId, messageId: lastIncoming.id })).catch(() => undefined);
   }, [conversationId, currentUserId, messages, refreshUnreadCounts]);
 
   useEffect(() => {
     if (!currentUserId || !conversation?.id) return;
-    void getChatSocket().then((socket) => {
-      if (!socket.connected) return;
-      if (input.trim()) {
-        socket.emit("typing:start", { conversationId });
-        if (typingTimer.current) window.clearTimeout(typingTimer.current);
-        typingTimer.current = window.setTimeout(() => socket.emit("typing:stop", { conversationId }), 1200);
-      } else {
-        socket.emit("typing:stop", { conversationId });
+    if (typingTimer.current) window.clearTimeout(typingTimer.current);
+
+    if (!input.trim()) {
+      if (typingActive.current) {
+        typingActive.current = false;
+        void setConversationTyping(conversationId, false).catch(() => undefined);
       }
-    }).catch(() => undefined);
+      return;
+    }
+
+    if (!typingActive.current) {
+      typingActive.current = true;
+      void setConversationTyping(conversationId, true).catch(() => undefined);
+    }
+    typingTimer.current = window.setTimeout(() => {
+      typingActive.current = false;
+      void setConversationTyping(conversationId, false).catch(() => undefined);
+    }, 1200);
+
+    return () => {
+      if (typingTimer.current) window.clearTimeout(typingTimer.current);
+    };
   }, [conversation?.id, conversationId, currentUserId, input]);
+
+  useEffect(() => () => {
+    if (typingTimer.current) window.clearTimeout(typingTimer.current);
+    if (typingActive.current) void setConversationTyping(conversationId, false).catch(() => undefined);
+  }, [conversationId]);
 
   const clearPendingAttachment = () => {
     setPendingAttachmentFile(null);
@@ -206,11 +212,7 @@ export function useConversation(conversationId: string, initialConversation: Con
       setEditingMessage(null);
       setInput("");
       try {
-        const socket = await getChatSocket();
-        const result = socket.connected
-          ? await emitAck<{ ok: boolean; message: ChatMessage }>(socket, "message:edit", { messageId: original.id, body })
-          : { ok: true, message: await editMessage(original.id, body) };
-        const canonical = normalizeRealtimeMessage(result.message);
+        const canonical = normalizeRealtimeMessage(await editMessage(original.id, body));
         setMessages((current) => current.map((message) => message.id === canonical.id ? { ...message, ...canonical } : message));
         setNotice("پیام ویرایش شد.");
       } catch {
@@ -245,20 +247,7 @@ export function useConversation(conversationId: string, initialConversation: Con
 
     try {
       const persistedAttachment = pendingFile ? await uploadChatAttachment(pendingFile) : pendingAttachment;
-      const socket = await getChatSocket();
-      let sent: ChatMessage;
-      if (socket.connected) {
-        const result = await emitAck<{ ok: boolean; message: ChatMessage }>(socket, "message:send", {
-          conversationId,
-          clientId,
-          body,
-          attachment: persistedAttachment ? { id: persistedAttachment.id, name: persistedAttachment.name, mimeType: persistedAttachment.mimeType, size: persistedAttachment.size, url: persistedAttachment.url } : undefined,
-          replyToId: optimistic.replyTo?.id,
-        });
-        sent = normalizeRealtimeMessage(result.message);
-      } else {
-        sent = await sendMessage(conversationId, body, persistedAttachment, { clientId, replyToId: optimistic.replyTo?.id });
-      }
+      const sent = await sendMessage(conversationId, body, persistedAttachment, { clientId, replyToId: optimistic.replyTo?.id });
       setMessages((current) => upsertMessage(current, {
         ...sent,
         attachment: sent.attachment ? {
@@ -299,13 +288,7 @@ export function useConversation(conversationId: string, initialConversation: Con
     const target = messages.find((message) => message.id === messageId);
     const active = !target?.reactions?.includes(reaction);
     setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: active ? [...(message.reactions ?? []), reaction] : (message.reactions ?? []).filter((item) => item !== reaction) } : message));
-    void getChatSocket().then(async (socket) => {
-      if (socket.connected) {
-        await emitAck(socket, "message:react", { messageId, reaction, active });
-      } else {
-        await setMessageReaction(messageId, reaction, active);
-      }
-    }).catch(() => {
+    void setMessageReaction(messageId, reaction, active).catch(() => {
       setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: target?.reactions ?? [] } : message));
     });
   };
@@ -317,9 +300,7 @@ export function useConversation(conversationId: string, initialConversation: Con
     setMessages((current) => current.filter((message) => message.id !== target.id));
     if (editingMessage?.id === target.id) { setEditingMessage(null); setInput(""); }
     if (replyingTo?.id === target.id) setReplyingTo(null);
-    void getChatSocket().then(async (socket) => {
-      if (socket.connected) await emitAck(socket, "message:delete", { messageId: target.id });
-      else await deleteMessage(target.id);
+    void deleteMessage(target.id).then(() => {
       setNotice("پیام حذف شد.");
     }).catch(() => {
       setMessages((current) => current.some((message) => message.id === target.id) ? current : [...current, target].sort((a, b) => Number(a.id) - Number(b.id)));

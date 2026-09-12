@@ -1,5 +1,5 @@
 import { meydanApi } from "@/lib/meydan-api";
-import type { ChatAttachment, ChatMessage, Conversation, SocketTicket } from "../types";
+import type { ChatAttachment, ChatMessage, Conversation } from "../types";
 
 type ApiConversation = {
   id: string | number;
@@ -42,6 +42,10 @@ type ApiMessage = {
   reply_to?: { id: string | number; body?: string; sender_name?: string } | null;
   forwarded_from?: string | null;
   reactions?: string[];
+};
+
+type RealtimeConfig = {
+  user_id: string | number;
 };
 
 let cachedCurrentUserId = "";
@@ -265,15 +269,19 @@ export async function markConversationRead(conversationId: string, messageId: st
   });
 }
 
-export async function getSocketTicket(): Promise<SocketTicket> {
-  const result = await meydanApi<{ ticket: string; user_id: string | number; expires_at: string; socket_url: string }>("/chat/socket-ticket", { method: "POST" });
-  cachedCurrentUserId = String(result.user_id);
-  return { ticket: result.ticket, userId: cachedCurrentUserId, expiresAt: result.expires_at, socketUrl: result.socket_url };
+export async function setConversationTyping(conversationId: string, typing: boolean): Promise<void> {
+  await meydanApi(`/chat/conversations/${conversationId}/typing`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ typing }),
+  });
 }
 
 export async function getCurrentUserId(): Promise<string> {
   if (cachedCurrentUserId) return cachedCurrentUserId;
-  return (await getSocketTicket()).userId;
+  const result = await meydanApi<RealtimeConfig>("/chat/realtime/config");
+  cachedCurrentUserId = String(result.user_id);
+  return cachedCurrentUserId;
 }
 
 export { mapMessage };
