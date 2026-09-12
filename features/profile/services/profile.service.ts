@@ -554,7 +554,7 @@ function mapSquare(
       label: "جمعیت امید",
     },
     {
-      value: `${compactFa(mediaReflectionCount)} خبر`,
+      value: `${compactFa(mediaReflectionCount)} روایت`,
       label: "بازتاب رسانه‌ای",
       tone: "success",
     },

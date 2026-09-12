@@ -879,7 +879,7 @@ export function PostCard({
    * Timeline
    */
   return (
-    <article className="relative border-b border-divider px-3 py-3 transition-colors duration-150 hover:bg-hover sm:px-4">
+    <article className="relative border-b border-divider bg-surface px-3 py-3 transition-colors duration-150 hover:bg-hover/20 sm:px-4">
       <Link
         href={(`/posts/${post.id}`) as Route}
         aria-label={`مشاهده روایت ${post.title}`}

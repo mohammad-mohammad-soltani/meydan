@@ -37,7 +37,7 @@ export async function hydrateSquareProfileMeta(
         label: "روایت منتشرشده",
       },
       {
-        value: `${compactFa(reflections.count ?? 0)} خبر`,
+        value: `${compactFa(reflections.count ?? 0)} روایت`,
         label: "بازتاب رسانه‌ای",
         tone: "success",
       },
