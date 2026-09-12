@@ -86,3 +86,9 @@ test("merges realtime notifications without duplicates and preserves newest firs
   assert.deepEqual(chatUtils.mergeNotification(current, next).map((item) => item.id), ["2", "1"]);
   assert.equal(chatUtils.mergeNotification([next, ...current], next).length, 2);
 });
+
+test("realtime notification events request an API refresh so actor/read metadata is authoritative", () => {
+  assert.equal(typeof chatUtils.shouldRefreshNotificationFromApi, "function");
+  assert.equal(chatUtils.shouldRefreshNotificationFromApi({ id: "4", actor: undefined, unread: true }), true);
+  assert.equal(chatUtils.shouldRefreshNotificationFromApi({ id: "4", actor: { id: "8" }, unread: true }), false);
+});
