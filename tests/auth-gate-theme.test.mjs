@@ -39,6 +39,15 @@ test("protected UI redirects before protected actions", () => {
   assert.match(api, /window\.location\.assign/);
 });
 
+test("notification center API endpoints are treated as authenticated client requests", () => {
+  const api = source("lib/meydan-api.ts");
+  assert.match(api, /cleanPath\s*===\s*["']\/notifications["']/);
+  assert.match(api, /cleanPath\.startsWith\(["']\/notifications\/["']\)/);
+  const notificationGuard = api.indexOf('cleanPath === "/notifications"');
+  const publicGetGuard = api.indexOf('method === "GET" || method === "HEAD"');
+  assert.ok(notificationGuard >= 0 && notificationGuard < publicGetGuard, "notification auth guard must run before public GET handling");
+});
+
 test("compose and chat routes have server-side authentication guards", () => {
   assert.match(source("app/(app)/compose/page.tsx"), /isAuthenticated/);
   assert.match(source("app/(app)/compose/page.tsx"), /loginHref\("\/compose"\)/);

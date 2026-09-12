@@ -1,4 +1,4 @@
-import type { ChatAttachment, ChatUser } from "./types";
+import type { ChatAttachment, ChatNotification, ChatNotificationKind, ChatUser } from "./types";
 
 export type ChatAttachmentKind = "image" | "video" | "audio" | "file";
 
@@ -16,6 +16,25 @@ export type SharedMediaItem = {
 export type SharedLinkItem = {
   id: string;
   url: string;
+};
+
+export type ApiNotificationLike = {
+  id: string | number;
+  type?: string | null;
+  title?: string | null;
+  body?: string | null;
+  created_at?: string | null;
+  read_at?: string | null;
+  deep_link?: string | null;
+  actor?: {
+    id?: string | number | null;
+    type?: "user" | "square" | string | null;
+    numeric_id?: string | number | null;
+    display_name?: string | null;
+    handle?: string | null;
+    avatar_url?: string | null;
+    verified?: boolean | null;
+  } | null;
 };
 
 export function classifyChatAttachment(attachment: Pick<ChatAttachment, "mimeType"> | { mimeType?: string }): ChatAttachmentKind {
@@ -73,4 +92,73 @@ export function participantProfileHref(participant: Pick<ChatUser, "id"> & Parti
 
 export function chatContactHref(conversationId: string | number): string {
   return `/chat/${String(conversationId)}/info`;
+}
+
+export function notificationKind(type?: string | null): ChatNotificationKind {
+  switch (String(type || "").toLowerCase()) {
+    case "like":
+      return "like";
+    case "repost":
+      return "repost";
+    case "comment":
+    case "comment_reply":
+      return "comment";
+    case "mention":
+      return "mention";
+    case "follow":
+      return "follow";
+    case "initiative_join":
+    case "join_field":
+      return "initiative";
+    case "media":
+    case "media_reflection":
+      return "media";
+    default:
+      return "system";
+  }
+}
+
+function notificationTimeLabel(value?: string | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat("fa-IR", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+export function mapApiNotification(item: ApiNotificationLike): ChatNotification {
+  const actor = item.actor;
+  const actorNumericId = String(actor?.numeric_id || actor?.id || "").replace(/^.*?_/, "");
+  const actorName = String(actor?.display_name || "کاربر میدان");
+  const mappedActor: ChatUser | undefined = actor ? {
+    id: actorNumericId || String(actor.id || ""),
+    name: actorName,
+    handle: String(actor.handle || ""),
+    avatarLabel: actorName.slice(0, 2),
+    avatarTone: "slate",
+    avatarUrl: actor.avatar_url || undefined,
+    isVerified: Boolean(actor.verified),
+    profileType: actor.type === "square" ? "square" : "user",
+    profileId: actorNumericId || undefined,
+  } : undefined;
+
+  return {
+    id: String(item.id),
+    kind: notificationKind(item.type),
+    title: String(item.title || "اعلان جدید"),
+    description: String(item.body || ""),
+    createdAt: notificationTimeLabel(item.created_at),
+    actor: mappedActor,
+    unread: !item.read_at,
+    targetUrl: item.deep_link || undefined,
+  };
+}
+
+export function mergeNotification(current: ChatNotification[], incoming: ChatNotification): ChatNotification[] {
+  return [incoming, ...current.filter((item) => item.id !== incoming.id)];
 }
