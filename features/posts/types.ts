@@ -8,6 +8,8 @@ export type PostAuthor = {
   handle: string;
   initials: string;
   verified: boolean;
+  /** Red speaker badge — granted via the linked curated speaker profile. */
+  verifiedSpeaker?: boolean;
   avatarUrl?: string;
 };
 

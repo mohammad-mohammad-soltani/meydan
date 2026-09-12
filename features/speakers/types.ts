@@ -12,6 +12,8 @@ export type Speaker = {
   avatarUrl?: string;
   accent: "slate" | "blue" | "amber" | "emerald";
   verified: boolean;
+  /** Linked user account id. Absent when the profile has no account yet. */
+  userId?: string;
 };
 
 export type ReservationRequest = {

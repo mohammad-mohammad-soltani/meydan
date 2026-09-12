@@ -13,6 +13,7 @@ type ApiSpeaker = {
   initials?: string;
   avatar_url?: string;
   cities?: Array<{ name?: string } | string>;
+  user_id?: number | null;
 };
 
 const accents: Speaker["accent"][] = ["slate", "blue", "amber", "emerald"];
@@ -50,5 +51,6 @@ export async function getSpeakers(): Promise<Speaker[]> {
     avatarUrl: item.avatar_url,
     accent: accents[index % accents.length],
     verified: Boolean(item.verified),
+    userId: item.user_id ? String(item.user_id) : undefined,
   }));
 }

@@ -192,6 +192,9 @@ const NOTIFICATION_PHRASES: Record<string, string> = {
   square_rejected: "درخواست میدان شما رد شد",
   speaker_request_created: "درخواست سخنران شما ثبت شد",
   speaker_request_status_changed: "وضعیت درخواست سخنران شما تغییر کرد",
+  speaker_invitation: "{actor} شما را برای سخنرانی دعوت کرده است",
+  speaker_invitation_accepted: "{actor} دعوت سخنرانی شما را پذیرفت",
+  speaker_invitation_rejected: "{actor} دعوت سخنرانی شما را نپذیرفت",
   content_published: "محتوای جدیدی منتشر شد",
 };
 

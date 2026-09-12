@@ -9,6 +9,8 @@ export type ProfileIdentity = {
   avatar?: string;
   cover?: string;
   verified: boolean;
+  /** Red speaker badge — granted via the linked curated speaker profile. */
+  verifiedSpeaker?: boolean;
 };
 
 export type ProfileStat = { label: string; value: string; tone?: "default" | "success"; };

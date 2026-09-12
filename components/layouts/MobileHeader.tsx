@@ -12,8 +12,9 @@ export function MobileHeader() {
   const isExploreRoute = pathname === "/explore";
   const isProfileRoute = pathname === "/profile" || pathname.startsWith("/profile/");
   const isInitiativeRoute = pathname.startsWith("/initiatives/");
+  const isSpeakerInvitationRoute = pathname.startsWith("/speaker-invitations");
 
-  if (pathname === "/chat" || isConversationRoute || isContentDetailRoute || isPostRoute || isExploreRoute || isProfileRoute || isInitiativeRoute) return null;
+  if (pathname === "/chat" || isConversationRoute || isContentDetailRoute || isPostRoute || isExploreRoute || isProfileRoute || isInitiativeRoute || isSpeakerInvitationRoute) return null;
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-surface-glass px-4 py-3 backdrop-blur-md lg:hidden">

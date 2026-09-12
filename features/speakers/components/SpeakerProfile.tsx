@@ -1,4 +1,5 @@
-import { BadgeCheck, CalendarClock, Send, X } from "lucide-react";
+import { CalendarClock, Send, X } from "lucide-react";
+import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import type { ReservationRequest, ReservationResult, Speaker } from "../types";
 
 type SpeakerProfileProps = {
@@ -17,7 +18,7 @@ export function SpeakerProfile({ speaker, request, reservation, onClose, onReque
   return (
     <div role="dialog" aria-modal="true" aria-label="درخواست اعزام سخنران" className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-4 sm:items-center">
       <section className="w-full max-w-md rounded-panel border border-border bg-popover p-5 text-popover-foreground shadow-dialog">
-        <div className="flex items-start justify-between"><div><div className="flex items-center gap-1"><h2 className="text-sm font-black text-foreground">{speaker.name}</h2><BadgeCheck className="h-4 w-4 fill-verified text-on-solid" /></div><p className="mt-1 text-xs text-muted-foreground">درخواست رسمی اعزام به میدان</p></div><button type="button" onClick={onClose} aria-label="بستن" className="grid h-10 w-10 place-items-center rounded-control text-icon-muted transition-colors hover:bg-hover hover:text-brand"><X className="h-5 w-5" /></button></div>
+        <div className="flex items-start justify-between"><div><div className="flex items-center gap-1"><h2 className="text-sm font-black text-foreground">{speaker.name}</h2><SpeakerBadge verified={speaker.verified} size="md" /></div><p className="mt-1 text-xs text-muted-foreground">درخواست رسمی اعزام به میدان</p></div><button type="button" onClick={onClose} aria-label="بستن" className="grid h-10 w-10 place-items-center rounded-control text-icon-muted transition-colors hover:bg-hover hover:text-brand"><X className="h-5 w-5" /></button></div>
         {reservation ? <div className="mt-5 rounded-control border border-success-border bg-success-surface p-4 text-sm font-bold text-success-foreground">درخواست اعزام ثبت شد و برای هماهنگی ارسال می‌شود.</div> : (
           <div className="mt-5 space-y-3">
             <label className="block text-xs font-bold text-foreground-secondary">پایگاه متقاضی<input value={request.venue} onChange={(event) => onRequestChange("venue", event.target.value)} className={fieldClass} /></label>

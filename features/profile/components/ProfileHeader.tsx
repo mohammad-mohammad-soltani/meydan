@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useState } from "react";
 import { ArrowRight, BadgeCheck, Check, LoaderCircle, MessageCircle, UserRoundPlus } from "lucide-react";
+import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { ProfileActionsMenu } from "./ProfileActionsMenu";
 import type { ProfileDetails } from "../types";
@@ -53,7 +54,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
           </div>
         </div>
         <div className="mt-2">
-          <div className="flex flex-wrap items-center gap-1.5"><h2 className="text-xl font-black leading-8 text-foreground">{identity.name}</h2>{identity.verified ? <BadgeCheck aria-label="حساب تأییدشده" className="h-5 w-5 fill-verified text-on-solid" /> : null}</div>
+          <div className="flex flex-wrap items-center gap-1.5"><h2 className="text-xl font-black leading-8 text-foreground">{identity.name}</h2>{identity.verified ? <BadgeCheck aria-label="حساب تأییدشده" className="h-5 w-5 fill-verified text-on-solid" /> : null}<SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /></div>
           <p dir="ltr" className="mt-0.5 text-left text-sm text-foreground-subtle">@{identity.handle}</p>
         </div>
       </div>

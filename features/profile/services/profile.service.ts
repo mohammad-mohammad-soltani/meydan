@@ -53,6 +53,7 @@ type ApiUserProfile = {
   cover_url?: string;
   headline?: string;
   verified?: boolean;
+  verified_speaker?: boolean;
   location_label?: string;
   province_id?: number;
   city_id?: number;
@@ -80,6 +81,7 @@ type ApiPublicUser = {
     avatar_url?: string;
     display_name?: string;
     verified?: boolean;
+    verified_speaker?: boolean;
   };
   profile: Omit<
     ApiUserProfile,
@@ -707,6 +709,10 @@ function mapUser(
     verified: Boolean(
       profile.verified,
     ),
+
+    verifiedSpeaker: Boolean(
+      profile.verified_speaker,
+    ),
   };
 
   return {
@@ -972,6 +978,9 @@ export async function getPublicProfileDetails(
 
         verified:
           user.actor.verified,
+
+        verified_speaker:
+          user.actor.verified_speaker,
       },
 
       narratives,

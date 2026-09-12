@@ -83,6 +83,8 @@
   --color-accent-border: var(--accent-border);
   --color-verified: var(--verified);
   --color-verified-surface: var(--verified-surface);
+  --color-speaker: var(--speaker);
+  --color-speaker-surface: var(--speaker-surface);
 
   --color-message-own: var(--message-own);
   --color-message-own-foreground: var(--message-own-foreground);
@@ -188,6 +190,8 @@
   --accent-border: #ddd6fe;
   --verified: #2563eb;
   --verified-surface: #eff6ff;
+  --speaker: #dc2626;
+  --speaker-surface: #fef2f2;
 
   --message-own: #e7f7e8;
   --message-own-foreground: #17351f;
@@ -297,6 +301,8 @@ html.dark {
   --accent-border: rgb(167 139 250 / .30);
   --verified: #60a5fa;
   --verified-surface: rgb(96 165 250 / .14);
+  --speaker: #f87171;
+  --speaker-surface: rgb(248 113 113 / .14);
 
   --message-own: #2b4638;
   --message-own-foreground: #f0fff6;
