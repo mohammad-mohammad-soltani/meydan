@@ -1,5 +1,5 @@
 import { meydanApi } from "@/lib/meydan-api";
-import type { ChatAttachment, ChatMessage, ChatNotification, Conversation, SocketTicket } from "../types";
+import type { ChatAttachment, ChatMessage, Conversation, SocketTicket } from "../types";
 
 type ApiConversation = {
   id: string | number;
@@ -274,22 +274,6 @@ export async function getSocketTicket(): Promise<SocketTicket> {
 export async function getCurrentUserId(): Promise<string> {
   if (cachedCurrentUserId) return cachedCurrentUserId;
   return (await getSocketTicket()).userId;
-}
-
-export async function getNotifications(): Promise<ChatNotification[]> {
-  try {
-    const items = await meydanApi<Array<{ id: string | number; type?: string; title?: string; body?: string; created_at?: string; deep_link?: string }>>("/notifications?limit=50");
-    return items.map((item) => ({
-      id: String(item.id),
-      kind: (["like", "repost", "message", "media", "mention", "follow"].includes(item.type || "") ? item.type : "message") as ChatNotification["kind"],
-      title: item.title || "اعلان جدید",
-      description: item.body || "",
-      createdAt: timeLabel(item.created_at),
-      conversationId: item.deep_link?.match(/\/chat\/(\d+)/)?.[1],
-    }));
-  } catch {
-    return [];
-  }
 }
 
 export { mapMessage };

@@ -102,10 +102,15 @@ export function useChat(initialConversations: Conversation[] = [], initialNotifi
       }
       if (MESSAGE_NOTIFICATION_TYPES.has(String(payload.type || "").toLowerCase())) return;
       const incoming = mapApiNotification(payload);
-      setNotifications((current) => mergeNotification(current, incoming));
-      if (shouldRefreshNotificationFromApi(incoming) || incoming.unread) {
+      // Socket payloads omit actor/entity data, so they cannot produce a real actor
+      // sentence or avatar. Go straight to the authoritative API rather than briefly
+      // rendering a generic placeholder that gets replaced a moment later.
+      if (shouldRefreshNotificationFromApi(incoming)) {
         void refreshNotifications();
+        return;
       }
+      setNotifications((current) => mergeNotification(current, incoming));
+      if (incoming.unread) void refreshNotifications();
     };
     const onNotificationUpdated = () => void refreshNotifications();
 

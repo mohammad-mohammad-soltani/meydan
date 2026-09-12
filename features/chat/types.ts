@@ -63,6 +63,9 @@ export type ChatNotificationKind = "like" | "repost" | "media" | "mention" | "fo
 export type ChatNotification = {
   id: string;
   kind: ChatNotificationKind;
+  /** Raw backend `type` (e.g. `comment_reply`). Presentation text is derived from this. */
+  rawType: string;
+  /** Backend-authored text. Used only as a legacy fallback when no type mapping exists. */
   title: string;
   description: string;
   createdAt: string;
@@ -70,4 +73,9 @@ export type ChatNotification = {
   actor?: ChatUser;
   unread?: boolean;
   targetUrl?: string;
+  /** Short preview of the target entity (narrative text, comment body) when available. */
+  targetPreview?: string;
+  /** Backend entity the notification is about; used to derive a link when `targetUrl` is a placeholder. */
+  entityType?: string;
+  entityId?: string;
 };
