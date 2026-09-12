@@ -62,7 +62,7 @@ class SoketiClient {
   start() {
     if (this.connected || this.connecting) return;
     this.connecting = this.open()
-      .catch(() => undefined)
+      .catch(() => this.scheduleReconnect())
       .finally(() => {
         this.connecting = null;
       });
