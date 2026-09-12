@@ -36,7 +36,6 @@ class SoketiClient {
   connected = false;
   private ws: WebSocket | null = null;
   private listeners = new Map<string, Set<Handler>>();
-  private config: RealtimeConfig | null = null;
   private socketId = "";
   private reconnectTimer: number | null = null;
   private reconnectAttempt = 0;
@@ -60,13 +59,13 @@ class SoketiClient {
     return this;
   }
 
-  async start() {
-    if (this.connected) return;
-    if (this.connecting) return this.connecting;
-    this.connecting = this.open().finally(() => {
-      this.connecting = null;
-    });
-    return this.connecting;
+  start() {
+    if (this.connected || this.connecting) return;
+    this.connecting = this.open()
+      .catch(() => undefined)
+      .finally(() => {
+        this.connecting = null;
+      });
   }
 
   private emit(event: string, payload?: unknown) {
@@ -82,7 +81,6 @@ class SoketiClient {
   private async open() {
     const config = await meydanApi<RealtimeConfig>("/chat/realtime/config");
     if (!config.app_key || !config.host) throw new Error("Soketi configuration is incomplete");
-    this.config = config;
 
     const protocol = String(config.scheme).toLowerCase() === "https" ? "wss" : "ws";
     const port = Number(config.port || (protocol === "wss" ? 443 : 80));
@@ -147,7 +145,7 @@ class SoketiClient {
           return;
         }
 
-        if (frame.event?.startsWith("pusher:" ) || frame.event?.startsWith("pusher_internal:")) return;
+        if (frame.event?.startsWith("pusher:") || frame.event?.startsWith("pusher_internal:")) return;
         if (frame.event) this.emit(frame.event, parseData(frame.data));
       };
 
@@ -171,19 +169,23 @@ class SoketiClient {
 
   private async subscribe(channelName: string) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.socketId) return;
-    const auth = await meydanApi<ChannelAuth>("/chat/realtime/auth", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ socket_id: this.socketId, channel_name: channelName }),
-    });
-    this.send({
-      event: "pusher:subscribe",
-      data: {
-        channel: channelName,
-        auth: auth.auth,
-        ...(auth.channel_data ? { channel_data: auth.channel_data } : {}),
-      },
-    });
+    try {
+      const auth = await meydanApi<ChannelAuth>("/chat/realtime/auth", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ socket_id: this.socketId, channel_name: channelName }),
+      });
+      this.send({
+        event: "pusher:subscribe",
+        data: {
+          channel: channelName,
+          auth: auth.auth,
+          ...(auth.channel_data ? { channel_data: auth.channel_data } : {}),
+        },
+      });
+    } catch (error) {
+      console.error("Soketi channel authorization failed", channelName, error);
+    }
   }
 
   private send(frame: unknown) {
@@ -195,24 +197,18 @@ class SoketiClient {
     const delay = Math.min(10_000, 500 * 2 ** Math.min(this.reconnectAttempt++, 5));
     this.reconnectTimer = window.setTimeout(() => {
       this.reconnectTimer = null;
-      void this.start().catch(() => this.scheduleReconnect());
+      this.start();
     }, delay);
   }
 }
 
 let socket: SoketiClient | null = null;
-let connecting: Promise<SoketiClient> | null = null;
 
 export async function getChatSocket(): Promise<SoketiClient> {
-  if (socket?.connected) return socket;
-  if (connecting) return connecting;
-
   const target = socket ?? new SoketiClient();
   socket = target;
-  connecting = target.start().then(() => target).finally(() => {
-    connecting = null;
-  });
-  return connecting;
+  target.start();
+  return target;
 }
 
 export function currentChatSocket(): SoketiClient | null {
