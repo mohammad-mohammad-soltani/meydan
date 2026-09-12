@@ -162,3 +162,7 @@ export function mapApiNotification(item: ApiNotificationLike): ChatNotification 
 export function mergeNotification(current: ChatNotification[], incoming: ChatNotification): ChatNotification[] {
   return [incoming, ...current.filter((item) => item.id !== incoming.id)];
 }
+
+export function shouldRefreshNotificationFromApi(notification: Pick<ChatNotification, "actor">): boolean {
+  return !notification.actor;
+}
