@@ -12,7 +12,13 @@ import {
   getInvitableSpeakers,
   getSpeakerInvitations,
 } from "../services/speaker-invitations.service";
-import type { CreateInvitationInput, InvitableSpeaker, InvitationBox, SpeakerInvitation } from "../types";
+import type {
+  CreateInvitationInput,
+  InvitableSpeaker,
+  InvitationBox,
+  SpeakerCategory,
+  SpeakerInvitation,
+} from "../types";
 
 const tabs: Array<{ id: InvitationBox; label: string; icon: typeof Inbox }> = [
   { id: "received", label: "دعوت‌های دریافتی", icon: Inbox },
@@ -22,9 +28,17 @@ const tabs: Array<{ id: InvitationBox; label: string; icon: typeof Inbox }> = [
 export function SpeakerInvitationsView({
   initialReceived,
   initialSent = [],
+  categories = [],
+  canInvite = false,
+  venue = "",
 }: {
   initialReceived: SpeakerInvitation[];
   initialSent?: SpeakerInvitation[];
+  categories?: SpeakerCategory[];
+  /** Only square accounts may invite; the API enforces this too. */
+  canInvite?: boolean;
+  /** The inviting square's own address, previewed in the composer. */
+  venue?: string;
 }) {
   const [box, setBox] = useState<InvitationBox>("received");
   const [received, setReceived] = useState(initialReceived);
@@ -141,14 +155,16 @@ export function SpeakerInvitationsView({
             <ArrowRight className="h-5 w-5" />
           </button>
           <h1 className="min-w-0 flex-1 truncate text-sm font-black text-foreground">دعوت‌های سخنرانی</h1>
-          <button
-            type="button"
-            onClick={openComposer}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-pill bg-brand px-3 text-[11px] font-black text-brand-foreground transition-colors hover:bg-brand-hover"
-          >
-            <Send className="h-3.5 w-3.5" />
-            دعوت جدید
-          </button>
+          {canInvite ? (
+            <button
+              type="button"
+              onClick={openComposer}
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-pill bg-brand px-3 text-[11px] font-black text-brand-foreground transition-colors hover:bg-brand-hover"
+            >
+              <Send className="h-3.5 w-3.5" />
+              دعوت جدید
+            </button>
+          ) : null}
         </div>
 
         <div role="tablist" aria-label="دعوت‌های دریافتی و ارسالی" className="mt-2.5 flex border-b border-border">
@@ -249,6 +265,8 @@ export function SpeakerInvitationsView({
           speakers={speakers}
           speakersLoading={speakersLoading}
           speakersError={speakersError}
+          categories={categories}
+          venue={venue}
           busy={submitting}
           onSearch={(query) => void loadSpeakers(query)}
           onClose={() => setComposerOpen(false)}

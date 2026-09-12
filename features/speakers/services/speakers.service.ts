@@ -1,6 +1,8 @@
 import { meydanApi } from "@/lib/meydan-api";
 import type { Speaker, SpeakerCategory } from "../types";
 
+type ApiCategory = { slug?: string; name?: string };
+
 type ApiSpeaker = {
   id: number;
   slug?: string;
@@ -14,21 +16,29 @@ type ApiSpeaker = {
   avatar_url?: string;
   cities?: Array<{ name?: string } | string>;
   user_id?: number | null;
+  categories?: ApiCategory[];
 };
 
 const accents: Speaker["accent"][] = ["slate", "blue", "amber", "emerald"];
 
-function categoryOf(item: ApiSpeaker): SpeakerCategory {
-  const text = `${item.role || ""} ${item.expertise || ""} ${item.bio || ""}`;
-  if (/رسانه|شناختی|ارتباط/.test(text)) return "media";
-  if (/مقاومت|تمدن|اجتماعی/.test(text)) return "resistance";
-  return "faith";
+function categoriesOf(item: ApiSpeaker): SpeakerCategory[] {
+  return (item.categories || [])
+    .filter((category): category is { slug: string; name?: string } => Boolean(category?.slug))
+    .map((category) => ({ slug: String(category.slug), name: String(category.name || category.slug) }));
 }
 
 function cityNames(cities?: ApiSpeaker["cities"]): string[] {
   return (cities || [])
     .map((city) => (typeof city === "string" ? city : city.name || ""))
     .filter(Boolean);
+}
+
+/** Admin-editable category list, so the filter row stays in sync without a deploy. */
+export async function getSpeakerCategories(): Promise<SpeakerCategory[]> {
+  const items = await meydanApi<ApiCategory[]>("/speaker-categories");
+  return (items || [])
+    .filter((item): item is { slug: string; name?: string } => Boolean(item?.slug))
+    .map((item) => ({ slug: String(item.slug), name: String(item.name || item.slug) }));
 }
 
 export async function getSpeakers(): Promise<Speaker[]> {
@@ -38,7 +48,7 @@ export async function getSpeakers(): Promise<Speaker[]> {
     name: item.name,
     handle: item.handle || item.slug || `speaker_${item.id}`,
     cities: cityNames(item.cities),
-    category: categoryOf(item),
+    categories: categoriesOf(item),
     expertise: item.expertise || item.bio || item.role || "",
     initials:
       item.initials ||

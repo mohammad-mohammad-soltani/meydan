@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { LoaderCircle, Search, Send, X } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
-import type { CreateInvitationInput, InvitableSpeaker } from "../types";
+import type { CreateInvitationInput, InvitableSpeaker, SpeakerCategory } from "../types";
 
 const fieldClass =
   "mt-1.5 w-full rounded-control border border-input-border bg-input px-3 py-2 text-xs text-foreground outline-none transition-colors placeholder:text-placeholder hover:border-input-border-hover focus:border-ring focus-visible:ring-2 focus-visible:ring-ring";
@@ -21,6 +21,8 @@ export function InviteSpeakerForm({
   speakers,
   speakersLoading,
   speakersError,
+  categories,
+  venue,
   initiativeId,
   busy,
   onSearch,
@@ -30,6 +32,9 @@ export function InviteSpeakerForm({
   speakers: InvitableSpeaker[];
   speakersLoading: boolean;
   speakersError?: string | null;
+  categories: SpeakerCategory[];
+  /** The square's own registered address, shown read-only; the API sends it. */
+  venue: string;
   initiativeId?: string;
   busy?: boolean;
   onSearch: (query: string) => void;
@@ -38,11 +43,15 @@ export function InviteSpeakerForm({
 }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<InvitableSpeaker | null>(null);
-  const [location, setLocation] = useState("");
+  const [category, setCategory] = useState("");
   const [date, setDate] = useState(today());
   const [time, setTime] = useState("21:00");
   const [message, setMessage] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+
+  const visibleSpeakers = category
+    ? speakers.filter((speaker) => speaker.categories.some((item) => item.slug === category))
+    : speakers;
 
   const submit = () => {
     setLocalError(null);
@@ -50,14 +59,9 @@ export function InviteSpeakerForm({
       setLocalError("ابتدا یک سخنران انتخاب کنید.");
       return;
     }
-    if (!location.trim()) {
-      setLocalError("مکان برگزاری الزامی است.");
-      return;
-    }
     void onSubmit({
       speakerUserId: selected.userId,
       initiativeId,
-      location: location.trim(),
       requestedDate: date,
       requestedTime: time,
       message: message.trim(),
@@ -106,6 +110,29 @@ export function InviteSpeakerForm({
             </div>
           </label>
 
+          {categories.length ? (
+            <div className="mt-2 flex gap-1.5 overflow-x-auto no-scrollbar" role="group" aria-label="فیلتر دسته‌بندی">
+              {[{ slug: "", name: "همه" }, ...categories].map((option) => {
+                const active = category === option.slug;
+                return (
+                  <button
+                    key={option.slug || "all"}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setCategory(option.slug)}
+                    className={`inline-flex min-h-8 shrink-0 items-center rounded-pill border px-2.5 text-[10px] font-black transition-colors ${
+                      active
+                        ? "border-brand-border bg-selected text-selected-foreground"
+                        : "border-border bg-surface text-muted-foreground hover:bg-hover hover:text-foreground"
+                    }`}
+                  >
+                    {option.name}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
           <div className="mt-2 max-h-52 overflow-y-auto rounded-control border border-border">
             {speakersLoading ? (
               <p className="flex items-center justify-center gap-2 py-6 text-xs text-muted-foreground">
@@ -114,11 +141,11 @@ export function InviteSpeakerForm({
               </p>
             ) : speakersError ? (
               <p className="py-6 text-center text-xs text-danger-foreground">{speakersError}</p>
-            ) : speakers.length === 0 ? (
+            ) : visibleSpeakers.length === 0 ? (
               <p className="py-6 text-center text-xs text-muted-foreground">سخنرانی با این مشخصات پیدا نشد.</p>
             ) : (
               <ul className="divide-y divide-divider">
-                {speakers.map((speaker) => {
+                {visibleSpeakers.map((speaker) => {
                   const active = selected?.userId === speaker.userId;
                   return (
                     <li key={speaker.userId}>
@@ -166,15 +193,17 @@ export function InviteSpeakerForm({
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <label className="col-span-2 block text-xs font-bold text-foreground-secondary">
-            مکان برگزاری
-            <input
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              placeholder="میدان، پایگاه یا نشانی"
-              className={fieldClass}
-            />
-          </label>
+          {/* Derived from the square's own profile and sent by the API — shown
+              read-only so the inviter can confirm what the speaker will see. */}
+          <div className="col-span-2 rounded-control border border-border bg-surface-muted px-3 py-2">
+            <span className="block text-xs font-bold text-foreground-secondary">مکان برگزاری</span>
+            <span className="mt-1 block text-xs leading-6 text-foreground">
+              {venue || "نشانی میدان شما ثبت نشده است."}
+            </span>
+            <span className="mt-0.5 block text-[10px] text-foreground-subtle">
+              این نشانی از پروفایل میدان شما برداشته می‌شود.
+            </span>
+          </div>
           <label className="block text-xs font-bold text-foreground-secondary">
             تاریخ
             <input type="date" value={date} onChange={(event) => setDate(event.target.value)} className={fieldClass} dir="ltr" />

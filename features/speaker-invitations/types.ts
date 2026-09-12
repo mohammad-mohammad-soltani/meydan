@@ -1,5 +1,8 @@
 export type SpeakerInvitationStatus = "pending" | "accepted" | "rejected" | "cancelled";
 
+/** Reuses the speakers feature shape; categories are admin-editable so slug is opaque. */
+export type SpeakerCategory = { slug: string; name: string };
+
 export type InvitationActor = {
   id: string;
   type: "user" | "square";
@@ -34,15 +37,20 @@ export type InvitableSpeaker = {
   avatarUrl?: string;
   role: string;
   expertise: string;
+  /** Topical categories; the picker filters on these. */
+  categories: SpeakerCategory[];
   verifiedSpeaker: boolean;
 };
 
 export type InvitationBox = "received" | "sent";
 
+/**
+ * The venue is not part of the input: the API derives it from the inviting
+ * square's own registered address.
+ */
 export type CreateInvitationInput = {
   speakerUserId: string;
   initiativeId?: string;
-  location: string;
   requestedDate: string;
   requestedTime: string;
   message?: string;

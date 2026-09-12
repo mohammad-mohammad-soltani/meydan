@@ -4,6 +4,7 @@ import type {
   InvitableSpeaker,
   InvitationActor,
   InvitationBox,
+  SpeakerCategory,
   SpeakerInvitation,
   SpeakerInvitationStatus,
 } from "../types";
@@ -40,6 +41,7 @@ type ApiSpeaker = {
   actor?: ApiActor | null;
   role?: string | null;
   expertise?: string | null;
+  speaker_categories?: Array<{ slug?: string | null; name?: string | null }> | null;
   verified_speaker?: boolean | null;
 };
 
@@ -112,24 +114,35 @@ export async function getInvitableSpeakers(query = ""): Promise<InvitableSpeaker
       avatarUrl: item.actor?.avatar_url || undefined,
       role: String(item.role || ""),
       expertise: String(item.expertise || ""),
+      categories: (item.speaker_categories || [])
+        .filter((category): category is { slug: string; name?: string | null } => Boolean(category?.slug))
+        .map((category) => ({ slug: String(category.slug), name: String(category.name || category.slug) })),
       verifiedSpeaker: Boolean(item.verified_speaker),
     }));
 }
 
 export async function createInvitation(input: CreateInvitationInput): Promise<SpeakerInvitation> {
+  // No `location`: the API derives the venue from the inviting square's profile.
   const created = await meydanApi<ApiInvitation>("/speaker-invitations", {
     method: "POST",
     headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
     body: JSON.stringify({
       speaker_user_id: Number(input.speakerUserId),
       initiative_id: input.initiativeId ? Number(input.initiativeId) : undefined,
-      location: input.location,
       requested_date: input.requestedDate,
       requested_time: input.requestedTime,
       message: input.message || "",
     }),
   });
   return mapInvitation(created);
+}
+
+/** Admin-editable category list for the picker filter. */
+export async function getInvitableCategories(): Promise<SpeakerCategory[]> {
+  const items = await meydanApi<Array<{ slug?: string | null; name?: string | null }>>("/speaker-categories");
+  return (items || [])
+    .filter((item): item is { slug: string; name?: string | null } => Boolean(item?.slug))
+    .map((item) => ({ slug: String(item.slug), name: String(item.name || item.slug) }));
 }
 
 export async function decideInvitation(
