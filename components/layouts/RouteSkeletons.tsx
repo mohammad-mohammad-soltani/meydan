@@ -50,6 +50,10 @@ export function ComposeRouteSkeleton() {
   return <SkeletonShell><div className="flex items-center justify-between"><Block className="h-5 w-24" /><Block className="h-8 w-16 rounded-lg" /></div><Block className="h-28 w-full rounded-2xl bg-skeleton-highlight" /><div className="grid grid-cols-3 gap-2"><Block className="h-20" /><Block className="h-20" /><Block className="h-20" /></div><Block className="h-11 w-full rounded-xl" /></SkeletonShell>;
 }
 
+export function ParticipantsRouteSkeleton() {
+  return <SkeletonShell><header className="flex items-center gap-3 border-b border-divider pb-4"><Block className="h-8 w-8 shrink-0 rounded-full" /><div className="space-y-2"><Block className="h-3.5 w-48" /><Block className="h-2.5 w-16 bg-skeleton-highlight" /></div></header><div className="overflow-hidden rounded-card border border-border"><div className="divide-y divide-divider">{[0, 1, 2, 3, 4].map((index) => <div key={index} className="flex items-center gap-3 px-4 py-3"><Block className="h-11 w-11 shrink-0 rounded-full" /><div className="min-w-0 flex-1 space-y-2"><Block className="h-3 w-32" /><Block className="h-2.5 w-20 bg-skeleton-highlight" /></div></div>)}</div></div></SkeletonShell>;
+}
+
 export function PodcastsRouteSkeleton() {
   return <SkeletonShell><div className="space-y-2"><Block className="h-5 w-32" /><Block className="h-3 w-52 bg-skeleton-highlight" /></div><div className="space-y-3">{[0, 1, 2, 3].map((index) => <article key={index} className="flex gap-3 rounded-card border border-border p-3"><Block className="h-16 w-16 shrink-0 rounded-xl" /><div className="flex-1 space-y-2 pt-1"><Block className="h-3 w-4/5" /><Block className="h-2.5 w-2/5 bg-skeleton-highlight" /><Block className="h-2.5 w-16 bg-skeleton-highlight" /></div></article>)}</div></SkeletonShell>;
 }
