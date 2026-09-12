@@ -34,6 +34,9 @@ export type ChatMessage = {
   status: MessageStatus;
   attachment?: ChatAttachment;
   replyTo?: MessageReply;
+  forwardedFrom?: string;
+  editedAt?: string;
+  deletedAt?: string;
   reactions?: string[];
 };
 
@@ -63,7 +66,8 @@ export type ChatNotification = {
   title: string;
   description: string;
   createdAt: string;
+  conversationId?: string;
   actor?: ChatUser;
-  unread: boolean;
+  unread?: boolean;
   targetUrl?: string;
 };
