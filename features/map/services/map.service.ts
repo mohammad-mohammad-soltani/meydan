@@ -155,3 +155,26 @@ export function clearAllSquaresCache(): void {
 export async function reverseGeocode(latitude: number, longitude: number): Promise<ReverseGeocodedLocation> {
   return meydanApi<ReverseGeocodedLocation>(`/geo/reverse?latitude=${latitude}&longitude=${longitude}`);
 }
+
+// Repeated taps often land on the same point (and reverse geocoding is billed
+// by the request), so results are memoized by ~11m precision. In-flight
+// promises are shared too, collapsing concurrent duplicate lookups. Failures
+// are deliberately not cached so a transient error can be retried.
+const reverseGeocodeCache = new Map<string, Promise<ReverseGeocodedLocation>>();
+
+export function reverseGeocodeCached(latitude: number, longitude: number): Promise<ReverseGeocodedLocation> {
+  const key = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+  const cached = reverseGeocodeCache.get(key);
+  if (cached) return cached;
+
+  const request = reverseGeocode(latitude, longitude).catch((error: unknown) => {
+    reverseGeocodeCache.delete(key);
+    throw error;
+  });
+  reverseGeocodeCache.set(key, request);
+  return request;
+}
+
+export function clearReverseGeocodeCache(): void {
+  reverseGeocodeCache.clear();
+}

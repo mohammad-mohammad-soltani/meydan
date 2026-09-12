@@ -18,6 +18,10 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
+import { ProvinceCitySelect } from "@/features/auth/components/ProvinceCitySelect";
+import { SquareLocationField } from "@/features/auth/components/SquareLocationField";
+import { useLocationSelection } from "@/features/auth/hooks/useLocationSelection";
+import { useProvinceCity } from "@/features/auth/hooks/useProvinceCity";
 
 type AuthStep = "phone" | "code" | "register";
 type AccountType = "user" | "square";
@@ -169,11 +173,6 @@ export default function AuthPage() {
   const [registrationToken, setRegistrationToken] = useState("");
   const [accountType, setAccountType] = useState<AccountType>("user");
   const [name, setName] = useState("");
-  const [provinceId, setProvinceId] = useState("");
-  const [cityId, setCityId] = useState("");
-  const [address, setAddress] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(false);
@@ -182,6 +181,44 @@ export default function AuthPage() {
     () => true,
     () => false,
   );
+
+  const {
+    provinces,
+    cities,
+    provinceId,
+    cityId,
+    provincesLoading,
+    citiesLoading,
+    error: geoError,
+    selectProvince,
+    selectCity,
+  } = useProvinceCity();
+
+  const selectedProvince = provinces.find((province) => province.id === provinceId) ?? null;
+
+  const {
+    location,
+    setLocation,
+    resolving,
+    setResolving,
+    focusRequest,
+    focusProvince,
+    focusCity,
+  } = useLocationSelection();
+
+  // Both handlers drop the previously chosen point, because its address
+  // belongs to the old area.
+  const changeProvince = (nextProvinceId: number | null) => {
+    selectProvince(nextProvinceId);
+    focusProvince(provinces.find((province) => province.id === nextProvinceId) ?? null);
+  };
+
+  const changeCity = (nextCityId: number | null) => {
+    selectCity(nextCityId);
+    const nextCity = cities.find((city) => city.id === nextCityId);
+    if (nextCity) focusCity(nextCity, selectedProvince);
+    else setLocation(null);
+  };
 
   const inputClass =
     "mt-2 min-h-12 w-full rounded-control border border-input-border bg-input px-3.5 text-sm text-foreground shadow-xs outline-none transition-[border-color,box-shadow,background-color] placeholder:text-foreground-subtle hover:border-border-strong focus:border-ring focus-visible:ring-2 focus-visible:ring-ring";
@@ -250,26 +287,43 @@ export default function AuthPage() {
     }
   };
 
+  const hasLocation =
+    location !== null &&
+    location.address.trim() !== "" &&
+    Number.isFinite(location.latitude) &&
+    Number.isFinite(location.longitude);
+  const locationReady = accountType === "user" || (hasLocation && !resolving);
+
   const submitRegistration = async (event: FormEvent) => {
     event.preventDefault();
-    setPending(true);
     resetMessages();
+
+    if (provinceId === null || cityId === null) {
+      setError("استان و شهر را انتخاب کنید.");
+      return;
+    }
+    if (accountType === "square" && !hasLocation) {
+      setError("روی نقشه نقطه‌ای را برای موقعیت میدان انتخاب کنید.");
+      return;
+    }
+
+    setPending(true);
     try {
       const base = {
         registration_token: registrationToken,
-        province_id: Number(provinceId),
-        city_id: Number(cityId),
+        province_id: provinceId,
+        city_id: cityId,
       };
 
       if (accountType === "user") {
         await api("register-user", { ...base, full_name: name });
-      } else {
+      } else if (location) {
         await api("register-square", {
           ...base,
           square_name: name,
-          address,
-          latitude: Number(latitude),
-          longitude: Number(longitude),
+          address: location.address,
+          latitude: location.latitude,
+          longitude: location.longitude,
         });
       }
       router.replace("/profile");
@@ -497,82 +551,37 @@ export default function AuthPage() {
                         />
                       </Field>
 
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <Field label="شناسه استان" hint="عددی">
-                          <input
-                            className={`${inputClass} text-left tabular-nums`}
-                            value={provinceId}
-                            onChange={(event) => setProvinceId(toLatinDigits(event.target.value).replace(/\D/g, ""))}
-                            inputMode="numeric"
-                            dir="ltr"
-                            placeholder="استان"
-                            required
-                          />
-                        </Field>
-                        <Field label="شناسه شهر" hint="عددی">
-                          <input
-                            className={`${inputClass} text-left tabular-nums`}
-                            value={cityId}
-                            onChange={(event) => setCityId(toLatinDigits(event.target.value).replace(/\D/g, ""))}
-                            inputMode="numeric"
-                            dir="ltr"
-                            placeholder="شهر"
-                            required
-                          />
-                        </Field>
-                      </div>
-
                       {accountType === "square" ? (
-                        <div className="space-y-4 rounded-card border border-border bg-surface-muted p-4">
-                          <div className="flex items-start gap-2.5">
-                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-muted text-brand">
-                              <MapPin aria-hidden="true" className="h-4 w-4" />
-                            </span>
-                            <div>
-                              <p className="text-xs font-black text-foreground">موقعیت میدان</p>
-                              <p className="mt-1 text-[10px] leading-5 text-muted-foreground">اطلاعات مکانی برای نمایش درست میدان روی نقشه استفاده می‌شود.</p>
-                            </div>
-                          </div>
+                        <SquareLocationField
+                          provinces={provinces}
+                          cities={cities}
+                          provinceId={provinceId}
+                          cityId={cityId}
+                          provincesLoading={provincesLoading}
+                          citiesLoading={citiesLoading}
+                          onProvinceChange={changeProvince}
+                          onCityChange={changeCity}
+                          location={location}
+                          resolving={resolving}
+                          error={geoError}
+                          focusRequest={focusRequest}
+                          onSelect={setLocation}
+                          onPendingChange={setResolving}
+                        />
+                      ) : (
+                        <ProvinceCitySelect
+                          provinces={provinces}
+                          cities={cities}
+                          provinceId={provinceId}
+                          cityId={cityId}
+                          provincesLoading={provincesLoading}
+                          citiesLoading={citiesLoading}
+                          onProvinceChange={changeProvince}
+                          onCityChange={changeCity}
+                        />
+                      )}
 
-                          <Field label="نشانی">
-                            <input
-                              className={inputClass}
-                              value={address}
-                              onChange={(event) => setAddress(event.target.value)}
-                              autoComplete="street-address"
-                              placeholder="نشانی دقیق میدان"
-                              required
-                            />
-                          </Field>
-
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <Field label="عرض جغرافیایی">
-                              <input
-                                className={`${inputClass} text-left tabular-nums`}
-                                value={latitude}
-                                onChange={(event) => setLatitude(toLatinDigits(event.target.value))}
-                                inputMode="decimal"
-                                dir="ltr"
-                                placeholder="32.65"
-                                required
-                              />
-                            </Field>
-                            <Field label="طول جغرافیایی">
-                              <input
-                                className={`${inputClass} text-left tabular-nums`}
-                                value={longitude}
-                                onChange={(event) => setLongitude(toLatinDigits(event.target.value))}
-                                inputMode="decimal"
-                                dir="ltr"
-                                placeholder="51.67"
-                                required
-                              />
-                            </Field>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <button disabled={pending || !name.trim() || !provinceId || !cityId} className={primaryButtonClass}>
+                      <button disabled={pending || !name.trim() || provinceId === null || cityId === null || !locationReady} className={primaryButtonClass}>
                         {pending ? <LoaderCircle aria-hidden="true" className="h-4.5 w-4.5 animate-spin" /> : <ArrowLeft aria-hidden="true" className="h-4.5 w-4.5" />}
                         {pending ? "در حال ساخت حساب…" : "تکمیل ثبت‌نام و ورود"}
                       </button>

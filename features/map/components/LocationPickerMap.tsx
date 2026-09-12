@@ -2,29 +2,16 @@
 
 import { Crosshair, LoaderCircle, MapPin } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { meydanApi } from "@/lib/meydan-api";
-
-export type SelectedLocation = {
-  latitude: number;
-  longitude: number;
-  address: string;
-  provinceId: number | null;
-  cityId: number | null;
-  provinceName: string | null;
-  cityName: string | null;
-};
-
-type ReverseResponse = {
-  latitude: number;
-  longitude: number;
-  address: string;
-  province_id: number | null;
-  city_id: number | null;
-  province_name: string | null;
-  city_name: string | null;
-};
+import { reverseGeocodeCached } from "../services/map.service";
+import type { MapFocusRequest, SelectedLocation } from "../types";
 
 const iranCenter: [number, number] = [35.6892, 51.389];
+
+/**
+ * Reverse geocoding is charged per request, so rapid taps are collapsed into a
+ * single lookup. The marker still follows the finger immediately.
+ */
+const geocodeDebounceMs = 450;
 
 function isValidPoint(point?: { latitude: number; longitude: number } | null): point is {
   latitude: number;
@@ -42,20 +29,29 @@ function isValidPoint(point?: { latitude: number; longitude: number } | null): p
 export function LocationPickerMap({
   initialLocation,
   fallbackCenter,
+  focusRequest,
   onSelect,
+  onPendingChange,
+  heightClassName = "h-72",
 }: {
   initialLocation?: SelectedLocation | null;
   fallbackCenter?: { latitude: number; longitude: number } | null;
+  focusRequest?: MapFocusRequest | null;
   onSelect: (location: SelectedLocation) => void;
+  onPendingChange?: (pending: boolean) => void;
+  heightClassName?: string;
 }) {
   const element = useRef<HTMLDivElement>(null);
   const map = useRef<import("leaflet").Map | null>(null);
   const marker = useRef<import("leaflet").CircleMarker | null>(null);
   const onSelectRef = useRef(onSelect);
+  const onPendingChangeRef = useRef(onPendingChange);
+  const geocodeTimer = useRef<number | null>(null);
   const initialKey = isValidPoint(initialLocation)
     ? `${initialLocation.latitude},${initialLocation.longitude}`
     : null;
   const appliedInitialKey = useRef<string | null>(null);
+  const appliedFocusNonce = useRef<number | null>(null);
 
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [customNotice, setCustomNotice] = useState<string | null>(null);
@@ -65,6 +61,10 @@ export function LocationPickerMap({
   useEffect(() => {
     onSelectRef.current = onSelect;
   }, [onSelect]);
+
+  useEffect(() => {
+    onPendingChangeRef.current = onPendingChange;
+  }, [onPendingChange]);
 
   const notice =
     customNotice ??
@@ -89,33 +89,45 @@ export function LocationPickerMap({
     marker.current?.setLatLng(point);
   }, []);
 
+  const resolve = useCallback(async (latitude: number, longitude: number) => {
+    setStatus("loading");
+    setCustomNotice("در حال تشخیص آدرس، شهر و استان…");
+    try {
+      const data = await reverseGeocodeCached(latitude, longitude);
+      onSelectRef.current({
+        latitude: data.latitude,
+        longitude: data.longitude,
+        address: data.address,
+        provinceId: data.province_id,
+        cityId: data.city_id,
+        provinceName: data.province_name,
+        cityName: data.city_name,
+      });
+      setCustomNotice(data.address || "موقعیت انتخاب شد.");
+      setStatus("idle");
+    } catch {
+      setCustomNotice("آدرس این نقطه پیدا نشد؛ نقطه‌ی دیگری را انتخاب کنید.");
+      setStatus("error");
+    } finally {
+      onPendingChangeRef.current?.(false);
+    }
+  }, []);
+
   const select = useCallback(
     async (latitude: number, longitude: number) => {
-      setStatus("loading");
-      setCustomNotice("در حال تشخیص آدرس، شهر و استان…");
-      try {
-        await drawMarker(latitude, longitude);
-        map.current?.panTo([latitude, longitude]);
-        const data = await meydanApi<ReverseResponse>(
-          `/geo/reverse?latitude=${latitude}&longitude=${longitude}`,
-        );
-        onSelectRef.current({
-          latitude: data.latitude,
-          longitude: data.longitude,
-          address: data.address,
-          provinceId: data.province_id,
-          cityId: data.city_id,
-          provinceName: data.province_name,
-          cityName: data.city_name,
-        });
-        setCustomNotice(data.address || "موقعیت انتخاب شد.");
-        setStatus("idle");
-      } catch {
-        setCustomNotice("آدرس این نقطه پیدا نشد؛ نقطه‌ی دیگری را انتخاب کنید.");
-        setStatus("error");
-      }
+      // The point is committed optimistically so the map feels instant; the
+      // caller is told it is pending so it never submits the previous point.
+      onPendingChangeRef.current?.(true);
+      await drawMarker(latitude, longitude);
+      map.current?.panTo([latitude, longitude]);
+
+      if (geocodeTimer.current !== null) window.clearTimeout(geocodeTimer.current);
+      geocodeTimer.current = window.setTimeout(() => {
+        geocodeTimer.current = null;
+        void resolve(latitude, longitude);
+      }, geocodeDebounceMs);
     },
-    [drawMarker],
+    [drawMarker, resolve],
   );
   const selectRef = useRef(select);
 
@@ -139,6 +151,10 @@ export function LocationPickerMap({
     });
     return () => {
       disposed = true;
+      if (geocodeTimer.current !== null) {
+        window.clearTimeout(geocodeTimer.current);
+        geocodeTimer.current = null;
+      }
       map.current?.remove();
       map.current = null;
       marker.current = null;
@@ -163,6 +179,16 @@ export function LocationPickerMap({
     }
   }, [mapReady, initialKey, initialLocation, fallbackCenter, drawMarker]);
 
+  // Recenter on an explicit request (province/city picked in a dropdown).
+  // Keyed on the nonce so an unrelated re-render never moves the map away
+  // from a point the user just chose.
+  useEffect(() => {
+    if (!mapReady || !map.current || !focusRequest) return;
+    if (appliedFocusNonce.current === focusRequest.nonce) return;
+    appliedFocusNonce.current = focusRequest.nonce;
+    map.current.setView([focusRequest.latitude, focusRequest.longitude], focusRequest.zoom);
+  }, [mapReady, focusRequest]);
+
   const locate = () => {
     if (!navigator.geolocation) {
       setStatus("error");
@@ -185,7 +211,7 @@ export function LocationPickerMap({
       aria-label="انتخاب موقعیت روی نقشه"
       className="overflow-hidden rounded-2xl border border-input-border bg-surface-muted"
     >
-      <div className="relative h-72">
+      <div className={`relative ${heightClassName}`}>
         <div ref={element} className="h-full w-full" />
         <button
           type="button"
