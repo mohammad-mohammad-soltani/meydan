@@ -25,7 +25,7 @@ At minimum: compose, timeline Following tab, like/unlike, repost/unrepost, follo
 - Preserve existing `light` and gray `dark` themes.
 - Add `black` theme, labeled «تیره» in UI.
 - In black theme, the primary canvas and semantic surfaces (`background`, `surface`, `surface-muted`, `surface-elevated`, `surface-sunken`, `card`, `popover`, and inputs) are `#000000`; separation uses borders, opacity, and existing semantic colors rather than gray panels.
-- The existing theme button opens a compact three-option popover: «لایت», «دارک», «تیره».
+- The existing theme button opens a compact three-option popover: «روز», «شب», «تیره».
 - Persist selection in `localStorage` key `meydan-theme` using `light | dark | black`.
 - The pre-hydration script in `app/layout.tsx` applies the selected class before first paint to avoid theme flash.
 - Tailwind `dark:` utilities must also behave as dark-mode utilities under the `black` class.

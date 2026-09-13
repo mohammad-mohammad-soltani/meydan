@@ -116,7 +116,11 @@
 :root {
   color-scheme: light;
 
-  --background: #f7f7f7;
+  /* Height the fixed post composer occupies; the app shell reserves it so the
+     audio player docks above the composer instead of behind it. */
+  --comment-composer-height: 0px;
+
+  --background: white;
   --foreground: #171717;
   --foreground-secondary: #404040;
   --foreground-subtle: #737373;

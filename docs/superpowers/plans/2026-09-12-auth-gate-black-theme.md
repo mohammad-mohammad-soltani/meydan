@@ -145,7 +145,7 @@ Commit message: `feat: return users to intended page after login`
 
 - [ ] **Step 1: Extend failing test**
 
-Assert three theme values exist, the menu contains «لایت», «دارک», «تیره», root boot script recognizes `black`, and `html.black` assigns `#000000` to background/surface/card/popover/input semantic tokens.
+Assert three theme values exist, the menu contains «روز», «شب», «تیره», root boot script recognizes `black`, and `html.black` assigns `#000000` to background/surface/card/popover/input semantic tokens.
 
 - [ ] **Step 2: Run test to verify it fails**
 

@@ -5,8 +5,8 @@ import { applyTheme, type ThemeName } from "@/lib/theme";
 import { useTheme } from "./useTheme";
 
 const options: Array<{ value: ThemeName; label: string; icon: typeof Sun }> = [
-  { value: "light", label: "لایت", icon: Sun },
-  { value: "dark", label: "دارک", icon: Moon },
+  { value: "light", label: "روز", icon: Sun },
+  { value: "dark", label: "شب", icon: Moon },
   { value: "black", label: "تیره", icon: Circle },
 ];
 

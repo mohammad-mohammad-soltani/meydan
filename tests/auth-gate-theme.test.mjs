@@ -103,8 +103,8 @@ test("theme supports light, dark and pure-black modes", () => {
   const menuPath = path.join(root, "components/layouts/ThemeMenu.tsx");
   assert.ok(existsSync(menuPath), "ThemeMenu must exist");
   const menu = readFileSync(menuPath, "utf8");
-  assert.match(menu, /لایت/);
-  assert.match(menu, /دارک/);
+  assert.match(menu, /روز/);
+  assert.match(menu, /شب/);
   assert.match(menu, /تیره/);
 
   const blackThemePath = path.join(root, "app/black-theme.css");
