@@ -7,7 +7,8 @@ import { BadgeCheck } from "lucide-react";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
 import { PostActions } from "./PostActions";
-import { PostMediaGallery } from "./media/PostMediaGallery";
+import { MediaGallery } from "@/features/media/components/MediaGallery";
+import { mediaItemsFromAttachments } from "@/features/media/media-utils";
 import type { FeedPost } from "../types";
 
 type PostCardProps = {
@@ -88,6 +89,8 @@ export function PostCard({
   void onJoin;
 
   const isDetail = variant === "detail";
+
+  const mediaItems = mediaItemsFromAttachments(post.attachments);
 
   const profileHref = (
     `/profile/${post.author.type}/${post.author.id}`
@@ -173,8 +176,9 @@ export function PostCard({
 
         {/* Media */}
         {post.attachments.length > 0 ? (
-          <PostMediaGallery
-            attachments={post.attachments}
+          <MediaGallery
+            items={mediaItems}
+            scope={`post:${post.id}`}
             artist={post.squareName}
             cover={post.author.avatarUrl}
             className="mt-3"
@@ -357,8 +361,9 @@ export function PostCard({
           </div>
 
           {post.attachments.length > 0 ? (
-            <PostMediaGallery
-              attachments={post.attachments}
+            <MediaGallery
+              items={mediaItems}
+              scope={`post:${post.id}`}
               artist={post.squareName}
               cover={post.author.avatarUrl}
               className="mt-2.5"

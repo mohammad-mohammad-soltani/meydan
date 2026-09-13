@@ -20,7 +20,7 @@ function cookieFromSetCookie(response: Response, name: string): string | undefin
   return setCookie.match(new RegExp(`(?:^|,\\s*)${name}=([^;]+)`))?.[1];
 }
 
-function copyAudioResponseHeaders(upstream: Response) {
+function copyMediaResponseHeaders(upstream: Response) {
   const headers = new Headers();
   for (const name of [
     "content-type",
@@ -57,28 +57,29 @@ export async function GET(
   });
   const payload = (await detail.json().catch(() => null)) as ContentResponse | null;
   const attachment = payload?.data?.attachments?.find(
-    (item) => String(item.id) === attachmentId && item.type === "audio",
+    (item) =>
+      String(item.id) === attachmentId && (item.type === "audio" || item.type === "video"),
   );
 
   if (!detail.ok || !attachment?.url) {
-    return new Response("Audio file was not found.", { status: 404 });
+    return new Response("Media attachment was not found.", { status: 404 });
   }
 
   let mediaUrl: URL;
   try {
     mediaUrl = new URL(attachment.url);
   } catch {
-    return new Response("Audio file URL is invalid.", { status: 502 });
+    return new Response("Media attachment URL is invalid.", { status: 502 });
   }
 
   // Only proxy media hosted by the configured Meydan backend. This keeps the
   // route from becoming an open proxy if malformed content data is returned.
   if (mediaUrl.origin !== apiOrigin) {
-    return new Response("Audio file host is not allowed.", { status: 502 });
+    return new Response("Media host is not allowed.", { status: 502 });
   }
 
   const upstreamHeaders = new Headers({
-    accept: request.headers.get("accept") || "audio/*,*/*;q=0.8",
+    accept: request.headers.get("accept") || "audio/*,video/*,*/*;q=0.8",
     "accept-encoding": "identity",
     referer: `${apiOrigin}/`,
   });
@@ -103,6 +104,6 @@ export async function GET(
 
   return new Response(upstream.body, {
     status: upstream.status,
-    headers: copyAudioResponseHeaders(upstream),
+    headers: copyMediaResponseHeaders(upstream),
   });
 }

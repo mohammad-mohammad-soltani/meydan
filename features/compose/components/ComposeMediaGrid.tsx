@@ -1,6 +1,9 @@
 "use client";
 
 import { AlertCircle, LoaderCircle, Mic, Play, RefreshCw, X } from "lucide-react";
+import { useState } from "react";
+import { MediaLightbox } from "@/features/media/components/MediaLightbox";
+import type { MediaItem } from "@/features/media/types";
 import type { ComposeMedia } from "../hooks/useComposeMedia";
 
 type TileLayout = {
@@ -38,9 +41,22 @@ export function ComposeMediaGrid({
   onRemove: (id: string) => void;
   onRetry: (id: string) => void;
 }) {
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+
   if (!media.length) return null;
   const count = media.length;
   const layout = LAYOUTS[count] ?? LAYOUTS[4];
+
+  // Local blob previews open in the same viewer used everywhere else.
+  const visuals: MediaItem[] = media
+    .filter((item) => item.kind === "image" || item.kind === "video")
+    .map((item) => ({
+      id: item.id,
+      kind: item.kind === "video" ? "video" : "image",
+      title: item.file.name,
+      src: item.previewUrl,
+    }));
+  const previewIndexOf = new Map(visuals.map((visual, index) => [visual.id, index]));
 
   return (
     <div
@@ -51,9 +67,7 @@ export function ComposeMediaGrid({
           key={item.id}
           className={`relative min-h-0 overflow-hidden bg-surface-sunken ${count > 1 ? "h-full w-full" : ""} ${layout.tiles[index] ?? ""}`}
         >
-          {item.kind === "video" ? (
-            <video src={item.previewUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />
-          ) : item.kind === "audio" ? (
+          {item.kind === "audio" ? (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3 text-center">
               <span className="grid h-11 w-11 place-items-center rounded-full bg-brand-muted text-brand">
                 <Mic aria-hidden="true" className="h-5 w-5" />
@@ -61,9 +75,20 @@ export function ComposeMediaGrid({
               <span className="line-clamp-2 text-[10px] leading-4 text-foreground-subtle">{item.file.name}</span>
             </div>
           ) : (
-            // A blob: preview cannot go through next/image.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.previewUrl} alt={item.file.name} className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={() => setPreviewIndex(previewIndexOf.get(item.id) ?? null)}
+              aria-label={`پیش‌نمایش ${item.file.name}`}
+              className="block h-full w-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {item.kind === "video" ? (
+                <video src={item.previewUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />
+              ) : (
+                // A blob: preview cannot go through next/image.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.previewUrl} alt={item.file.name} className="h-full w-full object-cover" />
+              )}
+            </button>
           )}
 
           {item.kind === "video" && item.status === "ready" ? (
@@ -110,6 +135,16 @@ export function ComposeMediaGrid({
           </button>
         </div>
       ))}
+
+      {previewIndex !== null && visuals[previewIndex] ? (
+        <MediaLightbox
+          items={visuals}
+          index={previewIndex}
+          onIndexChange={setPreviewIndex}
+          onClose={() => setPreviewIndex(null)}
+          label="پیش‌نمایش پیوست‌ها"
+        />
+      ) : null}
     </div>
   );
 }

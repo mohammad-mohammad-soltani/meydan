@@ -7,6 +7,8 @@ export type ContentMedia = {
   kind: MediaKind;
   duration?: string;
   audioSrc?: string;
+  /** Proxied video source, played by the shared media player. */
+  videoSrc?: string;
   description: string;
   coverImage?: string;
 };

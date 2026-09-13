@@ -17,14 +17,14 @@ import {
   Headphones,
   LoaderCircle,
   MapPin,
-  Pause,
-  Play,
   Share2,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import type { ContentDetailItem } from "../types";
 import { meydanApi } from "@/lib/meydan-api";
+import { MediaLightbox } from "@/features/media/components/MediaLightbox";
+import { VideoPlayer } from "@/features/media/components/VideoPlayer";
 import { AudioMediaStage } from "./AudioMediaStage";
 
 type ContentDetailViewProps = {
@@ -55,6 +55,8 @@ function MediaStage({
   isPlaying: boolean;
   onPlayingChange: (value: boolean) => void;
 }) {
+  const [coverOpen, setCoverOpen] = useState(false);
+
   if (item.media.kind === "audio") {
     return (
       <AudioMediaStage
@@ -104,39 +106,49 @@ function MediaStage({
     );
   }
 
+  if (item.media.kind === "video" && item.media.videoSrc) {
+    return (
+      <div className="bg-surface-sunken px-3 py-3 sm:px-4">
+        <VideoPlayer
+          item={{
+            id: `content:${item.apiId}`,
+            kind: "video",
+            title: item.title,
+            src: item.media.videoSrc,
+            poster: item.media.coverImage,
+          }}
+          variant="inline"
+          className="mx-auto max-w-3xl"
+        />
+      </div>
+    );
+  }
+
+  const coverSrc = item.media.coverImage ?? "/images/generated/content-hero.svg";
+
   return (
     <div className="relative aspect-[4/3] overflow-hidden bg-surface-sunken sm:aspect-video">
-      <Image
-        src={item.media.coverImage ?? "/images/generated/content-hero.svg"}
-        alt={item.title}
-        fill
-        priority
-        sizes="(max-width: 640px) 100vw, 720px"
-        className="object-cover"
-      />
+      <button
+        type="button"
+        onClick={() => setCoverOpen(true)}
+        aria-label={`نمایش تمام‌صفحهٔ ${item.title}`}
+        className="group/media absolute inset-0 block cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Image
+          src={coverSrc}
+          alt={item.title}
+          fill
+          priority
+          sizes="(max-width: 640px) 100vw, 720px"
+          className="object-cover transition-transform duration-300 group-hover/media:scale-[1.01]"
+        />
+      </button>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-scrim/80 via-transparent to-transparent" />
-
-      {item.media.kind === "video" ? (
-        <button
-          type="button"
-          onClick={() => onPlayingChange(!isPlaying)}
-          aria-label={isPlaying ? "توقف پخش ویدئو" : "پخش ویدئو"}
-          className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-scrim/70 text-on-solid shadow-dialog backdrop-blur-sm outline-none transition-[transform,background-color] hover:scale-105 hover:bg-brand focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {isPlaying ? (
-            <Pause aria-hidden="true" className="h-6 w-6 fill-current" />
-          ) : (
-            <Play
-              aria-hidden="true"
-              className="mr-0.5 h-6 w-6 fill-current"
-            />
-          )}
-        </button>
-      ) : null}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-scrim/80 via-transparent to-transparent" />
 
       <div
-        className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center justify-between gap-2"
         dir="rtl"
       >
         <span className="rounded-full bg-scrim/75 px-2.5 py-1 text-[10px] font-bold text-on-solid backdrop-blur-sm">
@@ -149,6 +161,22 @@ function MediaStage({
           </span>
         ) : null}
       </div>
+
+      {coverOpen ? (
+        <MediaLightbox
+          items={[
+            {
+              id: `content:${item.apiId}`,
+              kind: "image",
+              title: item.title,
+              src: coverSrc,
+            },
+          ]}
+          index={0}
+          onIndexChange={() => undefined}
+          onClose={() => setCoverOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

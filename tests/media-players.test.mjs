@@ -1,0 +1,172 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import {
+  clamp,
+  faDigits,
+  fileItems,
+  formatClock,
+  formatFileSize,
+  mediaAspectRatio,
+  mediaItemFromNamedAttachment,
+  mediaItemsFromAttachments,
+  visualItems,
+} from "../features/media/media-utils.ts";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const source = (relative) => readFileSync(path.join(root, relative), "utf8");
+
+test("attachments normalise into one media item shape", () => {
+  const items = mediaItemsFromAttachments([
+    { id: "a", label: "عکس", icon: "image", previewSrc: "/a.jpg", width: 1200, height: 800 },
+    { id: "b", label: "کلیپ", icon: "video", previewSrc: "/b.mp4", previewAlt: "ویدیو میدان" },
+    { id: "c", label: "صوت", icon: "microphone", audioSrc: "/c.mp3" },
+    { id: "d", label: "سند", icon: "article" },
+  ]);
+
+  assert.deepEqual(
+    items.map((item) => item.kind),
+    ["image", "video", "audio", "file"],
+  );
+  assert.equal(items[0].src, "/a.jpg");
+  assert.equal(items[1].title, "ویدیو میدان");
+  assert.equal(items[1].poster, "/b.mp4");
+  assert.equal(items[2].src, "/c.mp3");
+  // Only visual attachments reach the gallery/lightbox.
+  assert.deepEqual(visualItems(items).map((item) => item.id), ["a", "b"]);
+  assert.deepEqual(fileItems(items).map((item) => item.id), ["d"]);
+});
+
+test("chat uploads classify by mime type", () => {
+  assert.equal(mediaItemFromNamedAttachment({ id: "1", name: "p.jpg", mimeType: "image/jpeg" }).kind, "image");
+  assert.equal(mediaItemFromNamedAttachment({ id: "2", name: "v.mov", mimeType: "video/quicktime" }).kind, "video");
+  assert.equal(mediaItemFromNamedAttachment({ id: "3", name: "a.ogg", mimeType: "audio/ogg" }).kind, "audio");
+  assert.equal(mediaItemFromNamedAttachment({ id: "4", name: "f.pdf", mimeType: "application/pdf" }).kind, "file");
+
+  const audio = mediaItemFromNamedAttachment({
+    id: "3",
+    name: "a.ogg",
+    mimeType: "audio/ogg",
+    size: 48210,
+    url: "/a.ogg",
+  });
+  assert.equal(audio.detail, "۴۷ کیلوبایت");
+  assert.equal(audio.src, "/a.ogg");
+});
+
+test("time, size and ratio formatting stay Persian and bounded", () => {
+  assert.equal(faDigits("0123456789"), "۰۱۲۳۴۵۶۷۸۹");
+  assert.equal(formatClock(92), "۱:۳۲");
+  assert.equal(formatClock(3725), "۱:۰۲:۰۵");
+  assert.equal(formatClock(-4), "۰:۰۰");
+  assert.equal(formatFileSize(48210), "۴۷ کیلوبایت");
+  assert.equal(formatFileSize(3 * 1024 * 1024), "۳.۰ مگابایت");
+  assert.equal(formatFileSize(0), "");
+
+  assert.equal(mediaAspectRatio(1600, 900), 16 / 9);
+  assert.equal(mediaAspectRatio(0, 0, 1), 1);
+  // Ultra-tall uploads stay in a usable frame.
+  assert.equal(mediaAspectRatio(300, 1200), 4 / 5);
+  assert.equal(clamp(12, 0, 4), 4);
+});
+
+test("every surface renders the shared players instead of its own", () => {
+  const shared = [
+    "features/media/components/MediaGallery.tsx",
+    "features/media/components/MediaLightbox.tsx",
+    "features/media/components/VideoPlayer.tsx",
+    "features/media/components/MediaAudioCard.tsx",
+    "features/media/components/MediaFileCard.tsx",
+  ];
+  for (const file of shared) assert.ok(existsSync(path.join(root, file)), `${file} must exist`);
+
+  // The feed's private media folder was folded into the shared feature.
+  assert.equal(existsSync(path.join(root, "features/feed/components/media")), false);
+
+  assert.match(source("features/feed/components/PostCard.tsx"), /<MediaGallery/);
+  assert.match(source("features/chat/components/MessageBubble.tsx"), /<MediaGallery/);
+  assert.match(source("features/chat/components/ChatUserInfo.tsx"), /<MediaLightbox/);
+  assert.match(source("features/content/components/ContentDetailView.tsx"), /<VideoPlayer/);
+  assert.match(source("features/content/components/ContentDetailView.tsx"), /<MediaLightbox/);
+  // The audio catalogue plays through the shared bottom player.
+  assert.match(source("features/podcasts/components/PodcastsView.tsx"), /useAudio/);
+  assert.match(source("features/podcasts/components/PodcastsView.tsx"), /playTrack/);
+  // Composer attachments preview in the same viewer.
+  assert.match(source("features/compose/components/ComposeMediaGrid.tsx"), /<MediaLightbox/);
+});
+
+test("no chrome renders a native-controls player any more", () => {
+  // Chat used to open images in a new tab and use native <video controls>/<audio controls>.
+  const bubble = source("features/chat/components/MessageBubble.tsx");
+  assert.doesNotMatch(bubble, /<audio/);
+  assert.doesNotMatch(bubble, /<video/);
+  assert.doesNotMatch(bubble, /<img/);
+  assert.doesNotMatch(bubble, /<a href=\{source\}/);
+  assert.match(bubble, /mediaItemFromNamedAttachment/);
+
+  const gallery = source("features/media/components/MediaGallery.tsx");
+  assert.doesNotMatch(gallery, /<audio/);
+  assert.match(gallery, /<VideoPlayer/);
+  assert.match(gallery, /<MediaAudioCard/);
+  assert.match(gallery, /<MediaLightbox/);
+});
+
+test("the lightbox keeps the X-style viewing controls", () => {
+  const lightbox = source("features/media/components/MediaLightbox.tsx");
+  for (const capability of [
+    /addEventListener\("wheel"/,
+    /onPointerDown/,
+    /setPointerCapture/,
+    /MIN_ZOOM/,
+    /MAX_ZOOM/,
+    /DOUBLE_TAP_ZOOM/,
+    /SWIPE_THRESHOLD/,
+    /ArrowLeft/,
+    /ArrowRight/,
+    /role="dialog"/,
+    /aria-modal="true"/,
+    /document\.body\.style\.overflow = "hidden"/,
+    /onIndexChange/,
+    /onBackdropClick/,
+    /event\.key === "0"/,
+    /event\.key === "Tab"/,
+    /DISMISS_THRESHOLD/,
+    /imageState === "error"/,
+    /setImageState\("loading"\)/,
+    /role="group"/,
+  ]) {
+    assert.match(lightbox, capability, `lightbox must implement ${capability}`);
+  }
+});
+
+test("the video player keeps the shared playback controls", () => {
+  const player = source("features/media/components/VideoPlayer.tsx");
+  for (const capability of [
+    /SKIP_SECONDS/,
+    /RATES/,
+    /requestPictureInPicture/,
+    /requestFullscreen/,
+    /resolveBufferedEnd/,
+    /role="slider"/,
+    /aria-valuenow/,
+    /"ArrowLeft"/,
+    /"ArrowRight"/,
+    /tabIndex=\{0\}/,
+    /ratio <= 0\.34/,
+    /ratio >= 0\.66/,
+  ]) {
+    assert.match(player, capability, `player must implement ${capability}`);
+  }
+});
+
+test("content video flows through the media proxy", () => {
+  const service = source("features/content/services/content.service.ts");
+  assert.match(service, /function videoOf/);
+  assert.match(service, /videoSrc/);
+
+  const route = source("app/api/content/[contentId]/media/[attachmentId]/route.ts");
+  assert.match(route, /item\.type === "video"/);
+  assert.match(route, /copyMediaResponseHeaders/);
+});

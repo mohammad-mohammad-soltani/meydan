@@ -1,22 +1,71 @@
 "use client";
 
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { LoaderCircle, Maximize2, Pause, Play, Video, Volume2, VolumeX } from "lucide-react";
-import type { FeedAttachment } from "../../types";
-import { formatClock, mediaAspectRatio, resolveMediaDuration } from "./media-utils";
+import {
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+import {
+  LoaderCircle,
+  Maximize2,
+  Pause,
+  PictureInPicture2,
+  Play,
+  RotateCcw,
+  RotateCw,
+  Video,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import type { MediaItem } from "../types";
+import {
+  clamp,
+  faDigits,
+  formatClock,
+  mediaAspectRatio,
+  resolveBufferedEnd,
+  resolveMediaDuration,
+} from "../media-utils";
+
+const SKIP_SECONDS = 10;
+const RATES = [1, 1.25, 1.5, 2];
+
+function subscribeToNothing() {
+  return () => {};
+}
+
+/** Support is read as an external store so SSR and hydration agree on `false`. */
+function pictureInPictureSupported(): boolean {
+  return (
+    typeof document !== "undefined" &&
+    Boolean(document.pictureInPictureEnabled) &&
+    typeof HTMLVideoElement !== "undefined" &&
+    "requestPictureInPicture" in HTMLVideoElement.prototype
+  );
+}
+
+type VideoPlayerProps = {
+  item: MediaItem;
+  /** `inline` keeps the card frame; `immersive` fills the lightbox stage. */
+  variant?: "inline" | "immersive";
+  autoPlay?: boolean;
+  className?: string;
+};
 
 /**
- * Inline video player: tap to play/pause, scrubbable progress, mute and
- * fullscreen. The visible controls fade out while playing so the picture stays
- * the focus, and reappear on hover, focus or while seeking.
+ * The one video player for the whole app (feed, post, content, chat, lightbox).
+ *
+ * Tap to play/pause, ±۱۰s skip, scrubbable progress with a buffered track,
+ * mute, playback rate, picture-in-picture and fullscreen. Controls fade while
+ * playing so the picture stays the focus and return on hover, focus or seek.
  */
-export function InlineVideoPlayer({
-  attachment,
+export function VideoPlayer({
+  item,
+  variant = "inline",
+  autoPlay = false,
   className = "",
-}: {
-  attachment: FeedAttachment;
-  className?: string;
-}) {
+}: VideoPlayerProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -29,12 +78,18 @@ export function InlineVideoPlayer({
   const [isSeeking, setIsSeeking] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [aspectRatio, setAspectRatio] = useState(() =>
-    mediaAspectRatio(attachment.width, attachment.height),
+  const [buffered, setBuffered] = useState(0);
+  const [rate, setRate] = useState(1);
+  const canPictureInPicture = useSyncExternalStore(
+    subscribeToNothing,
+    pictureInPictureSupported,
+    () => false,
   );
+  const [aspectRatio, setAspectRatio] = useState(() => mediaAspectRatio(item.width, item.height));
 
-  const source = attachment.previewSrc;
-  const progress = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
+  const source = item.src;
+  const progress = duration > 0 ? clamp((currentTime / duration) * 100, 0, 100) : 0;
+  const bufferedProgress = duration > 0 ? clamp((buffered / duration) * 100, 0, 100) : 0;
 
   const syncDuration = (video: HTMLVideoElement) => {
     const resolved = resolveMediaDuration(video);
@@ -44,6 +99,7 @@ export function InlineVideoPlayer({
 
   const syncVideoMetrics = (video: HTMLVideoElement) => {
     syncDuration(video);
+    setBuffered(resolveBufferedEnd(video));
 
     if (video.videoWidth > 0 && video.videoHeight > 0) {
       setAspectRatio(mediaAspectRatio(video.videoWidth, video.videoHeight));
@@ -51,6 +107,7 @@ export function InlineVideoPlayer({
 
     setCurrentTime(Number.isFinite(video.currentTime) ? video.currentTime : 0);
     setIsMuted(video.muted);
+    setRate(video.playbackRate || 1);
   };
 
   const togglePlayback = async () => {
@@ -84,7 +141,7 @@ export function InlineVideoPlayer({
     const resolvedDuration = syncDuration(video) || duration;
     if (resolvedDuration <= 0) return;
 
-    const clamped = Math.min(resolvedDuration, Math.max(0, nextTime));
+    const clamped = clamp(nextTime, 0, resolvedDuration);
 
     try {
       video.currentTime = clamped;
@@ -92,6 +149,16 @@ export function InlineVideoPlayer({
     } catch {
       // Some browsers can briefly reject seeks before metadata is ready.
     }
+  };
+
+  const skip = (seconds: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const resolvedDuration = syncDuration(video) || duration;
+    if (resolvedDuration <= 0) return;
+
+    seekTo(clamp((Number.isFinite(video.currentTime) ? video.currentTime : 0) + seconds, 0, resolvedDuration));
   };
 
   const seekFromClientX = (clientX: number) => {
@@ -105,7 +172,7 @@ export function InlineVideoPlayer({
     const rect = track.getBoundingClientRect();
     if (rect.width <= 0) return;
 
-    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
     seekTo(ratio * resolvedDuration);
   };
 
@@ -118,6 +185,30 @@ export function InlineVideoPlayer({
 
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const cycleRate = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const next = RATES[(RATES.indexOf(video.playbackRate) + 1) % RATES.length] ?? 1;
+    video.playbackRate = next;
+    setRate(next);
+  };
+
+  const togglePictureInPicture = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        return;
+      }
+      await video.requestPictureInPicture();
+    } catch {
+      // Picture-in-picture is optional; playback continues either way.
     }
   };
 
@@ -146,24 +237,81 @@ export function InlineVideoPlayer({
 
   if (!source) return null;
 
+  const isImmersive = variant === "immersive";
+
   return (
     <div
       ref={wrapperRef}
-      data-media-interactive
-      className={`group/video pointer-events-auto relative w-full overflow-hidden rounded-2xl border border-border bg-black shadow-sm ${className}`}
-      style={{ aspectRatio }}
+      data-media-controls
+      tabIndex={0}
+      role="group"
+      aria-label={item.title || "پخش‌کننده ویدیو"}
+      className={`group/video pointer-events-auto relative overflow-hidden bg-black outline-none ${
+        isImmersive
+          ? "h-full w-full"
+          : `w-full rounded-2xl border border-border shadow-sm ${className}`
+      }`}
+      style={isImmersive ? undefined : { aspectRatio }}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => {
         event.stopPropagation();
+
+        // X-style double tap: rewind on the left side, fast-forward on the right.
+        const rect = wrapperRef.current?.getBoundingClientRect();
+        if (!rect || rect.width <= 0) {
+          void toggleFullscreen();
+          return;
+        }
+
+        const ratio = (event.clientX - rect.left) / rect.width;
+        if (ratio <= 0.34) {
+          skip(-SKIP_SECONDS);
+          return;
+        }
+        if (ratio >= 0.66) {
+          skip(SKIP_SECONDS);
+          return;
+        }
+
         void toggleFullscreen();
+      }}
+      onPointerDown={() => wrapperRef.current?.focus({ preventScroll: true })}
+      onKeyDown={(event) => {
+        const key = event.key;
+        if (key === " " || key === "k" || key === "K") {
+          event.preventDefault();
+          void togglePlayback();
+          return;
+        }
+        if (key === "ArrowLeft") {
+          event.preventDefault();
+          skip(-SKIP_SECONDS);
+          return;
+        }
+        if (key === "ArrowRight") {
+          event.preventDefault();
+          skip(SKIP_SECONDS);
+          return;
+        }
+        if (key === "m" || key === "M") {
+          event.preventDefault();
+          toggleMute();
+          return;
+        }
+        if (key === "f" || key === "F") {
+          event.preventDefault();
+          void toggleFullscreen();
+        }
       }}
     >
       <video
         ref={videoRef}
         src={source}
+        poster={item.poster}
         playsInline
+        autoPlay={autoPlay}
         preload="metadata"
-        aria-label={attachment.label || "پخش ویدیو"}
+        aria-label={item.title || "ویدیو"}
         className="absolute inset-0 h-full w-full cursor-pointer bg-black object-contain"
         onClick={(event) => {
           event.preventDefault();
@@ -173,10 +321,14 @@ export function InlineVideoPlayer({
         onLoadedMetadata={(event) => syncVideoMetrics(event.currentTarget)}
         onLoadedData={(event) => syncVideoMetrics(event.currentTarget)}
         onDurationChange={(event) => syncDuration(event.currentTarget)}
-        onProgress={(event) => syncDuration(event.currentTarget)}
+        onProgress={(event) => {
+          setBuffered(resolveBufferedEnd(event.currentTarget));
+          syncDuration(event.currentTarget);
+        }}
         onTimeUpdate={(event) => {
           const video = event.currentTarget;
           setCurrentTime(video.currentTime);
+          setBuffered(resolveBufferedEnd(video));
           syncDuration(video);
         }}
         onPlay={() => {
@@ -200,6 +352,7 @@ export function InlineVideoPlayer({
           setIsWaiting(false);
           syncDuration(event.currentTarget);
         }}
+        onRateChange={(event) => setRate(event.currentTarget.playbackRate || 1)}
         onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
         onError={() => {
           setHasError(true);
@@ -289,10 +442,12 @@ export function InlineVideoPlayer({
 
               if (event.key === "ArrowLeft") {
                 event.preventDefault();
-                seekTo(currentTime - 5);
+                event.stopPropagation();
+                skip(-SKIP_SECONDS);
               } else if (event.key === "ArrowRight") {
                 event.preventDefault();
-                seekTo(currentTime + 5);
+                event.stopPropagation();
+                skip(SKIP_SECONDS);
               } else if (event.key === "Home") {
                 event.preventDefault();
                 seekTo(0);
@@ -304,18 +459,22 @@ export function InlineVideoPlayer({
           >
             <span className="pointer-events-none absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/35" />
             <span
+              className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/25"
+              style={{ width: `${bufferedProgress}%` }}
+            />
+            <span
               className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white"
               style={{ width: `${progress}%` }}
             />
             <span
               className={`pointer-events-none absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-sm transition-opacity ${
-                isSeeking ? "opacity-100" : "opacity-0 group-hover/video:opacity-100"
+                isSeeking ? "opacity-100" : "opacity-0 group-hover/video:opacity-100 group-focus-within/video:opacity-100"
               }`}
               style={{ left: `${progress}%` }}
             />
           </div>
 
-          <div className="flex h-8 items-center gap-2 text-white">
+          <div className="flex h-8 items-center gap-1.5 text-white">
             <button
               type="button"
               aria-label={isPlaying ? "توقف موقت ویدیو" : "پخش ویدیو"}
@@ -333,11 +492,50 @@ export function InlineVideoPlayer({
               )}
             </button>
 
+            <button
+              type="button"
+              aria-label={`${faDigits(String(SKIP_SECONDS))} ثانیه عقب`}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                skip(-SKIP_SECONDS);
+              }}
+              className="hidden h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:grid"
+            >
+              <RotateCcw aria-hidden="true" className="h-[18px] w-[18px]" />
+            </button>
+
+            <button
+              type="button"
+              aria-label={`${faDigits(String(SKIP_SECONDS))} ثانیه جلو`}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                skip(SKIP_SECONDS);
+              }}
+              className="hidden h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:grid"
+            >
+              <RotateCw aria-hidden="true" className="h-[18px] w-[18px]" />
+            </button>
+
             <span className="shrink-0 text-[12px] font-medium tabular-nums text-white/95">
               {formatClock(currentTime)} / {formatClock(duration)}
             </span>
 
             <span className="min-w-0 flex-1" />
+
+            <button
+              type="button"
+              aria-label="سرعت پخش"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                cycleRate();
+              }}
+              className="hidden h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-black tabular-nums transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:flex"
+            >
+              {faDigits(String(rate))}×
+            </button>
 
             <button
               type="button"
@@ -347,7 +545,7 @@ export function InlineVideoPlayer({
                 event.stopPropagation();
                 toggleMute();
               }}
-              className="hidden h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:grid"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             >
               {isMuted ? (
                 <VolumeX aria-hidden="true" className="h-[18px] w-[18px]" />
@@ -355,6 +553,21 @@ export function InlineVideoPlayer({
                 <Volume2 aria-hidden="true" className="h-[18px] w-[18px]" />
               )}
             </button>
+
+            {canPictureInPicture ? (
+              <button
+                type="button"
+                aria-label="پنجرهٔ شناور"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  void togglePictureInPicture();
+                }}
+                className="hidden h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:grid"
+              >
+                <PictureInPicture2 aria-hidden="true" className="h-[18px] w-[18px]" />
+              </button>
+            ) : null}
 
             <button
               type="button"

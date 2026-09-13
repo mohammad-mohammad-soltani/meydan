@@ -1,9 +1,10 @@
-/* eslint-disable @next/next/no-img-element -- Chat media can use authenticated/uploaded runtime URLs. */
-import { CheckCheck, Clock3, Copy, CornerUpRight, Download, FileText, Forward, MoreVertical, Music2, Pencil, Trash2, TriangleAlert } from "lucide-react";
+import { CheckCheck, Clock3, Copy, CornerUpRight, Forward, MapPin, MoreVertical, Pencil, Trash2, TriangleAlert } from "lucide-react";
 import { useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { attachmentSource, classifyChatAttachment } from "../chat-utils";
+import { parseSquareLocationMessage } from "../chat-utils";
+import { MediaGallery } from "@/features/media/components/MediaGallery";
+import { mediaItemFromNamedAttachment } from "@/features/media/media-utils";
 import {
   getMessageActionButtonClass,
   getMessageMenuPosition,
@@ -28,42 +29,59 @@ type MessageBubbleProps = {
 
 type MenuPosition = { x: number; y: number };
 
-function formatFileSize(size: number) { return size < 1024 * 1024 ? `${Math.max(1, Math.round(size / 1024))} کیلوبایت` : `${(size / (1024 * 1024)).toFixed(1)} مگابایت`; }
+function MessageAttachment({ attachment, scope }: { attachment: ChatAttachment; scope: string }) {
+  // One shared gallery per attachment: images open the zoomable lightbox,
+  // video uses the shared player and audio routes through the bottom player.
+  return (
+    <MediaGallery
+      items={[mediaItemFromNamedAttachment(attachment)]}
+      scope={scope}
+      tone="bubble"
+    />
+  );
+}
 
-function MessageAttachment({ attachment }: { attachment: ChatAttachment }) {
-  const kind = classifyChatAttachment(attachment);
-  const source = attachmentSource(attachment);
-
-  if (kind === "image" && source) {
-    return <a href={source} target="_blank" rel="noreferrer" className="mb-1.5 block overflow-hidden rounded-xl"><img src={source} alt={attachment.name} className="max-h-[26rem] w-full object-cover" /></a>;
-  }
-
-  if (kind === "video" && source) {
-    return <video src={source} controls playsInline preload="metadata" className="mb-1.5 max-h-[26rem] w-full rounded-xl bg-black" aria-label={attachment.name} />;
-  }
-
-  if (kind === "audio" && source) {
-    return (
-      <div className="mb-1.5 min-w-[240px] rounded-xl bg-active p-2.5">
-        <div className="mb-2 flex items-center gap-2 text-xs"><Music2 className="h-4 w-4 shrink-0" /><span className="min-w-0 flex-1 truncate">{attachment.name}</span><span className="text-[10px] opacity-70">{formatFileSize(attachment.size)}</span></div>
-        <audio src={source} controls preload="metadata" className="h-9 w-full" aria-label={attachment.name} />
-      </div>
-    );
-  }
-
+/** A shared square location renders as a map card instead of raw text. */
+function MessageLocationCard({ location }: { location: NonNullable<ReturnType<typeof parseSquareLocationMessage>> }) {
   const card = (
-    <div className="mb-1.5 flex min-w-[220px] items-center gap-2 rounded-xl bg-active p-2.5">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-glass text-icon-muted"><FileText className="h-5 w-5" /></span>
-      <span className="min-w-0 flex-1 text-right"><strong className="block truncate text-xs">{attachment.name}</strong><small className="block text-[10px] opacity-70">{formatFileSize(attachment.size)}</small></span>
-      {source ? <Download className="h-4 w-4 shrink-0 opacity-70" /> : null}
+    <div className="mb-1.5 min-w-[220px] overflow-hidden rounded-xl bg-active">
+      <div className="flex items-center gap-2.5 px-3 py-2.5">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand text-brand-foreground">
+          <MapPin aria-hidden="true" className="h-[18px] w-[18px]" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <strong className="block truncate text-xs font-black">موقعیت میدان · {location.name}</strong>
+          <small className="mt-0.5 block truncate text-[10px] opacity-70">
+            {location.address || "موقعیت روی نقشه"}
+          </small>
+        </span>
+      </div>
+      {location.url ? (
+        <span className="block border-t border-divider px-3 py-1.5 text-center text-[10px] font-black text-brand">
+          مشاهده روی نقشه
+        </span>
+      ) : null}
     </div>
   );
 
-  return source ? <a href={source} target="_blank" rel="noreferrer" download={attachment.name} className="block">{card}</a> : card;
+  if (!location.url) return card;
+
+  return (
+    <a
+      href={location.url}
+      target="_blank"
+      rel="noreferrer"
+      onClick={(event) => event.stopPropagation()}
+      className="block outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {card}
+    </a>
+  );
 }
 
 export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelete, onForward, onReact }: MessageBubbleProps) {
   const StatusIcon = statusIcon[message.status];
+  const location = parseSquareLocationMessage(message.body);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition>({ x: 8, y: 8 });
   const longPressTimer = useRef<number | null>(null);
@@ -128,8 +146,12 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
         <article className={`rounded-2xl px-3 py-2 text-[13px] leading-6 shadow-sm ${isOwn ? "rounded-tr-md bg-message-own text-message-own-foreground" : "rounded-tl-md bg-message-peer text-message-peer-foreground"}`}>
           {message.forwardedFrom ? <p className="mb-1 text-[10px] font-semibold text-success">فورواردشده از {message.forwardedFrom}</p> : null}
           {message.replyTo ? <div className={`mb-1.5 border-r-2 pr-2 text-[11px] leading-4 ${isOwn ? "border-success-border text-message-meta" : "border-info-border text-message-meta"}`}><strong className="block text-[10px]">{message.replyTo.senderName}</strong><span className="block line-clamp-1">{message.replyTo.body}</span></div> : null}
-          {message.attachment ? <MessageAttachment attachment={message.attachment} /> : null}
-          {message.body ? <p className="whitespace-pre-wrap">{message.body}</p> : null}
+          {message.attachment ? <MessageAttachment attachment={message.attachment} scope={`chat:${message.id}`} /> : null}
+          {location ? (
+            <MessageLocationCard location={location} />
+          ) : message.body ? (
+            <p className="whitespace-pre-wrap">{message.body}</p>
+          ) : null}
           {message.reactions?.length ? <div className="mt-1 flex flex-wrap gap-1">{message.reactions.map((reaction) => <button key={reaction} type="button" aria-label={`حذف واکنش ${reaction}`} onClick={() => onReact(message.id, reaction)} className="rounded-full bg-surface-glass px-1.5 py-0.5 text-xs shadow-xs">{reaction}</button>)}</div> : null}
           <footer className="mt-0.5 flex items-center justify-end gap-1 text-[10px] leading-4 text-message-meta"><time>{message.sentAt}</time>{message.editedAt ? <span>ویرایش‌شده</span> : null}{isOwn ? <StatusIcon className="h-3.5 w-3.5" aria-label={message.status} /> : null}</footer>
         </article>

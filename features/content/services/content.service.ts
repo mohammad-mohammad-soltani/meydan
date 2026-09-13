@@ -114,6 +114,18 @@ function audioOf(item: ApiContent): string | undefined {
     : undefined;
 }
 
+function videoOf(item: ApiContent): string | undefined {
+  const primary = item.attachments?.find(
+    (attachment) => attachment.id === item.primary_attachment_id,
+  );
+  const videoAttachment =
+    primary?.type === "video"
+      ? primary
+      : item.attachments?.find((attachment) => attachment.type === "video");
+
+  return videoAttachment ? `/api/content/${item.id}/media/${videoAttachment.id}` : undefined;
+}
+
 function toItem(item: ApiContent): ContentItem {
   const kind = kindOf(item.format);
   return {
@@ -131,6 +143,7 @@ function toItem(item: ApiContent): ContentItem {
       kind: kind === "video" ? "image" : kind,
       duration: item.media_duration || undefined,
       audioSrc: audioOf(item),
+      videoSrc: videoOf(item),
       description: mediaDescription(item.format),
       coverImage: coverOf(item),
     },
@@ -187,6 +200,7 @@ function toDetail(item: ApiContent): ContentDetailItem {
       kind,
       duration: item.media_duration || undefined,
       audioSrc: audioOf(item),
+      videoSrc: videoOf(item),
       description: mediaDescription(item.format),
       coverImage:
         coverOf(item) ||

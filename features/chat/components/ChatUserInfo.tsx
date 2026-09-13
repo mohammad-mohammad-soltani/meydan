@@ -1,11 +1,15 @@
 "use client";
 
-import { chatAvatar } from "@/components/shared/generated-media";
+/* eslint-disable @next/next/no-img-element -- Chat media uses runtime upload URLs that the optimizer cannot fetch. */
+
 import { ArrowRight, AtSign, Bell, BellOff, ExternalLink, FileText, Link2, MessageCircle, Music2, Play } from "lucide-react";
-import Image from "next/image";
 import { useMemo, useState } from "react";
+import { MediaLightbox } from "@/features/media/components/MediaLightbox";
+import { mediaItemFromNamedAttachment } from "@/features/media/media-utils";
+import type { MediaItem } from "@/features/media/types";
 import { attachmentSource, classifyChatAttachment, collectConversationSharedItems, participantProfileHref } from "../chat-utils";
 import type { ChatMessage, Conversation } from "../types";
+import { ChatAvatar } from "./ChatAvatar";
 
 type Tab = "media" | "files" | "links";
 
@@ -29,10 +33,24 @@ export function ChatUserInfo({
   onOpenProfile: (href: string) => void;
 }) {
   const [tab, setTab] = useState<Tab>("media");
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { participant } = conversation;
-  const avatar = participant.avatarUrl || chatAvatar(participant.avatarTone);
   const shared = useMemo(() => collectConversationSharedItems(messages), [messages]);
   const profileHref = participantProfileHref(participant);
+
+  // Every visual attachment in the conversation, so the shared lightbox can
+  // move from one message's image to the next with prev/next.
+  const sharedVisuals = useMemo(
+    () =>
+      shared.media
+        .map((item) => ({ ...item.attachment, id: item.id }))
+        .filter((attachment) => {
+          const kind = classifyChatAttachment(attachment);
+          return (kind === "image" || kind === "video") && Boolean(attachmentSource(attachment));
+        })
+        .map(mediaItemFromNamedAttachment),
+    [shared.media],
+  );
 
   return (
     <section className={`flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background ${isLeaving ? "ui-view-leave" : "ui-view-enter"}`} aria-label={`اطلاعات ${participant.name}`}>
@@ -44,7 +62,7 @@ export function ChatUserInfo({
 
       <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
         <section className="px-5 pb-6 pt-6 text-center">
-          <Image src={avatar} alt={participant.name} width={176} height={176} unoptimized={typeof avatar === "string" && avatar.startsWith("http")} className="mx-auto h-40 w-40 rounded-full object-cover shadow-lg sm:h-44 sm:w-44" />
+          <ChatAvatar participant={participant} className="mx-auto h-40 w-40 shadow-lg sm:h-44 sm:w-44" textClassName="text-5xl" />
           <div className="mt-4 flex items-center justify-center gap-1.5"><h1 className="text-xl font-black text-foreground sm:text-2xl">{participant.name}</h1></div>
           <p className={`mt-1 text-sm ${participant.isOnline ? "text-verified" : "text-muted-foreground"}`}>{participant.isOnline ? "آنلاین" : "آخرین بازدید اخیراً"}</p>
 
@@ -79,11 +97,9 @@ export function ChatUserInfo({
 
           <div className="mx-auto min-h-56 max-w-2xl p-2 sm:p-3">
             {tab === "media" ? (
-              shared.media.length ? <div className="grid grid-cols-3 gap-1 sm:grid-cols-4">{shared.media.map((item) => {
-                const source = attachmentSource(item.attachment);
-                const kind = classifyChatAttachment({ mimeType: item.attachment.mimeType });
-                return <a key={item.id} href={source || undefined} target={source ? "_blank" : undefined} rel="noreferrer" className="relative aspect-square overflow-hidden rounded-lg bg-surface-muted">{kind === "image" && source ? <img src={source} alt={item.attachment.name || "رسانه"} className="h-full w-full object-cover" /> : kind === "video" && source ? <><video src={source} muted preload="metadata" className="h-full w-full object-cover" /><span className="absolute inset-0 grid place-items-center bg-black/20 text-white"><Play className="h-7 w-7 fill-current" /></span></> : null}</a>;
-              })}</div> : <EmptyState icon={<Play className="h-6 w-6" />} text="هنوز عکس یا ویدیویی در این گفتگو نیست." />
+              sharedVisuals.length ? <div className="grid grid-cols-3 gap-1 sm:grid-cols-4">{sharedVisuals.map((media, index) => (
+                <SharedMediaTile key={media.id} media={media} onOpen={() => setLightboxIndex(index)} />
+              ))}</div> : <EmptyState icon={<Play className="h-6 w-6" />} text="هنوز عکس یا ویدیویی در این گفتگو نیست." />
             ) : null}
 
             {tab === "files" ? (
@@ -100,7 +116,47 @@ export function ChatUserInfo({
           </div>
         </section>
       </div>
+
+      {lightboxIndex !== null && sharedVisuals[lightboxIndex] ? (
+        <MediaLightbox
+          items={sharedVisuals}
+          index={lightboxIndex}
+          onIndexChange={setLightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          label="رسانه‌های گفتگو"
+        />
+      ) : null}
     </section>
+  );
+}
+
+/** Square thumbnail that opens the shared lightbox, so it matches the chat and feed viewers. */
+function SharedMediaTile({ media, onOpen }: { media: MediaItem; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`نمایش ${media.title}`}
+      className="relative aspect-square overflow-hidden rounded-lg bg-surface-muted outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {media.kind === "video" ? (
+        <>
+          <video
+            src={media.src}
+            poster={media.poster}
+            muted
+            playsInline
+            preload="metadata"
+            className="h-full w-full object-cover"
+          />
+          <span aria-hidden="true" className="absolute inset-0 grid place-items-center bg-black/25 text-white">
+            <Play className="h-7 w-7 fill-current" />
+          </span>
+        </>
+      ) : (
+        <img src={media.src} alt={media.title} className="h-full w-full object-cover" />
+      )}
+    </button>
   );
 }
 
