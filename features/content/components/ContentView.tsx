@@ -113,7 +113,7 @@ export function ContentView({
   const openQuickAction = (action: ContentQuickAction) => {
     const descriptions: Partial<Record<ContentQuickAction["id"], string>> = {
       speakers: "درخواست و پیگیری اعزام سخنران به میدان.",
-      contact: "راه‌های ارتباط با ستاد مرکزی قرارگاه میدانِ خیابان.",
+      contact: "راه‌های ارتباط با ستاد مرکزی قرارگاه نقش من.",
       print: "فایل‌های لایه‌باز آماده چاپ افست و سیلک.",
       safety: "راه‌های مشارکت، همیاری و همراهی با فعالیت‌های میدان.",
     };

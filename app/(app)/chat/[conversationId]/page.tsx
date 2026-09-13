@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ConversationView } from "@/features/chat/components/ConversationView";
 
-export const metadata: Metadata = { title: "گفتگو | میدانِ خیابان" };
+export const metadata: Metadata = { title: "گفتگو | نقش من" };
 
 type ConversationPageProps = {
   params: Promise<{ conversationId: string }>;

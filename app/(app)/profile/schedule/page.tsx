@@ -4,7 +4,7 @@ import { ScheduleView } from "@/features/profile/components/ScheduleView";
 import { getProfileDetails } from "@/features/profile/services/profile.service";
 import { loginHref } from "@/lib/auth-navigation";
 
-export const metadata: Metadata = { title: "سین برنامه | میدانِ خیابان" };
+export const metadata: Metadata = { title: "سین برنامه | نقش من" };
 export const dynamic = "force-dynamic";
 
 export default async function SquareSchedulePage() {

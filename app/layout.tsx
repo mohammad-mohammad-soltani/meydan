@@ -14,8 +14,8 @@ const iranSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "میدانِ خیابان | شبکه سراسری میادین ایران",
-  description: "سامانه اجتماعی، رسانه‌ای و میدانی میدانِ خیابان",
+  title: "نقش من | شبکه سراسری میادین ایران",
+  description: "سامانه اجتماعی، رسانه‌ای و میدانی نقش من",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

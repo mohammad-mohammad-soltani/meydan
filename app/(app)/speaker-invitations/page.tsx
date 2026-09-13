@@ -7,7 +7,7 @@ import {
 import { getProfileDetails } from "@/features/profile/services/profile.service";
 import { accessTokenHeader } from "@/lib/meydan-session";
 
-export const metadata: Metadata = { title: "دعوت‌های سخنرانی | میدانِ خیابان" };
+export const metadata: Metadata = { title: "دعوت‌های سخنرانی | نقش من" };
 export const dynamic = "force-dynamic";
 
 export default async function SpeakerInvitationsPage() {

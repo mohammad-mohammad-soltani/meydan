@@ -367,7 +367,7 @@ export default function AuthPage() {
             <div className="inline-flex items-center gap-3">
               <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand text-xl font-black text-brand-foreground shadow-card">م</span>
               <div>
-                <p className="text-lg font-black text-foreground">میدانِ خیابان</p>
+                <p className="text-lg font-black text-foreground">نقش من</p>
                 <p className="mt-0.5 text-[11px] font-bold text-muted-foreground">شبکه سراسری میادین ایران</p>
               </div>
             </div>
@@ -414,7 +414,7 @@ export default function AuthPage() {
             <div className="mb-7 flex items-center justify-center gap-2.5 lg:hidden">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand text-base font-black text-brand-foreground shadow-card">م</span>
               <div>
-                <p className="text-sm font-black text-foreground">میدانِ خیابان</p>
+                <p className="text-sm font-black text-foreground">نقش من</p>
                 <p className="text-[9px] font-bold text-muted-foreground">شبکه سراسری میادین ایران</p>
               </div>
             </div>

@@ -31,7 +31,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
           <div className="space-y-6">
             <Link href="/home" className="flex items-center gap-3 px-2">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand text-lg font-black text-brand-foreground">م</span>
-              <span><span className="block text-base font-black text-foreground">میدانِ خیابان</span><span className="block text-[11px] text-muted-foreground">شبکه سراسری میادین ایران</span></span>
+              <span><span className="block text-base font-black text-foreground">نقش من</span><span className="block text-[11px] text-muted-foreground">شبکه سراسری میادین ایران</span></span>
             </Link>
             <nav aria-label="ناوبری دسکتاپ" className="space-y-1.5 text-sm font-bold">
               <Link href="/home" className={desktopLinkClass}><Home className="h-5 w-5" />خانه و روایت‌ها</Link>

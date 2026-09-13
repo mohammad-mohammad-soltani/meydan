@@ -22,7 +22,7 @@ export function MobileHeader() {
       <Link href="/home" className="flex min-w-0 items-center gap-2.5" aria-label="خانه میدان خیابان">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-black text-brand-foreground">م</span>
         <span className="min-w-0">
-          <span className="block truncate text-sm font-black leading-tight text-foreground">میدانِ خیابان</span>
+          <span className="block truncate text-sm font-black leading-tight text-foreground">نقش من</span>
           <span className="block truncate text-[10px] text-muted-foreground">شبکه همبستگی و روایت میادین ایران</span>
         </span>
       </Link>
