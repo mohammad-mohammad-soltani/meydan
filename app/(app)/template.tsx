@@ -10,5 +10,5 @@ type AppTemplateProps = {
  * without delaying links or interfering with feature-specific navigation.
  */
 export default function AppTemplate({ children }: AppTemplateProps) {
-  return <div className="route-transition-stage min-h-full flex-1">{children}</div>;
+  return <div className="route-transition-stage flex min-h-0 flex-1 flex-col">{children}</div>;
 }

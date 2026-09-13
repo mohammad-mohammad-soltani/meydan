@@ -1,10 +1,9 @@
 "use client";
 
-import { chatAvatar } from "@/components/shared/generated-media";
-import Image from "next/image";
 import { ArrowRight, BadgeCheck, Bell, BellOff, MoreVertical, Search, UserRound } from "lucide-react";
 import { useState } from "react";
 import type { Conversation } from "../types";
+import { ChatAvatar } from "./ChatAvatar";
 
 type ChatHeaderProps = {
   conversation: Conversation;
@@ -22,7 +21,6 @@ export function ChatHeader({ conversation, isLeaving, onBack, onOpenInfo, onOpen
   const { participant } = conversation;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const closeMenu = () => setIsMenuOpen(false);
-  const avatar = participant.avatarUrl || chatAvatar(participant.avatarTone);
   const run = (callback: () => void) => { closeMenu(); callback(); };
 
   return (
@@ -30,7 +28,7 @@ export function ChatHeader({ conversation, isLeaving, onBack, onOpenInfo, onOpen
       <div className="flex min-w-0 items-center gap-1">
         <button type="button" onClick={onBack} disabled={isLeaving} aria-label="بازگشت به گفتگوها" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:text-disabled-foreground"><ArrowRight className="h-6 w-6" /></button>
         <button type="button" onClick={onOpenInfo} className="flex min-w-0 items-center gap-2 rounded-xl px-1.5 py-1 text-right hover:bg-hover" aria-label={`اطلاعات ${participant.name}`}>
-          <Image src={avatar} alt={participant.name} width={42} height={42} unoptimized={typeof avatar === "string" && avatar.startsWith("http")} className="h-[42px] w-[42px] shrink-0 rounded-full object-cover" />
+          <ChatAvatar participant={participant} className="h-[42px] w-[42px]" textClassName="text-sm" />
           <div className="min-w-0">
             <div className="flex items-center gap-1"><h1 className="truncate text-[15px] font-extrabold text-foreground">{participant.name}</h1>{participant.isVerified ? <BadgeCheck className="h-3.5 w-3.5 shrink-0 fill-verified text-on-solid" aria-label="تأییدشده" /> : null}</div>
             <p className={`truncate text-[11px] ${participant.isOnline ? "text-verified" : "text-muted-foreground"}`}>{participant.isOnline ? "آنلاین" : "آخرین بازدید اخیراً"}</p>

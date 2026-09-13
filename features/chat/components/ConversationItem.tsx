@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Image from "next/image";
-import { chatAvatar } from "@/components/shared/generated-media";
 import type { Route } from "next";
 import { BadgeCheck, CheckCheck } from "lucide-react";
 import type { Conversation } from "../types";
+import { ChatAvatar } from "./ChatAvatar";
 
 type ConversationItemProps = { conversation: Conversation };
 
@@ -16,7 +15,6 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
   const router = useRouter();
   const [isOpening, setIsOpening] = useState(false);
   const href = ("/chat/" + conversation.id) as Route;
-  const avatar = participant.avatarUrl || chatAvatar(participant.avatarTone);
 
   const openConversation = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || isOpening) return;
@@ -27,7 +25,7 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
 
   return (
     <Link href={href} onClick={openConversation} aria-busy={isOpening} className={`group flex min-h-[72px] items-center gap-3 px-4 py-2 transition hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${isOpening ? "ui-opening" : ""}`}>
-      <Image src={avatar} alt="" width={54} height={54} unoptimized={typeof avatar === "string" && avatar.startsWith("http")} className="h-[54px] w-[54px] shrink-0 rounded-full object-cover shadow-inset" />
+      <ChatAvatar participant={participant} className="h-[54px] w-[54px] shadow-inset" textClassName="text-lg" />
       <div className="min-w-0 flex-1 self-stretch border-b border-divider py-2">
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-1">

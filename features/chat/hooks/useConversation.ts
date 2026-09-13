@@ -5,12 +5,14 @@ import { isRealtimeConnected, subscribeToRealtimeConnection } from "@/lib/realti
 import { getRealtimeUserId } from "@/lib/realtime/config";
 import { subscribeToUserChannel } from "@/lib/realtime/user-channel";
 import { useUnreadCounts } from "../providers/UnreadProvider";
+import { formatSquareLocationMessage, parseSquareLocationMessage } from "../chat-utils";
 import {
   deleteMessage,
   editMessage,
   getConversationById,
   getConversations,
   getMessages,
+  getShareableSquare,
   mapRealtimeMessage,
   markConversationRead,
   sendMessage,
@@ -412,6 +414,51 @@ export function useConversation(conversationId: string, initialConversation: Con
     }
   };
 
+  /**
+   * Sends the square's location as a normal message. The body stays readable in
+   * any client; this app renders it as a location card (see `MessageBubble`).
+   */
+  const sendSquareLocation = useCallback(async () => {
+    if (isSending || !currentUserId) return;
+
+    setActionError(null);
+    setIsSending(true);
+
+    try {
+      const peer = conversation?.participant;
+      const peerSquareId =
+        peer?.profileType === "square" && peer.profileId ? Number(peer.profileId) : undefined;
+      const square = await getShareableSquare(peerSquareId);
+
+      if (!square) {
+        setActionError("برای ارسال موقعیت میدان، حساب شما باید یک میدان باشد.");
+        return;
+      }
+
+      const body = formatSquareLocationMessage(square);
+      const clientId = crypto.randomUUID();
+      const optimistic: ChatMessage = {
+        id: `optimistic-${clientId}`,
+        clientId,
+        conversationId,
+        senderId: currentUserId,
+        body,
+        sentAt: new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()),
+        status: "sending",
+      };
+
+      setMessages((current) => [...current, optimistic]);
+
+      const sent = await sendMessage(conversationId, body, undefined, { clientId });
+      setMessages((current) => upsertMessage(current, sent));
+      setNotice("موقعیت میدان فرستاده شد.");
+    } catch {
+      setActionError("ارسال موقعیت میدان انجام نشد.");
+    } finally {
+      setIsSending(false);
+    }
+  }, [conversation, conversationId, currentUserId, isSending]);
+
   return {
     conversation, messages, currentUserId, input, setInput, isLoading, isSending, isConnected, isPeerTyping, error, notice, attachment, replyingTo, editingMessage, messageToDelete, messageToForward, forwardTargets,
     attachFile: (file: File) => {
@@ -427,10 +474,12 @@ export function useConversation(conversationId: string, initialConversation: Con
     cancelEdit: () => { setEditingMessage(null); setInput(""); },
     startReply, startEdit, copyMessage, toggleReaction,
     requestDelete: setMessageToDelete, cancelDelete: () => setMessageToDelete(null), confirmDelete,
-    requestForward: setMessageToForward, cancelForward: () => setMessageToForward(null), forwardTo, send,
+    requestForward: setMessageToForward, cancelForward: () => setMessageToForward(null), forwardTo, send, sendSquareLocation,
   };
 }
 
 function messageExcerpt(message: ChatMessage) {
+  const location = parseSquareLocationMessage(message.body);
+  if (location) return `📍 موقعیت میدان · ${location.name}`;
   return message.body || message.attachment?.name || "فایل پیوست‌شده";
 }

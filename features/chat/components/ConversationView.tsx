@@ -88,7 +88,7 @@ export function ConversationView({ conversationId, conversation, messages }: { c
       <MessageList messages={displayedMessages} currentUserId={chat.currentUserId} onReply={chat.startReply} onCopy={chat.copyMessage} onEdit={chat.startEdit} onDelete={chat.requestDelete} onForward={chat.requestForward} onReact={chat.toggleReaction} />
       {isSearchOpen && searchQuery.trim() && !isSearching && !searchResults.length ? <p className="absolute left-1/2 top-32 z-20 -translate-x-1/2 rounded-full bg-popover px-4 py-2 text-xs text-muted-foreground shadow-sm">نتیجه‌ای پیدا نشد.</p> : null}
       {chat.error || actionError ? <p className="bg-danger-surface px-4 pb-2 text-[10px] text-danger-foreground">{actionError || chat.error}</p> : null}
-      <MessageInput value={chat.input} attachment={chat.attachment} replyingTo={chat.replyingTo} editingMessage={chat.editingMessage} notice={chat.notice} isSending={chat.isSending} onChange={chat.setInput} onSubmit={chat.send} onAttachmentSelected={chat.attachFile} onClearAttachment={chat.clearAttachment} onCancelReply={chat.cancelReply} onCancelEdit={chat.cancelEdit} />
+      <MessageInput value={chat.input} attachment={chat.attachment} replyingTo={chat.replyingTo} editingMessage={chat.editingMessage} notice={chat.notice} isSending={chat.isSending} onChange={chat.setInput} onSubmit={chat.send} onAttachmentSelected={chat.attachFile} onClearAttachment={chat.clearAttachment} onSendSquareLocation={() => void chat.sendSquareLocation()} onCancelReply={chat.cancelReply} onCancelEdit={chat.cancelEdit} />
 
       {chat.messageToDelete ? (
         <div role="dialog" aria-modal="true" aria-label="حذف پیام" className="fixed inset-0 z-50 grid place-items-end bg-overlay p-3 sm:place-items-center">

@@ -173,6 +173,71 @@ export async function setConversationMuted(conversationId: string, muted: boolea
   return mapConversation(result);
 }
 
+export type ShareableSquare = {
+  id: number;
+  name: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+};
+
+type ApiViewerMe = {
+  account_type?: "user" | "square" | "speaker";
+  square?: { id?: number; name?: string } | null;
+};
+
+type ApiSquareCard = {
+  id?: number;
+  name?: string;
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
+  location?: {
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    lat?: number;
+    lng?: number;
+  } | null;
+};
+
+function finiteNumber(value: unknown): number | undefined {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+/**
+ * The square whose location a message can carry: the viewer's own square when
+ * the account is a square, otherwise the square on the other side of the chat.
+ * Returns null when neither side is a square.
+ */
+export async function getShareableSquare(preferredSquareId?: number): Promise<ShareableSquare | null> {
+  let squareId = preferredSquareId;
+  let fallbackName = "";
+
+  if (!squareId) {
+    const me = await meydanApi<ApiViewerMe>("/me").catch(() => null);
+    if (me?.account_type === "square" && me.square?.id) {
+      squareId = me.square.id;
+      fallbackName = me.square.name || "";
+    }
+  }
+
+  if (!squareId) return null;
+
+  const square = await meydanApi<ApiSquareCard>(`/squares/${squareId}`);
+  const location = square.location || {};
+
+  return {
+    id: squareId,
+    name: square.name || fallbackName || "میدان",
+    address: location.address || undefined,
+    latitude: finiteNumber(location.latitude ?? location.lat ?? square.latitude ?? square.lat),
+    longitude: finiteNumber(location.longitude ?? location.lng ?? square.longitude ?? square.lng),
+  };
+}
+
 export async function uploadChatAttachment(file: File): Promise<ChatAttachment> {
   const started = await meydanApi<{ upload_id: string; chunk_size: number }>("/uploads", {
     method: "POST",

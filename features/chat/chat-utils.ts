@@ -296,3 +296,48 @@ export function notificationActorId(actor?: Pick<ChatUser, "profileId" | "id">):
   const digits = raw.match(/(\d+)$/)?.[1];
   return digits || "";
 }
+
+/** First line of a shared square location; the marker makes parsing unambiguous. */
+const LOCATION_HEADER = "📍 موقعیت میدان";
+
+export type SharedSquareLocation = {
+  name: string;
+  address?: string;
+  /** External map link, when coordinates were available. */
+  url?: string;
+};
+
+/**
+ * Square locations travel as a plain, readable message so any client (and the
+ * conversation list preview) shows something sensible, while this app upgrades
+ * it into a real location card through `parseSquareLocationMessage`.
+ */
+export function formatSquareLocationMessage(location: {
+  name: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}): string {
+  const lines = [LOCATION_HEADER, location.name.trim() || "میدان"];
+  if (location.address?.trim()) lines.push(location.address.trim());
+  if (Number.isFinite(location.latitude) && Number.isFinite(location.longitude)) {
+    lines.push(`https://www.google.com/maps?q=${location.latitude},${location.longitude}`);
+  }
+  return lines.join("\n");
+}
+
+/** Returns the location payload for a location message, otherwise null. */
+export function parseSquareLocationMessage(body?: string): SharedSquareLocation | null {
+  const text = (body || "").trim();
+  if (!text.startsWith(LOCATION_HEADER)) return null;
+
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const name = lines[1];
+  if (!name) return null;
+
+  return {
+    name,
+    address: lines.slice(2).find((line) => !/^https?:\/\//i.test(line)),
+    url: lines.find((line) => /^https?:\/\//i.test(line)),
+  };
+}
