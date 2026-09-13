@@ -60,6 +60,7 @@ html.black {
   --success-border: rgb(52 211 153 / .32);
   --warning: #fbbf24;
   --warning-foreground: #fcd34d;
+  --warning-solid-foreground: #1f1400;
   --warning-surface: rgb(245 158 11 / .13);
   --warning-border: rgb(251 191 36 / .32);
   --danger: #f87171;

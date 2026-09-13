@@ -16,7 +16,7 @@ export function CommentsList({
   children?: ReactNode;
 }) {
   return (
-    <section className="space-y-4 pb-40 sm:pb-36">
+    <section className="space-y-4 pb-8">
       <h2 className="text-sm font-black text-foreground">
         نظرات و گفتگوها{" "}
         <span className="font-normal text-foreground-subtle">

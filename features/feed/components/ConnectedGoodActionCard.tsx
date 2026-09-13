@@ -70,22 +70,59 @@ export function ConnectedGoodActionCard({
   }
 
   return (
-    <div dir="rtl" className="mt-3 w-full rounded-[16px] border border-warning-border bg-warning-surface/50 px-3 py-3">
-      <div className="flex items-center gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-warning/10 text-warning">
-          <HandHeart className="h-5 w-5" />
+    <div
+      dir="rtl"
+      // The timeline card body is pointer-events-none behind a full-card link,
+      // so this block has to opt back in for its button and link to work.
+      className="pointer-events-auto relative z-10 mt-3 w-full rounded-[16px] border border-warning-border bg-warning-surface/50 p-3"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-warning/10 text-warning"
+          >
+            <HandHeart className="h-5 w-5" />
+          </span>
+
+          <div className="min-w-0 flex-1">
+            <strong className="block text-[13px] font-black leading-6 text-foreground sm:text-xs">
+              شما هم به این کار خوب بپیوندید
+            </strong>
+
+            <Link
+              href={`/initiatives/${initiativeId}/participants`}
+              className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-control text-[11px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <UsersRound aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+              <span className="tabular-nums">
+                {participantCount.toLocaleString("fa-IR")} نفر پیوسته‌اند
+              </span>
+              <span aria-hidden="true" className="text-foreground-subtle">
+                ·
+              </span>
+              <span className="font-bold text-warning-foreground">مشاهده افراد</span>
+            </Link>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <strong className="block text-xs font-black">شما هم به این کار خوب بپیوندید</strong>
-          <Link href={`/initiatives/${initiativeId}/participants`} className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
-            <UsersRound className="h-3.5 w-3.5" />
-            <span>{participantCount.toLocaleString("fa-IR")} نفر پیوسته‌اند</span>
-            <span className="font-bold text-warning-foreground">مشاهده افراد</span>
-          </Link>
-        </div>
-        <button type="button" disabled={loading} onClick={() => void toggleJoin()} className={`inline-flex h-10 items-center gap-1 rounded-full px-4 text-xs font-black ${joined ? "bg-success-surface text-success" : "bg-warning text-on-solid"}`}>
-          {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : joined ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {joined ? "پیوسته‌اید" : label || "پیوستن"}
+
+        <button
+          type="button"
+          disabled={loading}
+          aria-pressed={joined}
+          onClick={() => void toggleJoin()}
+          className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-black outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70 sm:min-h-10 sm:w-auto ${
+            joined ? "bg-success-surface text-success" : "bg-warning text-warning-solid-foreground hover:brightness-105"
+          }`}
+        >
+          {loading ? (
+            <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+          ) : joined ? (
+            <Check aria-hidden="true" className="h-4 w-4" />
+          ) : (
+            <Plus aria-hidden="true" className="h-4 w-4" />
+          )}
+          <span className="whitespace-nowrap">{joined ? "پیوسته‌اید" : label || "پیوستن"}</span>
         </button>
       </div>
     </div>
