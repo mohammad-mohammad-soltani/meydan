@@ -47,6 +47,17 @@ type CuratedResponse = {
   items?: CuratedItem[];
 };
 
+/**
+ * The trends feeds are advisory: a backend that answers with an object, a
+ * single row or `null` must never take the sidebar down with it.
+ */
+function asList<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (!value || typeof value !== "object") return [];
+  const nested = (value as { items?: unknown }).items;
+  return Array.isArray(nested) ? (nested as T[]) : [];
+}
+
 function isAbortError(reason: unknown): boolean {
   return (
     typeof reason === "object" &&
@@ -121,7 +132,7 @@ async function curatedTrends(signal?: AbortSignal): Promise<HotTrend[] | null> {
       `/trends/hot?window=${TREND_WINDOW}&limit=${TREND_LIMIT}`,
       { signal },
     );
-    const items = (data.items || [])
+    const items = asList<CuratedItem>(data?.items)
       .map(mapCurated)
       .filter((item): item is HotTrend => item !== null)
       .slice(0, TREND_LIMIT);
@@ -149,12 +160,12 @@ function engagementScore(item: ApiNarrative): number {
  * `/trends/hot` or `/explore/trends` answers with rows.
  */
 async function timelineTrends(signal?: AbortSignal): Promise<HotTrend[]> {
-  const items = await meydanApi<ApiNarrative[]>(
+  const data = await meydanApi<ApiNarrative[] | { items?: ApiNarrative[] }>(
     "/timeline?mode=for_you&filter=all",
     { signal },
   );
 
-  return [...items]
+  return asList<ApiNarrative>(data)
     .sort((a, b) => engagementScore(b) - engagementScore(a) || b.id - a.id)
     .slice(0, TREND_LIMIT)
     .map(mapNarrative);
@@ -168,7 +179,7 @@ export async function getHotTrends(signal?: AbortSignal): Promise<HotTrend[]> {
     `/explore/trends?window=${TREND_WINDOW}`,
     { signal },
   );
-  const hotTrends = (hot.items || []).slice(0, TREND_LIMIT).map(mapNarrative);
+  const hotTrends = asList<ApiNarrative>(hot?.items).slice(0, TREND_LIMIT).map(mapNarrative);
   if (hotTrends.length) return hotTrends;
 
   return timelineTrends(signal);

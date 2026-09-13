@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FolderKanban, Home, LogIn, Map, MessageCircle, Mic, Search, UserCheck } from "lucide-react";
 import { MiniPlayer } from "@/features/audio/MiniPlayer";
 import { AppLogo } from "@/components/shared/AppLogo";
+import { SilentBoundary } from "@/components/shared/SilentBoundary";
 import { HotTrendsPanel } from "@/features/trends/components/HotTrendsPanel";
 import { PostLoginReturn } from "@/components/providers/AuthReturnToBridge";
 import { UnreadProvider } from "@/features/chat/providers/UnreadProvider";
@@ -64,11 +65,15 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
           {!isComposePage ? <MobileHeader /> : null}
           <main className={`flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}>{children}</main>
           <FloatingComposeButton />
-          <MiniPlayer />
+          <SilentBoundary label="mini-player">
+            <MiniPlayer />
+          </SilentBoundary>
           {!isPostPage ? <BottomNavigation isAuthenticated={isAuthenticated} /> : null}
         </div>
         <aside className="hidden h-screen w-72 shrink-0 flex-col justify-between gap-4 overflow-y-auto border-r border-border bg-background p-4 lg:flex">
-          <HotTrendsPanel />
+          <SilentBoundary label="trends-panel">
+            <HotTrendsPanel />
+          </SilentBoundary>
           {/* Both sidebar footers share the same wrapper and a 3.375rem control,
               so the two columns end at exactly the same height. */}
           <div className="border-t border-divider pt-4">
