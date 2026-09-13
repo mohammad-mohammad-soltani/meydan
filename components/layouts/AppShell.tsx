@@ -27,7 +27,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
     <UnreadProvider isAuthenticated={isAuthenticated}>
       <div className="mx-auto flex min-h-[100dvh] w-full justify-center bg-background text-foreground">
         <PostLoginReturn />
-        <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between border-l border-border bg-surface p-4 lg:flex">
+        <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between border-l border-border bg-background p-4 lg:flex">
           <div className="space-y-6">
             <Link href="/home" className="flex items-center gap-3 px-2">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand text-lg font-black text-brand-foreground">م</span>
@@ -58,7 +58,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
           <MiniPlayer />
           {!isPostPage ? <BottomNavigation isAuthenticated={isAuthenticated} /> : null}
         </div>
-        <aside className="hidden h-screen w-72 shrink-0 flex-col justify-between gap-4 overflow-y-auto border-r border-border bg-surface p-4 lg:flex">
+        <aside className="hidden h-screen w-72 shrink-0 flex-col justify-between gap-4 overflow-y-auto border-r border-border bg-background p-4 lg:flex">
           <div className="rounded-card border border-border bg-card p-3.5 text-xs text-card-foreground shadow-xs">
             <h2 className="font-black">ترندهای داغ میادین</h2>
             <p className="mt-2 text-muted-foreground">نمای مشترک اطلاعات و روندهای میدانی</p>
