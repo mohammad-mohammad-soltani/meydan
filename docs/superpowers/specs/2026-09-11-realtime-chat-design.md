@@ -1,5 +1,11 @@
 # Realtime Chat Design
 
+> **SUPERSEDED.** The Socket.IO service and `POST /chat/socket-ticket` this
+> document describes were replaced by the unified Pusher-compatible Soketi
+> transport. See the superseded banner in
+> `docs/superpowers/plans/2026-09-11-realtime-chat.md` for the current
+> architecture. Kept for history only.
+
 ## Goal
 Replace the current mock chat data with authenticated, persistent, realtime direct messaging while preserving the existing Meydan chat UI.
 

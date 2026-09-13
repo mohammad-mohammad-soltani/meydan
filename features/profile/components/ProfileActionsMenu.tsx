@@ -7,6 +7,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
+import { closeRealtimeSession } from "@/lib/realtime/user-channel";
 import type { ProfileDetails } from "../types";
 
 /**
@@ -110,6 +111,7 @@ export function ProfileActionsMenu({
       // hard-navigate: a client-side transition would leave the pre-logout RSC
       // payload cached, so Back could restore the logged-in profile.
       document.documentElement.dataset.meydanAuthenticated = "false";
+      closeRealtimeSession();
       // A client-side transition would keep the pre-logout RSC payload cached,
       // so Back could restore the signed-in profile. A full document request
       // re-runs the server auth check and sends the user to the login screen.

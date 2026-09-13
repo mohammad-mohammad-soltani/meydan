@@ -15,6 +15,7 @@ on:
       - "tests/chat-message-menu.test.mjs"
       - "tests/podcasts-search.test.mjs"
       - "tests/auth-gate-theme.test.mjs"
+      - "tests/realtime-soketi.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -32,6 +33,7 @@ on:
       - "tests/chat-message-menu.test.mjs"
       - "tests/podcasts-search.test.mjs"
       - "tests/auth-gate-theme.test.mjs"
+      - "tests/realtime-soketi.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -55,5 +57,7 @@ jobs:
         run: node --experimental-strip-types --test tests/podcasts-search.test.mjs
       - name: Run auth gate and theme tests
         run: node --experimental-strip-types --test tests/auth-gate-theme.test.mjs
+      - name: Run realtime transport tests
+        run: node --experimental-strip-types --test tests/realtime-soketi.test.mjs
       - name: Build frontend
         run: npm run build

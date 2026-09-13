@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { subscribeToUserChannel } from "@/lib/realtime/user-channel";
 import { mapApiNotification, mergeNotification, shouldRefreshNotificationFromApi, type ApiNotificationLike } from "../chat-utils";
 import { useUnreadCounts } from "../providers/UnreadProvider";
-import { getChatSocket } from "../realtime/socket";
 import { getConversations } from "../services/chat.service";
 import {
   getNotifications,
@@ -93,14 +93,16 @@ export function useChat(initialConversations: Conversation[] = [], initialNotifi
 
   useEffect(() => {
     let active = true;
+    let unbind: (() => void) | null = null;
     void Promise.allSettled([refreshConversations(), refreshNotifications()]);
 
-    let socketRef: Awaited<ReturnType<typeof getChatSocket>> | null = null;
     const onConversationUpdated = () => void refreshConversations();
-    const onPresence = ({ userId, online }: { userId: string; online: boolean }) => {
+    const onPresence = (payload: unknown) => {
       if (!active) return;
-      setConversations((current) => current.map((conversation) => conversation.participant.id === String(userId)
-        ? { ...conversation, participant: { ...conversation.participant, isOnline: Boolean(online) } }
+      const record = payload && typeof payload === "object" ? payload as { userId?: unknown; online?: unknown } : null;
+      if (!record) return;
+      setConversations((current) => current.map((conversation) => conversation.participant.id === String(record.userId)
+        ? { ...conversation, participant: { ...conversation.participant, isOnline: Boolean(record.online) } }
         : conversation));
     };
     const onNotificationCreated = (payload?: ApiNotificationLike) => {
@@ -111,7 +113,7 @@ export function useChat(initialConversations: Conversation[] = [], initialNotifi
       }
       if (MESSAGE_NOTIFICATION_TYPES.has(String(payload.type || "").toLowerCase())) return;
       const incoming = mapApiNotification(payload);
-      // Socket payloads omit actor/entity data, so they cannot produce a real actor
+      // Realtime payloads omit actor/entity data, so they cannot produce a real actor
       // sentence or avatar. Go straight to the authoritative API rather than briefly
       // rendering a generic placeholder that gets replaced a moment later.
       if (shouldRefreshNotificationFromApi(incoming)) {
@@ -123,29 +125,28 @@ export function useChat(initialConversations: Conversation[] = [], initialNotifi
     };
     const onNotificationUpdated = () => void refreshNotifications();
 
-    void getChatSocket().then((socket) => {
-      if (!active) return;
-      socketRef = socket;
-      socket.on("conversation:updated", onConversationUpdated);
-      socket.on("message:created", onConversationUpdated);
-      socket.on("receipt:read", onConversationUpdated);
-      socket.on("presence:changed", onPresence);
-      socket.on("notification:created", onNotificationCreated);
-      socket.on("notification:updated", onNotificationUpdated);
-    }).catch(() => undefined);
+    // One subscription per component on the shared private channel; the
+    // helper removes only these bindings when the chat screen unmounts.
+    void subscribeToUserChannel({
+      "conversation:updated": onConversationUpdated,
+      "message:created": onConversationUpdated,
+      "receipt:read": onConversationUpdated,
+      "presence:changed": onPresence,
+      "notification:created": (payload) => onNotificationCreated(payload as ApiNotificationLike),
+      "notification:updated": onNotificationUpdated,
+    })
+      .then((off) => {
+        if (active) unbind = off;
+        else off();
+      })
+      .catch(() => undefined);
 
     const pollId = window.setInterval(() => void refreshNotifications(), 30_000);
 
     return () => {
       active = false;
       window.clearInterval(pollId);
-      if (!socketRef) return;
-      socketRef.off("conversation:updated", onConversationUpdated);
-      socketRef.off("message:created", onConversationUpdated);
-      socketRef.off("receipt:read", onConversationUpdated);
-      socketRef.off("presence:changed", onPresence);
-      socketRef.off("notification:created", onNotificationCreated);
-      socketRef.off("notification:updated", onNotificationUpdated);
+      unbind?.();
     };
   }, [refreshConversations, refreshNotifications]);
 

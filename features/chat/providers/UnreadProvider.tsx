@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getChatSocket } from "../realtime/socket";
+import { subscribeToUserChannel } from "@/lib/realtime/user-channel";
 import { getConversations } from "../services/chat.service";
 import { getUnreadNotificationCount } from "../services/notification.service";
 
@@ -40,20 +40,11 @@ const EMPTY: UnreadContextValue = {
 
 const UnreadContext = createContext<UnreadContextValue>(EMPTY);
 
-/** Socket events that can change either counter. */
-const REFRESH_EVENTS = [
-  "conversation:updated",
-  "message:created",
-  "receipt:read",
-  "notification:created",
-  "notification:updated",
-] as const;
-
 /**
- * Keeps a single app-wide unread counter for the navigation badges. It uses the
- * shared chat socket and a slow poll, so the badge stays correct without the
- * chat page being open. Only mounted for signed-in users — the API would
- * redirect a guest anyway.
+ * Keeps a single app-wide unread counter for the navigation badges. It listens
+ * on the shared Soketi private channel plus a slow poll, so the badge stays
+ * correct without the chat page being open. Only mounted for signed-in users —
+ * the API would redirect a guest anyway.
  */
 export function UnreadProvider({
   isAuthenticated,
@@ -93,12 +84,19 @@ export function UnreadProvider({
     refreshRef.current = () => void refresh();
     void refresh();
 
-    let socketRef: Awaited<ReturnType<typeof getChatSocket>> | null = null;
-    void getChatSocket()
-      .then((socket) => {
-        if (!active) return;
-        socketRef = socket;
-        for (const event of REFRESH_EVENTS) socket.on(event, refresh);
+    let unbind: (() => void) | null = null;
+    // Every event that can change either counter arrives on the user's private
+    // Soketi channel; the poll below stays as a slow safety net.
+    void subscribeToUserChannel({
+      "conversation:updated": () => void refresh(),
+      "message:created": () => void refresh(),
+      "receipt:read": () => void refresh(),
+      "notification:created": () => void refresh(),
+      "notification:updated": () => void refresh(),
+    })
+      .then((off) => {
+        if (active) unbind = off;
+        else off();
       })
       .catch(() => undefined);
 
@@ -108,8 +106,7 @@ export function UnreadProvider({
       active = false;
       refreshRef.current = () => {};
       window.clearInterval(pollId);
-      if (!socketRef) return;
-      for (const event of REFRESH_EVENTS) socketRef.off(event, refresh);
+      unbind?.();
     };
   }, [isAuthenticated]);
 

@@ -1,5 +1,5 @@
 import { meydanApi } from "@/lib/meydan-api";
-import type { ChatAttachment, ChatMessage, Conversation, SocketTicket } from "../types";
+import type { ChatAttachment, ChatMessage, Conversation } from "../types";
 
 type ApiConversation = {
   id: string | number;
@@ -43,8 +43,6 @@ type ApiMessage = {
   forwarded_from?: string | null;
   reactions?: string[];
 };
-
-let cachedCurrentUserId = "";
 
 const avatarTones = ["red", "amber", "blue", "emerald", "violet", "slate"] as const;
 function avatarTone(id: string) {
@@ -265,15 +263,36 @@ export async function markConversationRead(conversationId: string, messageId: st
   });
 }
 
-export async function getSocketTicket(): Promise<SocketTicket> {
-  const result = await meydanApi<{ ticket: string; user_id: string | number; expires_at: string; socket_url: string }>("/chat/socket-ticket", { method: "POST" });
-  cachedCurrentUserId = String(result.user_id);
-  return { ticket: result.ticket, userId: cachedCurrentUserId, expiresAt: result.expires_at, socketUrl: result.socket_url };
+/**
+ * Publishes the typing indicator for a conversation.
+ *
+ * Typing is a REST command: the backend relays it to the other participants as
+ * `typing:changed` over Soketi. There is no client-side socket emit any more.
+ */
+export async function setConversationTyping(conversationId: string, typing: boolean): Promise<void> {
+  await meydanApi(`/chat/conversations/${conversationId}/typing`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ typing }),
+  });
 }
 
-export async function getCurrentUserId(): Promise<string> {
-  if (cachedCurrentUserId) return cachedCurrentUserId;
-  return (await getSocketTicket()).userId;
-}
+/**
+ * Maps a realtime event payload.
+ *
+ * The backend publishes the same wire shape the REST endpoints return
+ * (`conversation_id`, `sender_id`, `client_id`, …), so realtime and REST
+ * messages are normalized through the exact same mapper.
+ */
+export function mapRealtimeMessage(payload: unknown): ChatMessage | null {
+  if (!payload || typeof payload !== "object") return null;
 
-export { mapMessage };
+  const candidate = payload as Partial<ApiMessage>;
+  if (candidate.id === undefined || candidate.id === null) return null;
+
+  try {
+    return mapMessage(candidate as ApiMessage);
+  } catch {
+    return null;
+  }
+}

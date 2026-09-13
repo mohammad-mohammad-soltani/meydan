@@ -1,5 +1,20 @@
 # Realtime Chat Implementation Plan
 
+> **SUPERSEDED — do not implement this plan.** The Socket.IO service, socket
+> tickets and client-emitted chat commands described below no longer exist.
+> Meydan now runs a single Pusher-compatible Soketi transport
+> (`wss://naghshman.ir/socket/app/{APP_KEY}`): REST commands to WordPress, live
+> events from Soketi on the private channel `private-user-{id}`.
+>
+> Current architecture:
+> - `lib/realtime/soketi.ts` — single public endpoint configuration
+> - `lib/realtime/client.ts` — one shared pusher-js connection per session
+> - `lib/realtime/user-channel.ts` — `private-user-{id}` subscriptions
+> - `lib/realtime/config.ts` / `lib/realtime/auth.ts` — `GET /chat/realtime/config`, `POST /chat/realtime/auth`
+> - `features/chat/*` — chat event handling; every mutation goes over REST
+>
+> Kept for history only.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace mock chat with persistent authenticated Socket.IO chat across Meydan frontend and backend.

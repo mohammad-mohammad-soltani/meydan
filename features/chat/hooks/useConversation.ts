@@ -1,45 +1,47 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { isRealtimeConnected, subscribeToRealtimeConnection } from "@/lib/realtime/client";
+import { getRealtimeUserId } from "@/lib/realtime/config";
+import { subscribeToUserChannel } from "@/lib/realtime/user-channel";
 import { useUnreadCounts } from "../providers/UnreadProvider";
-import { getChatSocket } from "../realtime/socket";
 import {
   deleteMessage,
   editMessage,
   getConversationById,
   getConversations,
-  getCurrentUserId,
   getMessages,
+  mapRealtimeMessage,
   markConversationRead,
   sendMessage,
+  setConversationTyping,
   setMessageReaction,
   uploadChatAttachment,
 } from "../services/chat.service";
 import type { ChatAttachment, ChatMessage, Conversation, MessageReply } from "../types";
 
-function timeLabel(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+/** How long a keystroke keeps the typing indicator alive. */
+const TYPING_IDLE_MS = 1200;
+
+function asRecord(payload: unknown): Record<string, unknown> | null {
+  if (!payload) return null;
+  if (typeof payload === "string") {
+    try {
+      const parsed: unknown = JSON.parse(payload);
+      return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  }
+  return typeof payload === "object" ? (payload as Record<string, unknown>) : null;
 }
 
-function normalizeRealtimeMessage(message: ChatMessage): ChatMessage {
-  return { ...message, id: String(message.id), conversationId: String(message.conversationId), senderId: String(message.senderId), sentAt: timeLabel(message.sentAt), status: "sent" };
-}
-
-function messageExcerpt(message: ChatMessage) {
-  return message.body || message.attachment?.name || "فایل پیوست‌شده";
-}
-
-function emitAck<T>(socket: Awaited<ReturnType<typeof getChatSocket>>, event: string, payload: unknown, timeoutMs = 9000): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error("socket timeout")), timeoutMs);
-    socket.emit(event, payload, (response: T & { ok?: boolean; error?: string }) => {
-      window.clearTimeout(timer);
-      if (response && response.ok === false) reject(new Error(response.error || "socket error"));
-      else resolve(response);
-    });
-  });
+function recordString(record: Record<string, unknown>, ...keys: string[]): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (value !== undefined && value !== null) return String(value);
+  }
+  return "";
 }
 
 function upsertMessage(list: ChatMessage[], incoming: ChatMessage) {
@@ -52,19 +54,25 @@ function upsertMessage(list: ChatMessage[], incoming: ChatMessage) {
 
 export function useConversation(conversationId: string, initialConversation: Conversation | null = null, initialMessages: ChatMessage[] = []) {
   // Reading a conversation clears its unread messages, so the shared badge has
-  // to re-read itself: the realtime server's `receipt:read` is broadcast only
-  // to the *other* participants, never back to the reader.
+  // to re-read itself: the backend broadcasts `receipt:read` to the *other*
+  // participants, and the reader updates its own counter after the REST write.
   const { refresh: refreshUnreadCounts } = useUnreadCounts();
   const lastMarkedReadRef = useRef("");
   const [conversation, setConversation] = useState(initialConversation);
   const [messages, setMessages] = useState(initialMessages);
   const [currentUserId, setCurrentUserId] = useState("");
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(!initialConversation);
+  // Loading/load-error are derived from which conversation the loaded data
+  // belongs to, so switching conversations never needs a synchronous setState
+  // inside an effect.
+  const [loadState, setLoadState] = useState<{ conversationId: string; error: string | null }>(() => ({
+    conversationId: initialConversation ? conversationId : "",
+    error: null,
+  }));
+  const [actionError, setActionError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(() => isRealtimeConnected());
   const [isPeerTyping, setIsPeerTyping] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<ChatAttachment | null>(null);
   const [pendingAttachmentFile, setPendingAttachmentFile] = useState<File | null>(null);
@@ -74,92 +82,153 @@ export function useConversation(conversationId: string, initialConversation: Con
   const [messageToForward, setMessageToForward] = useState<ChatMessage | null>(null);
   const [forwardTargets, setForwardTargets] = useState<Conversation[]>([]);
   const typingTimer = useRef<number | null>(null);
+  const typingActive = useRef(false);
 
+  const isLoading = loadState.conversationId !== conversationId;
+  const loadError = loadState.conversationId === conversationId ? loadState.error : null;
+  const error = loadError || actionError;
+
+  // Required data only: realtime config and the forward-target list must never
+  // turn a healthy conversation request into "دریافت گفتگو انجام نشد".
   useEffect(() => {
     let active = true;
-    setIsLoading(true);
-    void Promise.all([getConversationById(conversationId), getMessages(conversationId), getCurrentUserId(), getConversations()])
-      .then(([nextConversation, nextMessages, userId, targets]) => {
+    void Promise.all([getConversationById(conversationId), getMessages(conversationId)])
+      .then(([nextConversation, nextMessages]) => {
         if (!active) return;
         setConversation(nextConversation);
         setMessages(nextMessages);
-        setCurrentUserId(userId);
-        setForwardTargets(targets);
-        setError(nextConversation ? null : "این گفتگو پیدا نشد.");
+        setActionError(null);
+        setLoadState({ conversationId, error: nextConversation ? null : "این گفتگو پیدا نشد." });
       })
       .catch(() => {
-        if (active) setError("دریافت گفتگو انجام نشد. دوباره تلاش کنید.");
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
+        if (active) setLoadState({ conversationId, error: "دریافت گفتگو انجام نشد. دوباره تلاش کنید." });
       });
     return () => { active = false; };
   }, [conversationId]);
 
+  // Viewer identity for private channels comes from `/chat/realtime/config`.
   useEffect(() => {
-    if (!conversation?.id || !currentUserId) return;
-    let disposed = false;
-    let socketRef: Awaited<ReturnType<typeof getChatSocket>> | null = null;
+    let active = true;
+    void getRealtimeUserId().then((userId) => {
+      if (active && userId) setCurrentUserId(userId);
+    });
+    return () => { active = false; };
+  }, [conversationId]);
 
-    const onCreated = (raw: ChatMessage) => {
-      const message = normalizeRealtimeMessage(raw);
-      if (message.conversationId !== conversationId) return;
+  // Forward targets are a convenience list; a failure just hides the picker.
+  useEffect(() => {
+    let active = true;
+    void getConversations()
+      .then((items) => { if (active) setForwardTargets(items); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [conversationId]);
+
+  const refreshMessages = useCallback(async () => {
+    try {
+      const fresh = await getMessages(conversationId);
+      setMessages((current) => fresh.reduce(upsertMessage, current));
+    } catch {
+      // Live events keep the window usable until the next successful refresh.
+    }
+  }, [conversationId]);
+
+  useEffect(
+    () => subscribeToRealtimeConnection((state) => setIsConnected(state === "connected")),
+    [],
+  );
+
+  // The identity lookup may have failed while the page loaded; once the shared
+  // transport is up, retry it so the private channel can subscribe.
+  useEffect(() => {
+    if (currentUserId || !isConnected) return;
+    let active = true;
+    void getRealtimeUserId().then((userId) => {
+      if (active && userId) setCurrentUserId(userId);
+    });
+    return () => { active = false; };
+  }, [currentUserId, isConnected]);
+
+  useEffect(() => {
+    let active = true;
+    let unbind: (() => void) | null = null;
+
+    const onMessageCreated = (payload: unknown) => {
+      const message = mapRealtimeMessage(payload);
+      if (!message || message.conversationId !== conversationId) return;
       setMessages((current) => upsertMessage(current, message));
     };
-    const onUpdated = (raw: ChatMessage) => {
-      const message = normalizeRealtimeMessage(raw);
+    const onMessageUpdated = (payload: unknown) => {
+      const message = mapRealtimeMessage(payload);
+      if (!message || message.conversationId !== conversationId) return;
       setMessages((current) => current.map((item) => item.id === message.id ? { ...item, ...message } : item));
     };
-    const onDeleted = ({ messageId, conversationId: eventConversationId }: { messageId: string; conversationId: string }) => {
-      if (String(eventConversationId) !== conversationId) return;
-      setMessages((current) => current.filter((message) => message.id !== String(messageId)));
+    const onMessageDeleted = (payload: unknown) => {
+      const record = asRecord(payload);
+      if (!record || recordString(record, "conversationId", "conversation_id") !== conversationId) return;
+      const messageId = recordString(record, "messageId", "message_id");
+      setMessages((current) => current.filter((message) => message.id !== messageId));
     };
-    const onReaction = ({ messageId, reactions }: { messageId: string; reactions: string[] }) => {
-      setMessages((current) => current.map((message) => message.id === String(messageId) ? { ...message, reactions } : message));
+    const onMessageReaction = (payload: unknown) => {
+      const record = asRecord(payload);
+      if (!record) return;
+      const eventConversationId = recordString(record, "conversationId", "conversation_id");
+      if (eventConversationId && eventConversationId !== conversationId) return;
+      const messageId = recordString(record, "messageId", "message_id");
+      const reactions = Array.isArray(record.reactions) ? record.reactions.map(String) : [];
+      setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions } : message));
     };
-    const onTyping = ({ conversationId: eventConversationId, userId, typing }: { conversationId: string; userId: string; typing: boolean }) => {
-      if (String(eventConversationId) === conversationId && String(userId) !== currentUserId) setIsPeerTyping(Boolean(typing));
+    const onReceiptRead = (payload: unknown) => {
+      const record = asRecord(payload);
+      if (!record || recordString(record, "conversationId", "conversation_id") !== conversationId) return;
+      // The reader receives its own receipt echo; keep the local summary honest.
+      if (recordString(record, "userId", "user_id") !== currentUserId) return;
+      setConversation((current) => current ? { ...current, unreadCount: 0 } : current);
     };
-    const onPresence = ({ userId, online }: { userId: string; online: boolean }) => {
-      setConversation((current) => current && current.participant.id === String(userId) ? { ...current, participant: { ...current.participant, isOnline: Boolean(online) } } : current);
+    const onTypingChanged = (payload: unknown) => {
+      const record = asRecord(payload);
+      if (!record || recordString(record, "conversationId", "conversation_id") !== conversationId) return;
+      const userId = recordString(record, "userId", "user_id");
+      if (!currentUserId || userId === currentUserId) return;
+      setIsPeerTyping(Boolean(record.typing));
     };
-    const onConnect = () => {
-      setIsConnected(true);
-      socketRef?.emit("conversation:join", { conversationId });
-      void getMessages(conversationId).then((fresh) => !disposed && setMessages((current) => fresh.reduce(upsertMessage, current))).catch(() => undefined);
+    const onPresenceChanged = (payload: unknown) => {
+      const record = asRecord(payload);
+      if (!record) return;
+      const userId = recordString(record, "userId", "user_id");
+      const online = Boolean(record.online);
+      setConversation((current) => current && current.participant.id === userId
+        ? { ...current, participant: { ...current.participant, isOnline: online } }
+        : current);
     };
-    const onDisconnect = () => setIsConnected(false);
 
-    void getChatSocket().then((socket) => {
-      if (disposed) return;
-      socketRef = socket;
-      socket.on("message:created", onCreated);
-      socket.on("message:updated", onUpdated);
-      socket.on("message:deleted", onDeleted);
-      socket.on("message:reaction", onReaction);
-      socket.on("typing:changed", onTyping);
-      socket.on("presence:changed", onPresence);
-      socket.on("connect", onConnect);
-      socket.on("disconnect", onDisconnect);
-      setIsConnected(socket.connected);
-      socket.emit("conversation:join", { conversationId });
-    }).catch(() => setIsConnected(false));
+    void subscribeToUserChannel(
+      {
+        "message:created": onMessageCreated,
+        "message:updated": onMessageUpdated,
+        "message:deleted": onMessageDeleted,
+        "message:reaction": onMessageReaction,
+        "receipt:read": onReceiptRead,
+        "typing:changed": onTypingChanged,
+        "presence:changed": onPresenceChanged,
+      },
+      {
+        // Runs on the first subscribe and after every reconnect: re-read the
+        // window so events missed while offline are reconciled.
+        onSubscribed: () => { if (active) void refreshMessages(); },
+      },
+    )
+      .then((off) => {
+        if (active) unbind = off;
+        else off();
+      })
+      .catch(() => undefined);
 
     return () => {
-      disposed = true;
-      if (typingTimer.current) window.clearTimeout(typingTimer.current);
-      if (!socketRef) return;
-      socketRef.emit("conversation:leave", { conversationId });
-      socketRef.off("message:created", onCreated);
-      socketRef.off("message:updated", onUpdated);
-      socketRef.off("message:deleted", onDeleted);
-      socketRef.off("message:reaction", onReaction);
-      socketRef.off("typing:changed", onTyping);
-      socketRef.off("presence:changed", onPresence);
-      socketRef.off("connect", onConnect);
-      socketRef.off("disconnect", onDisconnect);
+      active = false;
+      unbind?.();
     };
-  }, [conversation?.id, conversationId, currentUserId]);
+  }, [conversationId, currentUserId, refreshMessages]);
 
   useEffect(() => {
     if (!currentUserId || !messages.length) return;
@@ -172,22 +241,48 @@ export function useConversation(conversationId: string, initialConversation: Con
     void markConversationRead(conversationId, lastIncoming.id)
       .then(() => refreshUnreadCounts())
       .catch(() => undefined);
-    void getChatSocket().then((socket) => socket.emit("receipt:read", { conversationId, messageId: lastIncoming.id })).catch(() => undefined);
   }, [conversationId, currentUserId, messages, refreshUnreadCounts]);
 
+  const sendTyping = useCallback((typing: boolean) => {
+    void setConversationTyping(conversationId, typing).catch(() => undefined);
+  }, [conversationId]);
+
+  // Typing is a REST command now: `true` once when typing starts, `false` after
+  // ~1.2s of inactivity (or immediately when the input is cleared). Never one
+  // request per keystroke.
   useEffect(() => {
     if (!currentUserId || !conversation?.id) return;
-    void getChatSocket().then((socket) => {
-      if (!socket.connected) return;
-      if (input.trim()) {
-        socket.emit("typing:start", { conversationId });
-        if (typingTimer.current) window.clearTimeout(typingTimer.current);
-        typingTimer.current = window.setTimeout(() => socket.emit("typing:stop", { conversationId }), 1200);
-      } else {
-        socket.emit("typing:stop", { conversationId });
+
+    if (input.trim()) {
+      if (!typingActive.current) {
+        typingActive.current = true;
+        sendTyping(true);
       }
-    }).catch(() => undefined);
-  }, [conversation?.id, conversationId, currentUserId, input]);
+      if (typingTimer.current) window.clearTimeout(typingTimer.current);
+      typingTimer.current = window.setTimeout(() => {
+        typingTimer.current = null;
+        typingActive.current = false;
+        sendTyping(false);
+      }, TYPING_IDLE_MS);
+      return;
+    }
+
+    if (!typingActive.current) return;
+    typingActive.current = false;
+    if (typingTimer.current) {
+      window.clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+    sendTyping(false);
+  }, [conversation?.id, currentUserId, input, sendTyping]);
+
+  // Leaving the conversation (or the page) must clear the peer's indicator.
+  useEffect(() => () => {
+    if (typingTimer.current) window.clearTimeout(typingTimer.current);
+    if (!typingActive.current) return;
+    typingActive.current = false;
+    void setConversationTyping(conversationId, false).catch(() => undefined);
+  }, [conversationId]);
 
   const clearPendingAttachment = () => {
     setPendingAttachmentFile(null);
@@ -206,16 +301,12 @@ export function useConversation(conversationId: string, initialConversation: Con
       setEditingMessage(null);
       setInput("");
       try {
-        const socket = await getChatSocket();
-        const result = socket.connected
-          ? await emitAck<{ ok: boolean; message: ChatMessage }>(socket, "message:edit", { messageId: original.id, body })
-          : { ok: true, message: await editMessage(original.id, body) };
-        const canonical = normalizeRealtimeMessage(result.message);
+        const canonical = await editMessage(original.id, body);
         setMessages((current) => current.map((message) => message.id === canonical.id ? { ...message, ...canonical } : message));
         setNotice("پیام ویرایش شد.");
       } catch {
         setMessages((current) => current.map((message) => message.id === original.id ? original : message));
-        setError("ویرایش پیام انجام نشد.");
+        setActionError("ویرایش پیام انجام نشد.");
       }
       return;
     }
@@ -239,26 +330,15 @@ export function useConversation(conversationId: string, initialConversation: Con
     setAttachment(null);
     setPendingAttachmentFile(null);
     setReplyingTo(null);
-    setError(null);
+    setActionError(null);
     setIsSending(true);
     setMessages((current) => [...current, optimistic]);
 
     try {
       const persistedAttachment = pendingFile ? await uploadChatAttachment(pendingFile) : pendingAttachment;
-      const socket = await getChatSocket();
-      let sent: ChatMessage;
-      if (socket.connected) {
-        const result = await emitAck<{ ok: boolean; message: ChatMessage }>(socket, "message:send", {
-          conversationId,
-          clientId,
-          body,
-          attachment: persistedAttachment ? { id: persistedAttachment.id, name: persistedAttachment.name, mimeType: persistedAttachment.mimeType, size: persistedAttachment.size, url: persistedAttachment.url } : undefined,
-          replyToId: optimistic.replyTo?.id,
-        });
-        sent = normalizeRealtimeMessage(result.message);
-      } else {
-        sent = await sendMessage(conversationId, body, persistedAttachment, { clientId, replyToId: optimistic.replyTo?.id });
-      }
+      const sent = await sendMessage(conversationId, body, persistedAttachment, { clientId, replyToId: optimistic.replyTo?.id });
+      // The backend also publishes `message:created` to the sender; upsert by id
+      // and clientId keeps the optimistic record and the event from duplicating.
       setMessages((current) => upsertMessage(current, {
         ...sent,
         attachment: sent.attachment ? {
@@ -269,7 +349,7 @@ export function useConversation(conversationId: string, initialConversation: Con
       if (pendingAttachment?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(pendingAttachment.previewUrl);
     } catch {
       setMessages((current) => current.map((message) => message.clientId === clientId ? { ...message, status: "failed" } : message));
-      setError("ارسال پیام انجام نشد. دوباره تلاش کنید.");
+      setActionError("ارسال پیام انجام نشد. دوباره تلاش کنید.");
     } finally {
       setIsSending(false);
     }
@@ -299,13 +379,7 @@ export function useConversation(conversationId: string, initialConversation: Con
     const target = messages.find((message) => message.id === messageId);
     const active = !target?.reactions?.includes(reaction);
     setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: active ? [...(message.reactions ?? []), reaction] : (message.reactions ?? []).filter((item) => item !== reaction) } : message));
-    void getChatSocket().then(async (socket) => {
-      if (socket.connected) {
-        await emitAck(socket, "message:react", { messageId, reaction, active });
-      } else {
-        await setMessageReaction(messageId, reaction, active);
-      }
-    }).catch(() => {
+    void setMessageReaction(messageId, reaction, active).catch(() => {
       setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: target?.reactions ?? [] } : message));
     });
   };
@@ -317,14 +391,12 @@ export function useConversation(conversationId: string, initialConversation: Con
     setMessages((current) => current.filter((message) => message.id !== target.id));
     if (editingMessage?.id === target.id) { setEditingMessage(null); setInput(""); }
     if (replyingTo?.id === target.id) setReplyingTo(null);
-    void getChatSocket().then(async (socket) => {
-      if (socket.connected) await emitAck(socket, "message:delete", { messageId: target.id });
-      else await deleteMessage(target.id);
-      setNotice("پیام حذف شد.");
-    }).catch(() => {
-      setMessages((current) => current.some((message) => message.id === target.id) ? current : [...current, target].sort((a, b) => Number(a.id) - Number(b.id)));
-      setError("حذف پیام انجام نشد.");
-    });
+    void deleteMessage(target.id)
+      .then(() => setNotice("پیام حذف شد."))
+      .catch(() => {
+        setMessages((current) => current.some((message) => message.id === target.id) ? current : [...current, target].sort((a, b) => Number(a.id) - Number(b.id)));
+        setActionError("حذف پیام انجام نشد.");
+      });
   };
 
   const forwardTo = async (target: Conversation) => {
@@ -334,7 +406,7 @@ export function useConversation(conversationId: string, initialConversation: Con
       await sendMessage(target.id, message.body, message.attachment, { clientId: crypto.randomUUID(), forwardedFromMessageId: message.id });
       setNotice(`پیام به «${target.participant.name}» فوروارد شد.`);
     } catch {
-      setError("فوروارد پیام انجام نشد.");
+      setActionError("فوروارد پیام انجام نشد.");
     } finally {
       setMessageToForward(null);
     }
@@ -357,4 +429,8 @@ export function useConversation(conversationId: string, initialConversation: Con
     requestDelete: setMessageToDelete, cancelDelete: () => setMessageToDelete(null), confirmDelete,
     requestForward: setMessageToForward, cancelForward: () => setMessageToForward(null), forwardTo, send,
   };
+}
+
+function messageExcerpt(message: ChatMessage) {
+  return message.body || message.attachment?.name || "فایل پیوست‌شده";
 }

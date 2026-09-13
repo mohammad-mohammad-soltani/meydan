@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LoaderCircle, LogIn, LogOut, UserRound } from "lucide-react";
+import { closeRealtimeSession } from "@/lib/realtime/user-channel";
 import { meydanApi } from "@/lib/meydan-api";
 
 type ApiMe = {
@@ -68,6 +69,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
       // A hard navigation is required: a client transition would keep the
       // pre-logout RSC payload cached, so Back could restore the session view.
       document.documentElement.dataset.meydanAuthenticated = "false";
+      closeRealtimeSession();
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- logout must discard the router cache
       window.location.assign("/auth");
     } catch {

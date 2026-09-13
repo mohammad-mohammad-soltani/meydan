@@ -51,13 +51,6 @@ export type ChatAttachment = {
 
 export type MessageReply = { id: string; body: string; senderName: string };
 
-export type SocketTicket = {
-  ticket: string;
-  userId: string;
-  expiresAt: string;
-  socketUrl: string;
-};
-
 export type ChatNotificationKind = "like" | "repost" | "media" | "mention" | "follow" | "comment" | "initiative" | "system";
 
 export type ChatNotification = {
