@@ -65,10 +65,34 @@ type ApiUserProfile = {
   };
 };
 
+/**
+ * Speaker extra carried by `/me` for accounts holding the `meydan_speaker`
+ * role. The speaker *is* the user account, so this only decorates `profile`.
+ */
+type ApiSpeaker = {
+  id: number;
+  user_id?: number;
+  name?: string;
+  role?: string;
+  bio?: string;
+  handle?: string;
+  avatar_url?: string;
+  cover_url?: string;
+  verified?: boolean;
+  cities?: number[];
+  social_links?: Array<{ platform?: string; url?: string; label?: string }>;
+  categories?: Array<{ slug?: string; name?: string }>;
+};
+
 type ApiMe =
   | {
       account_type: "square";
       square: ApiSquare | null;
+    }
+  | {
+      account_type: "speaker";
+      profile: ApiUserProfile;
+      speaker?: ApiSpeaker | null;
     }
   | {
       account_type: "user";
@@ -678,10 +702,28 @@ function mapSquare(
   };
 }
 
+function cleanStrings(
+  values: unknown,
+): string[] {
+  return (Array.isArray(values) ? values : [])
+    .map((value) =>
+      typeof value === "string"
+        ? value.trim()
+        : "",
+    )
+    .filter(Boolean);
+}
+
+/**
+ * A speaker account is a user account that also carries a curated speaker
+ * record. `speaker` is only present on `/me`; public profiles keep deriving the
+ * badge from the actor fields.
+ */
 function mapUser(
   profile: ApiUserProfile,
   narrativeItems: ApiNarrative[] = [],
   replies: ApiComment[] = [],
+  speaker: ApiSpeaker | null = null,
 ): ProfileDetails {
   const narratives =
     profile.stats?.narratives ||
@@ -690,13 +732,16 @@ function mapUser(
 
   const identity = {
     name:
+      speaker?.name ||
       profile.full_name ||
       "کاربر میدان",
 
     handle:
+      speaker?.handle ||
       `user_${profile.id}`,
 
     subtitle:
+      speaker?.role ||
       profile.headline ||
       "عضو میدان",
 
@@ -704,10 +749,12 @@ function mapUser(
       profile.location_label || "",
 
     avatar:
+      speaker?.avatar_url ||
       profile.avatar_url ||
       undefined,
 
     cover:
+      speaker?.cover_url ||
       profile.cover_url ||
       undefined,
 
@@ -716,9 +763,25 @@ function mapUser(
     ),
 
     verifiedSpeaker: Boolean(
-      profile.verified_speaker,
+      speaker?.verified ??
+        profile.verified_speaker,
     ),
   };
+
+  // The API can answer an unset list meta as `[""]`; treating that as a real
+  // entry would render an empty stat row and a bare `#` skill tag.
+  const resumeStats =
+    (profile.resume_stats || []).filter(
+      (stat) =>
+        Boolean(
+          stat &&
+            (stat.label || stat.value),
+        ),
+    );
+
+  const skills = cleanStrings(
+    profile.skills,
+  );
 
   return {
     actorId: profile.id,
@@ -738,8 +801,8 @@ function mapUser(
     squareStats: [],
 
     resumeStats:
-      profile.resume_stats?.length
-        ? profile.resume_stats
+      resumeStats.length
+        ? resumeStats
         : [
             {
               value:
@@ -794,11 +857,18 @@ function mapUser(
       replies.map(mapReply),
 
     about: plainText(
-      profile.about || "",
+      speaker?.bio ||
+        profile.about ||
+        "",
     ),
 
-    skills:
-      profile.skills || [],
+    skills: skills.length
+      ? skills
+      : cleanStrings(
+          (speaker?.categories || []).map(
+            (category) => category.name,
+          ),
+        ),
   };
 }
 
@@ -841,13 +911,20 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
         ? me.square?.id
         : me.profile.id;
 
+    // Speakers are `user` actors everywhere interactions and replies are keyed:
+    // `/actors/{type}` only accepts `user|square`, never `speaker`.
+    const actorType =
+      me.account_type === "square"
+        ? "square"
+        : "user";
+
     if (actorId) {
       try {
         replies =
           await meydanApi<
             ApiComment[]
           >(
-            `/actors/${me.account_type}/${actorId}/replies`,
+            `/actors/${actorType}/${actorId}/replies`,
             {
               headers,
             },
@@ -864,6 +941,17 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
         me.profile,
         narratives,
         replies,
+      );
+    }
+
+    if (
+      me.account_type === "speaker"
+    ) {
+      return mapUser(
+        me.profile,
+        narratives,
+        replies,
+        me.speaker || null,
       );
     }
 

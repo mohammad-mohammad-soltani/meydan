@@ -13,7 +13,8 @@ const DRAFT_KEY = "meydan-compose-draft";
 const MEDIA_ACCEPT = "image/*,video/*,audio/*";
 
 type ViewerState = {
-  accountType: "user" | "square" | "";
+  /** `speaker` publishes as the user account behind it. */
+  accountType: "user" | "square" | "speaker" | "";
 };
 
 type ComposeDraft = {
@@ -65,7 +66,7 @@ export function ComposeView() {
   }, [title, text, isEcho]);
 
   useEffect(() => {
-    void meydanApi<{ account_type: "user" | "square" }>("/me")
+    void meydanApi<{ account_type: "user" | "square" | "speaker" }>("/me")
       .then((me) => {
         setViewer({ accountType: me.account_type });
       })

@@ -7,7 +7,7 @@ import { LoaderCircle, LogIn, LogOut, UserRound } from "lucide-react";
 import { meydanApi } from "@/lib/meydan-api";
 
 type ApiMe = {
-  account_type?: "user" | "square";
+  account_type?: "user" | "square" | "speaker";
   profile?: { id?: number; full_name?: string; avatar_url?: string };
   square?: { id?: number; name?: string; avatar_url?: string } | null;
 };

@@ -11,7 +11,7 @@ export type FollowActor = {
 };
 
 type MeResponse =
-  | { account_type: "user"; profile?: { id?: number } }
+  | { account_type: "user" | "speaker"; profile?: { id?: number } }
   | { account_type: "square"; square?: { id?: number } | null };
 
 export function actorNumericId(value: string | number): number {
@@ -24,10 +24,22 @@ export function actorKey(type: ActorType, value: string | number): string {
   return `${type}:${id || String(value)}`;
 }
 
+/**
+ * Resolves the `/me` payload to the actor key follows are stored under.
+ *
+ * A speaker account is a `user` actor: interactions are keyed on `user|square`,
+ * and `/actors/{type}` has no `speaker` route.
+ */
+export function viewerActor(me: MeResponse): { type: ActorType; id?: number } {
+  if (me.account_type === "square") {
+    return { type: "square", id: me.square?.id };
+  }
+  return { type: "user", id: me.profile?.id };
+}
+
 export async function getViewerFollowing(): Promise<FollowActor[]> {
   const me = await meydanApi<MeResponse>("/me");
-  const type: ActorType = me.account_type;
-  const id = me.account_type === "square" ? me.square?.id : me.profile?.id;
+  const { type, id } = viewerActor(me);
   if (!id) return [];
 
   const response = await meydanApi<FollowActor[]>(`/actors/${type}/${id}/following?limit=1000`);

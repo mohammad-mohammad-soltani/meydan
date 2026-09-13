@@ -67,6 +67,33 @@ test("login flow preserves and consumes a sanitized return target", () => {
   assert.match(source("components/layouts/AppShell.tsx"), /PostLoginReturn/);
 });
 
+test("speaker accounts are mapped instead of bounced back to login", () => {
+  const service = source("features/profile/services/profile.service.ts");
+  // `/me` answers `account_type: "speaker"` for the `meydan_speaker` role; an
+  // unhandled type used to fall through to `null` and redirect to /auth.
+  assert.match(service, /account_type:\s*"speaker"/);
+  assert.match(service, /me\.account_type === "speaker"/);
+  assert.match(service, /mapUser\(\s*me\.profile,\s*narratives,\s*replies,\s*me\.speaker/);
+  // Replies are keyed on `user|square`: `/actors/{type}` has no `speaker` route.
+  assert.doesNotMatch(service, /\/actors\/\$\{me\.account_type\}/);
+  assert.match(service, /\/actors\/\$\{actorType\}/);
+});
+
+test("a speaker is a user actor for follows", () => {
+  const follow = source("lib/meydan-follow.ts");
+  assert.match(follow, /account_type:\s*"user"\s*\|\s*"speaker"/);
+  assert.match(follow, /return \{ type: "user", id: me\.profile\?\.id \}/);
+  assert.doesNotMatch(follow, /const type: ActorType = me\.account_type/);
+});
+
+test("profile pages redirect to login only when the session is missing", () => {
+  for (const page of ["app/(app)/profile/page.tsx", "app/(app)/profile/edit/page.tsx"]) {
+    const text = source(page);
+    assert.match(text, /if \(!\(await isAuthenticated\(\)\)\) redirect\(loginHref\(/, `${page} must gate on the session`);
+    assert.doesNotMatch(text, /getProfileDetails\(\)\.catch\(\(\) => null\)/, `${page} must not treat an API failure as a logout`);
+  }
+});
+
 test("theme supports light, dark and pure-black modes", () => {
   const themePath = path.join(root, "lib/theme.ts");
   assert.ok(existsSync(themePath), "lib/theme.ts must exist");
