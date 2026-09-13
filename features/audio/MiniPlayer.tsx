@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import {
+  ChevronUp,
   Headphones,
   LoaderCircle,
   Pause,
@@ -12,13 +13,16 @@ import {
   X,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { AudioProgressBar, formatAudioTime } from "./AudioProgressBar";
 import { useAudio } from "./AudioProvider";
+import { NowPlayingSheet } from "./NowPlayingSheet";
 
 const fallbackBars = [24, 52, 36, 74, 42, 88, 56, 32, 64, 46, 78, 40, 68, 50];
 
 export function MiniPlayer() {
   const pathname = usePathname();
+  const [expanded, setExpanded] = useState(false);
   const {
     currentTrack,
     currentTime,
@@ -48,17 +52,20 @@ export function MiniPlayer() {
   const bars = levels.length ? levels.slice(0, fallbackBars.length) : fallbackBars;
   const trackBody = (
     <>
-      <strong className="line-clamp-1  text-[12px] w-full font-black text-foreground">
+      <strong className="block truncate text-[13px] font-black leading-5 text-foreground sm:text-[12px]">
         {currentTrack.title}
       </strong>
-      <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground" dir="ltr">
-        <span className="tabular-nums">
+      <span
+        className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] text-muted-foreground"
+        dir="ltr"
+      >
+        <span className="shrink-0 whitespace-nowrap tabular-nums">
           {formatAudioTime(currentTime)} / {duration > 0 ? formatAudioTime(duration) : "--:--"}
         </span>
         {currentTrack.artist ? (
           <>
-            <span aria-hidden="true">•</span>
-            <span className="max-w-28 truncate" dir="rtl">{currentTrack.artist}</span>
+            <span aria-hidden="true" className="shrink-0">•</span>
+            <span className="min-w-0 truncate" dir="rtl">{currentTrack.artist}</span>
           </>
         ) : null}
       </span>
@@ -68,11 +75,14 @@ export function MiniPlayer() {
   return (
     <section
       aria-label="پخش‌کننده صوت"
-      className="relative z-50 shrink-0 border-t border-border bg-surface-glass px-3 py-2.5 text-foreground shadow-popover backdrop-blur-md"
+      className="relative z-50 shrink-0 border-t border-border bg-surface-glass px-2.5 py-2 text-foreground shadow-popover backdrop-blur-md sm:px-3 sm:py-2.5"
     >
-      <div className="flex items-center gap-2.5">
-        <div
-          className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-surface-muted text-brand"
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          aria-label="نمایش پخش‌کنندهٔ تمام‌صفحه"
+          className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-surface-muted text-brand outline-none transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-ring motion-reduce:hover:scale-100 sm:h-11 sm:w-11 sm:rounded-xl"
           style={
             currentTrack.cover
               ? {
@@ -93,7 +103,7 @@ export function MiniPlayer() {
               />
             ))}
           </div>
-        </div>
+        </button>
 
         <div className="min-w-0 flex-1">
           {currentTrack.sourceHref ? (
@@ -108,13 +118,13 @@ export function MiniPlayer() {
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-0.5" dir="ltr">
+        <div className="-me-1 flex shrink-0 items-center gap-0 sm:me-0 sm:gap-0.5" dir="ltr">
           <button
             type="button"
             onClick={clear}
             aria-label="بستن پخش‌کننده"
             title="بستن پخش‌کننده"
-            className="grid h-9 w-9 place-items-center rounded-full text-icon-muted outline-none transition hover:bg-hover hover:text-danger focus-visible:ring-2 focus-visible:ring-ring"
+            className="grid h-8 w-8 place-items-center rounded-full text-icon-muted outline-none transition hover:bg-hover hover:text-danger focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:w-9"
           >
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -124,7 +134,7 @@ export function MiniPlayer() {
             onClick={() => void previous()}
             disabled={!hasPrevious && currentTime < 1}
             aria-label="قطعه قبلی"
-            className="grid h-9 w-9 place-items-center rounded-full text-icon-muted outline-none transition hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
+            className="grid h-8 w-8 place-items-center rounded-full text-icon-muted outline-none transition hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
           >
             <SkipBack aria-hidden="true" className="h-4 w-4 fill-current" />
           </button>
@@ -133,7 +143,7 @@ export function MiniPlayer() {
             type="button"
             onClick={() => void toggle()}
             aria-label={isPlaying ? "توقف پخش" : "ادامه پخش"}
-            className="grid h-11 w-11 place-items-center rounded-full bg-brand text-brand-foreground shadow-card outline-none transition hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="grid h-10 w-10 place-items-center rounded-full bg-brand text-brand-foreground shadow-card outline-none transition hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-11 sm:w-11"
           >
             {isPlaying && !isReady ? (
               <LoaderCircle aria-hidden="true" className="h-5 w-5 animate-spin" />
@@ -149,20 +159,31 @@ export function MiniPlayer() {
             onClick={() => void next()}
             disabled={!hasNext}
             aria-label="قطعه بعدی"
-            className="grid h-9 w-9 place-items-center rounded-full text-icon-muted outline-none transition hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
+            className="grid h-8 w-8 place-items-center rounded-full text-icon-muted outline-none transition hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
           >
             <SkipForward aria-hidden="true" className="h-4 w-4 fill-current" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-label="باز کردن پخش‌کنندهٔ تمام‌صفحه"
+            className="hidden h-9 w-9 place-items-center rounded-full text-icon-muted outline-none transition hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:grid"
+          >
+            <ChevronUp aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <AudioProgressBar compact showTimes={false} className="mt-1" />
+      <AudioProgressBar compact showTimes={false} className="mt-1.5 sm:mt-1" />
 
       {error ? (
         <p role="alert" className="mt-1 line-clamp-1 text-[10px] font-bold text-danger">
           {error}
         </p>
       ) : null}
+
+      {expanded ? <NowPlayingSheet onClose={() => setExpanded(false)} /> : null}
     </section>
   );
 }
