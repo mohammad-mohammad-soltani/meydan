@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search } from "lucide-react";
+import { AppLogo } from "@/components/shared/AppLogo";
 import { ThemeMenu } from "./ThemeMenu";
 
 export function MobileHeader() {
@@ -20,7 +21,7 @@ export function MobileHeader() {
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-surface-glass px-4 py-3 backdrop-blur-md lg:hidden">
       <Link href="/home" className="flex min-w-0 items-center gap-2.5" aria-label="خانه میدان خیابان">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-black text-brand-foreground">م</span>
+        <AppLogo className="h-8 w-8 rounded-full" priority />
         <span className="min-w-0">
           <span className="block truncate text-sm font-black leading-tight text-foreground">نقش من</span>
           <span className="block truncate text-[10px] text-muted-foreground">شبکه همبستگی و روایت میادین ایران</span>

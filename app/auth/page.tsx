@@ -23,6 +23,7 @@ import { ProvinceCitySelect } from "@/features/auth/components/ProvinceCitySelec
 import { SquareLocationField } from "@/features/auth/components/SquareLocationField";
 import { useLocationSelection } from "@/features/auth/hooks/useLocationSelection";
 import { useProvinceCity } from "@/features/auth/hooks/useProvinceCity";
+import { AppLogo } from "@/components/shared/AppLogo";
 
 type AuthStep = "phone" | "code" | "register";
 type AccountType = "user" | "square";
@@ -365,7 +366,7 @@ export default function AuthPage() {
         <section className="hidden border-l border-border bg-surface-glass p-10 backdrop-blur-sm lg:flex lg:flex-col lg:justify-between xl:p-14">
           <div>
             <div className="inline-flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand text-xl font-black text-brand-foreground shadow-card">م</span>
+              <AppLogo className="h-12 w-12 rounded-2xl shadow-card" priority />
               <div>
                 <p className="text-lg font-black text-foreground">نقش من</p>
                 <p className="mt-0.5 text-[11px] font-bold text-muted-foreground">شبکه سراسری میادین ایران</p>
@@ -412,7 +413,7 @@ export default function AuthPage() {
         <section className="flex items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
           <div className="w-full max-w-md">
             <div className="mb-7 flex items-center justify-center gap-2.5 lg:hidden">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand text-base font-black text-brand-foreground shadow-card">م</span>
+              <AppLogo className="h-10 w-10 rounded-xl shadow-card" />
               <div>
                 <p className="text-sm font-black text-foreground">نقش من</p>
                 <p className="text-[9px] font-bold text-muted-foreground">شبکه سراسری میادین ایران</p>

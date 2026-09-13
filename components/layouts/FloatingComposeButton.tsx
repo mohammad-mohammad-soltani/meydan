@@ -6,6 +6,11 @@ import { usePathname } from "next/navigation";
 import { useAudio } from "@/features/audio/AudioProvider";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 
+/**
+ * Mobile-only compose call to action. From `lg` up the desktop sidebar owns the
+ * primary compose action (`SidebarComposeButton`), so this floating button hides
+ * itself there instead of competing with it.
+ */
 export function FloatingComposeButton() {
   const pathname = usePathname();
   const { currentTrack } = useAudio();
@@ -51,13 +56,12 @@ export function FloatingComposeButton() {
         focus-visible:outline-none
         focus-visible:ring-4
 
-        lg:left-5
-        lg:size-[3.75rem]
+        lg:hidden
 
         ${
           currentTrack
-            ? "bottom-[calc(11rem+env(safe-area-inset-bottom))] lg:bottom-24"
-            : "bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-6"
+            ? "bottom-[calc(11rem+env(safe-area-inset-bottom))]"
+            : "bottom-[calc(4.75rem+env(safe-area-inset-bottom))]"
         }
       `}
     >
@@ -99,7 +103,6 @@ export function FloatingComposeButton() {
           group-hover:scale-110
           group-active:rotate-0
           group-active:scale-95
-          lg:h-6 lg:w-6
         "
         strokeWidth={2.35}
       />
