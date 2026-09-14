@@ -2,16 +2,34 @@
 
 import { BellRing, X } from "lucide-react";
 import { FeedFilters } from "./FeedFilters";
+import { FeedSkeleton } from "./FeedSkeleton";
 import { FeedTabs } from "./FeedTabs";
 import { FollowingEmptyState } from "./FollowingEmptyState";
 import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
 import type { FeedPost, FollowSuggestion } from "../types";
 
-export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestions: FollowSuggestion[] }) {
-  const feed = useFeed(posts, suggestions);
+type FeedViewProps = {
+  posts: FeedPost[];
+  suggestions: FollowSuggestion[];
+  postsUnavailable?: boolean;
+  suggestionsUnavailable?: boolean;
+};
 
-  const postList = (
+export function FeedView({
+  posts,
+  suggestions,
+  postsUnavailable = false,
+  suggestionsUnavailable = false,
+}: FeedViewProps) {
+  const feed = useFeed(posts, suggestions);
+  const showForYouSkeleton =
+    feed.activeTab === "for-you" &&
+    (feed.isLoading || (postsUnavailable && feed.posts.length === 0));
+
+  const postList = showForYouSkeleton ? (
+    <FeedSkeleton />
+  ) : (
     <div className="w-full divide-y divide-divider">
       {feed.posts.map((post) => (
         <PostCard
@@ -45,9 +63,13 @@ export function FeedView({ posts, suggestions }: { posts: FeedPost[]; suggestion
         </>
       ) : (
         <div key={feed.activeTab} className="ui-enter">
-          {feed.posts.length ? postList : (
+          {feed.isLoading ? (
+            <FeedSkeleton />
+          ) : feed.posts.length ? (
+            postList
+          ) : (
             <FollowingEmptyState
-              isLoading={feed.isLoading || feed.isFollowingStateLoading}
+              isLoading={feed.isFollowingStateLoading || suggestionsUnavailable}
               requiresAuth={feed.followingRequiresAuth}
               hasFollowing={feed.hasFollowing}
               suggestions={feed.suggestions}
