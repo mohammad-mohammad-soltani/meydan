@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Compass, LoaderCircle, LogIn, Sparkles, UsersRound } from "lucide-react";
+import { Compass, LogIn, Sparkles, UsersRound } from "lucide-react";
 import type { ActorType } from "@/lib/meydan-follow";
 import type { FollowSuggestion } from "../types";
+import { FeedSkeleton } from "./FeedSkeleton";
 import { FollowSuggestions } from "./FollowSuggestions";
 
 type FollowingEmptyStateProps = {
@@ -17,16 +18,7 @@ type FollowingEmptyStateProps = {
 
 export function FollowingEmptyState({ isLoading, requiresAuth, hasFollowing, suggestions, followedActorKeys, pendingFollowKeys, onToggleFollow }: FollowingEmptyStateProps) {
   if (isLoading) {
-    return (
-      <div className="px-4 py-8">
-        <div className="flex min-h-56 items-center justify-center rounded-panel border border-border bg-card text-card-foreground">
-          <div className="text-center">
-            <LoaderCircle className="mx-auto h-6 w-6 animate-spin text-brand" />
-            <p className="mt-3 text-xs font-bold text-muted-foreground">در حال آماده‌کردن دنبال‌شده‌ها…</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <FeedSkeleton items={2} />;
   }
 
   if (requiresAuth) {
