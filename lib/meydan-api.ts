@@ -1,7 +1,7 @@
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 
 const DEFAULT_API_BASE =
-  "https://meydan-api.nabzjahan.ir/wp-json/meydan/v1";
+  "https://meydanbackend.naghshman.ir/wp-json/meydan/v1";
 
 export type ApiEnvelope<T> = {
   data: T;
