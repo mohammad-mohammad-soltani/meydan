@@ -9,10 +9,13 @@ export default async function HomePage() {
     getFollowSuggestions(),
   ]);
 
-  if (postsResult.status === "rejected") {
+  const postsUnavailable = postsResult.status === "rejected";
+  const suggestionsUnavailable = suggestionsResult.status === "rejected";
+
+  if (postsUnavailable) {
     console.error("[meydan] home feed request failed", postsResult.reason);
   }
-  if (suggestionsResult.status === "rejected") {
+  if (suggestionsUnavailable) {
     console.error("[meydan] home suggestions request failed", suggestionsResult.reason);
   }
 
@@ -20,5 +23,12 @@ export default async function HomePage() {
   const suggestions =
     suggestionsResult.status === "fulfilled" ? suggestionsResult.value : [];
 
-  return <FeedView posts={posts} suggestions={suggestions} />;
+  return (
+    <FeedView
+      posts={posts}
+      suggestions={suggestions}
+      postsUnavailable={postsUnavailable}
+      suggestionsUnavailable={suggestionsUnavailable}
+    />
+  );
 }
