@@ -4,9 +4,21 @@ import { getFeedPosts, getFollowSuggestions } from "@/features/feed/services/fee
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [posts, suggestions] = await Promise.all([
+  const [postsResult, suggestionsResult] = await Promise.allSettled([
     getFeedPosts(),
     getFollowSuggestions(),
   ]);
+
+  if (postsResult.status === "rejected") {
+    console.error("[meydan] home feed request failed", postsResult.reason);
+  }
+  if (suggestionsResult.status === "rejected") {
+    console.error("[meydan] home suggestions request failed", suggestionsResult.reason);
+  }
+
+  const posts = postsResult.status === "fulfilled" ? postsResult.value : [];
+  const suggestions =
+    suggestionsResult.status === "fulfilled" ? suggestionsResult.value : [];
+
   return <FeedView posts={posts} suggestions={suggestions} />;
 }
