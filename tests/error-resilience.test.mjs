@@ -35,6 +35,15 @@ test("production errors stay reportable instead of a dead end", () => {
   assert.match(globalError, /onClick=\{reset\}/);
 });
 
+test("the home route survives feed API failures", () => {
+  const home = source("app/(app)/home/page.tsx");
+  assert.match(home, /Promise\.allSettled/);
+  assert.match(home, /postsResult\.status === "fulfilled"/);
+  assert.match(home, /suggestionsResult\.status === "fulfilled"/);
+  assert.match(home, /\[meydan\] home feed request failed/);
+  assert.match(home, /\[meydan\] home suggestions request failed/);
+});
+
 test("the trends feeds tolerate any payload shape", () => {
   const service = source("features/trends/services/trends.service.ts");
   // A backend answering with an object, a single row or null must not throw.
