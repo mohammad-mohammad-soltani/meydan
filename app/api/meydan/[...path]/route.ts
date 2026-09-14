@@ -6,7 +6,7 @@ import {
 } from "@/lib/meydan-session";
 
 const GUEST_COOKIE = "meydan_guest";
-const DEFAULT_API_BASE = "https://meydan-api.nabzjahan.ir/wp-json/meydan/v1";
+const DEFAULT_API_BASE = "https://meydanbackend.naghshman.ir/wp-json/meydan/v1";
 
 const apiBase = () =>
   (
