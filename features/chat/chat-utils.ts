@@ -23,6 +23,7 @@ export type ApiNotificationLike = {
   type?: string | null;
   title?: string | null;
   body?: string | null;
+  icon_url?: string | null;
   created_at?: string | null;
   read_at?: string | null;
   deep_link?: string | null;
@@ -161,6 +162,7 @@ export function mapApiNotification(item: ApiNotificationLike): ChatNotification 
     description: String(item.body || ""),
     createdAt: notificationTimeLabel(item.created_at),
     actor: mappedActor,
+    iconUrl: item.icon_url || undefined,
     unread: !item.read_at,
     targetUrl: item.deep_link || undefined,
     entityType: item.entity_type || undefined,
@@ -174,6 +176,10 @@ export function mergeNotification(current: ChatNotification[], incoming: ChatNot
 
 export function shouldRefreshNotificationFromApi(notification: Pick<ChatNotification, "actor">): boolean {
   return !notification.actor;
+}
+
+export function notificationVisualUrl(notification: Pick<ChatNotification, "actor" | "iconUrl">): string | undefined {
+  return notification.actor?.avatarUrl || notification.iconUrl || undefined;
 }
 
 /** Actor-independent sentence for each backend notification type. `{actor}` is substituted. */
@@ -211,6 +217,7 @@ export type NotificationPresentation = {
   title: string;
   description: string;
   avatarUrl?: string;
+  visualUrl?: string;
   actorName?: string;
   href?: string;
   isSystem: boolean;
@@ -256,6 +263,7 @@ export function getNotificationPresentation(notification: ChatNotification): Not
     title,
     description,
     avatarUrl: notification.actor?.avatarUrl || undefined,
+    visualUrl: notificationVisualUrl(notification),
     actorName,
     href: notificationHref(notification),
     isSystem,
