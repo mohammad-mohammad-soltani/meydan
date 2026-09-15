@@ -91,7 +91,7 @@ export function collectConversationSharedItems<T extends SearchableMessage>(mess
 export function participantProfileHref(participant: Pick<ChatUser, "id"> & Partial<Pick<ChatUser, "profileType" | "profileId">>): string {
   const type = participant.profileType === "square" ? "square" : "user";
   const id = participant.profileId || participant.id;
-  return `/profile/${type}/${id}`;
+  return `/users/${type}/${id}`;
 }
 
 export function chatContactHref(conversationId: string | number): string {
@@ -289,12 +289,12 @@ export function notificationHref(notification: ChatNotification): string | undef
     const actorId = notificationActorId(notification.actor);
     if (actorId) {
       const kind = notification.actor?.profileType === "square" ? "square" : "user";
-      return `/profile/${kind}/${actorId}`;
+      return `/users/${kind}/${actorId}`;
     }
   }
   if (notification.entityType === "narrative" && entityId) return `/posts/${entityId}`;
   // Square-scoped notices (verification, rejection) target the square itself.
-  if (notification.entityType === "square" && entityId) return `/profile/square/${entityId}`;
+  if (notification.entityType === "square" && entityId) return `/users/square/${entityId}`;
   return link || undefined;
 }
 
