@@ -6,6 +6,7 @@ import { FolderKanban, Home, LogIn, Map, MessageCircle, Mic, Search, UserCheck }
 import { MiniPlayer } from "@/features/audio/MiniPlayer";
 import { AppLogo } from "@/components/shared/AppLogo";
 import { SilentBoundary } from "@/components/shared/SilentBoundary";
+import { PushEnrollment } from "@/components/pwa/PushEnrollment";
 import { HotTrendsPanel } from "@/features/trends/components/HotTrendsPanel";
 import { PostLoginReturn } from "@/components/providers/AuthReturnToBridge";
 import { UnreadProvider } from "@/features/chat/providers/UnreadProvider";
@@ -33,6 +34,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
     <UnreadProvider isAuthenticated={isAuthenticated}>
       <div className="mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground">
         <PostLoginReturn />
+        <PushEnrollment isAuthenticated={isAuthenticated} />
         <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between overflow-y-auto border-l border-border bg-background p-4 lg:flex">
           <div className="space-y-10">
             <Link href="/home" className="flex items-center gap-3 px-2">
