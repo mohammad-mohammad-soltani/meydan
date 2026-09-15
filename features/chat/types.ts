@@ -64,6 +64,8 @@ export type ChatNotification = {
   createdAt: string;
   conversationId?: string;
   actor?: ChatUser;
+  /** Resolved backend notification image. Actor avatar wins there; template icon is its fallback. */
+  iconUrl?: string;
   unread?: boolean;
   targetUrl?: string;
   /** Short preview of the target entity (narrative text, comment body) when available. */
