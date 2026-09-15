@@ -45,6 +45,9 @@ export function requiresClientAuthentication(path: string, init?: RequestInit): 
   if (cleanPath === "/notifications" || cleanPath.startsWith("/notifications/")) {
     return true;
   }
+  if (cleanPath === "/push" || cleanPath.startsWith("/push/")) {
+    return true;
+  }
 
   if (method === "GET" || method === "HEAD") {
     if (!path.startsWith("/timeline?")) return false;

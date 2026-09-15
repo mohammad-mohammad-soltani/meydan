@@ -3,14 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, LoaderCircle, X } from "lucide-react";
 import { meydanApi } from "@/lib/meydan-api";
-import { initializePushe, rememberPusheAppId } from "@/lib/pushe-web";
-
-type PushConfig = {
-  provider: "pushe";
-  enabled: boolean;
-  app_id: string;
-  custom_id: string;
-};
+import { enableWebPush, type WebPushConfig } from "@/lib/web-push";
 
 type State = "loading" | "hidden" | "ready" | "enabling" | "enabled" | "error";
 
@@ -27,11 +20,11 @@ function recentlyDismissed(): boolean {
 }
 
 export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }) {
-  const [config, setConfig] = useState<PushConfig | null>(null);
+  const [config, setConfig] = useState<WebPushConfig | null>(null);
   const [state, setState] = useState<State>("loading");
 
-  const syncSubscription = useCallback(async (pushConfig: PushConfig, interactive: boolean) => {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+  const syncSubscription = useCallback(async (pushConfig: WebPushConfig, interactive: boolean) => {
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
       setState("hidden");
       return;
     }
@@ -48,10 +41,10 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
 
     setState("enabling");
     try {
-      const sdk = await initializePushe(pushConfig.app_id);
-      await Promise.resolve(sdk.subscribe());
-      await Promise.resolve(sdk.setCustomId(pushConfig.custom_id));
-      setState(Notification.permission === "granted" ? "enabled" : "ready");
+      const result = await enableWebPush(pushConfig, interactive);
+      if (result === "enabled") setState("enabled");
+      else if (result === "prompt") setState(recentlyDismissed() ? "hidden" : "ready");
+      else setState("hidden");
     } catch {
       setState(interactive ? "error" : "ready");
     }
@@ -64,12 +57,11 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
     }
 
     let cancelled = false;
-    meydanApi<PushConfig>("/notifications/push-config")
+    meydanApi<WebPushConfig>("/push/config")
       .then((value) => {
         if (cancelled) return;
         setConfig(value);
-        rememberPusheAppId(value.app_id);
-        if (!value.enabled || !value.app_id || !value.custom_id) {
+        if (!value.enabled || !value.vapid_public_key) {
           setState("hidden");
           return;
         }
@@ -113,7 +105,7 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
           <div className="min-w-0 flex-1">
             <p className="text-sm font-black">اعلان‌های میدان را فعال کن</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              لایک، نظر، دعوت سخنران و پیام‌های مهم را حتی وقتی صفحه باز نیست دریافت کن.
+              لایک، نظر، دعوت سخنران و پیام جدید را حتی وقتی میدان بسته است دریافت کن.
             </p>
             {state === "error" ? (
               <p className="mt-2 text-xs font-bold text-destructive">فعال‌سازی انجام نشد؛ دوباره تلاش کن.</p>

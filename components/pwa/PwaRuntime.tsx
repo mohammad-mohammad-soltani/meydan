@@ -87,9 +87,9 @@ export function PwaRuntime() {
     if (!("serviceWorker" in navigator)) return;
 
     const register = () => {
-      // A single root worker owns both offline caching and Pushe Web Push.
+      // One first-party root worker owns offline caching and standards-based Web Push.
       navigator.serviceWorker
-        .register("/pushe-sw.js", { scope: "/", updateViaCache: "none" })
+        .register("/meydan-sw.js", { scope: "/", updateViaCache: "none" })
         .catch(() => undefined);
     };
 
