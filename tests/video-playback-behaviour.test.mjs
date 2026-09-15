@@ -140,11 +140,15 @@ test("the video player pauses itself when it leaves the viewport", () => {
   // not be undone by scrolling back to the card.
   assert.match(player, /entry\.intersectionRatio >= VISIBLE_PLAYBACK_THRESHOLD/);
   assert.match(player, /video\.pause\(\)/);
-  assert.doesNotMatch(player, /video\.play\(\)\s*;?\s*\}\s*$[\s\S]{0,80}observer/);
-  assert.doesNotMatch(
-    player.slice(player.indexOf("new IntersectionObserver")),
-    /\.play\(\)/,
-    "the viewport observer must never call play()",
+
+  // Re-entering the viewport resumes only under a live handoff session; a
+  // deliberate pause must never be undone by scrolling back to the card.
+  const observer = player.slice(player.indexOf("new IntersectionObserver"));
+  const resume = observer.indexOf("video.play()");
+  assert.ok(resume > 0, "the observer may resume a video, but only via the handoff");
+  assert.ok(
+    observer.lastIndexOf("isVideoAutoplayActive()", resume) > 0,
+    "resuming must be gated on the handoff session being live",
   );
 
   // A visible-share threshold exists and is a real fraction.
@@ -186,4 +190,51 @@ test("the video player remains the single player for every surface", () => {
   ]) {
     assert.match(source(file), /VideoPlayer/, `${file} must use the shared player`);
   }
+});
+
+test("a video entering the viewport claims the handoff and passes it on", () => {
+  const player = source("features/media/components/VideoPlayer.tsx");
+
+  // Its own play() is the gesture that starts a session.
+  assert.match(player, /beginVideoAutoplay\(\)/);
+  // Leaving the viewport while holding the handoff keeps the chain alive.
+  assert.match(player, /if \(handedOff\) continueVideoAutoplay\(\)/);
+  // A manual pause or mute ends the chain.
+  assert.match(player.slice(player.indexOf("const toggleMute")), /stopVideoAutoplay\(\)/);
+
+  // Entering the viewport plays, but only under the session's conditions.
+  assert.match(player, /!isVideoAutoplayActive\(\) \|\| !video\.paused/);
+  assert.match(player, /isNearestVisiblePlayer\(\)/);
+  assert.match(player, /void video\.play\(\)\.catch\(/);
+});
+
+test("only one video is ever audible at a time", () => {
+  const player = source("features/media/components/VideoPlayer.tsx");
+  const sound = source("lib/video-sound.ts");
+
+  // Players register themselves so they can see their siblings.
+  assert.match(player, /registerPlayer\(wrapper, video, handlePlay\)/);
+  assert.match(player, /data-video-player/);
+  assert.match(sound, /export function listPlayers/);
+
+  // A rival that was commanded to play stands down before it is audible.
+  assert.match(player, /const holder = handoffHolders\.get\(other\)/);
+  assert.match(player, /if \(!holder\) continue;/);
+  assert.match(player, /other\.pause\(\)/);
+
+  // A handoff is distinguished from a play the reader started by hand.
+  assert.match(player, /handoffHolders\.set\(video, setHasHandoff\)/);
+  assert.match(sound, /handoffHolders/);
+});
+
+test("the picture-in-picture and fullscreen exemptions survive the handoff", () => {
+  const player = source("features/media/components/VideoPlayer.tsx");
+  const observer = player.slice(player.indexOf("new IntersectionObserver"));
+
+  // The detached check runs before both the pause and the claim, so a floating
+  // player neither stops nor has playback stolen while it is out of the flow.
+  assert.match(
+    observer,
+    /const video = videoRef\.current;\s*\n\s*if \(!video \|\| isDetachedFromPage\(\)\) continue;/,
+  );
 });

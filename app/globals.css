@@ -423,6 +423,10 @@ html.dark {
   65% { scale: 1.025; }
   100% { scale: 1; }
 }
+@keyframes read-more-reveal-keyframes {
+  from { opacity: 0; filter: blur(.4rem); transform: translateY(-.3rem); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
 
 .route-transition-stage {
   animation: route-transition-enter-keyframes var(--motion-page) var(--motion-ease-emphasized) both;
@@ -454,6 +458,28 @@ html.dark {
 @utility ui-view-leave { pointer-events: none; animation: ui-view-leave-keyframes var(--motion-normal) var(--motion-ease-standard) both; }
 @utility ui-opening { pointer-events: none; opacity: .2; transform: translateX(-1rem) scale(.985); transition: opacity var(--motion-normal), transform var(--motion-normal); }
 @utility ui-pop { animation: ui-pop-keyframes var(--motion-slow) var(--motion-ease-standard) both; }
+
+/*
+ * "خواندن بیشتر": the hidden remainder stays in the document but takes no
+ * space. Collapsing it with `display: none` instead would snap the card shut
+ * and lose the reader's place, while `max-height` would need a magic number
+ * for text of unknown height — interpolate-size is not available everywhere
+ * yet, so the reveal animates the incoming text rather than the box.
+ */
+@utility read-more-reveal {
+  display: none;
+}
+
+@utility read-more-reveal-open {
+  display: inline;
+  animation: read-more-reveal-keyframes var(--motion-slow) var(--motion-ease-emphasized) both;
+  will-change: opacity, filter, transform;
+}
+
+@utility read-more-toggle {
+  /* The timeline card is one big link; the toggle must sit above it. */
+  isolation: isolate;
+}
 
 @utility no-scrollbar {
   -ms-overflow-style: none; 

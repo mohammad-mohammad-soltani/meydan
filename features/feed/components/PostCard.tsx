@@ -7,6 +7,7 @@ import { BadgeCheck } from "lucide-react";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
 import { PostActions } from "./PostActions";
+import { ReadMoreText } from "./ReadMoreText";
 import { MediaGallery } from "@/features/media/components/MediaGallery";
 import { mediaItemsFromAttachments } from "@/features/media/media-utils";
 import type { FeedPost } from "../types";
@@ -169,11 +170,12 @@ export function PostCard({
             <h1 className="sr-only">{post.title}</h1>
           ) : null}
 
-          <p className="whitespace-pre-wrap break-words text-[16px] leading-8 text-foreground">
-            {post.body}
-          </p>
+          <ReadMoreText
+            body={post.body}
+            className="text-[16px] leading-8 text-foreground"
+            contentClassName="relative z-10"
+          />
         </div>
-
         {/* Media */}
         {post.attachments.length > 0 ? (
           <MediaGallery
@@ -351,13 +353,13 @@ export function PostCard({
               </h2>
             ) : null}
 
-            <p
-              className={`whitespace-pre-wrap break-words text-[14px] leading-[1.75] text-foreground ${
+            <ReadMoreText
+              body={post.body}
+              className={`text-[14px] leading-[1.75] text-foreground ${
                 post.title !== post.squareName ? "mt-0.5" : ""
               }`}
-            >
-              {post.body}
-            </p>
+              contentClassName="relative z-10"
+            />
           </div>
 
           {post.attachments.length > 0 ? (

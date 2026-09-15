@@ -29,8 +29,15 @@ import {
   resolveMediaDuration,
 } from "../media-utils";
 import {
+  beginVideoAutoplay,
+  continueVideoAutoplay,
+  handoffHolders,
+  isVideoAutoplayActive,
+  listPlayers,
   readStoredVideoMuted,
+  registerPlayer,
   setVideoMuted,
+  stopVideoAutoplay,
   subscribeToVideoMuted,
   videoMutedServerSnapshot,
   videoMutedSnapshot,
@@ -100,6 +107,19 @@ export function VideoPlayer({
   const [duration, setDuration] = useState(0);
   const [buffered, setBuffered] = useState(0);
   const [rate, setRate] = useState(1);
+  /**
+   * True when this player is the one currently holding the handoff: the
+   * session is on, and this card's play was issued by the handoff rather than
+   * by a tap. Only such a player may hand play on to whoever enters next.
+   */
+  const [hasHandoff, setHasHandoff] = useState(false);
+  // Mirrored into a ref so the observer callback never reads stale state. The
+  // write happens in an effect, not during render, because refs are not part of
+  // rendering and mutating one mid-render can desynchronise the two.
+  const hasHandoffRef = useRef(false);
+  useEffect(() => {
+    hasHandoffRef.current = hasHandoff;
+  }, [hasHandoff]);
   const canPictureInPicture = useSyncExternalStore(
     subscribeToNothing,
     pictureInPictureSupported,
@@ -134,6 +154,9 @@ export function VideoPlayer({
     if (!video || hasError) return;
 
     if (video.paused || video.ended) {
+      setHasHandoff(false);
+      // A tap on play is the gesture that starts the handoff session.
+      beginVideoAutoplay();
       try {
         await video.play();
       } catch {
@@ -142,14 +165,21 @@ export function VideoPlayer({
       return;
     }
 
+    // An explicit pause ends the session: nothing may restart on its own.
+    setHasHandoff(false);
+    stopVideoAutoplay();
     video.pause();
   };
 
   /**
    * Mute is app-wide, not per player: the menu on a timeline card sets the
    * preference for every video in the document, mounted or not.
+   *
+   * Muting also ends the handoff — the reader asked for quiet, so scrolling
+   * must not start the next video talking.
    */
   const toggleMute = () => {
+    stopVideoAutoplay();
     setVideoMuted(!readStoredVideoMuted());
   };
 
@@ -264,15 +294,22 @@ export function VideoPlayer({
   }, [isMuted]);
 
   /**
-   * Pause when the player leaves the viewport.
+   * Pause when the player leaves the viewport — and, while a handoff session
+   * is live, play when it arrives.
    *
-   * The timeline mounts many players, so a video that is scrolled away must
-   * not keep playing: once less than half of the frame is on screen we pause
-   * it. The play button stays visible (state comes from the element), so the
+   * Exiting: once less than half of the frame is on screen the video pauses.
+   * The play button stays visible (state comes from the element), so the
    * reader can resume from the same position when they scroll back.
    *
-   * The observer only ever pauses — it never resumes, so a deliberate pause is
-   * never overridden by scrolling.
+   * Arriving: if the reader had started a handoff (they tapped play on a video
+   * and then scrolled past it), whichever video enters the viewport next picks
+   * playback up on its own, and passes it on again when it leaves. The chain
+   * survives until the reader pauses or mutes a video by hand.
+   *
+   * Two arriving players are separated by where they sit on screen: a fast
+   * fling can report a lower card as visible before the one under the reader's
+   * eye, so the player nearest the middle of the viewport wins and the others
+   * decline, even when they are told to play afterwards.
    */
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -289,17 +326,51 @@ export function VideoPlayer({
       );
     };
 
+    const distanceFromViewportMiddle = (rect: DOMRect) =>
+      Math.abs(rect.top + rect.height / 2 - (window.innerHeight || 0) / 2);
+
+    /** True when no on-screen rival sits closer to the middle of the screen. */
+    const isNearestVisiblePlayer = () => {
+      const rect = wrapper.getBoundingClientRect();
+      const mine = distanceFromViewportMiddle(rect);
+
+      return listPlayers().every(({ element, video }) => {
+        if (element === wrapper || video.paused) return true;
+        return mine <= distanceFromViewportMiddle(element.getBoundingClientRect());
+      });
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && entry.intersectionRatio >= VISIBLE_PLAYBACK_THRESHOLD) {
-            continue;
-          }
-
           const video = videoRef.current;
           if (!video || isDetachedFromPage()) continue;
 
+          if (entry.isIntersecting && entry.intersectionRatio >= VISIBLE_PLAYBACK_THRESHOLD) {
+            // Claim the handoff only if the session is still live, this player
+            // is not already playing, and it is the best-placed candidate.
+            if (!isVideoAutoplayActive() || !video.paused || !isNearestVisiblePlayer()) {
+              continue;
+            }
+
+            setHasHandoff(true);
+            handoffHolders.set(video, setHasHandoff);
+
+            void video.play().catch(() => {
+              // Autoplay refused (no gesture yet, or a data-saver policy) or
+              // another player won the tie-break and vetoed us.
+              setHasHandoff(false);
+            });
+            continue;
+          }
+
+          // Leaving the viewport: pause, and pass the handoff on if we held it.
+          if (video.paused) continue;
+
+          const handedOff = hasHandoffRef.current;
+          setHasHandoff(false);
           video.pause();
+          if (handedOff) continueVideoAutoplay();
         }
       },
       { threshold: [0, VISIBLE_PLAYBACK_THRESHOLD] },
@@ -307,6 +378,34 @@ export function VideoPlayer({
 
     observer.observe(wrapper);
     return () => observer.disconnect();
+  }, []);
+
+  /**
+   * Only one player may play at a time. The registry doubles as a veto: a
+   * rival that was already commanded to play stands down before the browser
+   * starts it, so the two never talk over each other.
+   */
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    const video = videoRef.current;
+    if (!wrapper || !video) return;
+
+    const handlePlay = () => {
+      if (!isVideoAutoplayActive()) return;
+
+      for (const { element, video: other } of listPlayers()) {
+        if (element === wrapper || other.paused) continue;
+
+        // Never override a play the reader started by hand; only a handoff.
+        const holder = handoffHolders.get(other);
+        if (!holder) continue;
+
+        other.pause();
+        holder(false);
+      }
+    };
+
+    return registerPlayer(wrapper, video, handlePlay);
   }, []);
 
   if (!source) return null;
@@ -317,6 +416,7 @@ export function VideoPlayer({
     <div
       ref={wrapperRef}
       data-media-controls
+      data-video-player
       tabIndex={0}
       role="group"
       aria-label={item.title || "پخش‌کننده ویدیو"}

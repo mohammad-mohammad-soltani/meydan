@@ -18,6 +18,8 @@ on:
       - "tests/auth-gate-theme.test.mjs"
       - "tests/protected-routes.test.mjs"
       - "tests/video-playback-behaviour.test.mjs"
+      - "tests/video-autoplay-chain.test.mjs"
+      - "tests/read-more.test.mjs"
       - "features/media/**"
       - "tests/realtime-soketi.test.mjs"
       - "package.json"
@@ -40,6 +42,8 @@ on:
       - "tests/auth-gate-theme.test.mjs"
       - "tests/protected-routes.test.mjs"
       - "tests/video-playback-behaviour.test.mjs"
+      - "tests/video-autoplay-chain.test.mjs"
+      - "tests/read-more.test.mjs"
       - "features/media/**"
       - "tests/realtime-soketi.test.mjs"
       - "package.json"
@@ -69,6 +73,10 @@ jobs:
         run: node --experimental-strip-types --test tests/protected-routes.test.mjs
       - name: Run video playback behavior tests
         run: node --experimental-strip-types --test tests/video-playback-behaviour.test.mjs
+      - name: Run video autoplay chain tests
+        run: node --experimental-strip-types --test tests/video-autoplay-chain.test.mjs
+      - name: Run read more tests
+        run: node --experimental-strip-types --test tests/read-more.test.mjs
       - name: Run media player tests
         run: node --experimental-strip-types --test tests/media-players.test.mjs
       - name: Run realtime transport tests
