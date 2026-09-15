@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#0b0b0c" />
   <title>میدان — آفلاین</title>
   <style>
+    @font-face{font-family:"IRANSansXV";src:url("/fonts/IRANSansXV.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
     :root{color-scheme:dark;--bg:#0b0b0c;--surface:#111113;--line:#29292d;--sk:#202024;--sk2:#29292e;--text:#f5f5f5;--muted:#9a9aa2;--warn:#f5b942}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;min-height:100dvh}.shell{width:min(100%,576px);min-height:100dvh;margin:auto;border-inline:1px solid var(--line);position:relative;overflow:hidden}.head{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:12px 16px}.circle{width:40px;height:40px;border-radius:50%;background:var(--sk)}.grow{flex:1}.bar{height:11px;border-radius:99px;background:var(--sk);margin:7px 0}.bar.sm{width:84px}.bar.md{width:132px}.tabs{display:flex;gap:8px;padding:20px 16px 8px}.pill{width:100px;height:34px;border-radius:99px;background:var(--sk)}.feed{padding:8px 16px 90px;display:grid;gap:14px;opacity:.48}.card{border:1px solid var(--line);border-radius:18px;padding:16px}.row{display:flex;gap:12px;align-items:center}.media{height:145px;margin-top:18px;border-radius:14px;background:var(--sk)}.pulse{animation:pulse 1.4s ease-in-out infinite alternate}@keyframes pulse{to{opacity:.55}}.notice{position:absolute;inset:0;display:grid;place-items:center;padding:24px}.notice-card{width:min(100%,360px);padding:24px;border:1px solid var(--line);border-radius:26px;background:rgba(11,11,12,.96);box-shadow:0 24px 80px rgba(0,0,0,.42);text-align:center;backdrop-filter:blur(16px)}.icon{width:58px;height:58px;margin:auto;border-radius:18px;display:grid;place-items:center;background:#2b2414;color:var(--warn);font-size:27px}.notice h1{font-size:18px;margin:16px 0 7px}.notice p{font-size:13px;line-height:1.9;color:var(--muted);margin:0}.notice button{border:0;width:100%;height:44px;border-radius:13px;margin-top:18px;background:var(--text);color:var(--bg);font-weight:800;cursor:pointer}@media(prefers-color-scheme:light){:root{color-scheme:light;--bg:#fff;--surface:#fff;--line:#e6e6e8;--sk:#ededf0;--sk2:#e3e3e7;--text:#161618;--muted:#707078;--warn:#9a6500}.notice-card{background:rgba(255,255,255,.96)}}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"IRANSansXV",Tahoma,sans-serif;min-height:100dvh}.shell{width:min(100%,576px);min-height:100dvh;margin:auto;border-inline:1px solid var(--line);position:relative;overflow:hidden}.head{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:12px 16px}.circle{width:40px;height:40px;border-radius:50%;background:var(--sk)}.grow{flex:1}.bar{height:11px;border-radius:99px;background:var(--sk);margin:7px 0}.bar.sm{width:84px}.bar.md{width:132px}.tabs{display:flex;gap:8px;padding:20px 16px 8px}.pill{width:100px;height:34px;border-radius:99px;background:var(--sk)}.feed{padding:8px 16px 90px;display:grid;gap:14px;opacity:.48}.card{border:1px solid var(--line);border-radius:18px;padding:16px}.row{display:flex;gap:12px;align-items:center}.media{height:145px;margin-top:18px;border-radius:14px;background:var(--sk)}.pulse{animation:pulse 1.4s ease-in-out infinite alternate}@keyframes pulse{to{opacity:.55}}.notice{position:absolute;inset:0;display:grid;place-items:center;padding:24px}.notice-card{width:min(100%,360px);padding:24px;border:1px solid var(--line);border-radius:26px;background:rgba(11,11,12,.96);box-shadow:0 24px 80px rgba(0,0,0,.42);text-align:center;backdrop-filter:blur(16px)}.icon{width:58px;height:58px;margin:auto;border-radius:18px;display:grid;place-items:center;background:#2b2414;color:var(--warn)}.icon svg{width:29px;height:29px;display:block}.notice h1{font-size:18px;margin:16px 0 7px}.notice p{font-size:13px;line-height:1.9;color:var(--muted);margin:0}.notice button{border:0;width:100%;height:44px;border-radius:13px;margin-top:18px;background:var(--text);color:var(--bg);font-family:inherit;font-weight:800;cursor:pointer}@media(prefers-color-scheme:light){:root{color-scheme:light;--bg:#fff;--surface:#fff;--line:#e6e6e8;--sk:#ededf0;--sk2:#e3e3e7;--text:#161618;--muted:#707078;--warn:#9a6500}.notice-card{background:rgba(255,255,255,.96)}}
   </style>
 </head>
 <body>
@@ -19,7 +20,22 @@
       <article class="card"><div class="row"><div class="circle"></div><div class="grow"><div class="bar md"></div><div class="bar sm"></div></div></div><div class="bar" style="width:96%;margin-top:20px"></div><div class="bar" style="width:68%"></div></article>
     </section>
     <section class="notice" role="status" aria-live="assertive">
-      <div class="notice-card"><div class="icon">⌁</div><h1>اتصال اینترنت قطع است</h1><p>قالب میدان از کش مرورگر بارگذاری شده است. با برگشت اینترنت، روایت‌ها و اطلاعات تازه دوباره در دسترس قرار می‌گیرند.</p><button onclick="location.reload()">بررسی دوباره اتصال</button></div>
+      <div class="notice-card">
+        <div class="icon" aria-hidden="true">
+          <svg data-offline-icon="wifi-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 8.82a15 15 0 0 1 4.17-2.65" />
+            <path d="M10.66 5c4.01-.36 7.97.9 11.34 3.82" />
+            <path d="M5 13a10 10 0 0 1 5.24-2.76" />
+            <path d="M14.5 10.5A10 10 0 0 1 19 13" />
+            <path d="M8.53 16.11a5 5 0 0 1 6.95 0" />
+            <path d="M12 20h.01" />
+            <path d="M2 2l20 20" />
+          </svg>
+        </div>
+        <h1>اتصال اینترنت قطع است</h1>
+        <p>قالب میدان از کش مرورگر بارگذاری شده است. با برگشت اینترنت، روایت‌ها و اطلاعات تازه دوباره در دسترس قرار می‌گیرند.</p>
+        <button onclick="location.reload()">بررسی دوباره اتصال</button>
+      </div>
     </section>
   </main>
 </body>
