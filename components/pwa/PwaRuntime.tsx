@@ -89,7 +89,7 @@ export function PwaRuntime() {
     const register = () => {
       // One first-party root worker owns offline caching and standards-based Web Push.
       navigator.serviceWorker
-        .register("/sw.js", { scope: "/", updateViaCache: "none" })
+        .register("/meydan-sw.js", { scope: "/", updateViaCache: "none" })
         .catch(() => undefined);
     };
 
