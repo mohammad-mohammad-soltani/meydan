@@ -3,7 +3,6 @@
 import { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import {
-  ELLIPSIS,
   READ_MORE_LIMIT,
   needsReadMore,
   truncateAtWordBoundary,
@@ -21,13 +20,12 @@ type ReadMoreTextProps = {
 /**
  * A post body that folds after {@link READ_MORE_LIMIT} characters.
  *
- * The preview is cut at a word boundary and the rest is revealed in place —
+ * The preview is cut at a word boundary and the full text is revealed in place —
  * the card never navigates away, so the reader keeps their position in the
- * timeline. The hidden part fades in behind a mask while the card expands, so
- * the reveal reads as one motion rather than a layout jump.
+ * timeline.
  *
- * Rendered inside an RTL page: `logical` properties keep the mask and the
- * gutter on the correct side without direction-specific classes.
+ * Rendered inside an RTL page: `logical` properties keep the gutter on the
+ * correct side without direction-specific classes.
  */
 export function ReadMoreText({
   body,
@@ -41,10 +39,6 @@ export function ReadMoreText({
   const collapsible = needsReadMore(body, limit);
   const preview = collapsible ? truncateAtWordBoundary(body, limit) : body;
 
-  // The preview keeps its trailing ellipsis while folded and drops it once the
-  // full text is on screen, so the expanded card has no stray punctuation.
-  const previewText = isExpanded ? preview.slice(0, -ELLIPSIS.length) : preview;
-
   if (!collapsible) {
     return <p className={`whitespace-pre-wrap break-words ${className}`}>{body}</p>;
   }
@@ -52,14 +46,8 @@ export function ReadMoreText({
   return (
     <div data-read-more className={contentClassName}>
       <p id={bodyId} className={`whitespace-pre-wrap break-words ${className}`}>
-        <span className="whitespace-pre-wrap break-words">{previewText}</span>
-        <span
-          aria-hidden={isExpanded ? "true" : undefined}
-          className={`read-more-reveal whitespace-pre-wrap break-words${
-            isExpanded ? " read-more-reveal-open" : ""
-          }`}
-        >
-          {body.slice(previewText.length)}
+        <span className="whitespace-pre-wrap break-words">
+          {isExpanded ? body : preview}
         </span>
       </p>
 
