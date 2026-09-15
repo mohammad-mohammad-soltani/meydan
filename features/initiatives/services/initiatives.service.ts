@@ -15,10 +15,10 @@ type ApiParticipants = {
   participant_count?: number | null;
 };
 
-/** `usr_9` / `sq_54` -> `/profile/user/9` / `/profile/square/54`. */
+/** `usr_9` / `sq_54` -> `/users/user/9` / `/users/square/54`. */
 export function participantProfileHref(participant: Pick<InitiativeParticipant, "type" | "id">): string {
   const numericId = String(participant.id).match(/(\d+)$/)?.[1] || "";
-  return `/profile/${participant.type}/${numericId}`;
+  return `/users/${participant.type}/${numericId}`;
 }
 
 /**
