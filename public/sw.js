@@ -1,5 +1,5 @@
 /* Meydan browser worker: private API responses and authenticated HTML are intentionally never cached. */
-const VERSION = "meydan-pwa-v1";
+const VERSION = "meydan-pwa-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const IMAGE_CACHE = `${VERSION}-images`;
 const MEDIA_CACHE = `${VERSION}-media`;
@@ -11,7 +11,12 @@ const MEDIA_MAX_AGE = 8 * 60 * 1000;
 const IMAGE_MAX_ENTRIES = 160;
 const MEDIA_MAX_ENTRIES = 24;
 const MEDIA_MAX_BYTES = 32 * 1024 * 1024;
-const CORE_ASSETS = [OFFLINE_URL, "/icon.svg", "/images/logo/meydan-mark.svg"];
+const CORE_ASSETS = [
+  OFFLINE_URL,
+  "/icon.svg",
+  "/images/logo/meydan-mark.svg",
+  "/fonts/IRANSansXV.woff2",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

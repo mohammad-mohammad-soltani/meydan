@@ -1,21 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Bell, LoaderCircle, X } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { meydanApi } from "@/lib/meydan-api";
 import { enableWebPush, type WebPushConfig } from "@/lib/web-push";
 
 type State = "loading" | "hidden" | "ready" | "enabling" | "enabled" | "error";
 
-const DISMISS_KEY = "meydan-push-prompt-dismissed-at";
-const DISMISS_FOR_MS = 7 * 24 * 60 * 60 * 1000;
+const PROMPT_HIDDEN_KEY = "meydan-push-prompt-hidden";
 
-function recentlyDismissed(): boolean {
+function promptHidden(): boolean {
   try {
-    const value = Number(window.localStorage.getItem(DISMISS_KEY) || 0);
-    return value > 0 && Date.now() - value < DISMISS_FOR_MS;
+    return window.localStorage.getItem(PROMPT_HIDDEN_KEY) === "1";
   } catch {
     return false;
+  }
+}
+
+function hidePromptPermanently(): void {
+  try {
+    window.localStorage.setItem(PROMPT_HIDDEN_KEY, "1");
+  } catch {
+    // localStorage can be unavailable in hardened/private browser modes.
   }
 }
 
@@ -35,18 +41,32 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
     }
 
     if (!interactive && Notification.permission !== "granted") {
-      setState(recentlyDismissed() ? "hidden" : "ready");
+      setState(promptHidden() ? "hidden" : "ready");
       return;
     }
 
+    // Existing granted permissions are repaired/synchronised silently. Hiding
+    // this transient state prevents the permission card flashing on every load.
     setState("enabling");
     try {
       const result = await enableWebPush(pushConfig, interactive);
-      if (result === "enabled") setState("enabled");
-      else if (result === "prompt") setState(recentlyDismissed() ? "hidden" : "ready");
-      else setState("hidden");
+      if (result === "enabled") {
+        hidePromptPermanently();
+        setState("enabled");
+      } else if (result === "prompt") {
+        setState(promptHidden() ? "hidden" : "ready");
+      } else {
+        setState("hidden");
+      }
     } catch {
-      setState(interactive ? "error" : "ready");
+      // Once the browser permission is granted the app should never nag again.
+      // A failed backend sync will be retried silently on a later mount.
+      if (Notification.permission === "granted") {
+        hidePromptPermanently();
+        setState("hidden");
+      } else {
+        setState(promptHidden() ? "hidden" : interactive ? "error" : "ready");
+      }
     }
   }, []);
 
@@ -76,14 +96,18 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
     };
   }, [isAuthenticated, syncSubscription]);
 
-  if (!config || state === "loading" || state === "hidden" || state === "enabled") return null;
+  if (
+    !config ||
+    state === "loading" ||
+    state === "hidden" ||
+    state === "enabled" ||
+    state === "enabling"
+  ) {
+    return null;
+  }
 
   const dismiss = () => {
-    try {
-      window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
-    } catch {
-      // localStorage can be unavailable in hardened browser modes.
-    }
+    hidePromptPermanently();
     setState("hidden");
   };
 
@@ -93,7 +117,7 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
         <button
           type="button"
           onClick={dismiss}
-          aria-label="بعداً"
+          aria-label="دیگر نمایش نده"
           className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
         >
           <X className="h-4 w-4" />
@@ -112,11 +136,10 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
             ) : null}
             <button
               type="button"
-              disabled={state === "enabling"}
               onClick={() => void syncSubscription(config, true)}
-              className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-xs font-bold text-background disabled:opacity-60"
+              className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-xs font-bold text-background transition-opacity hover:opacity-90"
             >
-              {state === "enabling" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Bell className="h-4 w-4" />}
+              <Bell className="h-4 w-4" />
               فعال‌کردن اعلان‌ها
             </button>
           </div>
