@@ -33,7 +33,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
           const key = actorKey(suggestion.actorType, suggestion.id);
           const followed = followedActorKeys.has(key);
           const pending = pendingFollowKeys.has(key);
-          const profileHref = `/profile/${suggestion.actorType}/${suggestion.id}` as Route;
+          const profileHref = `/users/${suggestion.actorType}/${suggestion.id}` as Route;
           const meta = suggestion.followerCount != null
             ? `${number.format(suggestion.followerCount)} دنبال‌کننده`
             : suggestion.narrativeCount != null
