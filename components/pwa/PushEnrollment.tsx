@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, LoaderCircle, X } from "lucide-react";
 import { meydanApi } from "@/lib/meydan-api";
-import { initializePushe } from "@/lib/pushe-web";
+import { initializePushe, rememberPusheAppId } from "@/lib/pushe-web";
 
 type PushConfig = {
   provider: "pushe";
@@ -68,6 +68,7 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
       .then((value) => {
         if (cancelled) return;
         setConfig(value);
+        rememberPusheAppId(value.app_id);
         if (!value.enabled || !value.app_id || !value.custom_id) {
           setState("hidden");
           return;
