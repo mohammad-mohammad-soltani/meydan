@@ -53,13 +53,13 @@ export function NotificationsList({
         const content = (
           <article className={`relative flex gap-3 rounded-card border p-3 text-right transition-colors hover:bg-hover ${notification.unread ? "border-ring/40 bg-hover/40" : "border-border bg-card"}`}>
             <div className="relative shrink-0">
-              {presentation.avatarUrl ? (
+              {presentation.visualUrl ? (
                 <Image
-                  src={presentation.avatarUrl}
+                  src={presentation.visualUrl}
                   alt=""
                   width={44}
                   height={44}
-                  unoptimized={presentation.avatarUrl.startsWith("http")}
+                  unoptimized={presentation.visualUrl.startsWith("http")}
                   className="h-11 w-11 rounded-full object-cover ring-1 ring-border/70"
                 />
               ) : (
