@@ -11,6 +11,8 @@ declare global {
   }
 }
 
+export const PUSHE_APP_ID_STORAGE_KEY = "meydan-pushe-app-id";
+
 let sdkPromise: Promise<PusheSdk> | null = null;
 let initializedAppId: string | null = null;
 
@@ -57,4 +59,48 @@ export async function initializePushe(appId: string): Promise<PusheSdk> {
     initializedAppId = appId;
   }
   return sdk;
+}
+
+export function rememberPusheAppId(appId: string): void {
+  if (typeof window === "undefined") return;
+
+  const value = appId.trim();
+  if (!value) return;
+
+  try {
+    window.localStorage.setItem(PUSHE_APP_ID_STORAGE_KEY, value);
+  } catch {
+    // Storage can be unavailable in hardened/private browser modes.
+  }
+}
+
+function rememberedPusheAppId(): string {
+  if (typeof window === "undefined") return "";
+
+  try {
+    return (window.localStorage.getItem(PUSHE_APP_ID_STORAGE_KEY) || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+export async function clearPusheIdentity(): Promise<boolean> {
+  const appId = rememberedPusheAppId();
+  if (!appId) return false;
+
+  try {
+    const sdk = await initializePushe(appId);
+    await Promise.resolve(sdk.setCustomId(null));
+
+    try {
+      window.localStorage.removeItem(PUSHE_APP_ID_STORAGE_KEY);
+    } catch {
+      // The remote custom id is already cleared; local cleanup is best-effort.
+    }
+
+    return true;
+  } catch {
+    // Keep the app id so the auth-page cleanup can retry on a later load.
+    return false;
+  }
 }
