@@ -50,3 +50,25 @@ test("no Pushe SDK or external Pushe worker remains", () => {
   );
   assert.doesNotMatch(source("public/meydan-sw.js"), /static\.pushe\.co|pusheweb/i);
 });
+
+test("offline fallback ships the Meydan font and a real offline icon", () => {
+  const offline = source("public/offline.html");
+  assert.match(offline, /@font-face\s*\{[^}]*font-family:\s*["']IRANSansXV["'][^}]*url\(["']\/fonts\/IRANSansXV\.woff2["']\)/s);
+  assert.match(offline, /font-family:\s*["']IRANSansXV["']/);
+  assert.match(offline, /<svg[^>]*data-offline-icon=["']wifi-off["']/);
+  assert.doesNotMatch(offline, />⌁</);
+
+  const worker = source("public/sw.js");
+  assert.match(worker, /["']\/fonts\/IRANSansXV\.woff2["']/);
+});
+
+test("push permission prompt stays gone permanently after allow or close", () => {
+  const enrollment = source("components/pwa/PushEnrollment.tsx");
+  assert.match(enrollment, /PROMPT_HIDDEN_KEY\s*=\s*["']meydan-push-prompt-hidden["']/);
+  assert.doesNotMatch(enrollment, /DISMISS_FOR_MS|dismissed-at/);
+  assert.match(enrollment, /localStorage\.getItem\(PROMPT_HIDDEN_KEY\)\s*===\s*["']1["']/);
+  assert.match(enrollment, /localStorage\.setItem\(PROMPT_HIDDEN_KEY,\s*["']1["']\)/);
+  assert.match(enrollment, /result\s*===\s*["']enabled["'][\s\S]*hidePromptPermanently\(\)/);
+  assert.match(enrollment, /const dismiss = \(\) => \{[\s\S]*hidePromptPermanently\(\)/);
+  assert.match(enrollment, /state === ["']enabling["']/);
+});
