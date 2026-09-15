@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { clearPusheIdentity } from "@/lib/pushe-web";
+import { clearWebPushSubscription } from "@/lib/web-push";
 
 export function PushIdentityCleanup() {
   useEffect(() => {
-    void clearPusheIdentity();
+    void clearWebPushSubscription();
   }, []);
 
   return null;
