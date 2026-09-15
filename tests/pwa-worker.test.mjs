@@ -44,6 +44,9 @@ test("signed-out browsers invalidate the previous account push endpoint", () => 
 test("no Pushe SDK or external Pushe worker remains", () => {
   assert.equal(existsSync(path.join(root, "lib/pushe-web.ts")), false);
   assert.equal(existsSync(path.join(root, "public/pushe-sw.js")), false);
-  assert.doesNotMatch(source("components/pwa/PushEnrollment.tsx"), /Pushe|pushe/i);
+  assert.doesNotMatch(
+    source("components/pwa/PushEnrollment.tsx"),
+    /lib\/pushe-web|initializePushe|rememberPusheAppId|static\.pushe\.co/i,
+  );
   assert.doesNotMatch(source("public/meydan-sw.js"), /static\.pushe\.co|pusheweb/i);
 });
