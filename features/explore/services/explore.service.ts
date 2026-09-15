@@ -126,7 +126,7 @@ function actorNumericId(value?: string): number {
 function actorHref(actor?: ApiActor): string {
   const id = actorNumericId(actor?.id);
   if (!id) return "/profile";
-  return `/profile/${actor?.type === "square" ? "square" : "user"}/${id}`;
+  return `/users/${actor?.type === "square" ? "square" : "user"}/${id}`;
 }
 
 function firstVisual(attachments?: ApiAttachment[]): string | undefined {
@@ -168,7 +168,7 @@ function mapSquare(item: ApiSquare): ExploreResult {
     kind: "square",
     title: item.name || "میدان",
     subtitle: item.location?.address || item.description || "میدان فعال",
-    href: `/profile/square/${item.id}`,
+    href: `/users/square/${item.id}`,
     avatarUrl: item.avatar_url,
     verified: item.verified ?? true,
     meta: "میدان",
@@ -214,7 +214,7 @@ function mapUser(item: ApiActor): ExploreResult {
     kind: "user",
     title: item.display_name || "کاربر میدان",
     subtitle: "کاربر میدان",
-    href: id ? `/profile/user/${id}` : "/profile",
+    href: id ? `/users/user/${id}` : "/explore",
     avatarUrl: item.avatar_url,
     verified: Boolean(item.verified),
     meta: "کاربر",
