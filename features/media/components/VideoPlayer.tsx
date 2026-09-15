@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -27,9 +28,23 @@ import {
   resolveBufferedEnd,
   resolveMediaDuration,
 } from "../media-utils";
+import {
+  readStoredVideoMuted,
+  setVideoMuted,
+  subscribeToVideoMuted,
+  videoMutedServerSnapshot,
+  videoMutedSnapshot,
+} from "@/lib/video-sound";
 
 const SKIP_SECONDS = 10;
 const RATES = [1, 1.25, 1.5, 2];
+
+/**
+ * How much of the video must remain on screen for playback to continue.
+ * A player that is scrolled further out than this pauses itself, so a
+ * timeline never keeps playing audio from a card the reader has left behind.
+ */
+const VISIBLE_PLAYBACK_THRESHOLD = 0.5;
 
 function subscribeToNothing() {
   return () => {};
@@ -74,7 +89,12 @@ export function VideoPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  // Sound is a shared, persisted preference: muting one player mutes them all.
+  const isMuted = useSyncExternalStore(
+    subscribeToVideoMuted,
+    videoMutedSnapshot,
+    videoMutedServerSnapshot,
+  );
   const [isSeeking, setIsSeeking] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -106,7 +126,6 @@ export function VideoPlayer({
     }
 
     setCurrentTime(Number.isFinite(video.currentTime) ? video.currentTime : 0);
-    setIsMuted(video.muted);
     setRate(video.playbackRate || 1);
   };
 
@@ -126,12 +145,12 @@ export function VideoPlayer({
     video.pause();
   };
 
+  /**
+   * Mute is app-wide, not per player: the menu on a timeline card sets the
+   * preference for every video in the document, mounted or not.
+   */
   const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.muted = !video.muted;
-    setIsMuted(video.muted);
+    setVideoMuted(!readStoredVideoMuted());
   };
 
   const seekTo = (nextTime: number) => {
@@ -234,6 +253,61 @@ export function VideoPlayer({
       // Fullscreen availability differs between browsers; playback continues regardless.
     }
   };
+
+  // Keep this element on the shared preference, including on first mount, and
+  // apply it before the browser can start an autoplaying video with sound.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = isMuted;
+  }, [isMuted]);
+
+  /**
+   * Pause when the player leaves the viewport.
+   *
+   * The timeline mounts many players, so a video that is scrolled away must
+   * not keep playing: once less than half of the frame is on screen we pause
+   * it. The play button stays visible (state comes from the element), so the
+   * reader can resume from the same position when they scroll back.
+   *
+   * The observer only ever pauses — it never resumes, so a deliberate pause is
+   * never overridden by scrolling.
+   */
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper || typeof IntersectionObserver === "undefined") return;
+
+    // Picture-in-picture and fullscreen deliberately take the video out of the
+    // page flow, so leaving the viewport must not pause them there.
+    const isDetachedFromPage = () => {
+      const video = videoRef.current;
+      if (!video) return true;
+      return (
+        document.pictureInPictureElement === video ||
+        document.fullscreenElement === wrapper
+      );
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio >= VISIBLE_PLAYBACK_THRESHOLD) {
+            continue;
+          }
+
+          const video = videoRef.current;
+          if (!video || isDetachedFromPage()) continue;
+
+          video.pause();
+        }
+      },
+      { threshold: [0, VISIBLE_PLAYBACK_THRESHOLD] },
+    );
+
+    observer.observe(wrapper);
+    return () => observer.disconnect();
+  }, []);
 
   if (!source) return null;
 
@@ -353,7 +427,6 @@ export function VideoPlayer({
           syncDuration(event.currentTarget);
         }}
         onRateChange={(event) => setRate(event.currentTarget.playbackRate || 1)}
-        onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
         onError={() => {
           setHasError(true);
           setIsPlaying(false);
