@@ -16,7 +16,7 @@ export function SpeakerCard({
   venue?: string;
 }) {
   const profileHref = speaker.userId
-    ? (`/profile/user/${speaker.userId}` as Route)
+    ? (`/users/user/${speaker.userId}` as Route)
     : null;
 
   const letter =
