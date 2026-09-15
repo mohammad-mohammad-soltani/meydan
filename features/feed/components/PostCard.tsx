@@ -94,11 +94,11 @@ export function PostCard({
   const mediaItems = mediaItemsFromAttachments(post.attachments);
 
   const profileHref = (
-    `/profile/${post.author.type}/${post.author.id}`
+    `/users/${post.author.type}/${post.author.id}`
   ) as Route;
 
   const squareHref = (
-    `/profile/square/${post.author.id}`
+    `/users/${post.author.type}/${post.author.id}`
   ) as Route;
 
   /*
