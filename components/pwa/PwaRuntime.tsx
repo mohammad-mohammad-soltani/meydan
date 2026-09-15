@@ -87,8 +87,9 @@ export function PwaRuntime() {
     if (!("serviceWorker" in navigator)) return;
 
     const register = () => {
+      // A single root worker owns both offline caching and Pushe Web Push.
       navigator.serviceWorker
-        .register("/sw.js", { scope: "/", updateViaCache: "none" })
+        .register("/pushe-sw.js", { scope: "/", updateViaCache: "none" })
         .catch(() => undefined);
     };
 
