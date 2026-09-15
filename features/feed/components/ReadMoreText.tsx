@@ -46,7 +46,11 @@ export function ReadMoreText({
   return (
     <div data-read-more className={contentClassName}>
       <p id={bodyId} className={`whitespace-pre-wrap break-words ${className}`}>
-        <span className="whitespace-pre-wrap break-words">
+        <span
+          className={`whitespace-pre-wrap break-words ${
+            isExpanded ? "read-more-reveal-open" : ""
+          }`}
+        >
           {isExpanded ? body : preview}
         </span>
       </p>
