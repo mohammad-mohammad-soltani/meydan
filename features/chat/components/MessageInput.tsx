@@ -27,6 +27,27 @@ function formatFileSize(size: number) {
   return `${(size / (1024 * 1024)).toFixed(1)} مگابایت`;
 }
 
+function AttachmentPreview({ attachment }: { attachment: ChatAttachment }) {
+  if (attachment.previewUrl && attachment.mimeType.startsWith("image/")) {
+    return <img src={attachment.previewUrl} alt="پیش‌نمایش تصویر انتخاب‌شده" className="h-12 w-12 shrink-0 rounded-xl object-cover" />;
+  }
+
+  if (attachment.previewUrl && attachment.mimeType.startsWith("video/")) {
+    return (
+      <video
+        src={attachment.previewUrl}
+        muted
+        playsInline
+        preload="metadata"
+        aria-label="پیش‌نمایش ویدیوی انتخاب‌شده"
+        className="h-12 w-12 shrink-0 rounded-xl bg-black object-cover"
+      />
+    );
+  }
+
+  return <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-surface-muted text-icon-muted"><FileText className="h-6 w-6" /></span>;
+}
+
 export function MessageInput({ value, attachment, replyingTo, editingMessage, notice, isSending, onChange, onSubmit, onAttachmentSelected, onClearAttachment, onSendSquareLocation, onCancelReply, onCancelEdit }: MessageInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
@@ -67,7 +88,7 @@ export function MessageInput({ value, attachment, replyingTo, editingMessage, no
 
       {attachment ? (
         <div className={`mb-2 flex items-center gap-2 rounded-2xl p-2 ${glassPanelClass}`}>
-          {attachment.previewUrl ? <img src={attachment.previewUrl} alt="پیش‌نمایش فایل انتخاب‌شده" className="h-12 w-12 rounded-xl object-cover" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-surface-muted text-icon-muted"><FileText className="h-6 w-6" /></span>}
+          <AttachmentPreview attachment={attachment} />
           <div className="min-w-0 flex-1 text-right"><p className="truncate text-xs font-semibold text-foreground-secondary">{attachment.name}</p><p className="mt-0.5 text-[10px] text-muted-foreground">{formatFileSize(attachment.size)}</p></div>
           <button type="button" aria-label="حذف فایل انتخاب‌شده" onClick={onClearAttachment} className={iconButtonClass}><X className="h-4 w-4" /></button>
         </div>
