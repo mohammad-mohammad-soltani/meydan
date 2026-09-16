@@ -1,11 +1,13 @@
 import { FeedView } from "@/features/feed/components/FeedView";
 import { getFeedPage, getFollowSuggestions } from "@/features/feed/services/feed.service";
+import { accessTokenHeader } from "@/lib/meydan-session";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  const authHeaders = await accessTokenHeader();
   const [postsResult, suggestionsResult] = await Promise.allSettled([
-    getFeedPage(),
+    getFeedPage({}, { headers: authHeaders }),
     getFollowSuggestions(),
   ]);
 
