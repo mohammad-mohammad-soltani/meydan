@@ -38,10 +38,20 @@ type ApiMessage = {
     url?: string;
     preview_url?: string;
     previewUrl?: string;
+    poster_url?: string;
+    thumbnail_url?: string;
+    width?: number;
+    height?: number;
+    duration?: number;
   } | null;
   reply_to?: { id: string | number; body?: string; sender_name?: string } | null;
   forwarded_from?: string | null;
   reactions?: string[];
+};
+
+export type ChatUploadProgress = {
+  progress: number;
+  phase: "uploading" | "processing";
 };
 
 const avatarTones = ["red", "amber", "blue", "emerald", "violet", "slate"] as const;
@@ -99,6 +109,10 @@ function mapMessage(item: ApiMessage): ChatMessage {
       size: Number(item.attachment.size || 0),
       url: attachmentUrl || undefined,
       previewUrl: attachmentUrl || undefined,
+      posterSrc: item.attachment.poster_url || item.attachment.thumbnail_url || undefined,
+      width: Number(item.attachment.width || 0) || undefined,
+      height: Number(item.attachment.height || 0) || undefined,
+      duration: Number(item.attachment.duration || 0) || undefined,
     } : undefined,
     replyTo: item.reply_to ? {
       id: String(item.reply_to.id),
@@ -207,11 +221,6 @@ function finiteNumber(value: unknown): number | undefined {
   return Number.isFinite(number) ? number : undefined;
 }
 
-/**
- * The square whose location a message can carry: the viewer's own square when
- * the account is a square, otherwise the square on the other side of the chat.
- * Returns null when neither side is a square.
- */
 export async function getShareableSquare(preferredSquareId?: number): Promise<ShareableSquare | null> {
   let squareId = preferredSquareId;
   let fallbackName = "";
@@ -238,7 +247,58 @@ export async function getShareableSquare(preferredSquareId?: number): Promise<Sh
   };
 }
 
-export async function uploadChatAttachment(file: File): Promise<ChatAttachment> {
+function uploadChunk(
+  uploadId: string,
+  index: number,
+  chunk: Blob,
+  uploadedBefore: number,
+  totalSize: number,
+  onProgress?: (progress: ChatUploadProgress) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", `/api/meydan/uploads/${encodeURIComponent(uploadId)}/chunks/${index}`);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader("content-type", "application/octet-stream");
+
+    xhr.upload.onprogress = (event) => {
+      const loaded = event.lengthComputable ? event.loaded : 0;
+      const transferred = Math.min(totalSize, uploadedBefore + loaded);
+      const percentage = totalSize > 0 ? (transferred / totalSize) * 100 : 0;
+      onProgress?.({ phase: "uploading", progress: Math.min(100, Math.max(0, percentage)) });
+    };
+
+    xhr.onerror = () => reject(new Error("upload_network_error"));
+    xhr.onabort = () => reject(new DOMException("Upload aborted", "AbortError"));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const transferred = Math.min(totalSize, uploadedBefore + chunk.size);
+        const percentage = totalSize > 0 ? (transferred / totalSize) * 100 : 100;
+        onProgress?.({ phase: "uploading", progress: Math.min(100, percentage) });
+        resolve();
+        return;
+      }
+
+      let message = `upload_chunk_${xhr.status}`;
+      try {
+        const payload = JSON.parse(xhr.responseText) as { error?: { message?: string } };
+        if (payload.error?.message) message = payload.error.message;
+      } catch {
+        // Keep the status-based fallback.
+      }
+      reject(new Error(message));
+    };
+
+    xhr.send(chunk);
+  });
+}
+
+export async function uploadChatAttachment(
+  file: File,
+  onProgress?: (progress: ChatUploadProgress) => void,
+): Promise<ChatAttachment> {
+  onProgress?.({ phase: "uploading", progress: 0 });
+
   const started = await meydanApi<{ upload_id: string; chunk_size: number }>("/uploads", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -253,13 +313,23 @@ export async function uploadChatAttachment(file: File): Promise<ChatAttachment> 
   const chunkSize = Math.max(1, Number(started.chunk_size || 5 * 1024 * 1024));
   try {
     for (let offset = 0, index = 0; offset < file.size; offset += chunkSize, index += 1) {
-      await meydanApi(`/uploads/${started.upload_id}/chunks/${index}`, {
-        method: "PUT",
-        headers: { "content-type": "application/octet-stream" },
-        body: file.slice(offset, Math.min(file.size, offset + chunkSize)),
-      });
+      const chunk = file.slice(offset, Math.min(file.size, offset + chunkSize));
+      await uploadChunk(started.upload_id, index, chunk, offset, file.size, onProgress);
     }
-    const completed = await meydanApi<{ media_id: number; url: string; size: number }>(`/uploads/${started.upload_id}/complete`, { method: "POST" });
+
+    onProgress?.({ phase: "processing", progress: 100 });
+
+    const completed = await meydanApi<{
+      media_id: number;
+      url: string;
+      size: number;
+      width?: number | null;
+      height?: number | null;
+      duration?: number | null;
+      poster_url?: string | null;
+      thumbnail_url?: string | null;
+    }>(`/uploads/${started.upload_id}/complete`, { method: "POST" });
+
     return {
       id: String(completed.media_id),
       name: file.name,
@@ -267,6 +337,10 @@ export async function uploadChatAttachment(file: File): Promise<ChatAttachment> 
       size: Number(completed.size || file.size),
       url: completed.url,
       previewUrl: completed.url,
+      posterSrc: completed.poster_url || completed.thumbnail_url || undefined,
+      width: Number(completed.width || 0) || undefined,
+      height: Number(completed.height || 0) || undefined,
+      duration: Number(completed.duration || 0) || undefined,
     };
   } catch (error) {
     await meydanApi(`/uploads/${started.upload_id}`, { method: "DELETE" }).catch(() => undefined);
@@ -294,6 +368,10 @@ export async function sendMessage(
         mime_type: attachment.mimeType,
         size: attachment.size,
         url: attachment.url,
+        width: attachment.width,
+        height: attachment.height,
+        duration: attachment.duration,
+        poster_url: attachment.posterSrc,
       } : undefined,
     }),
   });
@@ -328,12 +406,6 @@ export async function markConversationRead(conversationId: string, messageId: st
   });
 }
 
-/**
- * Publishes the typing indicator for a conversation.
- *
- * Typing is a REST command: the backend relays it to the other participants as
- * `typing:changed` over Soketi. There is no client-side socket emit any more.
- */
 export async function setConversationTyping(conversationId: string, typing: boolean): Promise<void> {
   await meydanApi(`/chat/conversations/${conversationId}/typing`, {
     method: "POST",
@@ -342,13 +414,6 @@ export async function setConversationTyping(conversationId: string, typing: bool
   });
 }
 
-/**
- * Maps a realtime event payload.
- *
- * The backend publishes the same wire shape the REST endpoints return
- * (`conversation_id`, `sender_id`, `client_id`, …), so realtime and REST
- * messages are normalized through the exact same mapper.
- */
 export function mapRealtimeMessage(payload: unknown): ChatMessage | null {
   if (!payload || typeof payload !== "object") return null;
 
