@@ -56,6 +56,10 @@ export function MediaGallery({
   tone = "surface",
 }: MediaGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  // Chat attachments created before intrinsic width/height metadata existed do
+  // not know their ratio up front. Learn it from the decoded image so an old
+  // square photo still renders in a square frame instead of a guessed 4:3 box.
+  const [naturalRatios, setNaturalRatios] = useState<Record<string, number>>({});
 
   const visuals = useMemo(() => visualItems(items), [items]);
   const audios = useMemo(() => audioItems(items), [items]);
@@ -68,6 +72,11 @@ export function MediaGallery({
   const isBubble = tone === "bubble";
   const frameRadius = isBubble ? "rounded-xl" : "rounded-2xl";
   const tileRadius = isBubble ? "rounded-lg" : "rounded-none";
+  const singleRatio = single
+    ? single.width && single.height
+      ? mediaAspectRatio(single.width, single.height)
+      : naturalRatios[single.id] ?? (isBubble ? 1 : 16 / 9)
+    : 16 / 9;
 
   return (
     <div
@@ -89,7 +98,7 @@ export function MediaGallery({
           >
             <span
               className={`relative block w-full ${isBubble ? "max-h-[26rem] bg-black/[0.03]" : ""}`}
-              style={{ aspectRatio: mediaAspectRatio(single.width, single.height, isBubble ? 4 / 3 : 16 / 9) }}
+              style={{ aspectRatio: singleRatio }}
             >
               <Image
                 src={single.src as string}
@@ -99,6 +108,18 @@ export function MediaGallery({
                 sizes="(max-width: 640px) calc(100vw - 72px), 520px"
                 className={`${isBubble ? "object-contain" : "object-cover"} transition-transform duration-300 group-hover/media:scale-[1.01]`}
                 draggable={false}
+                onLoad={(event) => {
+                  if (!isBubble || single.width || single.height) return;
+                  const width = event.currentTarget.naturalWidth;
+                  const height = event.currentTarget.naturalHeight;
+                  if (!width || !height) return;
+                  const ratio = mediaAspectRatio(width, height, 1);
+                  setNaturalRatios((current) =>
+                    current[single.id] === ratio
+                      ? current
+                      : { ...current, [single.id]: ratio },
+                  );
+                }}
               />
             </span>
           </button>
