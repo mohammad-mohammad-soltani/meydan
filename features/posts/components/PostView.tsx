@@ -299,7 +299,6 @@ export function PostView({
       <main
         className="
           flex-1
-          space-y-5
         "
       >
         <PostEditorialMark
@@ -350,6 +349,7 @@ export function PostView({
 
         <div
           className="
+            mt-5
             space-y-5
             px-4
           "

@@ -212,7 +212,7 @@ export function PostEditorialMark({
 
   return (
     <>
-      <div dir="rtl" className="px-4 pt-3">
+      <div dir="rtl" className="flex items-center gap-2 px-4 pb-1 pt-2.5">
         <button
           type="button"
           onClick={() => {
@@ -221,16 +221,16 @@ export function PostEditorialMark({
           }}
           aria-haspopup="dialog"
           title={isMarked ? "حذف از سردبیری" : "افزودن به سردبیری"}
-          className={`inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control border px-4 text-xs font-black outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
+          className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-[11px] font-black leading-none outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
             isMarked
               ? "border-success-border bg-success-surface text-success-foreground hover:border-success"
               : "border-warning-border bg-warning-surface text-warning-foreground hover:border-warning"
           }`}
         >
           {isMarked ? (
-            <CircleCheckBig aria-hidden="true" className="h-4 w-4" />
+            <CircleCheckBig aria-hidden="true" className="h-3.5 w-3.5" />
           ) : (
-            <ShieldCheck aria-hidden="true" className="h-4 w-4" />
+            <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5" />
           )}
           {isMarked ? "سردبیری شده" : "نشانه‌گذاری سردبیری"}
         </button>
