@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
-import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
+import { isAuthApiError, MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { actorKey, actorNumericId, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { getFeedPage } from "../services/feed.service";
 import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
@@ -34,8 +34,11 @@ function filterFor(tab: FeedTab, filter: FeedFilter): string {
   return tab === "for-you" ? filter : "all";
 }
 
+function isAbortError(reason: unknown): boolean {
+  return reason instanceof DOMException && reason.name === "AbortError";
+}
+
 type TimelinePaging = {
-  /** The timeline this paging state belongs to. */
   key: string;
   cursor: string | null;
   loading: boolean;
@@ -43,14 +46,13 @@ type TimelinePaging = {
 };
 
 const EMPTY_PAGING = { cursor: null, loading: false, failed: false } as const;
-
-/** How many already-seen pages a single "load more" may walk past. */
-const MAX_SKIPPED_PAGES = 2;
+const MAX_EMPTY_PAGES = 2;
 
 export function useFeed(
   initialPosts: FeedPost[],
   initialSuggestions: FollowSuggestion[],
   initialNextCursor: string | null = null,
+  initialPageReady = true,
 ) {
   const { requireAuth } = useAuthGate();
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
@@ -65,11 +67,7 @@ export function useFeed(
   const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.joined).map((post) => post.id)));
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  /**
-   * Paging state belongs to one timeline (tab + filter). Keying it means a
-   * switch back to a fresh list reads as "no cursor yet, nothing loading"
-   * without resetting state from inside an effect.
-   */
+
   const timelineKey = `${modeFor(activeTab)}:${filterFor(activeTab, activeFilter)}`;
   const [paging, setPaging] = useState<TimelinePaging>(() => ({
     key: timelineKey,
@@ -77,16 +75,16 @@ export function useFeed(
     loading: false,
     failed: false,
   }));
-  const activePaging = paging.key === timelineKey
-    ? paging
-    : EMPTY_PAGING;
+  const activePaging = paging.key === timelineKey ? paging : EMPTY_PAGING;
   const nextCursor = activePaging.cursor;
   const isLoadingMore = activePaging.loading;
   const loadMoreFailed = activePaging.failed;
-  /** Bumped on every tab/filter load so a late page from the old list is dropped. */
+
+  const initialPageConsumedRef = useRef(false);
   const generationRef = useRef(0);
-  /** Ids already rendered, so an appended page never repeats a card. */
   const knownPostIdsRef = useRef<Set<string>>(new Set(initialPosts.map((post) => post.id)));
+  const loadMoreInFlightRef = useRef(false);
+  const loadMoreAbortRef = useRef<AbortController | null>(null);
 
   const replacePosts = useCallback((next: FeedPost[]) => {
     knownPostIdsRef.current = new Set(next.map((post) => post.id));
@@ -96,7 +94,6 @@ export function useFeed(
     setJoinedPostIds(new Set(next.filter((post) => post.viewerState?.joined).map((post) => post.id)));
   }, []);
 
-  /** Appended pages carry their own viewer state; never clear what is already known. */
   const rememberViewerState = useCallback((posts: FeedPost[]) => {
     setLikedPostIds((current) => {
       const next = new Set(current);
@@ -114,6 +111,16 @@ export function useFeed(
       return next;
     });
   }, []);
+
+  const appendFreshPosts = useCallback((posts: FeedPost[]): number => {
+    const fresh = posts.filter((post) => !knownPostIdsRef.current.has(post.id));
+    if (!fresh.length) return 0;
+
+    for (const post of fresh) knownPostIdsRef.current.add(post.id);
+    setRemotePosts((current) => [...current, ...fresh]);
+    rememberViewerState(fresh);
+    return fresh.length;
+  }, [rememberViewerState]);
 
   const applyStats = useCallback((postId: string, stats?: { likes?: number; reposts?: number; comments?: number; views?: number }) => {
     if (!stats) return;
@@ -160,12 +167,28 @@ export function useFeed(
   }, []);
 
   useEffect(() => {
+    const isInitialTimeline = activeTab === "for-you" && activeFilter === "all";
+    const canUseServerPage = !initialPageConsumedRef.current && isInitialTimeline && initialPageReady;
+    initialPageConsumedRef.current = true;
+
+    if (canUseServerPage) {
+      return;
+    }
+
     let active = true;
+    const controller = new AbortController();
     const generation = ++generationRef.current;
+
+    loadMoreAbortRef.current?.abort();
+    loadMoreAbortRef.current = null;
+    loadMoreInFlightRef.current = false;
+
     queueMicrotask(() => active && setIsLoading(true));
-    // A page that lands after a tab or filter change is dropped by the
-    // generation check, so a fresh list never needs its state reset here.
-    void getFeedPage({ mode: modeFor(activeTab), filter: filterFor(activeTab, activeFilter) })
+
+    void getFeedPage(
+      { mode: modeFor(activeTab), filter: filterFor(activeTab, activeFilter) },
+      { signal: controller.signal },
+    )
       .then((page) => {
         if (!active || generationRef.current !== generation) return;
         replacePosts(page.posts);
@@ -173,7 +196,7 @@ export function useFeed(
         if (activeTab === "following") setFollowingRequiresAuth(false);
       })
       .catch((reason) => {
-        if (!active || generationRef.current !== generation) return;
+        if (isAbortError(reason) || !active || generationRef.current !== generation) return;
         if (activeTab === "following") {
           replacePosts([]);
           if (isAuthApiError(reason)) setFollowingRequiresAuth(true);
@@ -182,43 +205,72 @@ export function useFeed(
       .finally(() => {
         if (active && generationRef.current === generation) setIsLoading(false);
       });
-    return () => { active = false; };
-  }, [activeFilter, activeTab, replacePosts, timelineKey]);
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [activeFilter, activeTab, initialPageReady, replacePosts, timelineKey]);
 
   const loadMore = useCallback(() => {
-    if (isLoading || isLoadingMore || !nextCursor) return;
+    if (isLoading || isLoadingMore || !nextCursor || loadMoreInFlightRef.current) return;
+
     const generation = generationRef.current;
     const startCursor = nextCursor;
-    setPaging({ key: timelineKey, cursor: startCursor, loading: true, failed: false });
-
     const mode = modeFor(activeTab);
     const filter = filterFor(activeTab, activeFilter);
+    const controller = new AbortController();
+
+    loadMoreAbortRef.current?.abort();
+    loadMoreAbortRef.current = controller;
+    loadMoreInFlightRef.current = true;
+    setPaging({ key: timelineKey, cursor: startCursor, loading: true, failed: false });
 
     void (async () => {
       let cursor: string | null = startCursor;
+
       try {
-        // The for-you timeline is ordered per request, so an offset cursor can
-        // hand back a page that only repeats what is already on screen. Skip a
-        // bounded number of those instead of stopping at the first one.
-        for (let skipped = 0; cursor && skipped <= MAX_SKIPPED_PAGES; skipped += 1) {
-          const page = await getFeedPage({ mode, filter, cursor });
+        // Stable backend sessions should never repeat a page. The bounded loop
+        // only skips tombstoned/deleted narratives that serialize to an empty page.
+        for (let attempt = 0; cursor && attempt <= MAX_EMPTY_PAGES; attempt += 1) {
+          const page = await getFeedPage({ mode, filter, cursor }, { signal: controller.signal });
           if (generationRef.current !== generation) return;
+
           cursor = page.nextCursor;
-          const freshPosts = page.posts.filter((post) => !knownPostIdsRef.current.has(post.id));
-          if (!freshPosts.length) continue;
-          for (const post of freshPosts) knownPostIdsRef.current.add(post.id);
-          setRemotePosts((current) => [...current, ...freshPosts]);
-          rememberViewerState(freshPosts);
-          break;
+          if (appendFreshPosts(page.posts) > 0 || !cursor) break;
         }
-        setPaging({ key: timelineKey, cursor, loading: false, failed: false });
-      } catch (reason) {
+
         if (generationRef.current !== generation) return;
+        setPaging({ key: timelineKey, cursor, loading: false, failed: false });
+      } catch (caught) {
+        if (isAbortError(caught) || generationRef.current !== generation) return;
+
+        let reason: unknown = caught;
+
+        // An inactive tab can sit open long enough for its server-side snapshot
+        // to expire. Start a new session without replacing the visible list and
+        // append only unseen cards so scroll position is preserved.
+        if (reason instanceof MeydanApiError && reason.status === 410) {
+          try {
+            const freshPage = await getFeedPage({ mode, filter }, { signal: controller.signal });
+            if (generationRef.current !== generation) return;
+            appendFreshPosts(freshPage.posts);
+            setPaging({ key: timelineKey, cursor: freshPage.nextCursor, loading: false, failed: false });
+            return;
+          } catch (recoveryReason) {
+            if (isAbortError(recoveryReason) || generationRef.current !== generation) return;
+            reason = recoveryReason;
+          }
+        }
+
         setPaging({ key: timelineKey, cursor: startCursor, loading: false, failed: true });
         if (isAuthApiError(reason)) redirectToLogin();
+      } finally {
+        if (loadMoreAbortRef.current === controller) loadMoreAbortRef.current = null;
+        loadMoreInFlightRef.current = false;
       }
     })();
-  }, [activeFilter, activeTab, isLoading, isLoadingMore, nextCursor, rememberViewerState, timelineKey]);
+  }, [activeFilter, activeTab, appendFreshPosts, isLoading, isLoadingMore, nextCursor, timelineKey]);
 
   const posts = useMemo(
     () => activeTab === "for-you" ? remotePosts.filter((post) => matchesFilter(post, activeFilter)) : remotePosts,
@@ -330,7 +382,6 @@ export function useFeed(
     activeTab,
     activeFilter,
     posts,
-    /** Size of the loaded timeline before the tab's client-side filter. */
     loadedCount: remotePosts.length,
     suggestions: initialSuggestions,
     likedPostIds,
