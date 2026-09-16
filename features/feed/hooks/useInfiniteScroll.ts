@@ -3,24 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 
 type UseInfiniteScrollOptions = {
-  /** Attaches the observer only while there is something left to load. */
   enabled: boolean;
   onLoadMore: () => void;
-  /**
-   * Changes whenever the list grew. Re-attaching the observer makes a sentinel
-   * that is still on screen fire again, so a short first page keeps filling the
-   * viewport instead of waiting for a scroll that never happens.
-   */
+  /** Re-arm the observer when the rendered list grows. */
   revision?: number;
-  /** How far below the scroll container's edge a load is triggered. */
+  /** How early the next page should start loading. */
   rootMargin?: string;
 };
 
-/**
- * The feed scrolls inside the app shell's `<main>`, not the window, so a
- * viewport-rooted observer would only fire once the sentinel had already been
- * scrolled past. Walk up to the real scroll container instead.
- */
 function findScrollParent(node: HTMLElement): HTMLElement | null {
   let parent = node.parentElement;
   while (parent) {
@@ -33,43 +23,72 @@ function findScrollParent(node: HTMLElement): HTMLElement | null {
   return null;
 }
 
+function fallbackDistance(rootMargin: string): number {
+  const value = Number.parseInt(rootMargin, 10);
+  return Number.isFinite(value) ? Math.max(0, value) : 1200;
+}
+
 /**
- * Watches a sentinel element at the end of a list and calls `onLoadMore` when
- * it approaches the visible area. Browsers without `IntersectionObserver` keep
- * working through the manual "load more" control the caller renders next to it.
- *
- * The returned value is a callback ref: keeping the node in state means the
- * observer re-attaches when the list (and therefore the sentinel) is remounted
- * by a tab or filter switch.
+ * Prefetches the next timeline page before the user reaches the end. The app
+ * shell scrolls inside its own <main>, so the observer is rooted at the actual
+ * scroll container. A throttled scroll fallback keeps older browsers working.
  */
 export function useInfiniteScroll({
   enabled,
   onLoadMore,
   revision = 0,
-  rootMargin = "600px",
+  rootMargin = "1200px 0px",
 }: UseInfiniteScrollOptions) {
   const [sentinel, setSentinel] = useState<HTMLDivElement | null>(null);
   const onLoadMoreRef = useRef(onLoadMore);
 
-  // The observer is created once per sentinel; the ref keeps it calling the
-  // latest callback without tearing the observer down on every render.
   useEffect(() => {
     onLoadMoreRef.current = onLoadMore;
   }, [onLoadMore]);
 
   useEffect(() => {
     if (!sentinel || !enabled) return;
-    if (typeof IntersectionObserver === "undefined") return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) onLoadMoreRef.current();
-      },
-      { root: findScrollParent(sentinel), rootMargin, threshold: 0 },
-    );
+    const root = findScrollParent(sentinel);
 
-    observer.observe(sentinel);
-    return () => observer.disconnect();
+    if (typeof IntersectionObserver !== "undefined") {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            onLoadMoreRef.current();
+          }
+        },
+        { root, rootMargin, threshold: 0 },
+      );
+
+      observer.observe(sentinel);
+      return () => observer.disconnect();
+    }
+
+    const threshold = fallbackDistance(rootMargin);
+    const target: HTMLElement | Window = root ?? window;
+    let frame = 0;
+
+    const check = () => {
+      frame = 0;
+      const remaining = root
+        ? root.scrollHeight - root.scrollTop - root.clientHeight
+        : document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+      if (remaining <= threshold) onLoadMoreRef.current();
+    };
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(check);
+    };
+
+    target.addEventListener("scroll", onScroll, { passive: true });
+    check();
+
+    return () => {
+      target.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, [enabled, revision, rootMargin, sentinel]);
 
   return setSentinel;
