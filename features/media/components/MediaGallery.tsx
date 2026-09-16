@@ -88,8 +88,8 @@ export function MediaGallery({
             className={`group/media relative block w-full overflow-hidden border border-border bg-surface-sunken ${frameRadius}`}
           >
             <span
-              className={`relative block w-full ${isBubble ? "max-h-[26rem]" : ""}`}
-              style={{ aspectRatio: mediaAspectRatio(single.width, single.height) }}
+              className={`relative block w-full ${isBubble ? "max-h-[26rem] bg-black/[0.03]" : ""}`}
+              style={{ aspectRatio: mediaAspectRatio(single.width, single.height, isBubble ? 4 / 3 : 16 / 9) }}
             >
               <Image
                 src={single.src as string}
@@ -97,7 +97,7 @@ export function MediaGallery({
                 fill
                 quality={MEDIA_THUMB_QUALITY}
                 sizes="(max-width: 640px) calc(100vw - 72px), 520px"
-                className="object-cover transition-transform duration-300 group-hover/media:scale-[1.01]"
+                className={`${isBubble ? "object-contain" : "object-cover"} transition-transform duration-300 group-hover/media:scale-[1.01]`}
                 draggable={false}
               />
             </span>
