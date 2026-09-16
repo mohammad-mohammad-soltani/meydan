@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { FolderKanban, Home, LogIn, Map, MessageCircle, Mic, Search, UserCheck } from "lucide-react";
 import { MiniPlayer } from "@/features/audio/MiniPlayer";
@@ -25,11 +26,23 @@ const desktopLinkClass = "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-f
 
 export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
   const pathname = usePathname();
+  const mainScrollRef = useRef<HTMLElement>(null);
   const isPostPage = pathname.startsWith("/posts/");
   const isComposePage = pathname === "/compose";
   const isPublicProfilePage = pathname.startsWith("/users/");
   // Conversation routes own their internal scrolling (header + list + composer).
   const isChatRoute = pathname.startsWith("/chat/");
+
+  // The app scrolls inside <main>, not window. Next.js cannot restore/reset this
+  // custom scroll container automatically, so client-side navigation used to
+  // carry the previous route's scrollTop into the next page (most visibly on
+  // profile routes). Reset before paint so headers/nav never render mid-scroll.
+  useLayoutEffect(() => {
+    const main = mainScrollRef.current;
+    if (!main) return;
+    main.scrollTop = 0;
+    main.scrollLeft = 0;
+  }, [pathname]);
 
   return (
     <UnreadProvider isAuthenticated={isAuthenticated}>
@@ -66,7 +79,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
         </aside>
         <div id="mainAppShell" className="relative flex h-[100dvh] min-h-0 w-full max-w-xl flex-col border-x border-border bg-background pb-[var(--comment-composer-height)] transition-colors duration-150">
           {!isComposePage && !isPublicProfilePage ? <MobileHeader /> : null}
-          <main className={`flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}>{children}</main>
+          <main ref={mainScrollRef} className={`relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}>{children}</main>
           <FloatingComposeButton />
           <SilentBoundary label="mini-player">
             <MiniPlayer />
