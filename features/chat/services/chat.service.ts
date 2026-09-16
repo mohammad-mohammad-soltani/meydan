@@ -1,4 +1,5 @@
 import { meydanApi } from "@/lib/meydan-api";
+import { chatUploadKey, emitChatUploadProgress } from "../chat-upload-progress";
 import type { ChatAttachment, ChatMessage, Conversation } from "../types";
 
 type ApiConversation = {
@@ -143,7 +144,7 @@ export async function createDirectConversation(participantUserId: string | numbe
 export async function getConversationById(conversationId: string): Promise<Conversation | null> {
   try {
     const result = await meydanApi<ApiConversation>(`/chat/conversations/${conversationId}`);
-    return mapConversation(result);
+    return result;
   } catch {
     return null;
   }
@@ -297,7 +298,13 @@ export async function uploadChatAttachment(
   file: File,
   onProgress?: (progress: ChatUploadProgress) => void,
 ): Promise<ChatAttachment> {
-  onProgress?.({ phase: "uploading", progress: 0 });
+  const progressKey = chatUploadKey(file.name, file.size);
+  const notify = (progress: ChatUploadProgress) => {
+    onProgress?.(progress);
+    emitChatUploadProgress({ key: progressKey, ...progress });
+  };
+
+  notify({ phase: "uploading", progress: 0 });
 
   const started = await meydanApi<{ upload_id: string; chunk_size: number }>("/uploads", {
     method: "POST",
@@ -314,10 +321,10 @@ export async function uploadChatAttachment(
   try {
     for (let offset = 0, index = 0; offset < file.size; offset += chunkSize, index += 1) {
       const chunk = file.slice(offset, Math.min(file.size, offset + chunkSize));
-      await uploadChunk(started.upload_id, index, chunk, offset, file.size, onProgress);
+      await uploadChunk(started.upload_id, index, chunk, offset, file.size, notify);
     }
 
-    onProgress?.({ phase: "processing", progress: 100 });
+    notify({ phase: "processing", progress: 100 });
 
     const completed = await meydanApi<{
       media_id: number;
