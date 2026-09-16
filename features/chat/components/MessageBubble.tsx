@@ -29,24 +29,151 @@ type MessageBubbleProps = {
 };
 
 type MenuPosition = { x: number; y: number };
+type PendingVideoPoster = { src: string; ratio: number };
 
 function faPercent(value: number): string {
   return `${new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 }).format(Math.round(value))}٪`;
 }
 
 function MessageAttachment({ attachment, scope, transfer }: { attachment: ChatAttachment; scope: string; transfer: ChatUploadProgressDetail | null }) {
-  const isVisual = /^(image|video)\//i.test(attachment.mimeType);
+  const isImage = /^image\//i.test(attachment.mimeType);
+  const isVideo = /^video\//i.test(attachment.mimeType);
+  const isVisual = isImage || isVideo;
   const progress = Math.min(100, Math.max(0, transfer?.progress ?? 0));
+  const [pendingPoster, setPendingPoster] = useState<PendingVideoPoster | null>(() =>
+    attachment.posterSrc
+      ? {
+          src: attachment.posterSrc,
+          ratio: attachment.width && attachment.height ? attachment.width / attachment.height : 16 / 9,
+        }
+      : null,
+  );
+
+  useEffect(() => {
+    if (!transfer || !isVideo) return;
+
+    if (attachment.posterSrc) {
+      setPendingPoster({
+        src: attachment.posterSrc,
+        ratio: attachment.width && attachment.height ? attachment.width / attachment.height : 16 / 9,
+      });
+      return;
+    }
+
+    const source = attachment.previewUrl || attachment.url;
+    if (!source) return;
+
+    let cancelled = false;
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.src = source;
+
+    const capture = () => {
+      if (cancelled || !video.videoWidth || !video.videoHeight) return;
+
+      const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+      canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      try {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const src = canvas.toDataURL("image/jpeg", 0.72);
+        if (!cancelled) {
+          setPendingPoster({ src, ratio: video.videoWidth / video.videoHeight });
+        }
+      } catch {
+        // A local blob is expected here. If a remote source cannot be drawn to
+        // canvas because of CORS, the upload card simply keeps its dark fallback.
+      }
+    };
+
+    const onLoadedMetadata = () => {
+      if (cancelled) return;
+      const duration = Number.isFinite(video.duration) ? video.duration : 0;
+      const target = duration > 0.3 ? Math.min(0.35, duration * 0.08) : 0;
+      if (target > 0) {
+        try {
+          video.currentTime = target;
+          return;
+        } catch {
+          // Fall through and capture the first decoded frame.
+        }
+      }
+      capture();
+    };
+
+    video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
+    video.addEventListener("seeked", capture, { once: true });
+    video.addEventListener("loadeddata", capture, { once: true });
+    video.load();
+
+    return () => {
+      cancelled = true;
+      video.removeAttribute("src");
+      video.load();
+    };
+  }, [attachment.height, attachment.posterSrc, attachment.previewUrl, attachment.url, attachment.width, isVideo, transfer]);
+
+  const uploadRatio = pendingPoster?.ratio || (attachment.width && attachment.height ? attachment.width / attachment.height : 16 / 9);
 
   return (
     <div className="relative mb-1 overflow-hidden rounded-xl">
-      <MediaGallery
-        items={[mediaItemFromNamedAttachment(attachment)]}
-        scope={scope}
-        tone="bubble"
-      />
+      {transfer && isVideo ? (
+        <div
+          className="relative w-full overflow-hidden rounded-xl bg-black"
+          style={{ aspectRatio: uploadRatio }}
+          aria-label="در حال آپلود ویدیو"
+        >
+          {pendingPoster ? (
+            <div
+              aria-hidden="true"
+              className="absolute -inset-3 scale-110 bg-cover bg-center blur-md"
+              style={{ backgroundImage: `url(${JSON.stringify(pendingPoster.src).slice(1, -1)})` }}
+            />
+          ) : (
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-900 to-black" />
+          )}
+          <div aria-hidden="true" className="absolute inset-0 bg-black/45" />
 
-      {transfer && isVisual ? (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 text-white">
+            <div className="relative grid h-[72px] w-[72px] place-items-center">
+              <svg aria-hidden="true" className="absolute inset-0 h-full w-full -rotate-90 drop-shadow" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/25" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.8"
+                  strokeLinecap="round"
+                  pathLength="100"
+                  strokeDasharray="100"
+                  strokeDashoffset={100 - progress}
+                  className="text-white transition-[stroke-dashoffset] duration-150"
+                />
+              </svg>
+              <span className="relative text-[13px] font-black tabular-nums drop-shadow">{faPercent(progress)}</span>
+            </div>
+            <span className="rounded-full bg-black/55 px-3 py-1 text-[10px] font-bold shadow-sm backdrop-blur-md">
+              {transfer.phase === "processing" ? "در حال پردازش ویدیو…" : "در حال آپلود ویدیو…"}
+            </span>
+          </div>
+        </div>
+      ) : (
+        <MediaGallery
+          items={[mediaItemFromNamedAttachment(attachment)]}
+          scope={scope}
+          tone="bubble"
+        />
+      )}
+
+      {transfer && isImage ? (
         <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black/45 text-white backdrop-blur-[1px]">
           <div className="relative grid h-16 w-16 place-items-center">
             <svg aria-hidden="true" className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 36 36">
@@ -68,7 +195,7 @@ function MessageAttachment({ attachment, scope, transfer }: { attachment: ChatAt
             <span className="relative text-xs font-black tabular-nums">{faPercent(progress)}</span>
           </div>
           <span className="rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold backdrop-blur-sm">
-            {transfer.phase === "processing" ? "در حال پردازش ویدیو…" : "در حال آپلود…"}
+            {transfer.phase === "processing" ? "در حال پردازش…" : "در حال آپلود…"}
           </span>
         </div>
       ) : null}
