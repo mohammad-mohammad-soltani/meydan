@@ -8,6 +8,7 @@ import {
 import { CommentsList } from "./CommentsList";
 import { CommentInput } from "./CommentInput";
 import { MediaReflections } from "./MediaReflections";
+import { PostEditorialMark } from "./PostEditorialMark";
 import { PostHeader } from "./PostHeader";
 
 import { PostCard } from "@/features/feed/components/PostCard";
@@ -301,6 +302,13 @@ export function PostView({
           space-y-5
         "
       >
+        <PostEditorialMark
+          postId={state.post.id}
+          editorial={Boolean(
+            state.post.editorial,
+          )}
+        />
+
         <PostCard
           variant="detail"
           post={feedPost}

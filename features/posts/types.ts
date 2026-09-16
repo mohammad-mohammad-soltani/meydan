@@ -65,5 +65,7 @@ export type PostDetail = {
   views: number;
   commentsCount: number;
   comments: PostComment[];
+  /** The narrative is featured in the editorial collection. */
+  editorial?: boolean;
   viewerState?: { liked: boolean; reposted: boolean };
 };
