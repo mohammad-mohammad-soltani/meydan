@@ -13,7 +13,6 @@ import type { FeedPost, FollowSuggestion } from "../types";
 type FeedViewProps = {
   posts: FeedPost[];
   suggestions: FollowSuggestion[];
-  /** Cursor for the page after the server-rendered one, if the backend has more. */
   nextCursor?: string | null;
   postsUnavailable?: boolean;
   suggestionsUnavailable?: boolean;
@@ -26,9 +25,7 @@ export function FeedView({
   postsUnavailable = false,
   suggestionsUnavailable = false,
 }: FeedViewProps) {
-  const feed = useFeed(posts, suggestions, nextCursor);
-  // Auto-paging pauses on failure so a broken backend cannot spin requests;
-  // the retry button below the list is what resumes it.
+  const feed = useFeed(posts, suggestions, nextCursor, !postsUnavailable);
   const sentinelRef = useInfiniteScroll({
     enabled: feed.hasMore && !feed.isLoading && !feed.isLoadingMore && !feed.loadMoreFailed,
     onLoadMore: feed.loadMore,
@@ -36,11 +33,10 @@ export function FeedView({
   });
 
   const showForYouSkeleton =
-    feed.activeTab === "for-you" &&
-    (feed.isLoading || (postsUnavailable && feed.posts.length === 0));
+    feed.activeTab === "for-you" && feed.isLoading && feed.posts.length === 0;
 
   const listFooter = (
-    <div ref={sentinelRef} className="w-full px-4 py-6" data-feed-sentinel>
+    <div ref={sentinelRef} className="min-h-px w-full px-4 py-5" data-feed-sentinel>
       {feed.isLoadingMore ? (
         <p role="status" aria-live="polite" className="flex items-center justify-center gap-2 text-xs font-bold text-foreground-subtle">
           <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -53,11 +49,7 @@ export function FeedView({
             تلاش دوباره
           </button>
         </div>
-      ) : feed.hasMore ? (
-        <button type="button" onClick={feed.loadMore} className="mx-auto block rounded-pill border border-border px-4 py-2 text-xs font-black text-foreground transition-colors hover:bg-hover">
-          بارگذاری بیشتر
-        </button>
-      ) : feed.posts.length > 0 ? (
+      ) : !feed.hasMore && feed.posts.length > 0 ? (
         <p className="text-center text-xs font-bold text-foreground-subtle">به پایان روایت‌های میدان رسیدید.</p>
       ) : null}
     </div>
