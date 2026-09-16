@@ -68,19 +68,11 @@ const kindByIcon: Record<string, MediaKind> = {
   bolt: "file",
 };
 
-/**
- * A poster has to be a still image.
- *
- * These items used to reuse the video URL as the poster, so the browser tried
- * to decode an MP4 as an image — the request was wasted and every video card
- * stayed black. The video source is therefore never accepted as its own poster.
- */
 function posterForVideo(src?: string, posterSrc?: string): string | undefined {
   if (!posterSrc || posterSrc === src) return undefined;
   return posterSrc;
 }
 
-/** Normalises feed attachments and post media into the shared `MediaItem`. */
 export function mediaItemsFromAttachments(attachments: MediaAttachmentLike[]): MediaItem[] {
   return attachments.map((attachment) => {
     const kind = kindByIcon[attachment.icon || ""] || "file";
@@ -100,7 +92,6 @@ export function mediaItemsFromAttachments(attachments: MediaAttachmentLike[]): M
   });
 }
 
-/** Structural shape of a named upload, e.g. a chat attachment. */
 export type NamedAttachmentLike = {
   id: string;
   name?: string;
@@ -108,8 +99,10 @@ export type NamedAttachmentLike = {
   size?: number;
   url?: string;
   previewUrl?: string;
-  /** Real still for a video attachment, when the backend provides one. */
   posterSrc?: string;
+  width?: number;
+  height?: number;
+  duration?: number;
 };
 
 function kindFromMime(mimeType?: string): MediaKind {
@@ -120,7 +113,6 @@ function kindFromMime(mimeType?: string): MediaKind {
   return "file";
 }
 
-/** `48210` -> `۴۸ کیلوبایت`. */
 export function formatFileSize(size?: number): string {
   const value = Number(size || 0);
   if (value <= 0) return "";
@@ -128,7 +120,6 @@ export function formatFileSize(size?: number): string {
   return `${faDigits((value / (1024 * 1024)).toFixed(1))} مگابایت`;
 }
 
-/** Normalises a named upload (chat, compose preview) into the shared `MediaItem`. */
 export function mediaItemFromNamedAttachment(attachment: NamedAttachmentLike): MediaItem {
   const kind = kindFromMime(attachment.mimeType);
   const src = attachment.url || attachment.previewUrl;
@@ -140,6 +131,8 @@ export function mediaItemFromNamedAttachment(attachment: NamedAttachmentLike): M
     src,
     poster: kind === "video" ? posterForVideo(src, attachment.posterSrc) : undefined,
     detail: formatFileSize(attachment.size) || undefined,
+    width: attachment.width,
+    height: attachment.height,
     downloadHref: kind === "file" ? src : undefined,
   };
 }
@@ -151,32 +144,13 @@ function defaultTitle(kind: MediaKind): string {
   return "فایل ضمیمه";
 }
 
-/** Images and video that share one visual surface (grid tiles and lightbox). */
 export function visualItems(items: MediaItem[]): MediaItem[] {
   return items.filter((item) => (item.kind === "image" || item.kind === "video") && Boolean(item.src));
 }
 
-/**
- * Width and quality a timeline card asks the optimizer for.
- *
- * The upload can be several megabytes, while a feed card is at most ~520px
- * wide, so cards render a small WebP and the viewer still opens the untouched
- * original. `MEDIA_THUMB_QUALITY` must stay in `images.qualities` and
- * `MEDIA_THUMB_WIDTH` in `images.deviceSizes` in `next.config.ts`, otherwise
- * the optimizer rejects the request.
- */
 export const MEDIA_THUMB_WIDTH = 640;
 export const MEDIA_THUMB_QUALITY = 65;
 
-/**
- * The optimized thumbnail for one upload, built exactly the way Next's default
- * image loader builds it.
- *
- * Cards ask for it through `next/image`; the lightbox paints the same URL under
- * the original while it decodes, so opening a photo shows the cached thumbnail
- * immediately instead of an empty stage. Blob and data previews (compose,
- * uploads in progress) have no optimizer URL and return `undefined`.
- */
 export function mediaThumbnailSrc(src?: string, width = MEDIA_THUMB_WIDTH): string | undefined {
   if (!src || !/^https?:\/\//i.test(src)) return undefined;
   return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${MEDIA_THUMB_QUALITY}`;
