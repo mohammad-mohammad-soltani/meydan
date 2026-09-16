@@ -1,8 +1,9 @@
 import { CheckCheck, Clock3, Copy, CornerUpRight, Forward, MapPin, MoreVertical, Pencil, Trash2, TriangleAlert } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { parseSquareLocationMessage } from "../chat-utils";
+import { chatUploadKey, subscribeToChatUploadProgress, type ChatUploadProgressDetail } from "../chat-upload-progress";
 import { MediaGallery } from "@/features/media/components/MediaGallery";
 import { mediaItemFromNamedAttachment } from "@/features/media/media-utils";
 import {
@@ -29,16 +30,61 @@ type MessageBubbleProps = {
 
 type MenuPosition = { x: number; y: number };
 
-function MessageAttachment({ attachment, scope }: { attachment: ChatAttachment; scope: string }) {
-  // One shared gallery per attachment: images open the zoomable lightbox,
-  // video uses the shared player and audio routes through the bottom player.
+function faPercent(value: number): string {
+  return `${new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 }).format(Math.round(value))}٪`;
+}
+
+function MessageAttachment({ attachment, scope, transfer }: { attachment: ChatAttachment; scope: string; transfer: ChatUploadProgressDetail | null }) {
+  const isVisual = /^(image|video)\//i.test(attachment.mimeType);
+  const progress = Math.min(100, Math.max(0, transfer?.progress ?? 0));
+
   return (
-    <MediaGallery
-      items={[mediaItemFromNamedAttachment(attachment)]}
-      scope={scope}
-      tone="bubble"
-      className="mb-1"
-    />
+    <div className="relative mb-1 overflow-hidden rounded-xl">
+      <MediaGallery
+        items={[mediaItemFromNamedAttachment(attachment)]}
+        scope={scope}
+        tone="bubble"
+      />
+
+      {transfer && isVisual ? (
+        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black/45 text-white backdrop-blur-[1px]">
+          <div className="relative grid h-16 w-16 place-items-center">
+            <svg aria-hidden="true" className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/25" />
+              <circle
+                cx="18"
+                cy="18"
+                r="15.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+                pathLength="100"
+                strokeDasharray="100"
+                strokeDashoffset={100 - progress}
+                className="text-white transition-[stroke-dashoffset] duration-150"
+              />
+            </svg>
+            <span className="relative text-xs font-black tabular-nums">{faPercent(progress)}</span>
+          </div>
+          <span className="rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold backdrop-blur-sm">
+            {transfer.phase === "processing" ? "در حال پردازش ویدیو…" : "در حال آپلود…"}
+          </span>
+        </div>
+      ) : null}
+
+      {transfer && !isVisual ? (
+        <div className="border-t border-white/10 bg-black/10 px-2 py-1.5">
+          <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-message-meta">
+            <span>{transfer.phase === "processing" ? "در حال پردازش…" : "در حال آپلود…"}</span>
+            <span className="tabular-nums">{faPercent(progress)}</span>
+          </div>
+          <div className="mt-1 h-1 overflow-hidden rounded-full bg-black/15">
+            <span className="block h-full rounded-full bg-current transition-[width] duration-150" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -87,7 +133,27 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
   const hasAttachment = Boolean(message.attachment);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition>({ x: 8, y: 8 });
+  const [transfer, setTransfer] = useState<ChatUploadProgressDetail | null>(() =>
+    message.status === "sending" && message.attachment
+      ? { key: chatUploadKey(message.attachment.name, message.attachment.size), progress: 0, phase: "uploading" }
+      : null,
+  );
   const longPressTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const attachment = message.attachment;
+    if (message.status !== "sending" || !attachment) {
+      setTransfer(null);
+      return;
+    }
+
+    const key = chatUploadKey(attachment.name, attachment.size);
+    setTransfer((current) => current?.key === key ? current : { key, progress: 0, phase: "uploading" });
+
+    return subscribeToChatUploadProgress((detail) => {
+      if (detail.key === key) setTransfer(detail);
+    });
+  }, [message.attachment, message.status]);
 
   const clearLongPress = () => {
     if (longPressTimer.current !== null) {
@@ -155,7 +221,7 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
         <article className={`rounded-2xl text-[13px] leading-6 shadow-sm ${hasAttachment ? "px-2 py-2" : "px-3 py-2"} ${isOwn ? "rounded-tr-md bg-message-own text-message-own-foreground" : "rounded-tl-md bg-message-peer text-message-peer-foreground"}`}>
           {message.forwardedFrom ? <p className="mb-1 text-[10px] font-semibold text-success">فورواردشده از {message.forwardedFrom}</p> : null}
           {message.replyTo ? <div className={`mb-1.5 border-r-2 pr-2 text-[11px] leading-4 ${isOwn ? "border-success-border text-message-meta" : "border-info-border text-message-meta"}`}><strong className="block text-[10px]">{message.replyTo.senderName}</strong><span className="block line-clamp-1">{message.replyTo.body}</span></div> : null}
-          {message.attachment ? <MessageAttachment attachment={message.attachment} scope={`chat:${message.id}`} /> : null}
+          {message.attachment ? <MessageAttachment attachment={message.attachment} scope={`chat:${message.id}`} transfer={transfer} /> : null}
           {location ? (
             <MessageLocationCard location={location} />
           ) : message.body ? (
