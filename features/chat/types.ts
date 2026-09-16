@@ -38,6 +38,9 @@ export type ChatMessage = {
   editedAt?: string;
   deletedAt?: string;
   reactions?: string[];
+  /** Local-only transfer state for Telegram-style attachment progress. */
+  uploadProgress?: number;
+  uploadState?: "uploading" | "processing";
 };
 
 export type ChatAttachment = {
@@ -47,6 +50,10 @@ export type ChatAttachment = {
   size: number;
   previewUrl?: string;
   url?: string;
+  posterSrc?: string;
+  width?: number;
+  height?: number;
+  duration?: number;
 };
 
 export type MessageReply = { id: string; body: string; senderName: string };
