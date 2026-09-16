@@ -5,7 +5,16 @@ const DEFAULT_API_BASE =
 
 export type ApiEnvelope<T> = {
   data: T;
-  meta?: { request_id?: string; next_cursor?: string | null };
+  meta?: { request_id?: string; next_cursor?: string | null; count?: number };
+};
+
+/**
+ * A paginated payload: the envelope's `data` plus the cursor that asks the
+ * backend for the page after it. `null` means the list is exhausted.
+ */
+export type ApiPage<T> = {
+  data: T;
+  nextCursor: string | null;
 };
 
 type ApiErrorBody = {
@@ -88,7 +97,12 @@ function redirectProtectedClientRequest(path: string, init?: RequestInit): void 
   throw new MeydanApiError("Authentication required", 401);
 }
 
-export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T> {
+/**
+ * Reads the endpoint and keeps the envelope's pagination cursor, which is what
+ * cursor-based feeds (the timeline) need to request the next page. Every other
+ * caller only wants the payload and should keep using `meydanApi`.
+ */
+export async function meydanApiPage<T>(path: string, init?: RequestInit): Promise<ApiPage<T>> {
   redirectProtectedClientRequest(path, init);
 
   const base = getMeydanApiBaseUrl();
@@ -137,7 +151,15 @@ export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T>
     throw new MeydanApiError("Meydan API response is missing the data envelope.", response.status);
   }
 
-  return body.data;
+  const nextCursor = "meta" in body && typeof body.meta?.next_cursor === "string"
+    ? body.meta.next_cursor
+    : null;
+
+  return { data: body.data, nextCursor };
+}
+
+export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T> {
+  return (await meydanApiPage<T>(path, init)).data;
 }
 
 export function plainText(value: string): string {

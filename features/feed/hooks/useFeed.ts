@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import { actorKey, actorNumericId, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
-import { getFeedPosts } from "../services/feed.service";
+import { getFeedPage } from "../services/feed.service";
 import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
 
 function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
@@ -26,7 +26,32 @@ function redirectToLogin() {
   window.location.assign(loginHref(returnTo));
 }
 
-export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSuggestion[]) {
+function modeFor(tab: FeedTab): "for_you" | "following" {
+  return tab === "for-you" ? "for_you" : "following";
+}
+
+function filterFor(tab: FeedTab, filter: FeedFilter): string {
+  return tab === "for-you" ? filter : "all";
+}
+
+type TimelinePaging = {
+  /** The timeline this paging state belongs to. */
+  key: string;
+  cursor: string | null;
+  loading: boolean;
+  failed: boolean;
+};
+
+const EMPTY_PAGING = { cursor: null, loading: false, failed: false } as const;
+
+/** How many already-seen pages a single "load more" may walk past. */
+const MAX_SKIPPED_PAGES = 2;
+
+export function useFeed(
+  initialPosts: FeedPost[],
+  initialSuggestions: FollowSuggestion[],
+  initialNextCursor: string | null = null,
+) {
   const { requireAuth } = useAuthGate();
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
@@ -40,12 +65,54 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
   const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.joined).map((post) => post.id)));
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  /**
+   * Paging state belongs to one timeline (tab + filter). Keying it means a
+   * switch back to a fresh list reads as "no cursor yet, nothing loading"
+   * without resetting state from inside an effect.
+   */
+  const timelineKey = `${modeFor(activeTab)}:${filterFor(activeTab, activeFilter)}`;
+  const [paging, setPaging] = useState<TimelinePaging>(() => ({
+    key: timelineKey,
+    cursor: initialNextCursor,
+    loading: false,
+    failed: false,
+  }));
+  const activePaging = paging.key === timelineKey
+    ? paging
+    : EMPTY_PAGING;
+  const nextCursor = activePaging.cursor;
+  const isLoadingMore = activePaging.loading;
+  const loadMoreFailed = activePaging.failed;
+  /** Bumped on every tab/filter load so a late page from the old list is dropped. */
+  const generationRef = useRef(0);
+  /** Ids already rendered, so an appended page never repeats a card. */
+  const knownPostIdsRef = useRef<Set<string>>(new Set(initialPosts.map((post) => post.id)));
 
   const replacePosts = useCallback((next: FeedPost[]) => {
+    knownPostIdsRef.current = new Set(next.map((post) => post.id));
     setRemotePosts(next);
     setLikedPostIds(new Set(next.filter((post) => post.viewerState?.liked).map((post) => post.id)));
     setRepostedPostIds(new Set(next.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
     setJoinedPostIds(new Set(next.filter((post) => post.viewerState?.joined).map((post) => post.id)));
+  }, []);
+
+  /** Appended pages carry their own viewer state; never clear what is already known. */
+  const rememberViewerState = useCallback((posts: FeedPost[]) => {
+    setLikedPostIds((current) => {
+      const next = new Set(current);
+      for (const post of posts) if (post.viewerState?.liked) next.add(post.id);
+      return next;
+    });
+    setRepostedPostIds((current) => {
+      const next = new Set(current);
+      for (const post of posts) if (post.viewerState?.reposted) next.add(post.id);
+      return next;
+    });
+    setJoinedPostIds((current) => {
+      const next = new Set(current);
+      for (const post of posts) if (post.viewerState?.joined) next.add(post.id);
+      return next;
+    });
   }, []);
 
   const applyStats = useCallback((postId: string, stats?: { likes?: number; reposts?: number; comments?: number; views?: number }) => {
@@ -94,27 +161,64 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
 
   useEffect(() => {
     let active = true;
+    const generation = ++generationRef.current;
     queueMicrotask(() => active && setIsLoading(true));
-    if (activeTab === "following") setRemotePosts([]);
-    void getFeedPosts({
-      mode: activeTab === "for-you" ? "for_you" : "following",
-      filter: activeTab === "for-you" ? activeFilter : "all",
-    })
-      .then((next) => {
-        if (!active) return;
-        replacePosts(next);
+    // A page that lands after a tab or filter change is dropped by the
+    // generation check, so a fresh list never needs its state reset here.
+    void getFeedPage({ mode: modeFor(activeTab), filter: filterFor(activeTab, activeFilter) })
+      .then((page) => {
+        if (!active || generationRef.current !== generation) return;
+        replacePosts(page.posts);
+        setPaging({ key: timelineKey, cursor: page.nextCursor, loading: false, failed: false });
         if (activeTab === "following") setFollowingRequiresAuth(false);
       })
       .catch((reason) => {
-        if (!active) return;
+        if (!active || generationRef.current !== generation) return;
         if (activeTab === "following") {
           replacePosts([]);
           if (isAuthApiError(reason)) setFollowingRequiresAuth(true);
         }
       })
-      .finally(() => active && setIsLoading(false));
+      .finally(() => {
+        if (active && generationRef.current === generation) setIsLoading(false);
+      });
     return () => { active = false; };
-  }, [activeFilter, activeTab, replacePosts]);
+  }, [activeFilter, activeTab, replacePosts, timelineKey]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isLoadingMore || !nextCursor) return;
+    const generation = generationRef.current;
+    const startCursor = nextCursor;
+    setPaging({ key: timelineKey, cursor: startCursor, loading: true, failed: false });
+
+    const mode = modeFor(activeTab);
+    const filter = filterFor(activeTab, activeFilter);
+
+    void (async () => {
+      let cursor: string | null = startCursor;
+      try {
+        // The for-you timeline is ordered per request, so an offset cursor can
+        // hand back a page that only repeats what is already on screen. Skip a
+        // bounded number of those instead of stopping at the first one.
+        for (let skipped = 0; cursor && skipped <= MAX_SKIPPED_PAGES; skipped += 1) {
+          const page = await getFeedPage({ mode, filter, cursor });
+          if (generationRef.current !== generation) return;
+          cursor = page.nextCursor;
+          const freshPosts = page.posts.filter((post) => !knownPostIdsRef.current.has(post.id));
+          if (!freshPosts.length) continue;
+          for (const post of freshPosts) knownPostIdsRef.current.add(post.id);
+          setRemotePosts((current) => [...current, ...freshPosts]);
+          rememberViewerState(freshPosts);
+          break;
+        }
+        setPaging({ key: timelineKey, cursor, loading: false, failed: false });
+      } catch (reason) {
+        if (generationRef.current !== generation) return;
+        setPaging({ key: timelineKey, cursor: startCursor, loading: false, failed: true });
+        if (isAuthApiError(reason)) redirectToLogin();
+      }
+    })();
+  }, [activeFilter, activeTab, isLoading, isLoadingMore, nextCursor, rememberViewerState, timelineKey]);
 
   const posts = useMemo(
     () => activeTab === "for-you" ? remotePosts.filter((post) => matchesFilter(post, activeFilter)) : remotePosts,
@@ -179,8 +283,9 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
       await setActorFollowing(actorType, id, isOn);
       setFollowingRequiresAuth(false);
       if (activeTab === "following") {
-        const next = await getFeedPosts({ mode: "following", filter: "all" });
-        replacePosts(next);
+        const page = await getFeedPage({ mode: "following", filter: "all" });
+        replacePosts(page.posts);
+        setPaging({ key: timelineKey, cursor: page.nextCursor, loading: false, failed: false });
       }
     } catch (reason) {
       setFollowedActorKeys((current) => {
@@ -196,7 +301,7 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
         return next;
       });
     }
-  }, [activeTab, followedActorKeys, pendingFollowKeys, replacePosts, requireAuth]);
+  }, [activeTab, followedActorKeys, pendingFollowKeys, replacePosts, requireAuth, timelineKey]);
 
   const joinInitiative = useCallback(async (postId: string) => {
     if (!requireAuth()) return;
@@ -225,6 +330,8 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     activeTab,
     activeFilter,
     posts,
+    /** Size of the loaded timeline before the tab's client-side filter. */
+    loadedCount: remotePosts.length,
     suggestions: initialSuggestions,
     likedPostIds,
     repostedPostIds,
@@ -245,5 +352,9 @@ export function useFeed(initialPosts: FeedPost[], initialSuggestions: FollowSugg
     openMedia: setSelectedMedia,
     closeMedia: () => setSelectedMedia(null),
     isLoading,
+    hasMore: nextCursor !== null,
+    isLoadingMore,
+    loadMoreFailed,
+    loadMore,
   };
 }

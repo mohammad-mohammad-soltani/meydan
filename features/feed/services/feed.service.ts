@@ -1,4 +1,4 @@
-import { meydanApi, plainText } from "@/lib/meydan-api";
+import { meydanApi, meydanApiPage, plainText } from "@/lib/meydan-api";
 import type { FeedAttachment, FeedPost, FollowSuggestion } from "../types";
 
 type ApiActor = {
@@ -188,19 +188,66 @@ async function getSquares(): Promise<ApiSquare[]> {
   return meydanApi<ApiSquare[]>("/squares");
 }
 
-export type FeedQuery = { mode?: "for_you" | "following"; filter?: string; cursor?: string | null };
+/**
+ * Posts per timeline request. The backend only hands out a `next_cursor` when
+ * an explicit `limit` narrows the page, so every timeline read passes one.
+ */
+export const FEED_PAGE_SIZE = 10;
 
-export async function getFeedPosts(query: FeedQuery = {}): Promise<FeedPost[]> {
-  const params = new URLSearchParams({ mode: query.mode || "for_you", filter: query.filter || "all" });
+const SQUARES_TTL_MS = 60_000;
+let squaresCache: { at: number; promise: Promise<ApiSquare[]> } | null = null;
+
+/**
+ * The timeline page is keyed by square ids, so each page needs the square
+ * directory. Paging fires several requests in a row; a short-lived cache keeps
+ * that from turning every "load more" into two round trips.
+ */
+function getCachedSquares(): Promise<ApiSquare[]> {
+  const now = Date.now();
+  if (squaresCache && now - squaresCache.at < SQUARES_TTL_MS) return squaresCache.promise;
+
+  const promise = getSquares().catch((reason: unknown) => {
+    if (squaresCache?.promise === promise) squaresCache = null;
+    throw reason;
+  });
+  squaresCache = { at: now, promise };
+  return promise;
+}
+
+export type FeedQuery = {
+  mode?: "for_you" | "following";
+  filter?: string;
+  cursor?: string | null;
+  limit?: number;
+};
+
+export type FeedPage = {
+  posts: FeedPost[];
+  /** `null` once the backend has no further timeline page. */
+  nextCursor: string | null;
+};
+
+export async function getFeedPage(query: FeedQuery = {}): Promise<FeedPage> {
+  const params = new URLSearchParams({
+    mode: query.mode || "for_you",
+    filter: query.filter || "all",
+    limit: String(query.limit ?? FEED_PAGE_SIZE),
+  });
   if (query.cursor) params.set("cursor", query.cursor);
-  const [narratives, squares] = await Promise.all([
-    meydanApi<ApiNarrative[]>(`/timeline?${params}`),
-    getSquares(),
+
+  const [page, squares] = await Promise.all([
+    meydanApiPage<ApiNarrative[]>(`/timeline?${params}`),
+    getCachedSquares(),
   ]);
+
   const squareMap = new Map(
     squares.map((square) => [`sq_${square.id}`, square] as const),
   );
-  return narratives.map((item) => mapNarrative(item, squareMap));
+
+  return {
+    posts: page.data.map((item) => mapNarrative(item, squareMap)),
+    nextCursor: page.nextCursor,
+  };
 }
 
 export async function getFollowSuggestions(): Promise<FollowSuggestion[]> {

@@ -1,17 +1,20 @@
 "use client";
 
-import { BellRing, X } from "lucide-react";
+import { BellRing, LoaderCircle, X } from "lucide-react";
 import { FeedFilters } from "./FeedFilters";
 import { FeedSkeleton } from "./FeedSkeleton";
 import { FeedTabs } from "./FeedTabs";
 import { FollowingEmptyState } from "./FollowingEmptyState";
 import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
+import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 import type { FeedPost, FollowSuggestion } from "../types";
 
 type FeedViewProps = {
   posts: FeedPost[];
   suggestions: FollowSuggestion[];
+  /** Cursor for the page after the server-rendered one, if the backend has more. */
+  nextCursor?: string | null;
   postsUnavailable?: boolean;
   suggestionsUnavailable?: boolean;
 };
@@ -19,32 +22,68 @@ type FeedViewProps = {
 export function FeedView({
   posts,
   suggestions,
+  nextCursor = null,
   postsUnavailable = false,
   suggestionsUnavailable = false,
 }: FeedViewProps) {
-  const feed = useFeed(posts, suggestions);
+  const feed = useFeed(posts, suggestions, nextCursor);
+  // Auto-paging pauses on failure so a broken backend cannot spin requests;
+  // the retry button below the list is what resumes it.
+  const sentinelRef = useInfiniteScroll({
+    enabled: feed.hasMore && !feed.isLoading && !feed.isLoadingMore && !feed.loadMoreFailed,
+    onLoadMore: feed.loadMore,
+    revision: feed.loadedCount,
+  });
+
   const showForYouSkeleton =
     feed.activeTab === "for-you" &&
     (feed.isLoading || (postsUnavailable && feed.posts.length === 0));
 
+  const listFooter = (
+    <div ref={sentinelRef} className="w-full px-4 py-6" data-feed-sentinel>
+      {feed.isLoadingMore ? (
+        <p role="status" aria-live="polite" className="flex items-center justify-center gap-2 text-xs font-bold text-foreground-subtle">
+          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+          در حال بارگذاری روایت‌های بیشتر…
+        </p>
+      ) : feed.loadMoreFailed ? (
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-xs font-bold text-foreground-subtle">بارگذاری روایت‌های بیشتر ناموفق بود.</p>
+          <button type="button" onClick={feed.loadMore} className="rounded-pill border border-border px-4 py-2 text-xs font-black text-foreground transition-colors hover:bg-hover">
+            تلاش دوباره
+          </button>
+        </div>
+      ) : feed.hasMore ? (
+        <button type="button" onClick={feed.loadMore} className="mx-auto block rounded-pill border border-border px-4 py-2 text-xs font-black text-foreground transition-colors hover:bg-hover">
+          بارگذاری بیشتر
+        </button>
+      ) : feed.posts.length > 0 ? (
+        <p className="text-center text-xs font-bold text-foreground-subtle">به پایان روایت‌های میدان رسیدید.</p>
+      ) : null}
+    </div>
+  );
+
   const postList = showForYouSkeleton ? (
     <FeedSkeleton />
   ) : (
-    <div className="w-full divide-y divide-divider">
-      {feed.posts.map((post) => (
-        <PostCard
-          key={post.id}
-          post={post}
-          liked={feed.likedPostIds.has(post.id)}
-          reposted={feed.repostedPostIds.has(post.id)}
-          joined={feed.joinedPostIds.has(post.id)}
-          onLike={() => void feed.toggleLike(post.id)}
-          onRepost={() => void feed.toggleRepost(post.id)}
-          onShare={() => void feed.sharePost(post)}
-          onJoin={() => void feed.joinInitiative(post.id)}
-          onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)}
-        />
-      ))}
+    <div className="w-full">
+      <div className="w-full divide-y divide-divider">
+        {feed.posts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            liked={feed.likedPostIds.has(post.id)}
+            reposted={feed.repostedPostIds.has(post.id)}
+            joined={feed.joinedPostIds.has(post.id)}
+            onLike={() => void feed.toggleLike(post.id)}
+            onRepost={() => void feed.toggleRepost(post.id)}
+            onShare={() => void feed.sharePost(post)}
+            onJoin={() => void feed.joinInitiative(post.id)}
+            onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)}
+          />
+        ))}
+      </div>
+      {listFooter}
     </div>
   );
 
