@@ -77,7 +77,9 @@ export function MediaGallery({
     >
       {single ? (
         single.kind === "video" ? (
-          <VideoPlayer item={single} variant="inline" />
+          // `preload="none"`: an upload can be tens of megabytes and is not
+          // web-optimized, so a card must not fetch anything until play.
+          <VideoPlayer item={single} variant="inline" preload="none" />
         ) : (
           <button
             type="button"
@@ -112,15 +114,27 @@ export function MediaGallery({
               className={`group/tile relative min-h-0 overflow-hidden bg-surface-sunken ${layout.tiles[index] ?? ""} ${tileRadius}`}
             >
               {item.kind === "video" ? (
+                /*
+                 * A tile only opens the lightbox, so it must never mount a
+                 * <video>: preloading metadata for every card is what made a
+                 * timeline fetch file heads and tails for clips nobody watched.
+                 * The still appears once the backend serves a poster; until
+                 * then the dark tile and play badge are the affordance.
+                 */
                 <>
-                  <video
-                    src={item.src}
-                    poster={item.poster}
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className="h-full w-full bg-black object-cover"
-                  />
+                  {item.poster ? (
+                    <Image
+                      src={item.poster}
+                      alt={item.title}
+                      fill
+                      quality={MEDIA_THUMB_QUALITY}
+                      sizes="(max-width: 640px) 50vw, 260px"
+                      className="object-cover"
+                      draggable={false}
+                    />
+                  ) : (
+                    <span aria-hidden="true" className="absolute inset-0 bg-black" />
+                  )}
                   <span aria-hidden="true" className="absolute inset-0 grid place-items-center bg-black/25">
                     <span className="grid h-11 w-11 place-items-center rounded-full bg-black/60 text-white backdrop-blur-sm">
                       <Play className="ml-0.5 h-5 w-5 fill-current" />

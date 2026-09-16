@@ -9,6 +9,8 @@ export type FeedAttachment = {
   icon: "image" | "video" | "article" | "microphone" | "bolt";
   /** Image/video source. */
   previewSrc?: string;
+  /** Real still for a video attachment, when the backend provides one. */
+  posterSrc?: string;
   /** Audio source; plays through the shared bottom player. */
   audioSrc?: string;
   previewAlt?: string;

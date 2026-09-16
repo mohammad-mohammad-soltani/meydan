@@ -15,6 +15,9 @@ type ApiAttachment = {
   label?: string;
   filename?: string;
   url?: string;
+  /** Still image for a video attachment; the backend may name it either way. */
+  poster_url?: string;
+  thumbnail_url?: string;
   width?: number;
   height?: number;
 };
@@ -150,6 +153,10 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
       previewSrc:
         attachment.type === "image" || attachment.type === "video"
           ? attachment.url
+          : undefined,
+      posterSrc:
+        attachment.type === "video"
+          ? attachment.poster_url || attachment.thumbnail_url
           : undefined,
       audioSrc: attachment.type === "audio" ? attachment.url : undefined,
       previewAlt:

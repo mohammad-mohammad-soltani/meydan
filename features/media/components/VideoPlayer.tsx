@@ -72,6 +72,15 @@ type VideoPlayerProps = {
   /** `inline` keeps the card frame; `immersive` fills the lightbox stage. */
   variant?: "inline" | "immersive";
   autoPlay?: boolean;
+  /**
+   * How eagerly the browser may fetch the file.
+   *
+   * Cards in a timeline pass `"none"` so a feed requests nothing until the
+   * reader taps play — these uploads are not web-optimized, so even metadata
+   * costs extra range requests per card. The lightbox and dedicated pages keep
+   * the default, because there the reader already asked for the video.
+   */
+  preload?: "none" | "metadata" | "auto";
   className?: string;
 };
 
@@ -86,6 +95,7 @@ export function VideoPlayer({
   item,
   variant = "inline",
   autoPlay = false,
+  preload = "metadata",
   className = "",
 }: VideoPlayerProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -484,7 +494,7 @@ export function VideoPlayer({
         poster={item.poster}
         playsInline
         autoPlay={autoPlay}
-        preload="metadata"
+        preload={preload}
         aria-label={item.title || "ویدیو"}
         className="absolute inset-0 h-full w-full cursor-pointer bg-black object-contain"
         onClick={(event) => {

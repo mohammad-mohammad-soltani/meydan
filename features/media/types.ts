@@ -14,7 +14,7 @@ export type MediaItem = {
   title: string;
   /** Direct source: image src, video src or audio src. */
   src?: string;
-  /** Poster/cover shown before a video or audio item starts. */
+  /** Still shown before a video plays. Never the video file itself. */
   poster?: string;
   /** Secondary line: size, format or a duration hint. */
   detail?: string;
@@ -35,6 +35,8 @@ export type MediaAttachmentLike = {
   detail?: string;
   icon?: string;
   previewSrc?: string;
+  /** Real still for a video attachment, e.g. a first-frame thumbnail. */
+  posterSrc?: string;
   audioSrc?: string;
   previewAlt?: string;
   width?: number;

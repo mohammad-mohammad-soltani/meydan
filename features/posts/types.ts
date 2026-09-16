@@ -19,6 +19,8 @@ export type PostMedia = {
   kind: PostMediaKind;
   detail?: string;
   previewSrc?: string;
+  /** Real still for a video attachment, when the backend provides one. */
+  posterSrc?: string;
   /** Audio source; plays through the shared bottom player. */
   audioSrc?: string;
   previewAlt?: string;

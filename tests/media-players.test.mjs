@@ -32,11 +32,45 @@ test("attachments normalise into one media item shape", () => {
   );
   assert.equal(items[0].src, "/a.jpg");
   assert.equal(items[1].title, "ویدیو میدان");
-  assert.equal(items[1].poster, "/b.mp4");
+  // A video is never its own poster: the old fallback made the browser fetch
+  // the clip as an image, which wasted a request and left the card black.
+  assert.equal(items[1].poster, undefined);
   assert.equal(items[2].src, "/c.mp3");
   // Only visual attachments reach the gallery/lightbox.
   assert.deepEqual(visualItems(items).map((item) => item.id), ["a", "b"]);
   assert.deepEqual(fileItems(items).map((item) => item.id), ["d"]);
+});
+
+test("a video poster is only accepted when it is a real still", () => {
+  const [withStill] = mediaItemsFromAttachments([
+    { id: "b", icon: "video", previewSrc: "/b.mp4", posterSrc: "/b.jpg" },
+  ]);
+  assert.equal(withStill.poster, "/b.jpg");
+
+  // A backend that echoes the video URL back does not describe a poster.
+  const [echoed] = mediaItemsFromAttachments([
+    { id: "b", icon: "video", previewSrc: "/b.mp4", posterSrc: "/b.mp4" },
+  ]);
+  assert.equal(echoed.poster, undefined);
+
+  // Chat sends the same URL as `url` and `previewUrl`, so neither is a still.
+  const chatVideo = mediaItemFromNamedAttachment({
+    id: "v",
+    name: "v.mp4",
+    mimeType: "video/mp4",
+    url: "/v.mp4",
+    previewUrl: "/v.mp4",
+  });
+  assert.equal(chatVideo.poster, undefined);
+
+  const chatWithStill = mediaItemFromNamedAttachment({
+    id: "v",
+    name: "v.mp4",
+    mimeType: "video/mp4",
+    url: "/v.mp4",
+    posterSrc: "/v.jpg",
+  });
+  assert.equal(chatWithStill.poster, "/v.jpg");
 });
 
 test("chat uploads classify by mime type", () => {
@@ -159,6 +193,21 @@ test("the video player keeps the shared playback controls", () => {
   ]) {
     assert.match(player, capability, `player must implement ${capability}`);
   }
+});
+
+test("timeline video cards fetch nothing until the reader presses play", () => {
+  const gallery = source("features/media/components/MediaGallery.tsx");
+  // Comments may talk about a video element; only real JSX must not mount one.
+  const galleryCode = gallery.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  // Uploads are not web-optimized, so even a metadata preload costs extra
+  // range requests per card; a timeline must stay silent until play.
+  assert.match(gallery, /<VideoPlayer item=\{single\} variant="inline" preload="none"/);
+  assert.doesNotMatch(galleryCode, /<video[\s>]/, "gallery tiles must not mount a video element");
+
+  const player = source("features/media/components/VideoPlayer.tsx");
+  assert.match(player, /preload\?: "none" \| "metadata" \| "auto"/);
+  assert.match(player, /preload=\{preload\}/);
 });
 
 test("content video flows through the media proxy", () => {

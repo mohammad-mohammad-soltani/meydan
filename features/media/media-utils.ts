@@ -68,6 +68,18 @@ const kindByIcon: Record<string, MediaKind> = {
   bolt: "file",
 };
 
+/**
+ * A poster has to be a still image.
+ *
+ * These items used to reuse the video URL as the poster, so the browser tried
+ * to decode an MP4 as an image — the request was wasted and every video card
+ * stayed black. The video source is therefore never accepted as its own poster.
+ */
+function posterForVideo(src?: string, posterSrc?: string): string | undefined {
+  if (!posterSrc || posterSrc === src) return undefined;
+  return posterSrc;
+}
+
 /** Normalises feed attachments and post media into the shared `MediaItem`. */
 export function mediaItemsFromAttachments(attachments: MediaAttachmentLike[]): MediaItem[] {
   return attachments.map((attachment) => {
@@ -79,7 +91,7 @@ export function mediaItemsFromAttachments(attachments: MediaAttachmentLike[]): M
       kind,
       title: attachment.previewAlt || attachment.label || defaultTitle(kind),
       src,
-      poster: kind === "video" ? attachment.previewSrc : undefined,
+      poster: kind === "video" ? posterForVideo(src, attachment.posterSrc) : undefined,
       detail: attachment.detail,
       width: attachment.width,
       height: attachment.height,
@@ -96,6 +108,8 @@ export type NamedAttachmentLike = {
   size?: number;
   url?: string;
   previewUrl?: string;
+  /** Real still for a video attachment, when the backend provides one. */
+  posterSrc?: string;
 };
 
 function kindFromMime(mimeType?: string): MediaKind {
@@ -124,7 +138,7 @@ export function mediaItemFromNamedAttachment(attachment: NamedAttachmentLike): M
     kind,
     title: attachment.name || defaultTitle(kind),
     src,
-    poster: kind === "video" ? attachment.previewUrl : undefined,
+    poster: kind === "video" ? posterForVideo(src, attachment.posterSrc) : undefined,
     detail: formatFileSize(attachment.size) || undefined,
     downloadHref: kind === "file" ? src : undefined,
   };
