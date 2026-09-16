@@ -189,19 +189,14 @@ async function getSquares(): Promise<ApiSquare[]> {
 }
 
 /**
- * Posts per timeline request. The backend only hands out a `next_cursor` when
- * an explicit `limit` narrows the page, so every timeline read passes one.
+ * A media-heavy timeline benefits from moderately sized pages: enough runway
+ * for prefetching without forcing the browser to download too many cards at once.
  */
-export const FEED_PAGE_SIZE = 10;
+export const FEED_PAGE_SIZE = 12;
 
 const SQUARES_TTL_MS = 60_000;
 let squaresCache: { at: number; promise: Promise<ApiSquare[]> } | null = null;
 
-/**
- * The timeline page is keyed by square ids, so each page needs the square
- * directory. Paging fires several requests in a row; a short-lived cache keeps
- * that from turning every "load more" into two round trips.
- */
 function getCachedSquares(): Promise<ApiSquare[]> {
   const now = Date.now();
   if (squaresCache && now - squaresCache.at < SQUARES_TTL_MS) return squaresCache.promise;
@@ -223,11 +218,14 @@ export type FeedQuery = {
 
 export type FeedPage = {
   posts: FeedPost[];
-  /** `null` once the backend has no further timeline page. */
+  /** `null` once the backend snapshot has no further timeline page. */
   nextCursor: string | null;
 };
 
-export async function getFeedPage(query: FeedQuery = {}): Promise<FeedPage> {
+export async function getFeedPage(
+  query: FeedQuery = {},
+  init?: RequestInit,
+): Promise<FeedPage> {
   const params = new URLSearchParams({
     mode: query.mode || "for_you",
     filter: query.filter || "all",
@@ -236,7 +234,7 @@ export async function getFeedPage(query: FeedQuery = {}): Promise<FeedPage> {
   if (query.cursor) params.set("cursor", query.cursor);
 
   const [page, squares] = await Promise.all([
-    meydanApiPage<ApiNarrative[]>(`/timeline?${params}`),
+    meydanApiPage<ApiNarrative[]>(`/timeline?${params}`, init),
     getCachedSquares(),
   ]);
 
