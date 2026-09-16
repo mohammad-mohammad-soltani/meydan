@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import type { MediaItem } from "../types";
-import { clamp, faDigits } from "../media-utils";
+import { clamp, faDigits, mediaThumbnailSrc } from "../media-utils";
 import { VideoPlayer } from "./VideoPlayer";
 
 const MIN_ZOOM = 1;
@@ -247,7 +247,16 @@ function MediaStage({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isGesturing, setIsGesturing] = useState(false);
   const [imageState, setImageState] = useState<"loading" | "ready" | "error">("loading");
+  const [previewBroken, setPreviewBroken] = useState(false);
   const [attempt, setAttempt] = useState(0);
+
+  /**
+   * The thumbnail the card already fetched. Painting it under the original is
+   * what makes opening a photo feel instant instead of showing an empty stage
+   * while a multi-megabyte upload downloads.
+   */
+  const previewSrc = item.kind === "image" ? mediaThumbnailSrc(item.src) : undefined;
+  const showPreview = Boolean(previewSrc) && !previewBroken && imageState !== "ready";
 
   const stageRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef(MIN_ZOOM);
@@ -462,6 +471,18 @@ function MediaStage({
           });
         }}
       >
+        {showPreview ? (
+          // Same sizing rules as the original, so the swap does not jump much.
+          <img
+            src={previewSrc}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            onError={() => setPreviewBroken(true)}
+            className="pointer-events-none absolute inset-0 m-auto max-h-full max-w-full rounded-xl object-contain"
+          />
+        ) : null}
+
         <img
           key={attempt}
           src={item.src}
@@ -479,7 +500,7 @@ function MediaStage({
           }}
         />
 
-        {imageState === "loading" ? (
+        {imageState === "loading" && !showPreview ? (
           <span className="pointer-events-none absolute inset-0 grid place-items-center">
             <span className="grid h-12 w-12 place-items-center rounded-full bg-surface-glass/15 text-on-solid backdrop-blur-sm">
               <LoaderCircle aria-hidden="true" className="h-6 w-6 animate-spin motion-reduce:animate-none" />

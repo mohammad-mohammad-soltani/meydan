@@ -9,6 +9,7 @@ import {
   faDigits,
   fileItems,
   mediaAspectRatio,
+  MEDIA_THUMB_QUALITY,
   visualItems,
 } from "../media-utils";
 import { MediaAudioCard } from "./MediaAudioCard";
@@ -42,6 +43,9 @@ type MediaGalleryProps = {
  * several are laid out in an X-style mosaic, audio plays through the shared
  * bottom player, files fall back to a row, and every visual opens the shared
  * zoomable lightbox. Feed posts, post pages, content and chat all use this.
+ *
+ * Photos here are served as optimized thumbnails (small width, low quality) so
+ * a timeline paints fast; the lightbox is what fetches the original file.
  */
 export function MediaGallery({
   items,
@@ -89,7 +93,7 @@ export function MediaGallery({
                 src={single.src as string}
                 alt={single.title}
                 fill
-                unoptimized={(single.src as string).startsWith("http")}
+                quality={MEDIA_THUMB_QUALITY}
                 sizes="(max-width: 640px) calc(100vw - 72px), 520px"
                 className="object-cover transition-transform duration-300 group-hover/media:scale-[1.01]"
                 draggable={false}
@@ -128,7 +132,7 @@ export function MediaGallery({
                   src={item.src as string}
                   alt={item.title}
                   fill
-                  unoptimized={(item.src as string).startsWith("http")}
+                  quality={MEDIA_THUMB_QUALITY}
                   sizes="(max-width: 640px) 50vw, 260px"
                   className="object-cover transition-transform duration-300 group-hover/tile:scale-[1.02]"
                   draggable={false}

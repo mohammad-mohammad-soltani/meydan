@@ -142,6 +142,32 @@ export function visualItems(items: MediaItem[]): MediaItem[] {
   return items.filter((item) => (item.kind === "image" || item.kind === "video") && Boolean(item.src));
 }
 
+/**
+ * Width and quality a timeline card asks the optimizer for.
+ *
+ * The upload can be several megabytes, while a feed card is at most ~520px
+ * wide, so cards render a small WebP and the viewer still opens the untouched
+ * original. `MEDIA_THUMB_QUALITY` must stay in `images.qualities` and
+ * `MEDIA_THUMB_WIDTH` in `images.deviceSizes` in `next.config.ts`, otherwise
+ * the optimizer rejects the request.
+ */
+export const MEDIA_THUMB_WIDTH = 640;
+export const MEDIA_THUMB_QUALITY = 65;
+
+/**
+ * The optimized thumbnail for one upload, built exactly the way Next's default
+ * image loader builds it.
+ *
+ * Cards ask for it through `next/image`; the lightbox paints the same URL under
+ * the original while it decodes, so opening a photo shows the cached thumbnail
+ * immediately instead of an empty stage. Blob and data previews (compose,
+ * uploads in progress) have no optimizer URL and return `undefined`.
+ */
+export function mediaThumbnailSrc(src?: string, width = MEDIA_THUMB_WIDTH): string | undefined {
+  if (!src || !/^https?:\/\//i.test(src)) return undefined;
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${MEDIA_THUMB_QUALITY}`;
+}
+
 export function audioItems(items: MediaItem[]): MediaItem[] {
   return items.filter((item) => item.kind === "audio" && Boolean(item.src));
 }
