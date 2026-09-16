@@ -37,6 +37,7 @@ function MessageAttachment({ attachment, scope }: { attachment: ChatAttachment; 
       items={[mediaItemFromNamedAttachment(attachment)]}
       scope={scope}
       tone="bubble"
+      className="mb-1"
     />
   );
 }
@@ -82,6 +83,8 @@ function MessageLocationCard({ location }: { location: NonNullable<ReturnType<ty
 export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelete, onForward, onReact }: MessageBubbleProps) {
   const StatusIcon = statusIcon[message.status];
   const location = parseSquareLocationMessage(message.body);
+  const isVisualAttachment = Boolean(message.attachment && /^(image|video)\//i.test(message.attachment.mimeType));
+  const hasAttachment = Boolean(message.attachment);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition>({ x: 8, y: 8 });
   const longPressTimer = useRef<number | null>(null);
@@ -136,24 +139,30 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
   return (
     <div className={`relative flex ${isOwn ? "justify-start" : "justify-end"}`}>
       <div
-        className="group relative max-w-[84%]"
+        className={`group relative ${
+          isVisualAttachment
+            ? "w-[min(78vw,20rem)] max-w-[84%]"
+            : hasAttachment
+              ? "w-[min(74vw,18rem)] max-w-[84%]"
+              : "max-w-[84%]"
+        }`}
         onContextMenu={handleContextMenu}
         onPointerDown={longPressStart}
         onPointerUp={longPressEnd}
         onPointerCancel={longPressEnd}
         onPointerMove={longPressEnd}
       >
-        <article className={`rounded-2xl px-3 py-2 text-[13px] leading-6 shadow-sm ${isOwn ? "rounded-tr-md bg-message-own text-message-own-foreground" : "rounded-tl-md bg-message-peer text-message-peer-foreground"}`}>
+        <article className={`rounded-2xl text-[13px] leading-6 shadow-sm ${hasAttachment ? "px-2 py-2" : "px-3 py-2"} ${isOwn ? "rounded-tr-md bg-message-own text-message-own-foreground" : "rounded-tl-md bg-message-peer text-message-peer-foreground"}`}>
           {message.forwardedFrom ? <p className="mb-1 text-[10px] font-semibold text-success">فورواردشده از {message.forwardedFrom}</p> : null}
           {message.replyTo ? <div className={`mb-1.5 border-r-2 pr-2 text-[11px] leading-4 ${isOwn ? "border-success-border text-message-meta" : "border-info-border text-message-meta"}`}><strong className="block text-[10px]">{message.replyTo.senderName}</strong><span className="block line-clamp-1">{message.replyTo.body}</span></div> : null}
           {message.attachment ? <MessageAttachment attachment={message.attachment} scope={`chat:${message.id}`} /> : null}
           {location ? (
             <MessageLocationCard location={location} />
           ) : message.body ? (
-            <p className="whitespace-pre-wrap">{message.body}</p>
+            <p className={`whitespace-pre-wrap ${hasAttachment ? "px-1 pt-1" : ""}`}>{message.body}</p>
           ) : null}
           {message.reactions?.length ? <div className="mt-1 flex flex-wrap gap-1">{message.reactions.map((reaction) => <button key={reaction} type="button" aria-label={`حذف واکنش ${reaction}`} onClick={() => onReact(message.id, reaction)} className="rounded-full bg-surface-glass px-1.5 py-0.5 text-xs shadow-xs">{reaction}</button>)}</div> : null}
-          <footer className="mt-0.5 flex items-center justify-end gap-1 text-[10px] leading-4 text-message-meta"><time>{message.sentAt}</time>{message.editedAt ? <span>ویرایش‌شده</span> : null}{isOwn ? <StatusIcon className="h-3.5 w-3.5" aria-label={message.status} /> : null}</footer>
+          <footer className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] leading-4 text-message-meta ${hasAttachment ? "px-1" : ""}`}><time>{message.sentAt}</time>{message.editedAt ? <span>ویرایش‌شده</span> : null}{isOwn ? <StatusIcon className="h-3.5 w-3.5" aria-label={message.status} /> : null}</footer>
         </article>
 
         <button
