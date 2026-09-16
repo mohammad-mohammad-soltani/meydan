@@ -144,7 +144,7 @@ export async function createDirectConversation(participantUserId: string | numbe
 export async function getConversationById(conversationId: string): Promise<Conversation | null> {
   try {
     const result = await meydanApi<ApiConversation>(`/chat/conversations/${conversationId}`);
-    return result;
+    return mapConversation(result);
   } catch {
     return null;
   }
