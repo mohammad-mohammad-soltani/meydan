@@ -41,7 +41,7 @@ export function SquareLocationCard({ profile }: { profile: ProfileDetails }) {
         <p className="mt-2 text-xs leading-6 text-foreground-secondary">{address}</p>
       ) : null}
       {hasPoint ? (
-        <div className="mt-3 overflow-hidden rounded-card">
+        <div className="relative isolate z-0 mt-3 overflow-hidden rounded-card">
           <MapFrame
             selectedSquares={[
               { id: "current", name: profile.identity.name, latitude: point.latitude, longitude: point.longitude },
