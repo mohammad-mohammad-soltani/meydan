@@ -27,6 +27,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
   const pathname = usePathname();
   const isPostPage = pathname.startsWith("/posts/");
   const isComposePage = pathname === "/compose";
+  const isPublicProfilePage = pathname.startsWith("/users/");
   // Conversation routes own their internal scrolling (header + list + composer).
   const isChatRoute = pathname.startsWith("/chat/");
 
@@ -64,7 +65,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
           </div>
         </aside>
         <div id="mainAppShell" className="relative flex h-[100dvh] min-h-0 w-full max-w-xl flex-col border-x border-border bg-background pb-[var(--comment-composer-height)] transition-colors duration-150">
-          {!isComposePage ? <MobileHeader /> : null}
+          {!isComposePage && !isPublicProfilePage ? <MobileHeader /> : null}
           <main className={`flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}>{children}</main>
           <FloatingComposeButton />
           <SilentBoundary label="mini-player">
