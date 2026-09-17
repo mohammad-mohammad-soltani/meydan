@@ -180,12 +180,6 @@ export type LinkableUser = {
 };
 
 export type SpeakerProfileInput = {
-  name: string;
-  bio: string;
-  role: string;
-  handle: string;
-  expertise: string;
-  initials: string;
   avatarMediaId: number | null;
   verified: boolean;
   cities: number[];

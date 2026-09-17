@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import Link from "next/link";
@@ -14,6 +14,7 @@ import { fa, primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
   adminErrorMessage,
   demoteSpeaker,
+  getSpeakerCategories,
   promoteSpeaker,
   updateSpeaker,
 } from "../services/speakers.service";
@@ -30,8 +31,12 @@ import {
   type SpeakerProfileInput,
 } from "../types";
 import { fieldErrorMessage } from "@/lib/meydan-api";
+import { foldDigits } from "../lib/normalize";
 
 export type SpeakerFormErrors = { message: string | null; fields: Record<string, string> };
+
+type CityGroup = { province: GeoOption; cities: GeoOption[] };
+type ReferenceStatus = "loading" | "ready" | "error";
 
 function reasonMessages(fields?: Record<string, string>): Record<string, string> {
   if (!fields) return {};
@@ -48,14 +53,9 @@ function readApiFields(reason: unknown): Record<string, string> | undefined {
 }
 
 /**
- * Promotion (`POST /admin/speakers`) and profile editing (`PATCH`) share this
- * form: the field set is identical, only `user_id` and the verb differ. The
- * promote mode starts from the picked account, edit mode from the existing
- * speaker.
- *
- * `user_id: not_eligible` is the interesting rejection — an administrator or a
- * square account can never be promoted, and the account picker only offers
- * `promotableUsers()` (never admins, squares or existing speakers).
+ * Promotion only attaches the speaker role to an existing account. Identity,
+ * biography and handle deliberately remain owned by that account's profile;
+ * this form manages only speaker-specific metadata.
  */
 export function AdminSpeakerForm({
   mode,
@@ -64,68 +64,88 @@ export function AdminSpeakerForm({
 }: {
   mode: "create" | "edit";
   speaker?: Speaker;
-  /** Only used in create mode: the eligible accounts from the backend. */
+  /** Only used in create mode: eligible accounts from the backend. */
   users?: LinkableUser[];
 }) {
   const router = useRouter();
-
   const [userId, setUserId] = useState<number | null>(speaker?.userId ?? null);
-  const [name, setName] = useState(speaker?.name ?? "");
-  const [bio, setBio] = useState(speaker?.bio ?? "");
-  const [role, setRole] = useState(speaker?.role ?? "");
-  const [handle, setHandle] = useState(speaker?.handle ?? "");
-  const [expertise, setExpertise] = useState(speaker?.expertise ?? "");
-  const [initials, setInitials] = useState(speaker?.initials ?? "");
+  const [userQuery, setUserQuery] = useState("");
   const [verified, setVerified] = useState(speaker?.verified ?? false);
   const [avatarMediaId, setAvatarMediaId] = useState<number | null>(null);
   const [cityIds, setCityIds] = useState<number[]>(speaker?.cities ?? []);
+  const [cityQuery, setCityQuery] = useState("");
   const [categories, setCategories] = useState<string[]>(speaker?.categories ?? []);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(speaker?.socialLinks ?? []);
-
-  // Cities are grouped by province so the picker can label them; the province
-  // list itself is reference data the API returns in one call.
-  const [citiesByProvince, setCitiesByProvince] = useState<GeoOption[][]>([]);
-  const [cities, setCities] = useState<GeoOption[]>([]);
-  const [referenceLoaded, setReferenceLoaded] = useState(false);
-
+  const [citiesByProvince, setCitiesByProvince] = useState<CityGroup[]>([]);
+  const [citiesStatus, setCitiesStatus] = useState<ReferenceStatus>("loading");
+  const [categoriesList, setCategoriesList] = useState<SpeakerCategory[]>([]);
+  const [categoriesStatus, setCategoriesStatus] = useState<ReferenceStatus>("loading");
   const [errors, setErrors] = useState<SpeakerFormErrors>({ message: null, fields: {} });
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [confirmDemote, setConfirmDemote] = useState(false);
   const [demoteError, setDemoteError] = useState<string | null>(null);
 
-  const [categoriesList, setCategoriesList] = useState<SpeakerCategory[]>([]);
+  // These are reference choices, not values entered by the administrator. Load
+  // them with the form so empty cards never depend on an unrelated field focus.
+  useEffect(() => {
+    let cancelled = false;
 
-  // Lazy loads: the edit page always needs the vocabulary; the create page
-  // merely prefers it, so the lists arrive on first interaction.
-  const ensureReferenceData = () => {
-    if (referenceLoaded) return;
-    setReferenceLoaded(true);
-    void import("../services/speakers.service")
-      .then((module) => module.getSpeakerCategories())
-      .then((items) => setCategoriesList(items ?? []))
-      .catch(() => setCategoriesList([]));
-    void getProvinces()
-      .then((items) =>
-        Promise.all((items ?? []).map((province) => getCities(province.id).catch(() => []))),
-      )
-      .then((groups) => {
-        setCitiesByProvince(groups);
-        setCities(groups.flat());
+    void getSpeakerCategories()
+      .then((items) => {
+        if (!cancelled) {
+          setCategoriesList(items ?? []);
+          setCategoriesStatus("ready");
+        }
       })
       .catch(() => {
-        setCitiesByProvince([]);
-        setCities([]);
+        if (!cancelled) setCategoriesStatus("error");
       });
-  };
+
+    void getProvinces()
+      .then((provinces) =>
+        Promise.all(
+          (provinces ?? []).map(async (province) => ({
+            province,
+            cities: await getCities(province.id).catch(() => []),
+          })),
+        ),
+      )
+      .then((groups) => {
+        if (!cancelled) {
+          setCitiesByProvince(groups);
+          setCitiesStatus("ready");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCitiesStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedUser = users.find((user) => user.id === userId) ?? null;
+  const candidateUsers = useMemo(() => {
+    const query = foldDigits(userQuery).trim().toLowerCase();
+    if (!query) return [];
+    return users
+      .filter((user) => user.name.toLowerCase().includes(query) || foldDigits(user.id).includes(query))
+      .slice(0, 8);
+  }, [userQuery, users]);
+  const visibleCityGroups = useMemo(() => {
+    const query = cityQuery.trim().toLowerCase();
+    if (!query) return citiesByProvince;
+    return citiesByProvince
+      .map((group) => ({
+        ...group,
+        cities: group.cities.filter((city) => city.name.toLowerCase().includes(query)),
+      }))
+      .filter((group) => group.cities.length > 0);
+  }, [citiesByProvince, cityQuery]);
 
   const input: SpeakerProfileInput = {
-    name,
-    bio,
-    role,
-    handle,
-    expertise,
-    initials,
     avatarMediaId,
     verified,
     cities: cityIds,
@@ -135,12 +155,8 @@ export function AdminSpeakerForm({
 
   const submit = async () => {
     setErrors({ message: null, fields: {} });
-
-    const local: Record<string, string> = {};
-    if (!name.trim()) local.name = "required";
-    if (mode === "create" && !userId) local.user_id = "invalid";
-    if (Object.keys(local).length > 0) {
-      setErrors({ message: "چند فیلد نیاز به اصلاح دارد.", fields: local });
+    if (mode === "create" && !userId) {
+      setErrors({ message: "حساب کاربری سخنران را انتخاب کنید.", fields: { user_id: "invalid" } });
       return;
     }
 
@@ -195,107 +211,93 @@ export function AdminSpeakerForm({
           void submit();
         }}
       >
-        <div className="admin-form-notice"><AdminFieldMessage message={saved ? "پروفایل سخنران ذخیره شد." : errors.message} fields={errors.fields} /></div>
+        <div className="admin-form-notice">
+          <AdminFieldMessage
+            message={saved ? "پروفایل سخنران ذخیره شد." : errors.message}
+            fields={errors.fields}
+          />
+        </div>
 
         {mode === "create" ? (
-          <section aria-label="انتخاب حساب" className="admin-form-card admin-form-side">
+          <section aria-label="انتخاب حساب" className="admin-form-card admin-form-wide">
             <h2>حساب کاربری</h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              نام، معرفی، شناسه و تصویر پایه از همین حساب خوانده می‌شود و در فرم سخنران تغییر نمی‌کند.
+            </p>
             <AdminField
-              label="حساب کاربری"
-              htmlFor="speaker-user"
+              label="جست‌وجوی کاربر"
+              htmlFor="speaker-user-search"
               required
               error={errors.fields.user_id}
-              hint="فقط حساب‌های واجد شرایط فهرست می‌شوند؛ حساب مدیرکل و حساب میدان قابل ارتقا نیستند."
+              hint="نام یا شناسهٔ کاربر را وارد کنید. فقط حساب‌های واجد شرایط نمایش داده می‌شوند."
             >
-              <select
-                id="speaker-user"
-                value={userId ?? ""}
+              <input
+                id="speaker-user-search"
+                type="search"
+                value={userQuery}
                 onChange={(event) => {
-                  const next = event.target.value ? Number(event.target.value) : null;
-                  setUserId(next);
-                  const picked = users.find((user) => user.id === next);
-                  if (picked && !name) setName(picked.name);
+                  setUserQuery(event.target.value);
+                  if (userId !== null) setUserId(null);
                 }}
+                placeholder="مثلاً محمد یا ۱۲۳"
+                autoComplete="off"
                 className={fieldClass}
+              />
+            </AdminField>
+            {userQuery.trim() && !selectedUser ? (
+              <div
+                aria-label="نتایج جست‌وجوی کاربران"
+                className="mt-2 overflow-hidden rounded-control border border-border bg-surface"
               >
-                <option value="">
-                  {users.length ? "انتخاب کاربر" : "کاربر واجد شرایطی پیدا نشد"}
-                </option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} (#{user.id})
-                  </option>
-                ))}
-              </select>
-            </AdminField>
+                {candidateUsers.length ? (
+                  <ul className="divide-y divide-border">
+                    {candidateUsers.map((user) => (
+                      <li key={user.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserId(user.id);
+                            setUserQuery(user.name);
+                            setErrors((current) => ({
+                              ...current,
+                              fields: { ...current.fields, user_id: "" },
+                            }));
+                          }}
+                          className="flex min-h-11 w-full items-center justify-between gap-4 px-3 text-right text-xs font-bold transition-colors hover:bg-hover focus-visible:bg-hover"
+                        >
+                          <span>{user.name}</span>
+                          <span className="shrink-0 text-[11px] font-normal text-muted-foreground">
+                            شناسه {fa(user.id)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="px-3 py-3 text-xs text-muted-foreground">کاربر واجد شرایطی پیدا نشد.</p>
+                )}
+              </div>
+            ) : null}
+            {selectedUser ? (
+              <p className="mt-3 rounded-control bg-selected px-3 py-2 text-xs font-bold text-selected-foreground" role="status">
+                {selectedUser.name} با شناسهٔ {fa(selectedUser.id)} برای ارتقا انتخاب شد.
+              </p>
+            ) : null}
           </section>
-        ) : null}
+        ) : (
+          <section aria-label="حساب سخنران" className="admin-form-card admin-form-wide">
+            <h2>حساب سخنران</h2>
+            <p className="mt-1 text-sm font-black">{speaker?.name || "سخنران"}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              نام، معرفی و شناسه از نمایهٔ خود کاربر خوانده می‌شود؛ اینجا فقط تنظیمات اختصاصی سخنران را تغییر می‌دهید.
+            </p>
+          </section>
+        )}
 
-        <section aria-label="پروفایل" className={`admin-form-card ${mode === "create" ? "admin-form-main" : "admin-form-wide"} space-y-4`}>
-          <h2>هویت و معرفی سخنران</h2>
-
-          <AdminField label="نام" htmlFor="speaker-name" required error={errors.fields.name}>
-            <input
-              id="speaker-name"
-              value={name}
-              onFocus={ensureReferenceData}
-              onChange={(event) => setName(event.target.value)}
-              className={fieldClass}
-            />
-          </AdminField>
-
-          <AdminField label="معرفی" htmlFor="speaker-bio" error={errors.fields.bio}>
-            <textarea
-              id="speaker-bio"
-              value={bio}
-              rows={4}
-              onChange={(event) => setBio(event.target.value)}
-              className={`${fieldClass} resize-none`}
-            />
-          </AdminField>
-
-          <div className="admin-field-grid">
-            <AdminField label="سمت" htmlFor="speaker-role">
-              <input
-                id="speaker-role"
-                value={role}
-                onChange={(event) => setRole(event.target.value)}
-                className={fieldClass}
-              />
-            </AdminField>
-            <AdminField label="شناسه کاربری (handle)" htmlFor="speaker-handle">
-              <input
-                id="speaker-handle"
-                value={handle}
-                dir="ltr"
-                onChange={(event) => setHandle(event.target.value)}
-                className={`${fieldClass} text-left`}
-              />
-            </AdminField>
-            <AdminField label="تخصص" htmlFor="speaker-expertise">
-              <input
-                id="speaker-expertise"
-                value={expertise}
-                onChange={(event) => setExpertise(event.target.value)}
-                className={fieldClass}
-              />
-            </AdminField>
-            <AdminField label="سرواژه (initials)" htmlFor="speaker-initials">
-              <input
-                id="speaker-initials"
-                value={initials}
-                onChange={(event) => setInitials(event.target.value)}
-                className={fieldClass}
-              />
-            </AdminField>
-          </div>
-
-        </section>
-
-        <section aria-label="دسته‌بندی موضوعی" className="admin-form-card admin-form-half">
+        <section aria-label="دسته‌بندی موضوعی" className="admin-form-card admin-form-half" aria-busy={categoriesStatus === "loading"}>
           <h2>دسته‌بندی موضوعی</h2>
           <p className="mt-1 text-[10px] text-muted-foreground">
-            فقط اسلاگ‌های شناخته‌شده ذخیره می‌شوند؛ مقدار ناشناخته در سرور حذف می‌شود.
+            دسته‌ها هنگام باز شدن فرم از سامانه دریافت می‌شوند.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {categoriesList.map((category) => {
@@ -322,51 +324,74 @@ export function AdminSpeakerForm({
                 </button>
               );
             })}
-            {categoriesList.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground">
-                برای بارگذاری دسته‌ها، روی فیلد نام کلیک کنید.
-              </p>
+            {categoriesStatus === "loading" ? (
+              <p className="text-[11px] text-muted-foreground">دسته‌ها در حال دریافت‌اند…</p>
+            ) : null}
+            {categoriesStatus === "error" ? (
+              <p className="text-[11px] text-danger-foreground">دریافت دسته‌ها ممکن نشد؛ صفحه را دوباره بارگذاری کنید.</p>
+            ) : null}
+            {categoriesStatus === "ready" && categoriesList.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">دسته‌ای در سامانه تعریف نشده است.</p>
             ) : null}
           </div>
         </section>
 
-        <section aria-label="شهرها" className="admin-form-card admin-form-half">
+        <section aria-label="شهرها" className="admin-form-card admin-form-half" aria-busy={citiesStatus === "loading"}>
           <h2>شهرهای فعالیت</h2>
           <p className="mt-1 text-[10px] text-muted-foreground">
             {fa(cityIds.length)} شهر انتخاب شده است
             {citiesByProvince.length ? ` از ${fa(citiesByProvince.length)} استان` : ""}.
           </p>
-          <div className="mt-2 max-h-48 overflow-y-auto rounded-control border border-border p-2 no-scrollbar">
-            {cities.length === 0 ? (
-              <p className="py-3 text-center text-[11px] text-muted-foreground">
-                برای بارگذاری شهرها، روی فیلد نام کلیک کنید.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {cities.map((city) => {
-                  const active = cityIds.includes(city.id);
-                  return (
-                    <button
-                      key={city.id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() =>
-                        setCityIds((current) =>
-                          active ? current.filter((id) => id !== city.id) : [...current, city.id],
-                        )
-                      }
-                      className={`inline-flex min-h-7 items-center rounded-pill border px-2 text-[10px] font-bold transition-colors ${
-                        active
-                          ? "border-brand-border bg-selected text-selected-foreground"
-                          : "border-border bg-surface text-muted-foreground hover:bg-hover"
-                      }`}
-                    >
-                      {city.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          <label className="mt-3 block text-[11px] font-bold text-foreground" htmlFor="speaker-city-search">
+            جست‌وجوی شهر
+          </label>
+          <input
+            id="speaker-city-search"
+            type="search"
+            value={cityQuery}
+            onChange={(event) => setCityQuery(event.target.value)}
+            placeholder="نام شهر"
+            className={`${fieldClass} mt-1`}
+          />
+          <div className="mt-2 max-h-64 space-y-3 overflow-y-auto rounded-control border border-border p-2 no-scrollbar">
+            {citiesStatus === "loading" ? (
+              <p className="py-3 text-center text-[11px] text-muted-foreground">شهرها در حال دریافت‌اند…</p>
+            ) : null}
+            {citiesStatus === "error" ? (
+              <p className="py-3 text-center text-[11px] text-danger-foreground">دریافت شهرها ممکن نشد؛ صفحه را دوباره بارگذاری کنید.</p>
+            ) : null}
+            {citiesStatus === "ready" && visibleCityGroups.length === 0 ? (
+              <p className="py-3 text-center text-[11px] text-muted-foreground">شهری با این نام پیدا نشد.</p>
+            ) : null}
+            {visibleCityGroups.map((group) => (
+              <section key={group.province.id} aria-label={`شهرهای ${group.province.name}`}>
+                <h3 className="mb-1 text-[11px] font-black text-foreground">{group.province.name}</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {group.cities.map((city) => {
+                    const active = cityIds.includes(city.id);
+                    return (
+                      <button
+                        key={city.id}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() =>
+                          setCityIds((current) =>
+                            active ? current.filter((id) => id !== city.id) : [...current, city.id],
+                          )
+                        }
+                        className={`inline-flex min-h-7 items-center rounded-pill border px-2 text-[10px] font-bold transition-colors ${
+                          active
+                            ? "border-brand-border bg-selected text-selected-foreground"
+                            : "border-border bg-surface text-muted-foreground hover:bg-hover"
+                        }`}
+                      >
+                        {city.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         </section>
 
@@ -422,11 +447,7 @@ export function AdminSpeakerForm({
 
         <div className="admin-form-actions">
           <button type="submit" disabled={busy} className={primaryButtonClass}>
-            {busy ? (
-              <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save aria-hidden="true" className="h-4 w-4" />
-            )}
+            {busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Save aria-hidden="true" className="h-4 w-4" />}
             {busy ? "در حال ذخیره…" : mode === "create" ? "ارتقا به سخنران" : "ذخیره تغییرات"}
           </button>
           <Link href={"/admin/speakers" as Route} className={secondaryButtonClass}>

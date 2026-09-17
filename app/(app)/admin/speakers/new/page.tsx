@@ -20,7 +20,7 @@ export default async function AdminSpeakerCreatePage() {
     <div className="min-h-full bg-background">
       <AdminPageHeader
         title="ارتقای کاربر به سخنران"
-        description="یک حساب موجود را انتخاب و پروفایل سخنران را تکمیل کنید. ارتقا تکرارپذیر است."
+        description="حساب واجد شرایط را جست‌وجو و انتخاب کنید؛ نام و معرفی از همان حساب خوانده می‌شود."
         crumbs={[{ label: "سخنرانان", href: "/admin/speakers" }, { label: "ارتقا" }]}
       />
       <AdminSpeakerForm mode="create" users={users} />

@@ -21,6 +21,24 @@ test("the proxy matcher covers the admin subtree", () => {
   assert.match(proxy, /["']\/admin\/:path\*["']/);
 });
 
+test("speaker promotion searches accounts and never overwrites their identity", () => {
+  const form = source("features/admin/components/AdminSpeakerForm.tsx");
+  const speakers = source("features/admin/services/speakers.service.ts");
+  const profileBody = speakers.slice(
+    speakers.indexOf("function speakerProfileBody"),
+    speakers.indexOf("export async function promoteSpeaker"),
+  );
+
+  assert.match(form, /id="speaker-user-search"/);
+  assert.match(form, /type="search"/);
+  assert.match(form, /foldDigits\(userQuery\)/);
+  assert.match(form, /getSpeakerCategories\(\)/);
+  assert.match(form, /getProvinces\(\)/);
+  assert.doesNotMatch(form, /id="speaker-name"/);
+  assert.doesNotMatch(form, /هویت و معرفی سخنران/);
+  assert.doesNotMatch(profileBody, /\b(name|bio|role|handle|expertise|initials):/);
+});
+
 test("/admin is a protected prefix so an anonymous visitor never sees the shell", async () => {
   const { PROTECTED_ROUTE_PREFIXES, isProtectedPath } = await import(
     new URL("../lib/protected-routes.ts", import.meta.url).href

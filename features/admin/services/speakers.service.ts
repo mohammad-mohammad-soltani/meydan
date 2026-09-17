@@ -283,12 +283,6 @@ export async function getSpeakerInvitation(
 
 function speakerProfileBody(input: SpeakerProfileInput): Record<string, unknown> {
   return {
-    name: input.name.trim(),
-    bio: input.bio,
-    role: input.role.trim(),
-    handle: input.handle.trim(),
-    expertise: input.expertise.trim(),
-    initials: input.initials.trim(),
     avatar_media_id: input.avatarMediaId ?? 0,
     verified: input.verified,
     cities: input.cities,
