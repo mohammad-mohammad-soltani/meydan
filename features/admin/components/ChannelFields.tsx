@@ -3,11 +3,10 @@
 import { AdminField, fieldClass } from "./AdminField";
 
 /**
- * The two messaging channels a square can be reached on.
+ * The two messaging channels an account can be reached on.
  *
- * `SquareAdminService::saveChannels` stores the *handle* on the owner account
- * and derives the full URL onto the square itself, so the admin types a handle
- * (e.g. `meydan_tehran`), not a URL — an empty string clears the channel.
+ * The admin types a handle (e.g. `meydan_tehran`), not a URL. An empty string
+ * clears that channel for the account.
  */
 export function ChannelFields({
   idPrefix = "channels",

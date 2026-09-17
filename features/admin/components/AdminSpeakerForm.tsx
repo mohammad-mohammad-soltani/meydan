@@ -10,6 +10,7 @@ import { AdminDialog } from "./AdminDialog";
 import { MediaPickerField } from "./MediaPickerField";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminFieldMessage } from "./AdminFieldMessage";
+import { ChannelFields } from "./ChannelFields";
 import { fa, primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
   adminErrorMessage,
@@ -76,6 +77,10 @@ export function AdminSpeakerForm({
   const [cityQuery, setCityQuery] = useState("");
   const [categories, setCategories] = useState<string[]>(speaker?.categories ?? []);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(speaker?.socialLinks ?? []);
+  const [channels, setChannels] = useState({
+    eitaa: speaker?.eitaaChannel ?? "",
+    bale: speaker?.baleChannel ?? "",
+  });
   const [citiesByProvince, setCitiesByProvince] = useState<CityGroup[]>([]);
   const [citiesStatus, setCitiesStatus] = useState<ReferenceStatus>("loading");
   const [categoriesList, setCategoriesList] = useState<SpeakerCategory[]>([]);
@@ -151,6 +156,8 @@ export function AdminSpeakerForm({
     cities: cityIds,
     categories,
     socialLinks,
+    eitaaChannel: channels.eitaa,
+    baleChannel: channels.bale,
   };
 
   const submit = async () => {
@@ -436,6 +443,24 @@ export function AdminSpeakerForm({
             <Plus aria-hidden="true" className="h-3.5 w-3.5" />
             افزودن لینک
           </button>
+        </AdminDisclosureSection>
+
+        <AdminDisclosureSection
+          title="کانال‌های بله و ایتا"
+          className="admin-form-half"
+          defaultOpen={Boolean(channels.eitaa || channels.bale)}
+          hasError={Boolean(errors.fields.eitaa_channel || errors.fields.bale_channel)}
+        >
+          <ChannelFields
+            idPrefix="speaker-channels"
+            eitaa={channels.eitaa}
+            bale={channels.bale}
+            onChange={setChannels}
+            errors={{
+              eitaa_channel: errors.fields.eitaa_channel,
+              bale_channel: errors.fields.bale_channel,
+            }}
+          />
         </AdminDisclosureSection>
 
         <AdminDisclosureSection title="تصویر و نشان تأیید" className="admin-form-half" hasError={Boolean(errors.fields.avatar_media_id)}>

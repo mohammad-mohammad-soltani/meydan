@@ -44,6 +44,8 @@ type ApiSpeaker = {
   cities?: number[] | null;
   categories?: Array<{ slug?: string; name?: string }> | null;
   social_links?: Array<{ platform?: string; url?: string; label?: string }> | null;
+  eitaa_channel?: string | null;
+  bale_channel?: string | null;
 };
 
 type ApiInvitationActor = {
@@ -105,6 +107,8 @@ export function mapSpeaker(row: ApiSpeaker): Speaker {
       .filter((category): category is { slug: string; name?: string } => Boolean(category?.slug))
       .map((category) => String(category.slug)),
     socialLinks: mapSocialLinks(row.social_links),
+    eitaaChannel: String(row.eitaa_channel ?? ""),
+    baleChannel: String(row.bale_channel ?? ""),
   };
 }
 
@@ -288,6 +292,8 @@ function speakerProfileBody(input: SpeakerProfileInput): Record<string, unknown>
     cities: input.cities,
     categories: input.categories,
     social_links: input.socialLinks,
+    eitaa_channel: input.eitaaChannel.trim(),
+    bale_channel: input.baleChannel.trim(),
   };
 }
 

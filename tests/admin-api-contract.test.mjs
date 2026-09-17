@@ -88,6 +88,8 @@ test("the speaker surfaces use the promote/demote routes, not user edits", () =>
   assert.match(speakers, /promote/);
   // Promotion is a POST of `user_id`, never a role string.
   assert.match(speakers, /user_id/);
+  assert.match(speakers, /eitaa_channel: input\.eitaaChannel\.trim\(\)/);
+  assert.match(speakers, /bale_channel: input\.baleChannel\.trim\(\)/);
   // The request and invitation inboxes share one controller under two prefixes.
   assert.match(speakers, /\/admin\/speaker-requests/);
   assert.match(speakers, /\/admin\/speaker-invitations/);

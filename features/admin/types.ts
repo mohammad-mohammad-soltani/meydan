@@ -172,6 +172,8 @@ export type Speaker = {
   cities: number[];
   categories: string[];
   socialLinks: SocialLink[];
+  eitaaChannel: string;
+  baleChannel: string;
 };
 
 export type LinkableUser = {
@@ -185,6 +187,8 @@ export type SpeakerProfileInput = {
   cities: number[];
   categories: string[];
   socialLinks: SocialLink[];
+  eitaaChannel: string;
+  baleChannel: string;
 };
 
 export type SpeakerCreateInput = SpeakerProfileInput & { userId: number };
