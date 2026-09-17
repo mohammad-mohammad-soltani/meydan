@@ -35,7 +35,8 @@
   overscroll-behavior: contain;
 }
 @media (min-width: 1024px) {
-  .admin-shell > main { margin-inline-end: 18rem; }
+  /* In RTL, inline-start is the right edge. Reserve the fixed sidebar there. */
+  .admin-shell > main { margin-inline-start: 18rem; }
 }
 @media (min-width: 1024px) {
   .admin-shell { flex-direction: row; }
