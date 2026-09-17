@@ -3,8 +3,18 @@
 import type { ReactNode } from "react";
 import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
-import { FolderKanban, Home, LogIn, Map, MessageCircle, Mic, Search, UserCheck } from "lucide-react";
+import {
+  FolderKanban,
+  Home,
+  LogIn,
+  Map,
+  MessageCircle,
+  Mic,
+  Search,
+  UserCheck,
+} from "lucide-react";
 import { MiniPlayer } from "@/features/audio/MiniPlayer";
+import { AdminNavLink } from "@/features/admin/components/AdminNavLink";
 import { AppLogo } from "@/components/shared/AppLogo";
 import { SilentBoundary } from "@/components/shared/SilentBoundary";
 import { PushEnrollment } from "@/components/pwa/PushEnrollment";
@@ -22,7 +32,8 @@ import { usePathname } from "next/navigation";
 
 type AppShellProps = { children: ReactNode; isAuthenticated?: boolean };
 
-const desktopLinkClass = "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground";
+const desktopLinkClass =
+  "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground";
 
 export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
   const pathname = usePathname();
@@ -32,6 +43,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
   const isPublicProfilePage = pathname.startsWith("/users/");
   // Conversation routes own their internal scrolling (header + list + composer).
   const isChatRoute = pathname.startsWith("/chat/");
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
   // The app scrolls inside <main>, not window. Next.js cannot restore/reset this
   // custom scroll container automatically, so client-side navigation used to
@@ -46,27 +58,70 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
 
   return (
     <UnreadProvider isAuthenticated={isAuthenticated}>
-      <div className="mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground">
+      <div
+        className={`mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground ${isAdminRoute ? "admin-route" : ""}`}
+      >
         <PostLoginReturn />
         <PushEnrollment isAuthenticated={isAuthenticated} />
         <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between overflow-y-auto border-l border-border bg-background p-4 lg:flex">
           <div className="space-y-10">
             <Link href="/home" className="flex items-center gap-3 px-2">
               <AppLogo priority />
-              <span><span className="block text-base font-black text-foreground">نقش من</span><span className="block text-[11px] text-muted-foreground">شبکه سراسری میادین ایران</span></span>
+              <span>
+                <span className="block text-base font-black text-foreground">
+                  نقش من
+                </span>
+                <span className="block text-[11px] text-muted-foreground">
+                  شبکه سراسری میادین ایران
+                </span>
+              </span>
             </Link>
             <div className="space-y-5">
-              <nav aria-label="ناوبری دسکتاپ" className="space-y-3 text-sm font-bold">
-                <Link href="/home" className={desktopLinkClass}><Home className="h-5 w-5" />خانه و روایت‌ها</Link>
-                <Link href="/content" className={desktopLinkClass}><FolderKanban className="h-5 w-5" />بسته محتوا</Link>
-                <Link href="/speakers" className={desktopLinkClass}><Mic className="h-5 w-5" />اعزام سخنران</Link>
-                <Link href="/map" className={desktopLinkClass}><Map className="h-5 w-5" />نقشه زنده</Link>
-                <Link href="/chat" className={desktopLinkClass}><MessageCircle className="h-5 w-5" />گفتگو<NavBadge className="ms-auto" /></Link>
-                <Link href="/explore" className={desktopLinkClass}><Search className="h-5 w-5" />کاوش و جستجو</Link>
+              <nav
+                aria-label="ناوبری دسکتاپ"
+                className="space-y-3 text-sm font-bold"
+              >
+                <Link href="/home" className={desktopLinkClass}>
+                  <Home className="h-5 w-5" />
+                  خانه و روایت‌ها
+                </Link>
+                <Link href="/content" className={desktopLinkClass}>
+                  <FolderKanban className="h-5 w-5" />
+                  بسته محتوا
+                </Link>
+                <Link href="/speakers" className={desktopLinkClass}>
+                  <Mic className="h-5 w-5" />
+                  اعزام سخنران
+                </Link>
+                <Link href="/map" className={desktopLinkClass}>
+                  <Map className="h-5 w-5" />
+                  نقشه زنده
+                </Link>
+                <Link href="/chat" className={desktopLinkClass}>
+                  <MessageCircle className="h-5 w-5" />
+                  گفتگو
+                  <NavBadge className="ms-auto" />
+                </Link>
+                <Link href="/explore" className={desktopLinkClass}>
+                  <Search className="h-5 w-5" />
+                  کاوش و جستجو
+                </Link>
                 {isAuthenticated ? (
-                  <Link href="/profile" className={desktopLinkClass}><UserCheck className="h-5 w-5" />نمایه</Link>
+                  <AdminNavLink
+                    isAuthenticated={isAuthenticated}
+                    className={desktopLinkClass}
+                  />
+                ) : null}
+                {isAuthenticated ? (
+                  <Link href="/profile" className={desktopLinkClass}>
+                    <UserCheck className="h-5 w-5" />
+                    نمایه
+                  </Link>
                 ) : (
-                  <Link href="/auth" className={desktopLinkClass}><LogIn className="h-5 w-5" />ورود</Link>
+                  <Link href="/auth" className={desktopLinkClass}>
+                    <LogIn className="h-5 w-5" />
+                    ورود
+                  </Link>
                 )}
               </nav>
               {/* X-style primary action: signed-in desktop viewers compose here. */}
@@ -77,14 +132,26 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
             <SidebarUserCard isAuthenticated={isAuthenticated} />
           </div>
         </aside>
-        <div id="mainAppShell" className="relative flex h-[100dvh] min-h-0 w-full max-w-xl flex-col border-x border-border bg-background pb-[var(--comment-composer-height)] transition-colors duration-150">
-          {!isComposePage && !isPublicProfilePage ? <MobileHeader /> : null}
-          <main ref={mainScrollRef} className={`relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}>{children}</main>
+        <div
+          id="mainAppShell"
+          className={`relative flex h-[100dvh] min-h-0 w-full flex-col border-x border-border bg-background pb-[var(--comment-composer-height)] transition-colors duration-150 ${isAdminRoute ? "max-w-none" : "max-w-xl"}`}
+        >
+          {!isAdminRoute && !isComposePage && !isPublicProfilePage ? (
+            <MobileHeader />
+          ) : null}
+          <main
+            ref={mainScrollRef}
+            className={`relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}
+          >
+            {children}
+          </main>
           <FloatingComposeButton />
           <SilentBoundary label="mini-player">
             <MiniPlayer />
           </SilentBoundary>
-          {!isPostPage ? <BottomNavigation isAuthenticated={isAuthenticated} /> : null}
+          {!isPostPage ? (
+            <BottomNavigation isAuthenticated={isAuthenticated} />
+          ) : null}
         </div>
         <aside className="hidden h-screen w-72 shrink-0 flex-col justify-between gap-4 overflow-y-auto border-r border-border bg-background p-4 lg:flex">
           <SilentBoundary label="trends-panel">

@@ -1,0 +1,17 @@
+import type { Metadata } from "next";
+import { AdminProgramsView } from "@/features/admin/components/AdminProgramsView";
+import { PROGRAM_LIST_PAGE_SIZE } from "@/features/admin/services/programs.service";
+import { getPrograms } from "@/features/admin/services/admin-server";
+import { isAdministrator } from "@/features/admin/server/require-administrator";
+
+export const metadata: Metadata = { title: "کمپین‌ها | پنل مدیریت میدان" };
+export const dynamic = "force-dynamic";
+
+export default async function AdminCampaignsPage() {
+  // Fail-closed per page: the layout gate alone does not stop this segment from
+  // rendering, so no query runs and nothing is shown without the role.
+  if (!(await isAdministrator())) return null;
+
+  const initial = await getPrograms("campaigns", 1, PROGRAM_LIST_PAGE_SIZE);
+  return <AdminProgramsView kind="campaigns" initial={initial} />;
+}

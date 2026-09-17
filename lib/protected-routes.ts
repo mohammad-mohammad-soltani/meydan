@@ -18,6 +18,10 @@ export const PROTECTED_ROUTE_PREFIXES = [
   "/compose",
   "/chat",
   "/profile",
+  // The admin panel needs *a* session to be rendered at all; the role check
+  // that rejects non-administrators lives in `app/(app)/admin/layout.tsx`,
+  // because the proxy must stay offline and cannot call `/me`.
+  "/admin",
 ] as const;
 
 export function isProtectedPath(pathname: string): boolean {

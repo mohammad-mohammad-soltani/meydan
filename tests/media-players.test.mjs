@@ -212,7 +212,7 @@ test("timeline video cards fetch nothing until the reader presses play", () => {
 
 test("content video flows through the media proxy", () => {
   const service = source("features/content/services/content.service.ts");
-  assert.match(service, /function videoOf/);
+  assert.match(service, /contentVideo\(item\.id, item\.primary_attachment_id, item\.attachments\)/);
   assert.match(service, /videoSrc/);
 
   const route = source("app/api/content/[contentId]/media/[attachmentId]/route.ts");

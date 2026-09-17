@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ACCESS_COOKIE,
+  ACCESS_EXPIRY_COOKIE,
   REFRESH_COOKIE,
+  accessExpiry,
+  SESSION_COOKIE_MAX_AGE,
   sessionCookieOptions,
 } from "@/lib/meydan-session";
 import { getMeydanApiBaseUrl } from "@/lib/meydan-api";
@@ -17,6 +20,7 @@ const routes: Record<string, string> = {
 type AuthUpstreamPayload = {
   data?: {
     access_token?: string;
+    expires_in?: number;
   };
   error?: {
     message?: string;
@@ -89,17 +93,22 @@ export async function POST(request: NextRequest, context: RouteContext<"/api/aut
   if (parsed.data?.access_token) {
     result.cookies.set(ACCESS_COOKIE, parsed.data.access_token, {
       ...sessionCookieOptions,
-      maxAge: 15 * 60,
+      maxAge: SESSION_COOKIE_MAX_AGE,
+    });
+    result.cookies.set(ACCESS_EXPIRY_COOKIE, accessExpiry(parsed.data.expires_in), {
+      ...sessionCookieOptions,
+      maxAge: SESSION_COOKIE_MAX_AGE,
     });
   }
   if (refresh) {
     result.cookies.set(REFRESH_COOKIE, refresh, {
       ...sessionCookieOptions,
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: SESSION_COOKIE_MAX_AGE,
     });
   }
   if (action === "logout" && response.ok) {
     result.cookies.delete(ACCESS_COOKIE);
+    result.cookies.delete(ACCESS_EXPIRY_COOKIE);
     result.cookies.delete(REFRESH_COOKIE);
   }
 

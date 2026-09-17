@@ -1,5 +1,70 @@
 @import "tailwindcss";
 
+/* Admin has its own wide information architecture while sharing the app's
+ * semantic color contract. These scoped rules upgrade existing admin cards
+ * without changing public surfaces. */
+.admin-shell > main > div {
+  max-width: 96rem;
+  margin-inline: auto;
+}
+.admin-shell {
+  --background: #0b0d0f;
+  --surface: #101316;
+  --surface-muted: #15191d;
+  --surface-elevated: #171c20;
+  --surface-sunken: #080a0c;
+  --surface-glass: rgb(16 19 22 / 0.92);
+  --card: #171c20;
+  --border: #293037;
+  --border-strong: #3a444d;
+  --divider: #20272d;
+  --input: #0c1013;
+  --input-hover: #12171b;
+  --input-border: #303941;
+  --muted: #15191d;
+  --disabled: #1a1e22;
+}
+.admin-route > aside {
+  display: none !important;
+}
+.admin-shell .rounded-card {
+  border-radius: 1rem;
+  background: var(--surface-elevated);
+  box-shadow: var(--elevation-sm);
+}
+.admin-shell button,
+.admin-shell a,
+.admin-shell select,
+.admin-shell input,
+.admin-shell textarea {
+  outline-offset: 3px;
+}
+.admin-shell :focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.admin-shell .admin-navigation a {
+  min-height: 2.75rem;
+}
+.admin-shell form.space-y-5 {
+  padding-inline: clamp(1rem, 3vw, 2.5rem) !important;
+}
+.admin-shell form.space-y-5 > div:last-child {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-inline: calc(clamp(1rem, 3vw, 2.5rem) * -1);
+  padding: 0.75rem clamp(1rem, 3vw, 2.5rem);
+  border-top: 1px solid var(--divider);
+  background: var(--surface-glass);
+  backdrop-filter: blur(14px);
+}
+@media (max-width: 1023px) {
+  .admin-shell > main > div {
+    max-width: 100%;
+  }
+}
+
 /*
  * Meydan global design contract.
  * Components must consume semantic utilities (bg-surface, text-foreground,
@@ -111,7 +176,7 @@
   --radius-panel: var(--radius-panel-value);
   --radius-pill: var(--radius-pill-value);
   --container-app: 36rem;
-  --spacing-page: clamp(.75rem, 3.5vw, 1rem);
+  --spacing-page: clamp(0.75rem, 3.5vw, 1rem);
 }
 
 :root {
@@ -134,7 +199,7 @@
   --surface-muted: #f3f3f3;
   --surface-elevated: #ffffff;
   --surface-sunken: #ededed;
-  --surface-glass: rgb(255 255 255 / .92);
+  --surface-glass: rgb(255 255 255 / 0.92);
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --popover: var(--surface-elevated);
@@ -155,14 +220,14 @@
   --icon: #525252;
   --icon-muted: #8a8a8a;
 
-  --hover: rgb(23 23 23 / .055);
-  --active: rgb(23 23 23 / .09);
-  --selected: rgb(220 38 38 / .10);
+  --hover: rgb(23 23 23 / 0.055);
+  --active: rgb(23 23 23 / 0.09);
+  --selected: rgb(220 38 38 / 0.1);
   --selected-foreground: #b91c1c;
   --disabled: #eeeeee;
   --disabled-foreground: #a3a3a3;
   --ring: #dc2626;
-  --selection-bg: rgb(220 38 38 / .16);
+  --selection-bg: rgb(220 38 38 / 0.16);
   --link: #c81e1e;
   --link-hover: #991b1b;
 
@@ -206,21 +271,21 @@
   --message-peer-foreground: #262626;
   --message-meta: #737373;
 
-  --overlay: rgb(0 0 0 / .42);
-  --scrim: rgb(0 0 0 / .58);
+  --overlay: rgb(0 0 0 / 0.42);
+  --scrim: rgb(0 0 0 / 0.58);
   --skeleton: #e5e5e5;
   --skeleton-highlight: #f5f5f5;
 
   --shadow-color: 0 0 0;
-  --elevation-xs: 0 1px 2px rgb(var(--shadow-color) / .05);
-  --elevation-sm: 0 2px 8px rgb(var(--shadow-color) / .07);
-  --elevation-card: 0 6px 20px rgb(var(--shadow-color) / .08);
-  --elevation-popover: 0 12px 32px rgb(var(--shadow-color) / .12);
-  --elevation-floating: 0 18px 48px rgb(var(--shadow-color) / .14);
-  --elevation-dialog: 0 24px 64px rgb(var(--shadow-color) / .18);
-  --elevation-inset: inset 0 1px 2px rgb(var(--shadow-color) / .08);
+  --elevation-xs: 0 1px 2px rgb(var(--shadow-color) / 0.05);
+  --elevation-sm: 0 2px 8px rgb(var(--shadow-color) / 0.07);
+  --elevation-card: 0 6px 20px rgb(var(--shadow-color) / 0.08);
+  --elevation-popover: 0 12px 32px rgb(var(--shadow-color) / 0.12);
+  --elevation-floating: 0 18px 48px rgb(var(--shadow-color) / 0.14);
+  --elevation-dialog: 0 24px 64px rgb(var(--shadow-color) / 0.18);
+  --elevation-inset: inset 0 1px 2px rgb(var(--shadow-color) / 0.08);
 
-  --radius-control-value: .75rem;
+  --radius-control-value: 0.75rem;
   --radius-card-value: 1rem;
   --radius-panel-value: 1.25rem;
   --radius-pill-value: 9999px;
@@ -228,8 +293,8 @@
   --motion-normal: 180ms;
   --motion-slow: 240ms;
   --motion-page: 300ms;
-  --motion-ease-standard: cubic-bezier(.2,.8,.2,1);
-  --motion-ease-emphasized: cubic-bezier(.22,1,.36,1);
+  --motion-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html.dark {
@@ -249,7 +314,7 @@ html.dark {
   --surface-muted: #2d2d2d;
   --surface-elevated: #333333;
   --surface-sunken: #1a1a1a;
-  --surface-glass: rgb(38 38 38 / .92);
+  --surface-glass: rgb(38 38 38 / 0.92);
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --popover: var(--surface-elevated);
@@ -268,50 +333,50 @@ html.dark {
   --icon: #d4d4d4;
   --icon-muted: #8f8f8f;
 
-  --hover: rgb(255 255 255 / .065);
-  --active: rgb(255 255 255 / .105);
-  --selected: rgb(239 68 68 / .16);
+  --hover: rgb(255 255 255 / 0.065);
+  --active: rgb(255 255 255 / 0.105);
+  --selected: rgb(239 68 68 / 0.16);
   --selected-foreground: #f87171;
   --disabled: #303030;
   --disabled-foreground: #737373;
   --ring: #ef4444;
-  --selection-bg: rgb(239 68 68 / .24);
+  --selection-bg: rgb(239 68 68 / 0.24);
   --link: #f87171;
   --link-hover: #fca5a5;
 
   --brand: #ef4444;
   --brand-hover: #dc2626;
   --brand-active: #b91c1c;
-  --brand-muted: rgb(239 68 68 / .13);
-  --brand-border: rgb(239 68 68 / .36);
+  --brand-muted: rgb(239 68 68 / 0.13);
+  --brand-border: rgb(239 68 68 / 0.36);
   --brand-foreground: #ffffff;
 
   --success: #34d399;
   --success-foreground: #6ee7b7;
-  --success-surface: rgb(16 185 129 / .12);
-  --success-border: rgb(52 211 153 / .30);
+  --success-surface: rgb(16 185 129 / 0.12);
+  --success-border: rgb(52 211 153 / 0.3);
   --warning: #fbbf24;
   --warning-foreground: #fcd34d;
   /* The dark-theme amber is bright, so its label must be near-black. */
   --warning-solid-foreground: #1f1400;
-  --warning-surface: rgb(245 158 11 / .12);
-  --warning-border: rgb(251 191 36 / .30);
+  --warning-surface: rgb(245 158 11 / 0.12);
+  --warning-border: rgb(251 191 36 / 0.3);
   --danger: #f87171;
   --danger-foreground: #fca5a5;
-  --danger-surface: rgb(239 68 68 / .12);
-  --danger-border: rgb(248 113 113 / .32);
+  --danger-surface: rgb(239 68 68 / 0.12);
+  --danger-border: rgb(248 113 113 / 0.32);
   --info: #60a5fa;
   --info-foreground: #93c5fd;
-  --info-surface: rgb(59 130 246 / .12);
-  --info-border: rgb(96 165 250 / .30);
+  --info-surface: rgb(59 130 246 / 0.12);
+  --info-border: rgb(96 165 250 / 0.3);
   --accent: #a78bfa;
   --accent-foreground: #c4b5fd;
-  --accent-surface: rgb(167 139 250 / .14);
-  --accent-border: rgb(167 139 250 / .30);
+  --accent-surface: rgb(167 139 250 / 0.14);
+  --accent-border: rgb(167 139 250 / 0.3);
   --verified: #60a5fa;
-  --verified-surface: rgb(96 165 250 / .14);
+  --verified-surface: rgb(96 165 250 / 0.14);
   --speaker: #f87171;
-  --speaker-surface: rgb(248 113 113 / .14);
+  --speaker-surface: rgb(248 113 113 / 0.14);
 
   --message-own: #2b4638;
   --message-own-foreground: #f0fff6;
@@ -319,22 +384,26 @@ html.dark {
   --message-peer-foreground: #f5f5f5;
   --message-meta: #a3a3a3;
 
-  --overlay: rgb(0 0 0 / .52);
-  --scrim: rgb(0 0 0 / .70);
+  --overlay: rgb(0 0 0 / 0.52);
+  --scrim: rgb(0 0 0 / 0.7);
   --skeleton: #343434;
   --skeleton-highlight: #414141;
 
-  --elevation-xs: 0 1px 2px rgb(var(--shadow-color) / .22);
-  --elevation-sm: 0 3px 10px rgb(var(--shadow-color) / .26);
-  --elevation-card: 0 8px 24px rgb(var(--shadow-color) / .28);
-  --elevation-popover: 0 14px 36px rgb(var(--shadow-color) / .34);
-  --elevation-floating: 0 20px 52px rgb(var(--shadow-color) / .38);
-  --elevation-dialog: 0 28px 72px rgb(var(--shadow-color) / .44);
-  --elevation-inset: inset 0 1px 2px rgb(var(--shadow-color) / .30);
+  --elevation-xs: 0 1px 2px rgb(var(--shadow-color) / 0.22);
+  --elevation-sm: 0 3px 10px rgb(var(--shadow-color) / 0.26);
+  --elevation-card: 0 8px 24px rgb(var(--shadow-color) / 0.28);
+  --elevation-popover: 0 14px 36px rgb(var(--shadow-color) / 0.34);
+  --elevation-floating: 0 20px 52px rgb(var(--shadow-color) / 0.38);
+  --elevation-dialog: 0 28px 72px rgb(var(--shadow-color) / 0.44);
+  --elevation-inset: inset 0 1px 2px rgb(var(--shadow-color) / 0.3);
 }
 
 @layer base {
-  *, *::before, *::after { box-sizing: border-box; }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
   html {
     min-height: 100%;
     background: var(--background);
@@ -348,12 +417,24 @@ html.dark {
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
-    font-feature-settings: "kern" 1, "liga" 1;
+    font-feature-settings:
+      "kern" 1,
+      "liga" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  button, input, textarea, select { font: inherit; }
-  button, a, input, textarea, select, [role="button"] {
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+  button,
+  a,
+  input,
+  textarea,
+  select,
+  [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
   button,
@@ -362,14 +443,15 @@ html.dark {
   input,
   textarea,
   select {
-    transition-property: scale, opacity, color, background-color, border-color, box-shadow;
+    transition-property:
+      scale, opacity, color, background-color, border-color, box-shadow;
     transition-duration: var(--motion-fast);
     transition-timing-function: var(--motion-ease-standard);
   }
   button:not(:disabled):active,
   a:active,
   [role="button"]:active {
-    scale: .97;
+    scale: 0.97;
   }
   button:disabled,
   input:disabled,
@@ -377,87 +459,188 @@ html.dark {
   select:disabled {
     cursor: not-allowed;
   }
-  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-  ::selection { background: var(--selection-bg); color: var(--foreground); }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--selection-bg);
+    color: var(--foreground);
+  }
 }
 
 @keyframes route-transition-enter-keyframes {
-  from { opacity: 0; transform: translateY(.65rem) scale(.992); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(0.65rem) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 @keyframes ui-enter-keyframes {
-  from { opacity: 0; transform: translateY(.375rem); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes ui-exit-keyframes {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-.375rem); }
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.375rem);
+  }
 }
 @keyframes ui-view-enter-keyframes {
-  from { opacity: 0; transform: translateX(-1.25rem); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 @keyframes ui-view-leave-keyframes {
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(100%); }
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
 }
 @keyframes ui-pop-keyframes {
-  0%, 100% { transform: scale(1); }
-  45% { transform: scale(1.35); }
-  72% { transform: scale(.9); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.35);
+  }
+  72% {
+    transform: scale(0.9);
+  }
 }
 @keyframes ui-fade-in-keyframes {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes ui-dialog-panel-in-keyframes {
-  from { opacity: 0; transform: translateY(.75rem) scale(.965); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 @keyframes ui-popover-in-keyframes {
-  from { opacity: 0; transform: translateY(-.35rem) scale(.975); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 @keyframes ui-state-settle-keyframes {
-  0% { scale: .96; }
-  65% { scale: 1.025; }
-  100% { scale: 1; }
+  0% {
+    scale: 0.96;
+  }
+  65% {
+    scale: 1.025;
+  }
+  100% {
+    scale: 1;
+  }
 }
 @keyframes read-more-reveal-keyframes {
-  from { opacity: 0; filter: blur(.4rem); transform: translateY(-.3rem); }
-  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+  from {
+    opacity: 0;
+    filter: blur(0.4rem);
+    transform: translateY(-0.3rem);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
 }
 
 .route-transition-stage {
-  animation: route-transition-enter-keyframes var(--motion-page) var(--motion-ease-emphasized) both;
+  animation: route-transition-enter-keyframes var(--motion-page)
+    var(--motion-ease-emphasized) both;
   transform-origin: 50% 0;
 }
 
 [role="dialog"] {
-  animation: ui-fade-in-keyframes var(--motion-normal) var(--motion-ease-standard) both;
+  animation: ui-fade-in-keyframes var(--motion-normal)
+    var(--motion-ease-standard) both;
 }
 
 [role="dialog"] > :first-child {
-  animation: ui-dialog-panel-in-keyframes var(--motion-slow) var(--motion-ease-emphasized) both;
+  animation: ui-dialog-panel-in-keyframes var(--motion-slow)
+    var(--motion-ease-emphasized) both;
 }
 
 [role="menu"],
 [role="listbox"] {
-  animation: ui-popover-in-keyframes var(--motion-normal) var(--motion-ease-emphasized) both;
+  animation: ui-popover-in-keyframes var(--motion-normal)
+    var(--motion-ease-emphasized) both;
   transform-origin: top center;
 }
 
 [aria-selected="true"],
 [aria-pressed="true"] {
-  animation: ui-state-settle-keyframes var(--motion-normal) var(--motion-ease-emphasized) both;
+  animation: ui-state-settle-keyframes var(--motion-normal)
+    var(--motion-ease-emphasized) both;
 }
 
-@utility ui-enter { animation: ui-enter-keyframes var(--motion-slow) var(--motion-ease-standard) both; }
-@utility ui-exit { animation: ui-exit-keyframes var(--motion-normal) var(--motion-ease-standard) both; }
-@utility ui-view-enter { animation: ui-view-enter-keyframes var(--motion-normal) var(--motion-ease-emphasized) both; }
-@utility ui-view-leave { pointer-events: none; animation: ui-view-leave-keyframes var(--motion-normal) var(--motion-ease-standard) both; }
-@utility ui-opening { pointer-events: none; opacity: .2; transform: translateX(-1rem) scale(.985); transition: opacity var(--motion-normal), transform var(--motion-normal); }
-@utility ui-pop { animation: ui-pop-keyframes var(--motion-slow) var(--motion-ease-standard) both; }
+@utility ui-enter {
+  animation: ui-enter-keyframes var(--motion-slow) var(--motion-ease-standard)
+    both;
+}
+@utility ui-exit {
+  animation: ui-exit-keyframes var(--motion-normal) var(--motion-ease-standard)
+    both;
+}
+@utility ui-view-enter {
+  animation: ui-view-enter-keyframes var(--motion-normal)
+    var(--motion-ease-emphasized) both;
+}
+@utility ui-view-leave {
+  pointer-events: none;
+  animation: ui-view-leave-keyframes var(--motion-normal)
+    var(--motion-ease-standard) both;
+}
+@utility ui-opening {
+  pointer-events: none;
+  opacity: 0.2;
+  transform: translateX(-1rem) scale(0.985);
+  transition:
+    opacity var(--motion-normal),
+    transform var(--motion-normal);
+}
+@utility ui-pop {
+  animation: ui-pop-keyframes var(--motion-slow) var(--motion-ease-standard)
+    both;
+}
 
 /*
  * "خواندن بیشتر": the hidden remainder stays in the document but takes no
@@ -472,7 +655,8 @@ html.dark {
 
 @utility read-more-reveal-open {
   display: inline;
-  animation: read-more-reveal-keyframes var(--motion-slow) var(--motion-ease-emphasized) both;
+  animation: read-more-reveal-keyframes var(--motion-slow)
+    var(--motion-ease-emphasized) both;
   will-change: opacity, filter, transform;
 }
 
@@ -482,17 +666,23 @@ html.dark {
 }
 
 @utility no-scrollbar {
-  -ms-overflow-style: none; 
+  -ms-overflow-style: none;
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html:focus-within { scroll-behavior: auto; }
-  *, *::before, *::after {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
     scroll-behavior: auto !important;
-    animation-duration: .01ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -116,6 +116,8 @@ function MediaStage({
             title: item.title,
             src: item.media.videoSrc,
             poster: item.media.coverImage,
+            width: item.media.videoWidth,
+            height: item.media.videoHeight,
           }}
           variant="inline"
           className="mx-auto max-w-3xl"
@@ -123,6 +125,8 @@ function MediaStage({
       </div>
     );
   }
+
+  if (item.media.kind === "video") return null;
 
   const coverSrc = item.media.coverImage ?? "/images/generated/content-hero.svg";
 
@@ -433,7 +437,17 @@ export function ContentDetailView({
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <h2 className="truncate text-sm font-black text-foreground">
-                {item.creator.name}
+                {item.creator.profileHref ? (
+                  <Link
+                    href={item.creator.profileHref as Route}
+                    aria-label={`مشاهدهٔ صفحهٔ ${item.creator.name}`}
+                    className="rounded-sm outline-none transition-colors hover:text-brand focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {item.creator.name}
+                  </Link>
+                ) : (
+                  item.creator.name
+                )}
               </h2>
 
               <span

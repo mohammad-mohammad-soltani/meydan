@@ -5,7 +5,11 @@ const DEFAULT_API_BASE =
 
 export type ApiEnvelope<T> = {
   data: T;
-  meta?: { request_id?: string; next_cursor?: string | null; count?: number };
+  meta?: Record<string, unknown> & {
+    request_id?: string;
+    next_cursor?: string | null;
+    count?: number;
+  };
 };
 
 /**
@@ -17,24 +21,69 @@ export type ApiPage<T> = {
   nextCursor: string | null;
 };
 
+/**
+ * The admin lists page with `page`/`per_page` and report `total`/`pages` in
+ * `meta` instead of the cursor the public feeds use, so the whole envelope is
+ * kept rather than just the payload.
+ */
+export type ApiEnvelopeResult<T> = {
+  data: T;
+  meta: Record<string, unknown>;
+};
+
 type ApiErrorBody = {
-  error?: { message?: string };
+  error?: {
+    message?: string;
+    code?: string;
+    fields?: Record<string, string> | null;
+  };
   message?: string;
   code?: string;
 };
 
 export class MeydanApiError extends Error {
   status: number;
+  /** Backend `error.code`, e.g. `validation_failed` or `forbidden`. */
+  code?: string;
+  /**
+   * Per-field reason codes from a WordPress 422 (`{ phone: "taken" }`), which
+   * forms turn into inline messages under the matching input.
+   */
+  fields?: Record<string, string>;
 
-  constructor(message: string, status: number) {
+  constructor(
+    message: string,
+    status: number,
+    details?: { code?: string; fields?: Record<string, string> },
+  ) {
     super(message);
     this.name = "MeydanApiError";
     this.status = status;
+    this.code = details?.code;
+    this.fields = details?.fields;
   }
 }
 
+/** Reason codes the backend attaches to `error.fields`, mapped to Persian. */
+const FIELD_REASON_MESSAGES: Record<string, string> = {
+  required: "این فیلد الزامی است.",
+  invalid: "مقدار وارد‌شده معتبر نیست.",
+  taken: "این مقدار قبلاً ثبت شده است.",
+  invalid_or_taken: "این مقدار معتبر نیست یا قبلاً ثبت شده است.",
+  not_eligible: "این حساب واجد شرایط نیست.",
+  too_long: "مقدار وارد‌شده بیش از حد بلند است.",
+};
+
+/**
+ * The Persian sentence for a single rejected form field. The server's own
+ * message is shown above the form; this explains the marker next to the input.
+ */
+export function fieldErrorMessage(reason: string): string {
+  return FIELD_REASON_MESSAGES[reason] || "مقدار وارد‌شده معتبر نیست.";
+}
+
 export function isAuthApiError(reason: unknown): boolean {
-  return reason instanceof MeydanApiError && (reason.status === 401 || reason.status === 403);
+  return reason instanceof MeydanApiError && reason.status === 401;
 }
 
 export function getMeydanApiBaseUrl(): string {
@@ -97,12 +146,47 @@ function redirectProtectedClientRequest(path: string, init?: RequestInit): void 
   throw new MeydanApiError("Authentication required", 401);
 }
 
+
+/**
+ * Reads the endpoint and returns the whole envelope, which is what the admin
+ * lists need: they page with `page`/`per_page` and report `total` and `pages`
+ * in `meta` rather than the `next_cursor` the public feeds use.
+ */
+export async function meydanApiEnvelope<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<ApiEnvelopeResult<T>> {
+  const body = await requestEnvelope<T>(path, init);
+  const meta =
+    "meta" in body && body.meta && typeof body.meta === "object"
+      ? (body.meta as Record<string, unknown>)
+      : {};
+  return { data: (body as ApiEnvelope<T>).data, meta };
+}
+
 /**
  * Reads the endpoint and keeps the envelope's pagination cursor, which is what
  * cursor-based feeds (the timeline) need to request the next page. Every other
  * caller only wants the payload and should keep using `meydanApi`.
  */
 export async function meydanApiPage<T>(path: string, init?: RequestInit): Promise<ApiPage<T>> {
+  const body = await requestEnvelope<T>(path, init);
+  const nextCursor =
+    "meta" in body && typeof body.meta?.next_cursor === "string" ? body.meta.next_cursor : null;
+  return { data: body.data, nextCursor };
+}
+
+export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T> {
+  return (await meydanApiPage<T>(path, init)).data;
+}
+
+/**
+ * The single fetch/parse/throw path shared by every envelope reader above.
+ * Redirect-on-401, the invalid-JSON message and the error text are unchanged
+ * from the original single-endpoint implementation; only the structured
+ * `error.code`/`error.fields` are new.
+ */
+async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<ApiEnvelope<T>> {
   redirectProtectedClientRequest(path, init);
 
   const base = getMeydanApiBaseUrl();
@@ -132,34 +216,32 @@ export async function meydanApiPage<T>(path: string, init?: RequestInit): Promis
   if (!response.ok) {
     if (
       typeof window !== "undefined" &&
-      (response.status === 401 || response.status === 403) &&
+      response.status === 401 &&
       requiresClientAuthentication(path, init)
     ) {
       redirectClientToLogin();
     }
 
-    const envelopeMessage =
-      "error" in body && body.error?.message ? body.error.message : undefined;
+    const errorEnvelope = "error" in body ? body.error : undefined;
+    const envelopeMessage = errorEnvelope?.message;
     const wordpressMessage =
       "message" in body && typeof body.message === "string" ? body.message : undefined;
     const message =
       envelopeMessage || wordpressMessage || `Meydan API request failed (${response.status})`;
-    throw new MeydanApiError(message, response.status);
+    throw new MeydanApiError(message, response.status, {
+      code: errorEnvelope?.code,
+      fields:
+        errorEnvelope?.fields && typeof errorEnvelope.fields === "object"
+          ? errorEnvelope.fields
+          : undefined,
+    });
   }
 
   if (!("data" in body)) {
     throw new MeydanApiError("Meydan API response is missing the data envelope.", response.status);
   }
 
-  const nextCursor = "meta" in body && typeof body.meta?.next_cursor === "string"
-    ? body.meta.next_cursor
-    : null;
-
-  return { data: body.data, nextCursor };
-}
-
-export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T> {
-  return (await meydanApiPage<T>(path, init)).data;
+  return body as ApiEnvelope<T>;
 }
 
 export function plainText(value: string): string {

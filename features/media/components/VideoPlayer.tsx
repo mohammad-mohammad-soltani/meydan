@@ -24,7 +24,7 @@ import {
   clamp,
   faDigits,
   formatClock,
-  mediaAspectRatio,
+  videoAspectRatio,
   resolveBufferedEnd,
   resolveMediaDuration,
 } from "../media-utils";
@@ -135,9 +135,11 @@ export function VideoPlayer({
     pictureInPictureSupported,
     () => false,
   );
-  const [aspectRatio, setAspectRatio] = useState(() => mediaAspectRatio(item.width, item.height));
-
   const source = item.src;
+  const [decodedRatio, setDecodedRatio] = useState<{ source: string; ratio: number } | null>(null);
+  const aspectRatio = decodedRatio && decodedRatio.source === source
+    ? decodedRatio.ratio
+    : videoAspectRatio(item.width, item.height);
   const progress = duration > 0 ? clamp((currentTime / duration) * 100, 0, 100) : 0;
   const bufferedProgress = duration > 0 ? clamp((buffered / duration) * 100, 0, 100) : 0;
 
@@ -152,7 +154,7 @@ export function VideoPlayer({
     setBuffered(resolveBufferedEnd(video));
 
     if (video.videoWidth > 0 && video.videoHeight > 0) {
-      setAspectRatio(mediaAspectRatio(video.videoWidth, video.videoHeight));
+      setDecodedRatio({ source: source || "", ratio: videoAspectRatio(video.videoWidth, video.videoHeight) });
     }
 
     setCurrentTime(Number.isFinite(video.currentTime) ? video.currentTime : 0);
@@ -435,7 +437,10 @@ export function VideoPlayer({
           ? "h-full w-full"
           : `w-full rounded-2xl border border-border shadow-sm ${className}`
       }`}
-      style={isImmersive ? undefined : { aspectRatio }}
+      style={isImmersive ? undefined : {
+        aspectRatio,
+        maxWidth: aspectRatio < 1 ? `min(100%, ${aspectRatio * 80}dvh)` : undefined,
+      }}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => {
         event.stopPropagation();
@@ -504,6 +509,7 @@ export function VideoPlayer({
         }}
         onLoadedMetadata={(event) => syncVideoMetrics(event.currentTarget)}
         onLoadedData={(event) => syncVideoMetrics(event.currentTarget)}
+        onResize={(event) => syncVideoMetrics(event.currentTarget)}
         onDurationChange={(event) => syncDuration(event.currentTarget)}
         onProgress={(event) => {
           setBuffered(resolveBufferedEnd(event.currentTarget));
@@ -534,7 +540,7 @@ export function VideoPlayer({
         }}
         onPlaying={(event) => {
           setIsWaiting(false);
-          syncDuration(event.currentTarget);
+          syncVideoMetrics(event.currentTarget);
         }}
         onRateChange={(event) => setRate(event.currentTarget.playbackRate || 1)}
         onError={() => {

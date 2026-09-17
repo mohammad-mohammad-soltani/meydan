@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ACCESS_COOKIE,
+  ACCESS_EXPIRY_COOKIE,
   REFRESH_COOKIE,
+  accessExpiry,
+  SESSION_COOKIE_MAX_AGE,
   sessionCookieOptions,
 } from "@/lib/meydan-session";
 
@@ -56,11 +59,12 @@ async function refresh(refreshToken: string) {
     cache: "no-store",
   });
   const body = await response.json().catch(() => null) as {
-    data?: { access_token?: string };
+    data?: { access_token?: string; expires_in?: number };
   } | null;
   if (!response.ok || !body?.data?.access_token) return undefined;
   return {
     accessToken: body.data.access_token,
+    expiresIn: body.data.expires_in,
     refreshToken: upstreamCookie(response, REFRESH_COOKIE),
   };
 }
@@ -76,6 +80,7 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
   let response = await upstream(request, path, accessToken, body);
   let refreshed = false;
   let refreshedRefreshToken: string | undefined;
+  let refreshedExpiresIn: number | undefined;
 
   if (response.status === 401) {
     const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
@@ -83,6 +88,7 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
     if (refreshedSession) {
       accessToken = refreshedSession.accessToken;
       refreshedRefreshToken = refreshedSession.refreshToken;
+      refreshedExpiresIn = refreshedSession.expiresIn;
       refreshed = true;
       response = await upstream(request, path, accessToken, body);
     }
@@ -106,12 +112,20 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
     });
   }
   if (refreshed && accessToken) {
-    result.cookies.set(ACCESS_COOKIE, accessToken, { ...sessionCookieOptions, maxAge: 15 * 60 });
-    if (refreshedRefreshToken) result.cookies.set(REFRESH_COOKIE, refreshedRefreshToken, { ...sessionCookieOptions, maxAge: 30 * 24 * 60 * 60 });
-  }
-  if (response.status === 401) {
-    result.cookies.delete(ACCESS_COOKIE);
-    result.cookies.delete(REFRESH_COOKIE);
+    result.cookies.set(ACCESS_COOKIE, accessToken, {
+      ...sessionCookieOptions,
+      maxAge: SESSION_COOKIE_MAX_AGE,
+    });
+    result.cookies.set(ACCESS_EXPIRY_COOKIE, accessExpiry(refreshedExpiresIn), {
+      ...sessionCookieOptions,
+      maxAge: SESSION_COOKIE_MAX_AGE,
+    });
+    if (refreshedRefreshToken) {
+      result.cookies.set(REFRESH_COOKIE, refreshedRefreshToken, {
+        ...sessionCookieOptions,
+        maxAge: SESSION_COOKIE_MAX_AGE,
+      });
+    }
   }
   return result;
 }

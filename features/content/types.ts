@@ -9,6 +9,8 @@ export type ContentMedia = {
   audioSrc?: string;
   /** Proxied video source, played by the shared media player. */
   videoSrc?: string;
+  videoWidth?: number;
+  videoHeight?: number;
   description: string;
   coverImage?: string;
 };
@@ -17,6 +19,8 @@ export type ContentCreator = {
   name: string;
   role: string;
   avatar?: string;
+  /** Public actor page for content produced by a user or a square. */
+  profileHref?: string;
   bio: string;
   publishedCount: string;
 };

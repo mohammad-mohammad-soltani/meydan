@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { meydanApi } from "@/lib/meydan-api";
-
-/** WordPress role fields the API added to `GET /me`. */
-type ApiViewerRole = {
-  role?: string | null;
-  roles?: string[] | null;
-};
+import {
+  type ApiViewerRole,
+  extractRoles,
+  hasAdministratorRole,
+} from "../services/viewer-role.service";
 
 type RoleState = {
   status: "idle" | "ready" | "error";
@@ -38,9 +37,10 @@ const ANONYMOUS_ROLE: ViewerRole = {
 /**
  * Reads the signed-in viewer's WordPress roles from `/me`.
  *
- * `/me` is authenticated, so guests must pass `enabled = false`: an
- * unauthenticated call makes the API client bounce the visitor to the login
- * page instead of failing quietly.
+ * The role decision itself lives in `viewer-role.service` so this hook and the
+ * server-side admin gate share one definition. `/me` is authenticated, so
+ * guests must pass `enabled = false`: an unauthenticated call makes the API
+ * client bounce the visitor to the login page instead of failing quietly.
  */
 export function useViewerRole(enabled: boolean): ViewerRole {
   const [state, setState] = useState<RoleState>({
@@ -58,13 +58,7 @@ export function useViewerRole(enabled: boolean): ViewerRole {
       .then((me) => {
         if (!active) return;
 
-        const roles = Array.isArray(me.roles)
-          ? me.roles.filter(
-              (role): role is string =>
-                typeof role === "string" && role.length > 0,
-            )
-          : [];
-
+        const roles = extractRoles(me);
         setState({
           status: "ready",
           role:
@@ -92,3 +86,6 @@ export function useViewerRole(enabled: boolean): ViewerRole {
     isLoading: state.status === "idle",
   };
 }
+
+/** Re-exported so client callers can gate on the same predicate as the server. */
+export { hasAdministratorRole };

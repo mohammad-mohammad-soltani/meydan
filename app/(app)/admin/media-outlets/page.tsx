@@ -1,0 +1,16 @@
+import type { Metadata } from "next";
+import { AdminMediaOutletsView } from "@/features/admin/components/AdminMediaOutletsView";
+import { getMediaOutlets } from "@/features/admin/services/admin-server";
+import { isAdministrator } from "@/features/admin/server/require-administrator";
+
+export const metadata: Metadata = { title: "رسانه‌ها | پنل مدیریت میدان" };
+export const dynamic = "force-dynamic";
+
+export default async function AdminMediaOutletsPage() {
+  // Fail-closed per page: the layout gate alone does not stop this segment from
+  // rendering, so no query runs and nothing is shown without the role.
+  if (!(await isAdministrator())) return null;
+
+  const initial = await getMediaOutlets("");
+  return <AdminMediaOutletsView initial={initial} />;
+}

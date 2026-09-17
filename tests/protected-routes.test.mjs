@@ -52,7 +52,7 @@ test("the proxy redirects a visitor without a session to the login page", () => 
   const proxy = readFileSync(proxyFile, "utf8");
 
   // Next 16 renamed middleware to proxy; the guard must use that convention.
-  assert.match(proxy, /export function proxy\(request: NextRequest\)/);
+  assert.match(proxy, /export async function proxy\(request: NextRequest\)/);
   assert.match(proxy, /from "next\/server"/);
 
   // It reads the real session cookie and redirects to login with a return path.
@@ -61,9 +61,11 @@ test("the proxy redirects a visitor without a session to the login page", () => 
   assert.match(proxy, /NextResponse\.redirect\(/);
   assert.match(proxy, /loginHref\(returnToFrom\(pathname, search\)\)/);
 
-  // Requests that are not protected, or that carry a session, pass through.
+  // Public requests pass through; stale protected sessions renew with the
+  // refresh credential before downstream server components read the cookie.
   assert.match(proxy, /if \(!isProtectedPath\(pathname\)\) return NextResponse\.next\(\)/);
-  assert.match(proxy, /if \(hasSession\) return NextResponse\.next\(\)/);
+  assert.match(proxy, /refreshSession\(refreshToken\)/);
+  assert.match(proxy, /if \(accessToken\) return NextResponse\.next\(\)/);
 
   // The redirect must be built from the request origin, not a hardcoded host.
   assert.match(proxy, /request\.nextUrl\.origin/);

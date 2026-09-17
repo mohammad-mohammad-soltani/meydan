@@ -1,7 +1,50 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { loginHref } from "@/lib/auth-navigation";
-import { ACCESS_COOKIE } from "@/lib/meydan-session";
+import { getMeydanApiBaseUrl } from "@/lib/meydan-api";
+import {
+  ACCESS_COOKIE,
+  ACCESS_EXPIRY_COOKIE,
+  REFRESH_COOKIE,
+  accessExpiry,
+  SESSION_COOKIE_MAX_AGE,
+  sessionCookieOptions,
+} from "@/lib/meydan-session";
 import { isProtectedPath, returnToFrom } from "@/lib/protected-routes";
+
+type RefreshedSession = { accessToken: string; expiresIn?: number };
+
+async function refreshSession(refreshToken?: string): Promise<RefreshedSession | undefined> {
+  if (!refreshToken) return undefined;
+
+  try {
+    const response = await fetch(`${getMeydanApiBaseUrl()}/auth/refresh`, {
+      method: "POST",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+      cache: "no-store",
+    });
+    const body = (await response.json().catch(() => null)) as {
+      data?: { access_token?: string; expires_in?: number };
+    } | null;
+    if (!response.ok || !body?.data?.access_token) return undefined;
+    return { accessToken: body.data.access_token, expiresIn: body.data.expires_in };
+  } catch {
+    // A transient auth-origin outage must not turn an existing browser session
+    // into a logout. The next navigation can retry the refresh.
+    return undefined;
+  }
+}
+
+function requestWithAccessToken(request: NextRequest, accessToken: string): Headers {
+  const headers = new Headers(request.headers);
+  const cookies = request.cookies
+    .getAll()
+    .filter((cookie) => cookie.name !== ACCESS_COOKIE)
+    .map((cookie) => `${cookie.name}=${encodeURIComponent(cookie.value)}`);
+  cookies.push(`${ACCESS_COOKIE}=${encodeURIComponent(accessToken)}`);
+  headers.set("cookie", cookies.join("; "));
+  return headers;
+}
 
 /**
  * Route guard for the signed-in areas of the app.
@@ -12,18 +55,43 @@ import { isProtectedPath, returnToFrom } from "@/lib/protected-routes";
  * their own `isAuthenticated()` checks as defence in depth — this catches the
  * request earlier and avoids shipping markup that would only be thrown away.
  *
- * The check is deliberately optimistic, per the Next.js guidance: the presence
- * of the access cookie is enough to let the request through, and the API stays
- * the authority on whether the token is still valid. No network call happens
- * here, so the guard stays fast and safe to run at the edge.
+ * The route remains optimistic for a current access token. When it has expired,
+ * the proxy renews it with the browser's refresh credential before rendering a
+ * protected page, so server-rendered reads receive a current bearer token.
  */
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (!isProtectedPath(pathname)) return NextResponse.next();
 
-  const hasSession = Boolean(request.cookies.get(ACCESS_COOKIE)?.value);
-  if (hasSession) return NextResponse.next();
+  const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
+  const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
+  const accessExpiryAt = Number(request.cookies.get(ACCESS_EXPIRY_COOKIE)?.value || 0);
+  const needsRefresh = !accessToken || !Number.isFinite(accessExpiryAt) || accessExpiryAt <= Date.now() / 1000 + 60;
+
+  if (!needsRefresh) return NextResponse.next();
+
+  const refreshed = await refreshSession(refreshToken);
+  if (refreshed) {
+    const requestHeaders = requestWithAccessToken(request, refreshed.accessToken);
+    const response = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+    response.cookies.set(ACCESS_COOKIE, refreshed.accessToken, {
+      ...sessionCookieOptions,
+      maxAge: SESSION_COOKIE_MAX_AGE,
+    });
+    response.cookies.set(ACCESS_EXPIRY_COOKIE, accessExpiry(refreshed.expiresIn), {
+      ...sessionCookieOptions,
+      maxAge: SESSION_COOKIE_MAX_AGE,
+    });
+    return response;
+  }
+
+  // An older access cookie may still be valid if the expiry marker was absent
+  // (for example, immediately after deploying this change). Let the backend
+  // decide rather than treating the cookie migration as a logout.
+  if (accessToken) return NextResponse.next();
 
   const loginUrl = new URL(
     loginHref(returnToFrom(pathname, search)),
@@ -44,5 +112,6 @@ export const config = {
     "/compose/:path*",
     "/chat/:path*",
     "/profile/:path*",
+    "/admin/:path*",
   ],
 };

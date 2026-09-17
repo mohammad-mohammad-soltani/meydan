@@ -8,13 +8,16 @@ import type {
   MediaKind,
   ScheduleItem,
 } from "../types";
+import {
+  contentProducer,
+  type ContentProducerSource,
+  type LegacyContentCreator,
+} from "./content-producer";
+import { contentCover, type ContentCoverAttachment } from "./content-cover";
+import { contentVideo, type ContentVideoAttachment } from "./content-video";
 
-type ApiCreator = {
+type ApiCreator = LegacyContentCreator & {
   id: number;
-  name: string;
-  role?: string;
-  bio?: string;
-  avatar_url?: string;
 };
 
 type ApiContent = {
@@ -25,16 +28,14 @@ type ApiContent = {
   body?: string;
   format?: string;
   category?: { slug?: string; name?: string } | null;
-  attachments?: Array<{
-    id: number;
-    type?: string;
-    url?: string;
+  attachments?: Array<ContentCoverAttachment & ContentVideoAttachment & {
     label?: string;
     filename?: string;
     size?: number;
     duration?: number;
   }>;
   creators?: ApiCreator[];
+  producer?: ContentProducerSource | null;
   tags?: string[];
   usage_note?: string;
   featured?: boolean;
@@ -96,10 +97,6 @@ function mediaDescription(format?: string): string {
   return "تصویر و متن";
 }
 
-function coverOf(item: ApiContent): string | undefined {
-  return item.attachments?.find((attachment) => attachment.type === "image")?.url;
-}
-
 function audioOf(item: ApiContent): string | undefined {
   const primary = item.attachments?.find(
     (attachment) => attachment.id === item.primary_attachment_id,
@@ -114,20 +111,10 @@ function audioOf(item: ApiContent): string | undefined {
     : undefined;
 }
 
-function videoOf(item: ApiContent): string | undefined {
-  const primary = item.attachments?.find(
-    (attachment) => attachment.id === item.primary_attachment_id,
-  );
-  const videoAttachment =
-    primary?.type === "video"
-      ? primary
-      : item.attachments?.find((attachment) => attachment.type === "video");
-
-  return videoAttachment ? `/api/content/${item.id}/media/${videoAttachment.id}` : undefined;
-}
-
 function toItem(item: ApiContent): ContentItem {
   const kind = kindOf(item.format);
+  const producer = contentProducer(item.producer, item.creators);
+  const video = contentVideo(item.id, item.primary_attachment_id, item.attachments);
   return {
     id: item.slug || String(item.id),
     apiId: item.id,
@@ -137,15 +124,17 @@ function toItem(item: ApiContent): ContentItem {
     title: item.title,
     subtitle: item.subtitle || item.excerpt || "",
     description: item.excerpt || plainText(item.body || ""),
-    author: item.creators?.[0]?.name,
-    authorAvatar: item.creators?.[0]?.avatar_url,
+    author: producer.name,
+    authorAvatar: producer.avatar,
     media: {
       kind: kind === "video" ? "image" : kind,
       duration: item.media_duration || undefined,
       audioSrc: audioOf(item),
-      videoSrc: videoOf(item),
+      videoSrc: video?.src,
+      videoWidth: video?.width,
+      videoHeight: video?.height,
       description: mediaDescription(item.format),
-      coverImage: coverOf(item),
+      coverImage: contentCover(item.attachments, item.format),
     },
   };
 }
@@ -183,8 +172,9 @@ function fileList(item: ApiContent): ContentFile[] {
 }
 
 function toDetail(item: ApiContent): ContentDetailItem {
-  const creator = item.creators?.[0];
+  const creator = contentProducer(item.producer, item.creators);
   const kind = kindOf(item.format);
+  const video = contentVideo(item.id, item.primary_attachment_id, item.attachments);
 
   return {
     id: item.slug || String(item.id),
@@ -195,25 +185,19 @@ function toDetail(item: ApiContent): ContentDetailItem {
     title: item.title,
     subtitle: item.subtitle || item.excerpt || "",
     description: item.excerpt || plainText(item.body || ""),
-    author: creator?.name,
+    author: creator.name,
     media: {
       kind,
       duration: item.media_duration || undefined,
       audioSrc: audioOf(item),
-      videoSrc: videoOf(item),
+      videoSrc: video?.src,
+      videoWidth: video?.width,
+      videoHeight: video?.height,
       description: mediaDescription(item.format),
-      coverImage:
-        coverOf(item) ||
-        (kind === "video"
-          ? "/images/generated/feed/enghelab-gathering.png"
-          : "/images/generated/content-hero.svg"),
+      coverImage: contentCover(item.attachments, item.format),
     },
     creator: {
-      name: creator?.name || "میدان خیابان",
-      role: creator?.role || "تولیدکننده محتوا",
-      avatar: creator?.avatar_url,
-      bio: creator?.bio || "",
-      publishedCount: "",
+      ...creator,
     },
     publishedAt: persianDate(item.published_at),
     location: item.location_label || undefined,

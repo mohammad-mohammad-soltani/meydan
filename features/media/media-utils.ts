@@ -28,6 +28,13 @@ export function mediaAspectRatio(width?: number, height?: number, fallback = 16 
   return Math.min(16 / 9, Math.max(4 / 5, width / height));
 }
 
+/** Preserve the decoded video's real proportions; gallery tile crops use mediaAspectRatio instead. */
+export function videoAspectRatio(width?: number, height?: number): number {
+  return width && height && Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0
+    ? width / height
+    : 16 / 9;
+}
+
 function lastRangeEnd(ranges: TimeRanges): number {
   if (!ranges.length) return 0;
 
