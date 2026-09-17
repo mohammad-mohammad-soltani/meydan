@@ -7,6 +7,7 @@ import Link from "next/link";
 import { LoaderCircle, Plus, Save, Trash2 } from "lucide-react";
 import { AdminCheckbox, AdminField, fieldClass } from "./AdminField";
 import { AdminDialog } from "./AdminDialog";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminFieldMessage } from "./AdminFieldMessage";
 import { MediaPickerField } from "./MediaPickerField";
 import { fa, primaryButtonClass, secondaryButtonClass } from "./styles";
@@ -164,16 +165,16 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
   return (
     <>
       <form
-        className="space-y-5 px-3 py-4 pb-24 sm:px-4"
+        className="admin-form"
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
         }}
       >
-        <AdminFieldMessage message={message} fields={fieldErrors} />
+        <div className="admin-form-notice"><AdminFieldMessage message={message} fields={fieldErrors} /></div>
 
-        <section aria-label="پروفایل" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">پروفایل تولیدکننده</h2>
+        <section aria-label="پروفایل" className="admin-form-card admin-form-wide space-y-4">
+          <h2 className="text-base font-black text-foreground">هویت و معرفی</h2>
 
           <AdminField label="نام" htmlFor="creator-name" required error={fieldErrors.name}>
             <input
@@ -194,7 +195,7 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
             />
           </AdminField>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="admin-field-grid">
             <AdminField label="نقش" htmlFor="creator-role" error={fieldErrors.role}>
               <input
                 id="creator-role"
@@ -230,25 +231,10 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
             </AdminField>
           </div>
 
-          <AdminCheckbox
-            id="creator-verified"
-            label="تأییدشده"
-            description="نشان تأیید در فهرست عمومی تولیدکنندگان نمایش داده می‌شود."
-            checked={form.verified}
-            onChange={(verified) => patch({ verified })}
-          />
-
-          <MediaPickerField
-            id="creator-avatar"
-            label="تصویر تولیدکننده"
-            mediaId={form.avatarMediaId}
-            currentUrl={creator?.avatarUrl}
-            onChange={(avatarMediaId) => patch({ avatarMediaId })}
-          />
         </section>
 
-        <section aria-label="نوع فعالیت" className="rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">نوع فعالیت</h2>
+        <section aria-label="نوع فعالیت" className="admin-form-card admin-form-half">
+          <h2 className="text-base font-black text-foreground">نوع فعالیت و تخصص</h2>
           <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
             اسلاگ‌های ناشناخته در سرور حذف می‌شوند؛ بنابراین فقط موارد شناخته‌شده پیشنهاد می‌شود.
           </p>
@@ -285,8 +271,8 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
           </div>
         </section>
 
-        <section aria-label="شهرها" className="rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">شهرهای فعالیت</h2>
+        <section aria-label="شهرها" className="admin-form-card admin-form-half">
+          <h2 className="text-base font-black text-foreground">شهرهای فعالیت</h2>
           <p className="mt-1 text-[10px] text-muted-foreground">
             {fa(form.cities.length)} شهر انتخاب شده است.
           </p>
@@ -329,8 +315,7 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
           </p>
         </section>
 
-        <section aria-label="شبکه‌های اجتماعی" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">شبکه‌های اجتماعی</h2>
+        <AdminDisclosureSection title="شبکه‌های اجتماعی" className="admin-form-half" defaultOpen={form.socialLinks.length > 0} hasError={Boolean(fieldErrors.socialLinks)}>
           {form.socialLinks.map((link, index) => (
             <div key={index} className="grid gap-2 sm:grid-cols-[10rem_1fr_auto]">
               <select
@@ -377,9 +362,26 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
             <Plus aria-hidden="true" className="h-3.5 w-3.5" />
             افزودن لینک
           </button>
-        </section>
+        </AdminDisclosureSection>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <AdminDisclosureSection title="تصویر و نشان تأیید" className="admin-form-half" defaultOpen={Boolean(creator?.avatarUrl || form.verified)} hasError={Boolean(fieldErrors.avatarMediaId || fieldErrors.verified)}>
+          <AdminCheckbox
+            id="creator-verified"
+            label="تأییدشده"
+            description="نشان تأیید در فهرست عمومی تولیدکنندگان نمایش داده می‌شود."
+            checked={form.verified}
+            onChange={(verified) => patch({ verified })}
+          />
+          <MediaPickerField
+            id="creator-avatar"
+            label="تصویر تولیدکننده"
+            mediaId={form.avatarMediaId}
+            currentUrl={creator?.avatarUrl}
+            onChange={(avatarMediaId) => patch({ avatarMediaId })}
+          />
+        </AdminDisclosureSection>
+
+        <div className="admin-form-actions flex flex-wrap items-center gap-2">
           <button type="submit" disabled={busy} className={primaryButtonClass}>
             {busy ? (
               <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />

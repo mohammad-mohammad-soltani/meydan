@@ -9,6 +9,8 @@ import { AdminCheckbox, AdminField, fieldClass } from "./AdminField";
 import { AdminDialog } from "./AdminDialog";
 import { AdminFieldMessage } from "./AdminFieldMessage";
 import { ScheduleRows } from "./ScheduleRows";
+import { AdminDateTimeField } from "./AdminDateTimeField";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { IdLookup, type LookupResult } from "./IdLookup";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
@@ -148,16 +150,16 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
   return (
     <>
       <form
-        className="space-y-5 px-3 py-4 pb-24 sm:px-4"
+        className="admin-form"
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
         }}
       >
-        <AdminFieldMessage message={message} fields={fieldErrors} />
+        <div className="admin-form-notice"><AdminFieldMessage message={message} fields={fieldErrors} /></div>
 
-        <section aria-label="اطلاعات اصلی" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">اطلاعات اصلی</h2>
+        <section aria-label="اطلاعات اصلی" className="admin-form-card admin-form-main space-y-4">
+          <h2>اطلاعات اصلی</h2>
 
           <AdminField label="عنوان" htmlFor="program-title" required error={fieldErrors.title}>
             <input
@@ -178,7 +180,7 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
             />
           </AdminField>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="admin-field-grid">
             <AdminField
               label="وضعیت چرخه عمر"
               htmlFor="program-status"
@@ -240,37 +242,14 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
               />
             </AdminField>
 
-            <AdminField
-              label="شروع"
-              htmlFor="program-starts"
-              hint="میلادی، قالب YYYY-MM-DD HH:mm."
-            >
-              <input
-                id="program-starts"
-                value={form.startsAt}
-                dir="ltr"
-                placeholder="2026-09-17 09:00"
-                onChange={(event) => patch({ startsAt: event.target.value })}
-                className={`${fieldClass} text-left`}
-              />
-            </AdminField>
-
-            <AdminField
-              label="پایان"
-              htmlFor="program-ends"
-              hint="خالی بگذارید تا پایان‌یافته محسوب نشود."
-            >
-              <input
-                id="program-ends"
-                value={form.endsAt}
-                dir="ltr"
-                placeholder="2026-12-31 23:59"
-                onChange={(event) => patch({ endsAt: event.target.value })}
-                className={`${fieldClass} text-left`}
-              />
-            </AdminField>
+            <div className="admin-field-wide grid gap-4 sm:grid-cols-2">
+              <AdminDateTimeField label="شروع" value={form.startsAt} onChange={(startsAt) => patch({ startsAt })} />
+              <AdminDateTimeField label="پایان (اختیاری)" value={form.endsAt} defaultTime="23:59" onChange={(endsAt) => patch({ endsAt })} />
+            </div>
           </div>
+        </section>
 
+        <AdminDisclosureSection title="تنظیمات تکمیلی" className="admin-form-side" hasError={Boolean(fieldErrors.labels || fieldErrors.allow_guest_join)}>
           <AdminField label="برچسب‌ها" htmlFor="program-labels" hint="با ویرگول جدا کنید.">
             <textarea
               id="program-labels"
@@ -290,15 +269,14 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
               onChange={(allowGuestJoin) => patch({ allowGuestJoin })}
             />
           ) : null}
-        </section>
+        </AdminDisclosureSection>
 
-        <section aria-label="برنامه زمانی" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">برنامه زمانی</h2>
+        <section aria-label="برنامه زمانی" className="admin-form-card admin-form-main">
+          <h2>برنامه زمانی</h2>
           <ScheduleRows rows={form.schedule} onChange={updateSchedule} />
         </section>
 
-        <section aria-label="محتوای پیوندشده" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">محتوای پیوندشده</h2>
+        <AdminDisclosureSection title="محتوای پیوندشده" className="admin-form-side">
           <p className="text-[10px] leading-5 text-muted-foreground">
             فقط شناسه محتوا ذخیره می‌شود؛ ترتیب فهرست همان ترتیب نمایش است.
           </p>
@@ -418,9 +396,9 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
               />
             </div>
           ) : null}
-        </section>
+        </AdminDisclosureSection>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="admin-form-actions">
           <button type="submit" disabled={busy} className={primaryButtonClass}>
             {busy ? (
               <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />

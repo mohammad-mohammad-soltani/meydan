@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { PersianDatePicker } from "@/components/shared/PersianDatePicker";
 import { AdminDialog } from "./AdminDialog";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminField, fieldClass } from "./AdminField";
 import { AdminNotice } from "./AdminNotice";
 import { AdminPageHeader } from "./AdminPageHeader";
@@ -53,9 +54,9 @@ function toFormState(square: Square): SquareFormState {
   return {
     squareName: square.name,
     description: square.description,
-    contactName: "",
-    contactPhone: "",
-    startDate: "",
+    contactName: square.contactName,
+    contactPhone: square.contactPhone,
+    startDate: square.startDate,
     avatarMediaId: null,
     eitaaChannel: square.eitaaChannel,
     baleChannel: square.baleChannel,
@@ -186,13 +187,13 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
         }
       />
 
-      <div className="space-y-5 px-3 py-4 pb-24 sm:px-4">
-        {saved ? <AdminNotice tone="success" message={saved} autoHideMs={4000} /> : null}
+      <div className="admin-form">
+        {saved ? <div className="admin-form-notice"><AdminNotice tone="success" message={saved} autoHideMs={4000} /></div> : null}
         {formError ? (
-          <AdminNotice tone="error" message={formError} onDismiss={() => setFormError(null)} />
+          <div className="admin-form-notice"><AdminNotice tone="error" message={formError} onDismiss={() => setFormError(null)} /></div>
         ) : null}
 
-        <section aria-label="خلاصه میدان" className="rounded-card border border-border bg-surface p-3.5">
+        <section aria-label="خلاصه میدان" className="admin-form-card admin-form-wide">
           <div className="flex items-center gap-3">
             <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-icon-muted">
               {square.avatarUrl ? (
@@ -214,7 +215,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
                 <VerifiedBadge verified={square.verified} />
                 <PostStatusBadge status={square.postStatus} />
               </div>
-              <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">
+              <p className="mt-1.5 text-xs text-muted-foreground">
                 شناسه میدان #{square.id}
                 {square.ownerUserId ? ` · مالک #${square.ownerUserId}` : ""}
                 {square.ownerName ? ` (${square.ownerName})` : ""}
@@ -231,7 +232,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
           {square.location ? (
             <div className="mt-3 grid gap-2 text-[11px] text-foreground-secondary sm:grid-cols-2">
               <p>استان #{square.location.provinceId} · شهر #{square.location.cityId}</p>
-              <p dir="ltr" className="text-left font-mono text-[10px]">
+              <p dir="ltr" className="text-left text-xs">
                 {square.location.latitude.toFixed(5)}, {square.location.longitude.toFixed(5)}
               </p>
             </div>
@@ -255,8 +256,8 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
           </div>
         </section>
 
-        <section aria-label="ویرایش میدان" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">ویرایش</h2>
+        <section aria-label="ویرایش میدان" className="admin-form-card admin-form-wide space-y-4">
+          <h2>مشخصات میدان</h2>
 
           <AdminField label="نام میدان" htmlFor="detail-name" required error={fieldErrors.square_name}>
             <input
@@ -276,32 +277,6 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
               className={`${fieldClass} resize-none`}
             />
           </AdminField>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <AdminField
-              label="نام رابط"
-              htmlFor="detail-contact-name"
-              error={fieldErrors.contact_name}
-              hint="خالی گذاشتن این فیلد آن را پاک می‌کند."
-            >
-              <input
-                id="detail-contact-name"
-                value={form.contactName}
-                onChange={(event) => setForm({ ...form, contactName: event.target.value })}
-                className={fieldClass}
-              />
-            </AdminField>
-            <AdminField label="تلفن رابط" htmlFor="detail-contact-phone" error={fieldErrors.contact_phone}>
-              <input
-                id="detail-contact-phone"
-                value={form.contactPhone}
-                dir="ltr"
-                inputMode="tel"
-                onChange={(event) => setForm({ ...form, contactPhone: event.target.value })}
-                className={`${fieldClass} text-left`}
-              />
-            </AdminField>
-          </div>
 
           <div>
             <span className="block text-[11px] font-black text-foreground-secondary">
@@ -326,33 +301,12 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
             ) : null}
           </div>
 
-          <MediaPickerField
-            id="detail-avatar"
-            label="تغییر نشان میدان"
-            hint="اگر فایلی انتخاب نکنید، تصویر فعلی دست‌نخورده می‌ماند."
-            mediaId={form.avatarMediaId}
-            currentUrl={square.avatarUrl}
-            onChange={(mediaId) => setForm({ ...form, avatarMediaId: mediaId })}
-          />
-
-          <ChannelFields
-            idPrefix="detail-channels"
-            eitaa={form.eitaaChannel}
-            bale={form.baleChannel}
-            onChange={(next) =>
-              setForm({ ...form, eitaaChannel: next.eitaa, baleChannel: next.bale })
-            }
-            errors={{
-              eitaa_channel: fieldErrors.eitaa_channel,
-              bale_channel: fieldErrors.bale_channel,
-            }}
-          />
         </section>
 
-        <section aria-label="موقعیت" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
+        <section aria-label="موقعیت" className="admin-form-card admin-form-wide space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-xs font-black text-foreground-secondary">موقعیت</h2>
+              <h2>موقعیت مکانی</h2>
               <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
                 جابه‌جایی موقعیت فقط با ارسال هم‌زمان استان، شهر، نشانی، عرض و طول جغرافیایی انجام
                 می‌شود؛ همین دلیل است که این بخش یک کلید فعال/غیرفعال دارد.
@@ -386,18 +340,26 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
           </div>
         </section>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => void save()} disabled={saving} className={primaryButtonClass}>
-            {saving ? (
-              <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save aria-hidden="true" className="h-4 w-4" />
-            )}
-            {saving ? "در حال ذخیره…" : "ذخیره تغییرات"}
-          </button>
-        </div>
+        <AdminDisclosureSection title="اطلاعات رابط" className="admin-form-side" defaultOpen={Boolean(form.contactName || form.contactPhone)} hasError={Boolean(fieldErrors.contact_name || fieldErrors.contact_phone)}>
+          <AdminField label="نام رابط" htmlFor="detail-contact-name" error={fieldErrors.contact_name}>
+            <input id="detail-contact-name" value={form.contactName} onChange={(event) => setForm({ ...form, contactName: event.target.value })} className={fieldClass} />
+          </AdminField>
+          <AdminField label="تلفن رابط" htmlFor="detail-contact-phone" error={fieldErrors.contact_phone}>
+            <input id="detail-contact-phone" value={form.contactPhone} dir="ltr" inputMode="tel" onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} className={`${fieldClass} text-left`} />
+          </AdminField>
+        </AdminDisclosureSection>
 
-        <section aria-label="وضعیت تأیید" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
+        <AdminDisclosureSection title="شبکه‌های اجتماعی" className="admin-form-side" defaultOpen={Boolean(form.eitaaChannel || form.baleChannel)} hasError={Boolean(fieldErrors.eitaa_channel || fieldErrors.bale_channel)}>
+          <ChannelFields idPrefix="detail-channels" eitaa={form.eitaaChannel} bale={form.baleChannel}
+            onChange={(next) => setForm({ ...form, eitaaChannel: next.eitaa, baleChannel: next.bale })}
+            errors={{ eitaa_channel: fieldErrors.eitaa_channel, bale_channel: fieldErrors.bale_channel }} />
+        </AdminDisclosureSection>
+
+        <AdminDisclosureSection title="تصویر میدان" className="admin-form-side" defaultOpen={Boolean(square.avatarUrl)} hasError={Boolean(fieldErrors.avatar_media_id)}>
+          <MediaPickerField id="detail-avatar" label="تغییر نشان میدان" hint="اگر فایلی انتخاب نکنید، تصویر فعلی دست‌نخورده می‌ماند." mediaId={form.avatarMediaId} currentUrl={square.avatarUrl} onChange={(mediaId) => setForm({ ...form, avatarMediaId: mediaId })} />
+        </AdminDisclosureSection>
+
+        <section aria-label="وضعیت تأیید" className="admin-form-card admin-form-wide space-y-3">
           <h2 className="flex items-center gap-1.5 text-xs font-black text-foreground-secondary">
             <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-brand" />
             وضعیت تأیید
@@ -440,6 +402,13 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
             ))}
           </div>
         </section>
+
+        <div className="admin-form-actions">
+          <button type="button" onClick={() => void save()} disabled={saving} className={primaryButtonClass}>
+            {saving ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Save aria-hidden="true" className="h-4 w-4" />}
+            {saving ? "در حال ذخیره…" : "ذخیره تغییرات"}
+          </button>
+        </div>
 
       </div>
 

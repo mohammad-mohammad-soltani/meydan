@@ -19,6 +19,8 @@ import {
   updateParticipant,
 } from "../services/programs.service";
 import type { InitiativeMember, Program } from "../types";
+import { PersianDatePicker } from "@/components/shared/PersianDatePicker";
+import { formatAdminDateTime, splitAdminDateTime } from "../lib/datetime";
 
 /**
  * The member rows of one initiative.
@@ -63,7 +65,7 @@ export function AdminParticipantsView({
     setFormError(null);
     setFieldErrors({});
     setStatus(member.status);
-    setJoinedAt(member.joinedAt?.slice(0, 10) ?? "");
+    setJoinedAt(splitAdminDateTime(member.joinedAt).date);
     setEditing(member);
   };
 
@@ -122,8 +124,8 @@ export function AdminParticipantsView({
       key: "joined",
       header: "زمان عضویت",
       render: (member) => (
-        <span className="font-mono text-[10px] text-foreground-secondary" dir="ltr">
-          {member.joinedAt || "—"}
+        <span className="text-xs text-foreground-secondary">
+          {formatAdminDateTime(member.joinedAt)}
         </span>
       ),
     },
@@ -219,20 +221,11 @@ export function AdminParticipantsView({
                 className={fieldClass}
               />
             </AdminField>
-            <AdminField
-              label="تاریخ پیوستن"
-              htmlFor="member-joined"
-              hint="میلادی، قالب YYYY-MM-DD. ساعت روی ۰۰:۰۰ تنظیم می‌شود."
-            >
-              <input
-                id="member-joined"
-                value={joinedAt}
-                dir="ltr"
-                placeholder="2026-09-17"
-                onChange={(event) => setJoinedAt(event.target.value)}
-                className={`${fieldClass} text-left`}
-              />
-            </AdminField>
+            <div>
+              <span className="mb-1.5 block text-xs font-bold text-foreground-secondary">تاریخ پیوستن</span>
+              <PersianDatePicker value={joinedAt} onChange={setJoinedAt} allow="any" ariaLabel="تاریخ پیوستن" />
+              <p className="mt-1 text-xs text-muted-foreground">ساعت روی ۰۰:۰۰ تنظیم می‌شود.</p>
+            </div>
             {busy ? (
               <p role="status" className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />

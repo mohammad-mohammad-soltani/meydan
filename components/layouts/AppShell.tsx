@@ -134,22 +134,26 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
         </aside>
         <div
           id="mainAppShell"
-          className={`relative flex h-[100dvh] min-h-0 w-full flex-col border-x border-border bg-background pb-[var(--comment-composer-height)] transition-colors duration-150 ${isAdminRoute ? "max-w-none" : "max-w-xl"}`}
+          className={`relative flex h-[100dvh] min-h-0 w-full flex-col border-x border-border bg-background transition-colors duration-150 ${isAdminRoute ? "max-w-none" : "max-w-xl pb-[var(--comment-composer-height)]"}`}
         >
           {!isAdminRoute && !isComposePage && !isPublicProfilePage ? (
             <MobileHeader />
           ) : null}
           <main
             ref={mainScrollRef}
-            className={`relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}
+            className={`relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isAdminRoute || isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}
           >
             {children}
           </main>
-          <FloatingComposeButton />
-          <SilentBoundary label="mini-player">
-            <MiniPlayer />
-          </SilentBoundary>
-          {!isPostPage ? (
+          {!isAdminRoute ? (
+            <>
+              <FloatingComposeButton />
+              <SilentBoundary label="mini-player">
+                <MiniPlayer />
+              </SilentBoundary>
+            </>
+          ) : null}
+          {!isPostPage && !isAdminRoute ? (
             <BottomNavigation isAuthenticated={isAuthenticated} />
           ) : null}
         </div>

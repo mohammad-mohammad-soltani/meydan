@@ -12,6 +12,7 @@ import { AdminPageHeader } from "./AdminPageHeader";
 import { ChannelFields } from "./ChannelFields";
 import { GeoPickerField, EMPTY_GEO, type GeoValue } from "./GeoPickerField";
 import { MediaPickerField } from "./MediaPickerField";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
 import { adminErrorMessage, createSquare } from "../services/squares.service";
 import { getCities } from "../services/programs.service";
@@ -203,17 +204,17 @@ export function AdminSquareCreateForm() {
       />
 
       <form
-        className="space-y-5 px-3 py-4 pb-24 sm:px-4"
+        className="admin-form"
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
         }}
       >
-        {formError ? <AdminNotice tone="error" message={formError} onDismiss={() => setFormError(null)} /> : null}
+        {formError ? <div className="admin-form-notice"><AdminNotice tone="error" message={formError} onDismiss={() => setFormError(null)} /></div> : null}
 
-        <section aria-label="حساب مالک" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">حساب مالک میدان</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+        <section aria-label="حساب مالک" className="admin-form-card admin-form-side">
+          <h2>حساب مالک میدان</h2>
+          <div className="admin-field-grid">
             <AdminField
               label="شماره موبایل"
               htmlFor="square-phone"
@@ -266,8 +267,8 @@ export function AdminSquareCreateForm() {
           </div>
         </section>
 
-        <section aria-label="مشخصات میدان" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">مشخصات میدان</h2>
+        <section aria-label="مشخصات میدان" className="admin-form-card admin-form-main space-y-4">
+          <h2>مشخصات میدان</h2>
 
           <AdminField
             label="نام میدان"
@@ -295,32 +296,6 @@ export function AdminSquareCreateForm() {
             />
           </AdminField>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <AdminField label="نام رابط" htmlFor="square-contact-name" error={fieldErrors.contact_name}>
-              <input
-                id="square-contact-name"
-                value={contactName}
-                onChange={(event) => setContactName(event.target.value)}
-                className={fieldClass}
-              />
-            </AdminField>
-
-            <AdminField
-              label="تلفن رابط"
-              htmlFor="square-contact-phone"
-              error={fieldErrors.contact_phone}
-            >
-              <input
-                id="square-contact-phone"
-                value={contactPhone}
-                inputMode="tel"
-                dir="ltr"
-                onChange={(event) => setContactPhone(event.target.value)}
-                className={`${fieldClass} text-left`}
-              />
-            </AdminField>
-          </div>
-
           <div>
             <span className="block text-[11px] font-black text-foreground-secondary">
               تاریخ شروع فعالیت (اختیاری)
@@ -344,17 +319,10 @@ export function AdminSquareCreateForm() {
             ) : null}
           </div>
 
-          <MediaPickerField
-            id="square-avatar"
-            label="نشان میدان"
-            hint="فقط تصویر؛ شناسه رسانه ذخیره می‌شود."
-            mediaId={avatarMediaId}
-            onChange={setAvatarMediaId}
-          />
         </section>
 
-        <section aria-label="موقعیت میدان" className="rounded-card border border-border bg-surface p-3.5">
-          <h2 className="mb-3 text-xs font-black text-foreground-secondary">موقعیت میدان</h2>
+        <section aria-label="موقعیت میدان" className="admin-form-card admin-form-wide">
+          <h2>موقعیت میدان</h2>
           <GeoPickerField
             idPrefix="square-geo"
             value={geo}
@@ -369,28 +337,14 @@ export function AdminSquareCreateForm() {
           />
         </section>
 
-        <section aria-label="کانال‌ها و وضعیت" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">کانال‌ها</h2>
-          <ChannelFields
-            idPrefix="square-channels"
-            eitaa={channels.eitaa}
-            bale={channels.bale}
-            onChange={setChannels}
-            errors={{
-              eitaa_channel: fieldErrors.eitaa_channel,
-              bale_channel: fieldErrors.bale_channel,
-            }}
-          />
-
-          <fieldset className="border-t border-divider pt-3">
-            <legend className="text-[11px] font-black text-foreground-secondary">
-              وضعیت اولیه
-            </legend>
-            <div className="mt-2 space-y-2">
+        <section aria-label="وضعیت اولیه" className="admin-form-card admin-form-wide">
+          <fieldset>
+            <legend className="text-sm font-black text-foreground">وضعیت اولیه</legend>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {SQUARE_CREATE_STATUSES.map((option) => (
                 <label
                   key={option}
-                  className={`flex cursor-pointer items-start gap-2.5 rounded-control border px-3 py-2.5 transition-colors ${
+                  className={`flex min-h-11 cursor-pointer items-start gap-2.5 rounded-control border px-3 py-2.5 transition-colors ${
                     status === option ? "border-brand-border bg-brand-muted/60" : "border-border bg-surface hover:bg-hover"
                   }`}
                 >
@@ -403,34 +357,64 @@ export function AdminSquareCreateForm() {
                     className="mt-0.5 h-4 w-4 accent-[var(--brand)]"
                   />
                   <span className="min-w-0">
-                    <span className="block text-xs font-black text-foreground-secondary">
-                      {SQUARE_STATUS_LABELS[option]}
-                    </span>
-                    <span className="mt-0.5 block text-[10px] leading-5 text-muted-foreground">
+                    <span className="block text-xs font-black text-foreground-secondary">{SQUARE_STATUS_LABELS[option]}</span>
+                    <span className="mt-0.5 block text-[11px] leading-5 text-muted-foreground">
                       {option === "approved"
-                        ? "میدان منتشر می‌شود اما هیچ اعلانی برای مالک ارسال نمی‌شود."
+                        ? "میدان منتشر می‌شود اما اعلانی برای مالک ارسال نمی‌شود."
                         : "میدان در صف بررسی می‌ماند و پس از تأیید، مالک مطلع می‌شود."}
                     </span>
                   </span>
                 </label>
               ))}
             </div>
-            {fieldErrors.status ? (
-              <p role="alert" className="mt-2 text-[10px] font-bold text-danger-foreground">
-                {fieldErrors.status}
-              </p>
-            ) : null}
+            {fieldErrors.status ? <p role="alert" className="mt-2 text-xs font-bold text-danger-foreground">{fieldErrors.status}</p> : null}
           </fieldset>
         </section>
 
+        <AdminDisclosureSection
+          title="اطلاعات رابط"
+          className="admin-form-side"
+          hasError={Boolean(fieldErrors.contact_name || fieldErrors.contact_phone)}
+        >
+          <div className="admin-field-grid">
+            <AdminField label="نام رابط" htmlFor="square-contact-name" error={fieldErrors.contact_name}>
+              <input id="square-contact-name" value={contactName} onChange={(event) => setContactName(event.target.value)} className={fieldClass} />
+            </AdminField>
+            <AdminField label="تلفن رابط" htmlFor="square-contact-phone" error={fieldErrors.contact_phone}>
+              <input id="square-contact-phone" value={contactPhone} inputMode="tel" dir="ltr" onChange={(event) => setContactPhone(event.target.value)} className={`${fieldClass} text-left`} />
+            </AdminField>
+          </div>
+        </AdminDisclosureSection>
+
+        <AdminDisclosureSection title="تصویر میدان" className="admin-form-side" hasError={Boolean(fieldErrors.avatar_media_id)}>
+          <MediaPickerField id="square-avatar" label="نشان میدان" hint="فقط تصویر؛ شناسه رسانه ذخیره می‌شود." mediaId={avatarMediaId} onChange={setAvatarMediaId} />
+        </AdminDisclosureSection>
+
+        <AdminDisclosureSection
+          title="شبکه‌های اجتماعی"
+          className="admin-form-side"
+          hasError={Boolean(fieldErrors.eitaa_channel || fieldErrors.bale_channel)}
+        >
+          <ChannelFields
+            idPrefix="square-channels"
+            eitaa={channels.eitaa}
+            bale={channels.bale}
+            onChange={setChannels}
+            errors={{
+              eitaa_channel: fieldErrors.eitaa_channel,
+              bale_channel: fieldErrors.bale_channel,
+            }}
+          />
+        </AdminDisclosureSection>
+
         {status === "approved" ? (
-          <AdminNotice
+          <div className="admin-form-notice"><AdminNotice
             tone="info"
             message="با انتخاب «تأییدشده» میدان بلافاصله منتشر می‌شود و اعلانی برای مالک ارسال نمی‌شود."
-          />
+          /></div>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="admin-form-actions">
           <button type="submit" disabled={busy} className={primaryButtonClass}>
             {busy ? (
               <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />

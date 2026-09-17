@@ -8,6 +8,7 @@ import { LoaderCircle, Plus, Save, Trash2 } from "lucide-react";
 import { AdminCheckbox, AdminField, fieldClass } from "./AdminField";
 import { AdminDialog } from "./AdminDialog";
 import { MediaPickerField } from "./MediaPickerField";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminFieldMessage } from "./AdminFieldMessage";
 import { fa, primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
@@ -188,16 +189,17 @@ export function AdminSpeakerForm({
   return (
     <>
       <form
-        className="space-y-5 px-3 py-4 pb-24 sm:px-4"
+        className="admin-form"
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
         }}
       >
-        <AdminFieldMessage message={saved ? "پروفایل سخنران ذخیره شد." : errors.message} fields={errors.fields} />
+        <div className="admin-form-notice"><AdminFieldMessage message={saved ? "پروفایل سخنران ذخیره شد." : errors.message} fields={errors.fields} /></div>
 
         {mode === "create" ? (
-          <section aria-label="انتخاب حساب" className="rounded-card border border-border bg-surface p-3.5">
+          <section aria-label="انتخاب حساب" className="admin-form-card admin-form-side">
+            <h2>حساب کاربری</h2>
             <AdminField
               label="حساب کاربری"
               htmlFor="speaker-user"
@@ -229,8 +231,8 @@ export function AdminSpeakerForm({
           </section>
         ) : null}
 
-        <section aria-label="پروفایل" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">پروفایل سخنران</h2>
+        <section aria-label="پروفایل" className={`admin-form-card ${mode === "create" ? "admin-form-main" : "admin-form-wide"} space-y-4`}>
+          <h2>هویت و معرفی سخنران</h2>
 
           <AdminField label="نام" htmlFor="speaker-name" required error={errors.fields.name}>
             <input
@@ -252,7 +254,7 @@ export function AdminSpeakerForm({
             />
           </AdminField>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="admin-field-grid">
             <AdminField label="سمت" htmlFor="speaker-role">
               <input
                 id="speaker-role"
@@ -288,26 +290,10 @@ export function AdminSpeakerForm({
             </AdminField>
           </div>
 
-          <AdminCheckbox
-            id="speaker-verified"
-            label="تأییدشده"
-            description="نشان تأیید در نمایه عمومی سخنران نمایش داده می‌شود."
-            checked={verified}
-            onChange={setVerified}
-          />
-
-          <MediaPickerField
-            id="speaker-avatar"
-            label="تصویر سخنران"
-            hint="اگر فایلی انتخاب نکنید، تصویر فعلی تغییر نمی‌کند."
-            mediaId={avatarMediaId}
-            currentUrl={speaker?.avatarUrl}
-            onChange={setAvatarMediaId}
-          />
         </section>
 
-        <section aria-label="دسته‌بندی موضوعی" className="rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">دسته‌بندی موضوعی</h2>
+        <section aria-label="دسته‌بندی موضوعی" className="admin-form-card admin-form-half">
+          <h2>دسته‌بندی موضوعی</h2>
           <p className="mt-1 text-[10px] text-muted-foreground">
             فقط اسلاگ‌های شناخته‌شده ذخیره می‌شوند؛ مقدار ناشناخته در سرور حذف می‌شود.
           </p>
@@ -344,8 +330,8 @@ export function AdminSpeakerForm({
           </div>
         </section>
 
-        <section aria-label="شهرها" className="rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">شهرهای فعالیت</h2>
+        <section aria-label="شهرها" className="admin-form-card admin-form-half">
+          <h2>شهرهای فعالیت</h2>
           <p className="mt-1 text-[10px] text-muted-foreground">
             {fa(cityIds.length)} شهر انتخاب شده است
             {citiesByProvince.length ? ` از ${fa(citiesByProvince.length)} استان` : ""}.
@@ -384,8 +370,7 @@ export function AdminSpeakerForm({
           </div>
         </section>
 
-        <section aria-label="شبکه‌های اجتماعی" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">شبکه‌های اجتماعی</h2>
+        <AdminDisclosureSection title="شبکه‌های اجتماعی" className="admin-form-half">
           {socialLinks.map((link, index) => (
             <div key={index} className="grid gap-2 sm:grid-cols-[10rem_1fr_auto]">
               <select
@@ -426,9 +411,16 @@ export function AdminSpeakerForm({
             <Plus aria-hidden="true" className="h-3.5 w-3.5" />
             افزودن لینک
           </button>
-        </section>
+        </AdminDisclosureSection>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <AdminDisclosureSection title="تصویر و نشان تأیید" className="admin-form-half" hasError={Boolean(errors.fields.avatar_media_id)}>
+          <div className="space-y-4">
+            <MediaPickerField id="speaker-avatar" label="تصویر سخنران" hint="اگر فایلی انتخاب نکنید، تصویر فعلی تغییر نمی‌کند." mediaId={avatarMediaId} currentUrl={speaker?.avatarUrl} onChange={setAvatarMediaId} />
+            <AdminCheckbox id="speaker-verified" label="دارای نشان تأیید" description="نشان تأیید در نمایه عمومی سخنران نمایش داده می‌شود." checked={verified} onChange={setVerified} />
+          </div>
+        </AdminDisclosureSection>
+
+        <div className="admin-form-actions">
           <button type="submit" disabled={busy} className={primaryButtonClass}>
             {busy ? (
               <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />

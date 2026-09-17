@@ -47,7 +47,7 @@ export default async function AdminLayout({
   return (
     <div className="admin-shell min-h-full bg-background text-foreground">
       <AdminSectionNav />
-      <main className="lg:mr-72">{children}</main>
+      <main>{children}</main>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { dangerButtonClass, fa, secondaryButtonClass } from "./styles";
 import { adminErrorMessage, deleteContent } from "../services/content.service";
 import type { ContentItem } from "../types";
 import { CONTENT_FORMAT_LABELS, type ContentFormat } from "../types";
+import { formatAdminDate } from "../lib/datetime";
 
 /** One labelled data row in the read-only summary. */
 function Row({ label, value }: { label: string; value: string }) {
@@ -92,7 +93,7 @@ export function AdminContentDetailView({ content }: { content: ContentItem }) {
           />
           <Row label="نشانی یکتا" value={content.slug} />
           <Row label="دسته‌بندی" value={content.category?.name ?? ""} />
-          <Row label="تاریخ انتشار" value={content.publishedAt?.slice(0, 10) ?? ""} />
+          <Row label="تاریخ انتشار" value={formatAdminDate(content.publishedAt)} />
           <Row label="برچسب‌ها" value={content.tags.join("، ")} />
           <Row label="تعداد ضمیمه" value={fa(content.attachments.length)} />
           <Row label="تولیدکننده اصلی" value={content.producer?.name ?? ""} />
@@ -172,7 +173,7 @@ export function AdminContentDetailView({ content }: { content: ContentItem }) {
         </section>
 
         <p className="text-[10px] text-muted-foreground">
-          تاریخ‌ها میلادی ذخیره می‌شوند؛ نمایش شمسی و انتخاب تاریخ در فرم ویرایش انجام می‌شود.
+          تاریخ‌ها در پنل به تقویم شمسی نمایش داده می‌شوند.
         </p>
       </div>
 

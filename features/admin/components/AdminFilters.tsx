@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { RotateCcw, Search } from "lucide-react";
+import { ChevronDown, RotateCcw, Search } from "lucide-react";
 import {
   chipActiveClass,
   chipClass,
@@ -70,6 +70,9 @@ export function AdminFilters({
   resetLabel?: string;
 }) {
   if (filters.length === 0) return null;
+  const searchFilters = filters.filter((filter) => filter.kind === "search");
+  const extraFilters = filters.filter((filter) => filter.kind !== "search");
+  const activeExtraCount = extraFilters.filter((filter) => "value" in filter && Boolean(filter.value)).length;
 
   return (
     <form
@@ -79,33 +82,31 @@ export function AdminFilters({
       }}
       className="admin-filters border-b border-divider bg-surface px-4 py-4 sm:px-6 lg:px-10"
     >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {filters.map((filter) => {
-          if (filter.kind === "search") {
-            return (
-              <label
-                key={filter.key}
-                className="block sm:col-span-2 xl:col-span-4"
-              >
-                <span className="mb-1 block truncate text-[10px] font-black text-foreground-secondary">
-                  {filter.label}
-                </span>
-                <span className="flex min-h-11 items-center gap-2 rounded-xl border border-input-border bg-input px-3.5 focus-within:border-ring">
-                  <Search
-                    aria-hidden="true"
-                    className="h-3.5 w-3.5 shrink-0 text-icon-muted"
-                  />
-                  <input
-                    value={filter.value}
-                    onChange={(event) => filter.onChange(event.target.value)}
-                    placeholder={filter.placeholder}
-                    aria-label={filter.label}
-                    className="h-10 w-full bg-transparent text-xs text-foreground outline-none placeholder:text-placeholder"
-                  />
-                </span>
-              </label>
-            );
-          }
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {searchFilters.map((filter) => filter.kind === "search" ? (
+          <label key={filter.key} className="block min-w-0 sm:col-span-2">
+            <span className="mb-1 block text-xs font-bold text-foreground-secondary">{filter.label}</span>
+            <span className="flex min-h-11 items-center gap-2 rounded-xl border border-input-border bg-input px-3.5 focus-within:border-ring">
+              <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-icon-muted" />
+              <input
+                value={filter.value}
+                onChange={(event) => filter.onChange(event.target.value)}
+                placeholder={filter.placeholder}
+                aria-label={filter.label}
+                className="h-10 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-placeholder"
+              />
+            </span>
+          </label>
+        ) : null)}
+      </div>
+
+      {extraFilters.length > 0 ? <details className="group mt-3" defaultOpen={activeExtraCount > 0}>
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-xs font-bold text-foreground-secondary marker:hidden hover:text-foreground">
+          <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" />
+          فیلترهای بیشتر{activeExtraCount > 0 ? ` (${activeExtraCount.toLocaleString("fa-IR")})` : ""}
+        </summary>
+        <div className="grid grid-cols-1 gap-3 pt-3 sm:grid-cols-2 xl:grid-cols-4">
+        {extraFilters.map((filter) => {
 
           if (filter.kind === "select") {
             return (
@@ -194,7 +195,8 @@ export function AdminFilters({
             </div>
           );
         })}
-      </div>
+        </div>
+      </details> : null}
 
       <div className="mt-4 flex items-center gap-2 border-t border-divider pt-4">
         <button

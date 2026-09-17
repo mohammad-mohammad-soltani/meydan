@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { Image as ImageIcon, Plus, RefreshCw } from "lucide-react";
 import { AdminDialog } from "./AdminDialog";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminField, fieldClass } from "./AdminField";
 import { AdminFieldMessage } from "./AdminFieldMessage";
@@ -263,7 +264,7 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
           onConfirm={() => void submit()}
           onClose={() => setEditing(null)}
         >
-          <div className="space-y-3">
+          <div className="space-y-4">
             <AdminFieldMessage message={formMessage} fields={fieldErrors} />
             <AdminField label="نام" htmlFor="outlet-name" required error={fieldErrors.name}>
               <input
@@ -273,7 +274,9 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
                 className={fieldClass}
               />
             </AdminField>
-            <AdminField label="وب‌سایت" htmlFor="outlet-website">
+            <AdminDisclosureSection title="لینک‌های رسانه" defaultOpen={Boolean(website || bale || eitaa)} hasError={Boolean(fieldErrors.website || fieldErrors.bale || fieldErrors.eitaa)}>
+              <div className="grid gap-3 sm:grid-cols-2">
+            <AdminField label="وب‌سایت" htmlFor="outlet-website" error={fieldErrors.website}>
               <input
                 id="outlet-website"
                 value={website}
@@ -301,6 +304,9 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
                 className={`${fieldClass} text-left`}
               />
             </AdminField>
+              </div>
+            </AdminDisclosureSection>
+            <AdminDisclosureSection title="نشان رسانه" defaultOpen={Boolean(avatarMediaId || (editing !== "new" && editing.avatarUrl))} hasError={Boolean(fieldErrors.avatarMediaId)}>
             <MediaPickerField
               id="outlet-avatar"
               label="نشان رسانه"
@@ -308,6 +314,7 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
               currentUrl={editing === "new" ? null : editing.avatarUrl}
               onChange={setAvatarMediaId}
             />
+            </AdminDisclosureSection>
           </div>
         </AdminDialog>
       ) : null}

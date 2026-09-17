@@ -9,6 +9,7 @@ import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { ProfileActionsMenu } from "./ProfileActionsMenu";
+import { AdminNavLink } from "@/features/admin/components/AdminNavLink";
 import type { ProfileDetails } from "../types";
 
 type ProfileHeaderProps = {
@@ -46,7 +47,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
           <div className="flex min-h-16 items-start justify-between">
             <div className="-mt-12 grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-surface bg-surface-muted text-3xl font-black text-foreground sm:-mt-14 sm:h-28 sm:w-28">{identity.avatar ? <Image src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} height={112} unoptimized={identity.avatar.startsWith("http")} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}</div>
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-              {canEdit ? <Link href={"/profile/edit" as Route} className="inline-flex min-h-10 items-center rounded-pill border border-border px-4 text-xs font-black text-foreground hover:bg-hover">ویرایش پروفایل</Link> : (
+              {canEdit ? <><AdminNavLink isAuthenticated className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-brand-border bg-brand-muted px-3 text-xs font-black text-brand hover:bg-selected lg:hidden" /><Link href={"/profile/edit" as Route} className="inline-flex min-h-10 items-center rounded-pill border border-border px-4 text-xs font-black text-foreground hover:bg-hover">ویرایش پروفایل</Link></> : (
                 <>
                   <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-3 text-xs font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
                     {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}

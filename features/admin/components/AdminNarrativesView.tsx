@@ -5,11 +5,14 @@ import Link from "next/link";
 import type { Route } from "next";
 import { BookOpen, FileText, LoaderCircle, RefreshCw, Trash2 } from "lucide-react";
 import { AdminDialog } from "./AdminDialog";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminEmptyState, AdminErrorState } from "./AdminStateViews";
 import { AdminField, fieldClass } from "./AdminField";
 import { AdminFieldMessage } from "./AdminFieldMessage";
 import { IdLookup, type LookupResult } from "./IdLookup";
 import { MediaPickerField } from "./MediaPickerField";
+import { PersianDatePicker } from "@/components/shared/PersianDatePicker";
+import { formatAdminDate, splitAdminDateTime } from "../lib/datetime";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { fa, primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
@@ -192,7 +195,7 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
       setRefTitle(reflection.title);
       setRefUrl(reflection.url);
       setRefSummary(reflection.summary);
-      setRefPublishedAt(reflection.publishedAt?.slice(0, 10) ?? "");
+      setRefPublishedAt(splitAdminDateTime(reflection.publishedAt).date);
     }
     setReflectionOpen(reflection);
   };
@@ -411,7 +414,7 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
                       </span>
                       <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
                         {reflection.outletName || "رسانه نامشخص"}
-                        {reflection.publishedAt ? ` · ${reflection.publishedAt.slice(0, 10)}` : ""}
+                        {reflection.publishedAt ? ` · ${formatAdminDate(reflection.publishedAt)}` : ""}
                       </span>
                       {reflection.url ? (
                         <a
@@ -557,8 +560,9 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
           onConfirm={() => void submitReflection()}
           onClose={() => setReflectionOpen(null)}
         >
-          <div className="space-y-3">
+          <div className="space-y-4">
             <AdminFieldMessage message={refMessage} />
+            <div className="grid gap-3 sm:grid-cols-2">
             <AdminField label="رسانه" htmlFor="reflection-outlet">
               <select
                 id="reflection-outlet"
@@ -611,6 +615,8 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
                 className={`${fieldClass} text-left`}
               />
             </AdminField>
+            </div>
+            <AdminDisclosureSection title="جزئیات انتشار" defaultOpen={Boolean(refSummary || refPublishedAt)}>
             <AdminField label="خلاصه" htmlFor="reflection-summary">
               <textarea
                 id="reflection-summary"
@@ -620,20 +626,12 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
                 className={`${fieldClass} resize-none`}
               />
             </AdminField>
-            <AdminField
-              label="تاریخ انتشار"
-              htmlFor="reflection-date"
-              hint="میلادی، قالب YYYY-MM-DD."
-            >
-              <input
-                id="reflection-date"
-                value={refPublishedAt}
-                dir="ltr"
-                placeholder="2026-09-17"
-                onChange={(event) => setRefPublishedAt(event.target.value)}
-                className={`${fieldClass} text-left`}
-              />
-            </AdminField>
+            <div>
+              <span className="mb-1.5 block text-xs font-bold text-foreground-secondary">تاریخ انتشار</span>
+              <PersianDatePicker value={refPublishedAt} onChange={setRefPublishedAt} allow="any" ariaLabel="تاریخ انتشار بازتاب" />
+            </div>
+            </AdminDisclosureSection>
+            <AdminDisclosureSection title="تصویر رسانه" defaultOpen={Boolean(refLogoMediaId || (reflectionOpen !== "new" && reflectionOpen.logoUrl))}>
             <MediaPickerField
               id="reflection-logo"
               label="نشان رسانه در این بازتاب"
@@ -641,6 +639,7 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
               currentUrl={reflectionOpen === "new" ? null : reflectionOpen.logoUrl}
               onChange={setRefLogoMediaId}
             />
+            </AdminDisclosureSection>
           </div>
         </AdminDialog>
       ) : null}

@@ -8,6 +8,7 @@ import { LoaderCircle, Save } from "lucide-react";
 import { AdminCheckbox, AdminField, fieldClass } from "./AdminField";
 import { AdminFieldMessage } from "./AdminFieldMessage";
 import { MediaPickerField } from "./MediaPickerField";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
   adminErrorMessage,
@@ -138,16 +139,16 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
 
   return (
     <form
-      className="space-y-5 px-3 py-4 pb-24 sm:px-4"
+      className="admin-form"
       onSubmit={(event) => {
         event.preventDefault();
         void submit();
       }}
     >
-      <AdminFieldMessage message={message} fields={fieldErrors} tone={savedDraftNotice ? "success" : "error"} />
+      <div className="admin-form-notice"><AdminFieldMessage message={message} fields={fieldErrors} tone={savedDraftNotice ? "success" : "error"} /></div>
 
-      <section aria-label="متن اصلی" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-        <h2 className="text-xs font-black text-foreground-secondary">متن اصلی</h2>
+      <section aria-label="متن اصلی" className="admin-form-card admin-form-main space-y-4">
+        <h2>متن اصلی</h2>
 
         <AdminField label="عنوان" htmlFor="content-title" required error={fieldErrors.title}>
           <input
@@ -178,26 +179,12 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
           />
         </AdminField>
 
-        <AdminField
-          label="برچسب‌ها"
-          htmlFor="content-tags"
-          error={fieldErrors.tags}
-          hint="با ویرگول یا خط جدید جدا کنید."
-        >
-          <textarea
-            id="content-tags"
-            value={tagText}
-            rows={2}
-            onChange={(event) => setTagText(event.target.value)}
-            className={`${fieldClass} resize-none`}
-          />
-        </AdminField>
       </section>
 
-      <section aria-label="دسته‌بندی و وضعیت" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-        <h2 className="text-xs font-black text-foreground-secondary">دسته‌بندی و وضعیت</h2>
+      <section aria-label="دسته‌بندی و وضعیت" className="admin-form-card admin-form-side space-y-4">
+        <h2>انتشار و دسته‌بندی</h2>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-3">
           <AdminField label="قالب" htmlFor="content-format" error={fieldErrors.format}>
             <select
               id="content-format"
@@ -250,43 +237,6 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
             />
           </AdminField>
 
-          <AdminField label="برچسب روی کارت" htmlFor="content-badge" error={fieldErrors.badge}>
-            <input
-              id="content-badge"
-              value={form.badge}
-              onChange={(event) => patch({ badge: event.target.value })}
-              className={fieldClass}
-            />
-          </AdminField>
-
-          <AdminField label="زیرعنوان" htmlFor="content-subtitle" error={fieldErrors.subtitle}>
-            <input
-              id="content-subtitle"
-              value={form.subtitle}
-              onChange={(event) => patch({ subtitle: event.target.value })}
-              className={fieldClass}
-            />
-          </AdminField>
-
-          <AdminField label="محل" htmlFor="content-location" error={fieldErrors.location_label}>
-            <input
-              id="content-location"
-              value={form.locationLabel}
-              onChange={(event) => patch({ locationLabel: event.target.value })}
-              className={fieldClass}
-            />
-          </AdminField>
-
-          <AdminField label="مدت رسانه" htmlFor="content-duration" error={fieldErrors.media_duration}>
-            <input
-              id="content-duration"
-              value={form.mediaDuration}
-              dir="ltr"
-              placeholder="12:30"
-              onChange={(event) => patch({ mediaDuration: event.target.value })}
-              className={`${fieldClass} text-left`}
-            />
-          </AdminField>
         </div>
 
         <AdminCheckbox
@@ -298,8 +248,8 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
         />
       </section>
 
-      <section aria-label="ضمیمه‌ها" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-        <h2 className="text-xs font-black text-foreground-secondary">ضمیمه‌ها</h2>
+      <section aria-label="ضمیمه‌ها" className="admin-form-card admin-form-main space-y-4">
+        <h2>ضمیمه‌ها</h2>
         <p className="text-[10px] leading-5 text-muted-foreground">
           هر ضمیمه یک شناسه رسانه است. ترتیب فهرست، ترتیب نمایش را تعیین می‌کند.
         </p>
@@ -366,8 +316,27 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
         )}
       </section>
 
-      <section aria-label="تولیدکنندگان" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-        <h2 className="text-xs font-black text-foreground-secondary">تولیدکنندگان</h2>
+      <AdminDisclosureSection title="جزئیات کارت و برچسب‌ها" className="admin-form-side" hasError={Boolean(fieldErrors.tags || fieldErrors.badge || fieldErrors.subtitle || fieldErrors.location_label || fieldErrors.media_duration)}>
+        <div className="space-y-3">
+          <AdminField label="برچسب‌ها" htmlFor="content-tags" error={fieldErrors.tags} hint="با ویرگول یا خط جدید جدا کنید.">
+            <textarea id="content-tags" value={tagText} rows={2} onChange={(event) => setTagText(event.target.value)} className={`${fieldClass} resize-none`} />
+          </AdminField>
+          <AdminField label="برچسب روی کارت" htmlFor="content-badge" error={fieldErrors.badge}>
+            <input id="content-badge" value={form.badge} onChange={(event) => patch({ badge: event.target.value })} className={fieldClass} />
+          </AdminField>
+          <AdminField label="زیرعنوان" htmlFor="content-subtitle" error={fieldErrors.subtitle}>
+            <input id="content-subtitle" value={form.subtitle} onChange={(event) => patch({ subtitle: event.target.value })} className={fieldClass} />
+          </AdminField>
+          <AdminField label="محل" htmlFor="content-location" error={fieldErrors.location_label}>
+            <input id="content-location" value={form.locationLabel} onChange={(event) => patch({ locationLabel: event.target.value })} className={fieldClass} />
+          </AdminField>
+          <AdminField label="مدت رسانه" htmlFor="content-duration" error={fieldErrors.media_duration}>
+            <input id="content-duration" value={form.mediaDuration} dir="ltr" placeholder="12:30" onChange={(event) => patch({ mediaDuration: event.target.value })} className={`${fieldClass} text-left`} />
+          </AdminField>
+        </div>
+      </AdminDisclosureSection>
+
+      <AdminDisclosureSection title="تولیدکنندگان" className="admin-form-wide" hasError={Boolean(fieldErrors.creators)}>
         <p className="text-[10px] leading-5 text-muted-foreground">
           شناسه تولیدکننده‌ها به‌همراه برچسب نقش. ترتیب فهرست، ترتیب نمایش است.
         </p>
@@ -424,9 +393,9 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
         >
           افزودن تولیدکننده
         </button>
-      </section>
+      </AdminDisclosureSection>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="admin-form-actions">
         <button type="submit" disabled={busy} className={primaryButtonClass}>
           {busy ? (
             <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />

@@ -45,13 +45,41 @@ export function AdminDialog({
 }) {
   const panel = useRef<HTMLElement>(null);
   const restoreFocusTo = useRef<Element | null>(null);
+  const onCloseRef = useRef(onClose);
+  const busyRef = useRef(busy);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    busyRef.current = busy;
+  }, [onClose, busy]);
 
   useEffect(() => {
     restoreFocusTo.current = document.activeElement;
     panel.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !busyRef.current) {
+        event.preventDefault();
+        onCloseRef.current();
+      }
+      if (event.key !== "Tab" || !panel.current) return;
+      const focusable = Array.from(panel.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )).filter((element) => element.getClientRects().length > 0);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        panel.current.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === panel.current)) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKeyDown);
 
@@ -60,13 +88,13 @@ export function AdminDialog({
       const target = restoreFocusTo.current;
       if (target instanceof HTMLElement && document.contains(target)) target.focus();
     };
-  }, [onClose]);
+  }, []);
 
   return createPortal(
     <div
       role="presentation"
-      onClick={onClose}
-      className="fixed inset-0 z-[120] flex items-end justify-center bg-overlay p-4 sm:items-center"
+      onClick={() => { if (!busy) onClose(); }}
+      className="admin-dialog-root fixed inset-0 z-[120] flex items-end justify-center bg-overlay p-4 sm:items-center"
     >
       <section
         ref={panel}
@@ -75,7 +103,7 @@ export function AdminDialog({
         aria-label={title}
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
-        className="flex max-h-[90dvh] w-full max-w-md flex-col overflow-hidden rounded-panel border border-border bg-popover text-popover-foreground shadow-dialog outline-none"
+        className={`flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-panel border border-border bg-popover text-popover-foreground shadow-dialog outline-none ${children ? "max-w-2xl" : "max-w-md"}`}
       >
         <header className="flex items-start gap-3 border-b border-divider bg-surface-muted/60 px-5 py-4">
           {tone === "danger" ? (
@@ -95,6 +123,7 @@ export function AdminDialog({
           <button
             type="button"
             onClick={onClose}
+            disabled={busy}
             aria-label="بستن"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand"
           >

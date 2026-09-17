@@ -1,37 +1,145 @@
 @import "tailwindcss";
 
-/* Admin has its own wide information architecture while sharing the app's
- * semantic color contract. These scoped rules upgrade existing admin cards
- * without changing public surfaces. */
+/* Admin workspace: keep the existing three site themes, but give forms a
+ * content-aware grid. The public app's semantic colors remain the source of
+ * truth; the admin no longer paints a forced dark canvas over the light theme. */
 .admin-shell > main > div {
-  max-width: 96rem;
+  max-width: 90rem;
   margin-inline: auto;
+  background: var(--admin-page);
 }
 .admin-shell {
-  --background: #0b0d0f;
-  --surface: #101316;
-  --surface-muted: #15191d;
-  --surface-elevated: #171c20;
-  --surface-sunken: #080a0c;
-  --surface-glass: rgb(16 19 22 / 0.92);
-  --card: #171c20;
-  --border: #293037;
-  --border-strong: #3a444d;
-  --divider: #20272d;
-  --input: #0c1013;
-  --input-hover: #12171b;
-  --input-border: #303941;
-  --muted: #15191d;
-  --disabled: #1a1e22;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  --admin-page: #f7f8f9;
+  --admin-panel: #ffffff;
+  --admin-panel-quiet: #f4f6f7;
+  background: var(--admin-page);
+  font-family: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1, "ss02" 1;
+}
+.admin-dialog-root {
+  font-family: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1, "ss02" 1;
+}
+.admin-shell > main {
+  container: admin-workspace / inline-size;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (min-width: 1024px) {
+  .admin-shell { flex-direction: row; }
+}
+html.dark .admin-shell {
+  --admin-page: #1b1d20;
+  --admin-panel: #26282c;
+  --admin-panel-quiet: #222428;
+}
+html.black .admin-shell {
+  --admin-page: #000000;
+  --admin-panel: #080808;
+  --admin-panel-quiet: #050505;
 }
 .admin-route > aside {
   display: none !important;
 }
-.admin-shell .rounded-card {
-  border-radius: 1rem;
-  background: var(--surface-elevated);
-  box-shadow: var(--elevation-sm);
+.admin-shell .admin-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding: 1.25rem clamp(1rem, 2.5vw, 2rem) 2rem;
 }
+.admin-shell .admin-form-card,
+.admin-dialog-root .admin-form-card {
+  container-type: inline-size;
+  min-width: 0;
+  padding: clamp(1rem, 1.8vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--admin-panel);
+  box-shadow: var(--elevation-xs);
+}
+.admin-shell .admin-form-card > h2,
+.admin-dialog-root .admin-form-card > h2 {
+  margin-bottom: 1rem;
+  font-size: .95rem;
+  font-weight: 900;
+  color: var(--foreground);
+}
+.admin-shell .admin-form-card .admin-form-section-body[hidden],
+.admin-dialog-root .admin-form-card .admin-form-section-body[hidden] {
+  display: none;
+}
+.admin-shell .admin-field-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+@container admin-workspace (min-width: 68rem) {
+  .admin-shell .admin-form {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  .admin-shell .admin-form-card,
+  .admin-shell .admin-form-wide,
+  .admin-shell .admin-form-actions,
+  .admin-shell .admin-form-notice {
+    grid-column: span 12;
+  }
+  .admin-shell .admin-form-main { grid-column: span 8; }
+  .admin-shell .admin-form-side { grid-column: span 4; }
+  .admin-shell .admin-form-half { grid-column: span 6; }
+}
+@container (min-width: 36rem) {
+  .admin-shell .admin-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-shell .admin-field-wide { grid-column: 1 / -1; }
+}
+.admin-shell .admin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
+  padding: .9rem 0;
+  border-top: 1px solid var(--divider);
+  background: var(--admin-page);
+}
+@media (max-width: 767px) {
+  .admin-shell .admin-form { padding-bottom: 7rem; }
+  .admin-shell .admin-form-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin-inline: -1rem;
+    padding: .75rem 1rem max(.75rem, env(safe-area-inset-bottom));
+    background: var(--surface-glass);
+    backdrop-filter: blur(14px);
+  }
+}
+.admin-shell .admin-form input,
+.admin-shell .admin-form textarea,
+.admin-shell .admin-form select {
+  font-family: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1, "ss02" 1;
+}
+.admin-shell .leaflet-container,
+.admin-shell .leaflet-popup-content,
+.admin-shell .leaflet-tooltip {
+  font-family: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss02" 1;
+}
+.admin-nav-dialog::backdrop { background: var(--overlay); backdrop-filter: blur(3px); }
+.admin-shell .font-mono { font-family: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif; font-feature-settings: "ss02" 1; }
+.admin-dialog-root .font-mono { font-family: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif; font-feature-settings: "ss02" 1; }
 .admin-shell button,
 .admin-shell a,
 .admin-shell select,
@@ -45,19 +153,6 @@
 }
 .admin-shell .admin-navigation a {
   min-height: 2.75rem;
-}
-.admin-shell form.space-y-5 {
-  padding-inline: clamp(1rem, 3vw, 2.5rem) !important;
-}
-.admin-shell form.space-y-5 > div:last-child {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
-  margin-inline: calc(clamp(1rem, 3vw, 2.5rem) * -1);
-  padding: 0.75rem clamp(1rem, 3vw, 2.5rem);
-  border-top: 1px solid var(--divider);
-  background: var(--surface-glass);
-  backdrop-filter: blur(14px);
 }
 @media (max-width: 1023px) {
   .admin-shell > main > div {

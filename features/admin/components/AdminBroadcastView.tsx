@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Megaphone, Send } from "lucide-react";
+import { Send } from "lucide-react";
+import { AdminDialog } from "./AdminDialog";
 import { AdminField, fieldClass } from "./AdminField";
 import { AdminFieldMessage } from "./AdminFieldMessage";
+import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminNotice } from "./AdminNotice";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
@@ -145,18 +147,18 @@ export function AdminBroadcastView() {
         limitation="تعداد گیرندگان پیش از ارسال نمایش داده نمی‌شود؛ پس از ارسال فقط تعداد ردیف‌های نوشته‌شده گزارش می‌شود."
       />
 
-      <div className="space-y-4 px-3 py-4 pb-24 sm:px-4">
+      <div className="admin-form">
         {result ? (
-          <AdminNotice
+          <div className="admin-form-notice"><AdminNotice
             tone="success"
             message={`پیام برای ${faLocal(result.created)} گیرنده ثبت شد (${NOTIFICATION_AUDIENCE_LABELS[result.audience]}).`}
-          />
+          /></div>
         ) : null}
 
-        <AdminFieldMessage message={message} fields={fieldErrors} labels={FIELD_LABELS} />
+        <div className="admin-form-notice"><AdminFieldMessage message={message} fields={fieldErrors} labels={FIELD_LABELS} /></div>
 
-        <section aria-label="محتوای پیام" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">محتوای پیام</h2>
+        <section aria-label="محتوای پیام" className="admin-form-card admin-form-main space-y-4">
+          <h2>محتوای پیام</h2>
 
           <AdminField label="عنوان" htmlFor="broadcast-title" required error={fieldErrors.title}>
             <input
@@ -177,25 +179,10 @@ export function AdminBroadcastView() {
             />
           </AdminField>
 
-          <AdminField
-            label="پیوند داخلی (اختیاری)"
-            htmlFor="broadcast-link"
-            error={fieldErrors.deepLink}
-            hint="باید با / شروع شود، مثلاً /explore یا /squares/123."
-          >
-            <input
-              id="broadcast-link"
-              value={deepLink}
-              dir="ltr"
-              placeholder="/explore"
-              onChange={(event) => setDeepLink(event.target.value)}
-              className={`${fieldClass} text-left`}
-            />
-          </AdminField>
         </section>
 
-        <section aria-label="گیرندگان" className="space-y-3 rounded-card border border-border bg-surface p-3.5">
-          <h2 className="text-xs font-black text-foreground-secondary">گیرندگان</h2>
+        <section aria-label="گیرندگان" className="admin-form-card admin-form-side space-y-4">
+          <h2>گیرندگان</h2>
 
           <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="گروه گیرندگان">
             {NOTIFICATION_AUDIENCES.map((option) => (
@@ -269,7 +256,13 @@ export function AdminBroadcastView() {
           </p>
         </section>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <AdminDisclosureSection title="پیوند داخلی" className="admin-form-wide" defaultOpen={Boolean(deepLink)} hasError={Boolean(fieldErrors.deepLink)}>
+          <AdminField label="پیوند داخلی (اختیاری)" htmlFor="broadcast-link" error={fieldErrors.deepLink} hint="باید با / شروع شود، مثلاً /explore یا /squares/123.">
+            <input id="broadcast-link" value={deepLink} dir="ltr" placeholder="/explore" onChange={(event) => setDeepLink(event.target.value)} className={`${fieldClass} text-left`} />
+          </AdminField>
+        </AdminDisclosureSection>
+
+        <div className="admin-form-actions">
           <button
             type="button"
             disabled={busy}
@@ -307,41 +300,18 @@ export function AdminBroadcastView() {
           </button>
         </div>
 
-        {confirming ? (
-          <section
-            role="alertdialog"
-            aria-label="تأیید ارسال پیام همگانی"
-            className="space-y-3 rounded-card border border-warning-border bg-warning-surface p-3.5"
-          >
-            <h2 className="flex items-center gap-1.5 text-xs font-black text-warning-foreground">
-              <Megaphone aria-hidden="true" className="h-4 w-4" />
-              تأیید ارسال
-            </h2>
-            <p className="text-[11px] leading-6 text-warning-foreground">
-              پیام «{title}» برای {audienceSummary} ارسال می‌شود. این عملیات قابل بازگشت نیست و
-              اعلان‌ها بلافاصله برای گیرندگان ثبت می‌شوند.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void submit()}
-                className="inline-flex min-h-10 items-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-danger-foreground transition-colors hover:opacity-90"
-              >
-                {busy ? "در حال ارسال…" : "بله، ارسال کن"}
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setConfirming(false)}
-                className={secondaryButtonClass}
-              >
-                انصراف
-              </button>
-            </div>
-          </section>
-        ) : null}
       </div>
+      {confirming ? (
+        <AdminDialog
+          title="تأیید ارسال پیام همگانی"
+          description={`پیام «${title}» برای ${audienceSummary} ارسال می‌شود. این عملیات قابل بازگشت نیست و اعلان‌ها بلافاصله ثبت می‌شوند.`}
+          confirmLabel="بله، ارسال کن"
+          tone="danger"
+          busy={busy}
+          onConfirm={() => void submit()}
+          onClose={() => setConfirming(false)}
+        />
+      ) : null}
     </div>
   );
 }

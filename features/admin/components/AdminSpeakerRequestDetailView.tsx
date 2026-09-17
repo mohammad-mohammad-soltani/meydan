@@ -13,6 +13,8 @@ import { dangerButtonClass, primaryButtonClass, secondaryButtonClass } from "./s
 import { adminErrorMessage, setSpeakerRequestStatus } from "../services/speakers.service";
 import type { SpeakerRequest, SpeakerRequestStatus } from "../types";
 import { SPEAKER_REQUEST_STATUSES, SPEAKER_REQUEST_STATUS_LABELS } from "../types";
+import { formatAdminDate, formatAdminDateTime } from "../lib/datetime";
+import { formatPersianTime } from "@/components/shared/PersianTimePicker";
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -98,10 +100,10 @@ export function AdminSpeakerRequestDetailView({
           <Row label="محل برگزاری" value={request.direction} />
           <Row
             label="زمان درخواستی"
-            value={[request.requestedDate, request.requestedTime].filter(Boolean).join(" ")}
+            value={request.requestedDate ? `${formatAdminDate(request.requestedDate)}${request.requestedTime ? `، ${formatPersianTime(request.requestedTime)}` : ""}` : ""}
           />
-          <Row label="تاریخ ثبت" value={request.createdAt} />
-          <Row label="تاریخ تصمیم" value={request.decidedAt ?? ""} />
+          <Row label="تاریخ ثبت" value={formatAdminDateTime(request.createdAt)} />
+          <Row label="تاریخ تصمیم" value={formatAdminDateTime(request.decidedAt)} />
           {request.requesterUserId ? (
             <Row label="شناسه دعوت‌کننده" value={`#${request.requesterUserId}`} />
           ) : null}

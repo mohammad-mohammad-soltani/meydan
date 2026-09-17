@@ -19,6 +19,8 @@ import {
 } from "../services/speakers.service";
 import type { AdminListResult, SpeakerRequest, SpeakerRequestStatus } from "../types";
 import { SPEAKER_REQUEST_STATUS_LABELS, SPEAKER_REQUEST_STATUSES } from "../types";
+import { formatAdminDate } from "../lib/datetime";
+import { formatPersianTime } from "@/components/shared/PersianTimePicker";
 
 export type SpeakerRequestSurface = "speaker-requests" | "speaker-invitations";
 
@@ -129,8 +131,8 @@ export function AdminSpeakerRequestsView({
       key: "when",
       header: "زمان درخواستی",
       render: (row) => (
-        <span className="font-mono text-[10px] text-foreground-secondary" dir="ltr">
-          {[row.requestedDate, row.requestedTime].filter(Boolean).join(" ") || "—"}
+        <span className="text-xs text-foreground-secondary">
+          {row.requestedDate ? `${formatAdminDate(row.requestedDate)}${row.requestedTime ? `، ${formatPersianTime(row.requestedTime)}` : ""}` : "—"}
         </span>
       ),
     },

@@ -10,6 +10,7 @@ import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminTable, type AdminColumn } from "./AdminTable";
 import { PostStatusBadge } from "./AdminStatusBadge";
 import { fa, secondaryButtonClass } from "./styles";
+import { formatAdminDate } from "../lib/datetime";
 import {
   CONTENT_LIST_LIMITATION,
   adminErrorMessage,
@@ -161,8 +162,8 @@ export function AdminContentView({ initial }: { initial: { items: ContentItem[];
       key: "date",
       header: "انتشار",
       render: (item) => (
-        <span className="font-mono text-[10px] text-muted-foreground" dir="ltr">
-          {item.publishedAt ? item.publishedAt.slice(0, 10) : "—"}
+        <span className="text-xs text-muted-foreground">
+          {formatAdminDate(item.publishedAt)}
         </span>
       ),
     },

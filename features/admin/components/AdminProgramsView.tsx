@@ -13,6 +13,7 @@ import { ProgramStatusBadge } from "./AdminStatusBadge";
 import { fa, secondaryButtonClass } from "./styles";
 import { PROGRAM_LIST_PAGE_SIZE, adminErrorMessage, getPrograms, type ProgramKind, type ProgramPage } from "../services/programs.service";
 import { PROGRAM_STATUSES, PROGRAM_STATUS_LABELS, type Program } from "../types";
+import { formatAdminDate } from "../lib/datetime";
 
 /**
  * The initiative/campaign list.
@@ -132,9 +133,8 @@ export function AdminProgramsView({
       key: "dates",
       header: "بازه",
       render: (program) => (
-        <span className="font-mono text-[10px] text-foreground-secondary" dir="ltr">
-          {[program.startsAt?.slice(0, 10), program.endsAt?.slice(0, 10)].filter(Boolean).join(" → ") ||
-            "—"}
+        <span className="text-xs text-foreground-secondary">
+          {[program.startsAt && formatAdminDate(program.startsAt), program.endsAt && formatAdminDate(program.endsAt)].filter(Boolean).join(" ← ") || "—"}
         </span>
       ),
     },

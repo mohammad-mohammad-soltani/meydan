@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, CalendarDays, Clock, Plus, Trash2 } from "lucide-react";
 import { PersianDatePicker } from "@/components/shared/PersianDatePicker";
 import { PersianTimePicker } from "@/components/shared/PersianTimePicker";
+import { joinAdminDateTime, splitAdminDateTime } from "../lib/datetime";
 import type { ProgramScheduleRow } from "../types";
 import { fieldClass, labelClass, secondaryButtonClass } from "./styles";
 
@@ -14,18 +15,6 @@ const EMPTY_ROW: ProgramScheduleRow = {
   locationLabel: "",
   status: "published",
 };
-
-/** `2026-09-17T21:00` → `{ date, time }` for the two Persian pickers. */
-function splitDateTime(value: string): { date: string; time: string } {
-  if (!value) return { date: "", time: "" };
-  const [date, time] = value.split("T");
-  return { date: date ?? "", time: (time ?? "").slice(0, 5) };
-}
-
-function joinDateTime(date: string, time: string): string {
-  if (!date) return "";
-  return time ? `${date}T${time}` : date;
-}
 
 /**
  * Repeatable schedule rows written to `meydan_schedule`.
@@ -66,8 +55,8 @@ export function ScheduleRows({
       ) : null}
 
       {rows.map((row, index) => {
-        const start = splitDateTime(row.startsAt);
-        const end = splitDateTime(row.endsAt);
+        const start = splitAdminDateTime(row.startsAt);
+        const end = splitAdminDateTime(row.endsAt);
         return (
           <fieldset
             key={index}
@@ -97,7 +86,8 @@ export function ScheduleRows({
                 <div className="mt-1.5">
                   <PersianDatePicker
                     value={start.date}
-                    onChange={(date) => update(index, { startsAt: joinDateTime(date, start.time) })}
+                    onChange={(date) => update(index, { startsAt: joinAdminDateTime(date, start.time || "09:00") })}
+                    allow="any"
                     ariaLabel={`تاریخ شروع اجرای ${index + 1}`}
                   />
                 </div>
@@ -111,7 +101,7 @@ export function ScheduleRows({
                 <div className="mt-1.5">
                   <PersianTimePicker
                     value={start.time}
-                    onChange={(time) => update(index, { startsAt: joinDateTime(start.date, time) })}
+                    onChange={(time) => update(index, { startsAt: joinAdminDateTime(start.date, time) })}
                     ariaLabel={`ساعت شروع اجرای ${index + 1}`}
                   />
                 </div>
@@ -122,7 +112,8 @@ export function ScheduleRows({
                 <div className="mt-1.5">
                   <PersianDatePicker
                     value={end.date}
-                    onChange={(date) => update(index, { endsAt: joinDateTime(date, end.time) })}
+                    onChange={(date) => update(index, { endsAt: joinAdminDateTime(date, end.time || "23:59") })}
+                    allow="any"
                     ariaLabel={`تاریخ پایان اجرای ${index + 1}`}
                   />
                 </div>
@@ -133,7 +124,7 @@ export function ScheduleRows({
                 <div className="mt-1.5">
                   <PersianTimePicker
                     value={end.time}
-                    onChange={(time) => update(index, { endsAt: joinDateTime(end.date, time) })}
+                    onChange={(time) => update(index, { endsAt: joinAdminDateTime(end.date, time) })}
                     ariaLabel={`ساعت پایان اجرای ${index + 1}`}
                   />
                 </div>
