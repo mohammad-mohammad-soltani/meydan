@@ -8,7 +8,7 @@ import {
 import { CommentsList } from "./CommentsList";
 import { CommentInput } from "./CommentInput";
 import { MediaReflections } from "./MediaReflections";
-import { PostEditorialMark } from "./PostEditorialMark";
+import { PostAdminActions } from "./PostAdminActions";
 import { PostHeader } from "./PostHeader";
 
 import { PostCard } from "@/features/feed/components/PostCard";
@@ -301,10 +301,13 @@ export function PostView({
           flex-1
         "
       >
-        <PostEditorialMark
+        <PostAdminActions
           postId={state.post.id}
           editorial={Boolean(
             state.post.editorial,
+          )}
+          isContent={Boolean(
+            state.post.isContent,
           )}
         />
 

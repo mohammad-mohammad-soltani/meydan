@@ -67,5 +67,9 @@ export type PostDetail = {
   comments: PostComment[];
   /** The narrative is featured in the editorial collection. */
   editorial?: boolean;
+  /** The narrative was published as standalone content. */
+  isContent?: boolean;
+  /** Id of the linked content post, when the narrative was converted. */
+  contentId?: number | null;
   viewerState?: { liked: boolean; reposted: boolean };
 };
