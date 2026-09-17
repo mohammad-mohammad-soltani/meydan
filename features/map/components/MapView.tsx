@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ChevronLeft,
   LoaderCircle,
@@ -11,8 +12,50 @@ import { CitySelector } from "./CitySelector";
 import { MapFrame } from "./MapFrame";
 import { useMap } from "../hooks/useMap";
 
+type MapFocus = { latitude: number; longitude: number };
+
+function readLinkedFocus(): MapFocus | null {
+  if (typeof window === "undefined") return null;
+
+  const params = new URLSearchParams(window.location.search);
+  const latParam = params.get("lat");
+  const lngParam = params.get("lng");
+  if (!latParam || !lngParam) return null;
+
+  const latitude = Number(latParam);
+  const longitude = Number(lngParam);
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    Math.abs(latitude) > 90 ||
+    Math.abs(longitude) > 180 ||
+    (latitude === 0 && longitude === 0)
+  ) {
+    return null;
+  }
+
+  return { latitude, longitude };
+}
+
 export function MapView() {
   const map = useMap();
+  // A square profile links here with ?lat=&lng= so the live map opens on that
+  // square. The URL is read directly to avoid a useSearchParams boundary.
+  const [linkedFocus, setLinkedFocus] = useState<MapFocus | null>(null);
+
+  useEffect(() => {
+    queueMicrotask(() => setLinkedFocus(readLinkedFocus()));
+  }, []);
+
+  const handleSelectProvince = (provinceId: number) => {
+    setLinkedFocus(null);
+    map.selectProvince(provinceId);
+  };
+
+  const handleSelectCity = (cityId: number) => {
+    setLinkedFocus(null);
+    map.selectCity(cityId);
+  };
 
   return (
     <section
@@ -46,7 +89,7 @@ export function MapView() {
             selectedProvinceId={map.selectedProvinceId}
             query={map.provinceQuery}
             onQueryChange={map.setProvinceQuery}
-            onSelect={map.selectProvince}
+            onSelect={handleSelectProvince}
           />
 
           <CitySelector
@@ -54,7 +97,7 @@ export function MapView() {
             selectedCityId={map.selectedCityId}
             query={map.cityQuery}
             onQueryChange={map.setCityQuery}
-            onSelect={map.selectCity}
+            onSelect={handleSelectCity}
           />
         </div>
       </div>
@@ -65,8 +108,8 @@ export function MapView() {
             <MapFrame
               selectedSquares={map.squares}
               aggregates={map.aggregates}
-              center={map.center}
-              onSelectProvince={map.selectProvince}
+              center={linkedFocus ?? map.center}
+              onSelectProvince={handleSelectProvince}
             />
           </div>
 
