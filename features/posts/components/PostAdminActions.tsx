@@ -80,18 +80,80 @@ const DIALOGS: Record<AdminAction, DialogConfig> = {
   },
 };
 
+/** Formats accepted by `POST /admin/narratives/{id}/content`. */
+const CONTENT_FORMATS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "mixed", label: "ترکیبی" },
+  { value: "text", label: "مکتوب" },
+  { value: "image", label: "تصویری" },
+  { value: "gallery", label: "گالری تصاویر" },
+  { value: "audio", label: "صوتی" },
+  { value: "video", label: "ویدئو" },
+  { value: "pdf", label: "PDF" },
+  { value: "docx", label: "سند Word" },
+  { value: "pptx", label: "ارائه PowerPoint" },
+  { value: "zip", label: "فایل فشرده" },
+  { value: "file", label: "فایل" },
+  { value: "external", label: "لینک خارجی" },
+];
+
+const DEFAULT_CONTENT_FORMAT = "mixed";
+
+function formatLabel(value?: string | null): string {
+  if (!value) return "";
+  return (
+    CONTENT_FORMATS.find((format) => format.value === value)?.label || value
+  );
+}
+
+function ContentFormatPicker({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="mt-4 w-full text-right">
+      <label
+        htmlFor="post-admin-content-format"
+        className="mb-1.5 block text-[11px] font-bold text-foreground-subtle"
+      >
+        نوع محتوا
+      </label>
+
+      <select
+        id="post-admin-content-format"
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="min-h-11 w-full rounded-control border border-border bg-background px-3 text-xs font-black text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {CONTENT_FORMATS.map((format) => (
+          <option key={format.value} value={format.value}>
+            {format.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function AdminConfirmDialog({
   action,
   isSaving,
   error,
   onCancel,
   onConfirm,
+  children,
 }: {
   action: AdminAction;
   isSaving: boolean;
   error: string;
   onCancel: () => void;
   onConfirm: () => void;
+  children?: ReactNode;
 }) {
   useEffect(() => {
     const previousBodyOverflow = document.body.style.overflow;
@@ -152,6 +214,8 @@ function AdminConfirmDialog({
           >
             {config.message}
           </p>
+
+          {children}
 
           {error ? (
             <p
@@ -217,10 +281,12 @@ export function PostAdminActions({
   postId,
   editorial,
   isContent,
+  contentId,
 }: {
   postId: string;
   editorial: boolean;
   isContent: boolean;
+  contentId?: number | null;
 }) {
   const { isAuthenticated } = useAuthGate();
   const { isAdministrator, isLoading } = useViewerRole(isAuthenticated);
@@ -229,6 +295,10 @@ export function PostAdminActions({
     null,
   );
   const [contentOverride, setContentOverride] = useState<boolean | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<string>(
+    DEFAULT_CONTENT_FORMAT,
+  );
+  const [currentFormat, setCurrentFormat] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<AdminAction | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -237,6 +307,26 @@ export function PostAdminActions({
   // The server values win until an action in this session overrides them.
   const isMarked = editorialOverride ?? editorial;
   const isPublished = contentOverride ?? isContent;
+
+  /*
+   * The narrative payload only links the content id, so the stored format is
+   * read from the public content endpoint once the conversion exists.
+   */
+  useEffect(() => {
+    if (!isAuthenticated || !isPublished || !contentId) return;
+
+    let active = true;
+
+    void meydanApi<{ format?: string }>(`/content/${contentId}`)
+      .then((content) => {
+        if (active && content.format) setCurrentFormat(content.format);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated, isPublished, contentId]);
 
   useEffect(() => {
     if (!notice) return;
@@ -274,17 +364,33 @@ export function PostAdminActions({
       } else {
         const publish = action === "publishContent";
 
-        await meydanApi<{ id?: number; deleted?: boolean }>(
+        const result = await meydanApi<{
+          id?: number;
+          format?: string;
+          deleted?: boolean;
+        }>(
           `/admin/narratives/${postId}/content`,
-          { method: publish ? "POST" : "DELETE" },
+          publish
+            ? {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ format: selectedFormat }),
+              }
+            : { method: "DELETE" },
         );
 
         setContentOverride(publish);
-        setNotice(
-          publish
-            ? "روایت به عنوان محتوا منتشر شد."
-            : "روایت از محتوا حذف شد.",
-        );
+
+        if (publish) {
+          const saved = result.format || selectedFormat;
+          setCurrentFormat(saved);
+          setNotice(
+            `روایت به عنوان محتوا (${formatLabel(saved)}) منتشر شد.`,
+          );
+        } else {
+          setCurrentFormat(null);
+          setNotice("روایت از محتوا حذف شد.");
+        }
       }
 
       setPendingAction(null);
@@ -335,7 +441,11 @@ export function PostAdminActions({
           }}
           aria-haspopup="dialog"
           title={
-            isPublished ? "حذف از محتوا" : "انتشار به عنوان محتوا"
+            isPublished
+              ? currentFormat
+                ? `حذف از محتوا (${formatLabel(currentFormat)})`
+                : "حذف از محتوا"
+              : "انتشار به عنوان محتوا"
           }
           className={`${pillClass} ${
             isPublished ? activeContentPill : idleContentPill
@@ -346,7 +456,11 @@ export function PostAdminActions({
           ) : (
             <Newspaper aria-hidden="true" className="h-3.5 w-3.5" />
           )}
-          {isPublished ? "منتشرشده به عنوان محتوا" : "انتشار به عنوان محتوا"}
+          {isPublished
+            ? currentFormat
+              ? `منتشرشده · ${formatLabel(currentFormat)}`
+              : "منتشرشده به عنوان محتوا"
+            : "انتشار به عنوان محتوا"}
         </button>
       </div>
 
@@ -357,7 +471,33 @@ export function PostAdminActions({
           error={error}
           onCancel={closeDialog}
           onConfirm={() => void applyAction(pendingAction)}
-        />
+        >
+          {pendingAction === "publishContent" ? (
+            <ContentFormatPicker
+              value={selectedFormat}
+              disabled={isSaving}
+              onChange={setSelectedFormat}
+            />
+          ) : null}
+
+          {pendingAction === "removeContent" ? (
+            <div className="mt-4 w-full space-y-1.5 rounded-control bg-surface-muted px-3 py-2.5 text-right">
+              {currentFormat ? (
+                <p className="text-[11px] font-bold text-foreground-secondary">
+                  نوع فعلی محتوا:{" "}
+                  <span className="text-foreground">
+                    {formatLabel(currentFormat)}
+                  </span>
+                </p>
+              ) : null}
+
+              <p className="text-[10px] leading-5 text-foreground-subtle">
+                برای تغییر نوع، ابتدا حذف کنید و سپس دوباره با نوع دلخواه منتشر
+                کنید.
+              </p>
+            </div>
+          ) : null}
+        </AdminConfirmDialog>
       ) : null}
 
       <p

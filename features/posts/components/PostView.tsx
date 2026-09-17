@@ -309,6 +309,9 @@ export function PostView({
           isContent={Boolean(
             state.post.isContent,
           )}
+          contentId={
+            state.post.contentId ?? null
+          }
         />
 
         <PostCard
