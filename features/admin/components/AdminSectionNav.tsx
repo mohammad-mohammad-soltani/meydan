@@ -111,7 +111,7 @@ export function AdminSectionNav() {
         <ThemeMenu />
       </header>
 
-      <aside className="admin-navigation hidden h-full w-72 shrink-0 flex-col border-l border-divider bg-surface lg:flex">
+      <aside className="admin-navigation hidden w-72 shrink-0 flex-col border-l border-divider bg-surface lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:flex lg:h-screen">
         <div className="border-b border-divider px-5 py-5">
           <Link href="/admin" className="flex items-center gap-3">
             <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand text-lg font-black text-brand-foreground">م</span>

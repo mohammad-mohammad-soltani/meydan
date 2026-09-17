@@ -35,6 +35,9 @@
   overscroll-behavior: contain;
 }
 @media (min-width: 1024px) {
+  .admin-shell > main { margin-inline-end: 18rem; }
+}
+@media (min-width: 1024px) {
   .admin-shell { flex-direction: row; }
 }
 html.dark .admin-shell {

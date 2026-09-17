@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ChevronDown, RotateCcw, Search } from "lucide-react";
 import {
   chipActiveClass,
@@ -69,10 +69,12 @@ export function AdminFilters({
   busy?: boolean;
   resetLabel?: string;
 }) {
-  if (filters.length === 0) return null;
   const searchFilters = filters.filter((filter) => filter.kind === "search");
   const extraFilters = filters.filter((filter) => filter.kind !== "search");
   const activeExtraCount = extraFilters.filter((filter) => "value" in filter && Boolean(filter.value)).length;
+  const [extraOpen, setExtraOpen] = useState(activeExtraCount > 0);
+
+  if (filters.length === 0) return null;
 
   return (
     <form
@@ -100,7 +102,7 @@ export function AdminFilters({
         ) : null)}
       </div>
 
-      {extraFilters.length > 0 ? <details className="group mt-3" defaultOpen={activeExtraCount > 0}>
+      {extraFilters.length > 0 ? <details className="group mt-3" open={extraOpen} onToggle={(event) => setExtraOpen(event.currentTarget.open)}>
         <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-xs font-bold text-foreground-secondary marker:hidden hover:text-foreground">
           <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" />
           فیلترهای بیشتر{activeExtraCount > 0 ? ` (${activeExtraCount.toLocaleString("fa-IR")})` : ""}

@@ -54,9 +54,9 @@ function toFormState(square: Square): SquareFormState {
   return {
     squareName: square.name,
     description: square.description,
-    contactName: square.contactName,
-    contactPhone: square.contactPhone,
-    startDate: square.startDate,
+    contactName: "",
+    contactPhone: "",
+    startDate: "",
     avatarMediaId: null,
     eitaaChannel: square.eitaaChannel,
     baleChannel: square.baleChannel,
