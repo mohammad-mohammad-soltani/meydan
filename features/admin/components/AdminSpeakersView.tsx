@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { Mic, RefreshCw, UserPlus } from "lucide-react";
+import { Mic, Pencil, RefreshCw, Trash2, UserPlus, UserRoundPlus } from "lucide-react";
+import { AdminDialog } from "./AdminDialog";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
 import { AdminListCapNotice } from "./AdminPagination";
@@ -14,6 +15,7 @@ import { fa, secondaryButtonClass } from "./styles";
 import {
   EMPTY_SPEAKER_FILTERS,
   adminErrorMessage,
+  demoteSpeaker,
   getAdminSpeakers,
   getSpeakerCategories,
 } from "../services/speakers.service";
@@ -43,6 +45,9 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
   const [categories, setCategories] = useState<SpeakerCategory[]>([]);
   const [provinces, setProvinces] = useState<GeoOption[]>([]);
   const [cities, setCities] = useState<GeoOption[]>([]);
+  const [speakerToDemote, setSpeakerToDemote] = useState<Speaker | null>(null);
+  const [demoteBusy, setDemoteBusy] = useState(false);
+  const [demoteError, setDemoteError] = useState<string | null>(null);
 
   useEffect(() => {
     void getSpeakerCategories()
@@ -94,6 +99,21 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
     setFilters(EMPTY_SPEAKER_FILTERS);
     setApplied(EMPTY_SPEAKER_FILTERS);
     void load(EMPTY_SPEAKER_FILTERS);
+  };
+
+  const demote = async () => {
+    if (!speakerToDemote) return;
+    setDemoteBusy(true);
+    setDemoteError(null);
+    try {
+      await demoteSpeaker(String(speakerToDemote.userId));
+      setSpeakerToDemote(null);
+      await load(applied);
+    } catch (reason) {
+      setDemoteError(adminErrorMessage(reason, "حذف نقش سخنران ممکن نشد."));
+    } finally {
+      setDemoteBusy(false);
+    }
   };
 
   const descriptors: AdminFilter[] = [
@@ -217,6 +237,33 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
         <span className="font-mono text-[10px] text-muted-foreground">#{speaker.userId}</span>
       ),
     },
+    {
+      key: "actions",
+      header: "عملیات",
+      className: "w-44 whitespace-nowrap",
+      render: (speaker) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/admin/speakers/${speaker.userId}` as Route}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-[11px] font-black text-foreground transition-colors hover:bg-hover"
+          >
+            <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
+            ویرایش
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setDemoteError(null);
+              setSpeakerToDemote(speaker);
+            }}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-danger-border bg-danger-surface px-3 text-[11px] font-black text-danger-foreground transition-colors hover:opacity-80"
+          >
+            <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
+            حذف نقش
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -238,10 +285,17 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
             </button>
             <Link
               href={"/admin/speakers/new" as Route}
-              className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand px-4 text-xs font-black text-brand-foreground transition-colors hover:bg-brand-hover"
+              className={secondaryButtonClass}
             >
               <UserPlus aria-hidden="true" className="h-4 w-4" />
               ارتقای کاربر
+            </Link>
+            <Link
+              href={"/admin/speakers/new-account" as Route}
+              className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand px-4 text-xs font-black text-brand-foreground transition-colors hover:bg-brand-hover"
+            >
+              <UserRoundPlus aria-hidden="true" className="h-4 w-4" />
+              افزودن سخنران
             </Link>
           </>
         }
@@ -261,7 +315,7 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
             rowKey={(speaker) => speaker.userId}
             caption="فهرست سخنرانان"
             emptyTitle="سخنرانی با این فیلترها پیدا نشد."
-            emptyDescription="فیلترها را تغییر دهید یا یک حساب را ارتقا دهید."
+            emptyDescription="فیلترها را تغییر دهید، یک حساب را ارتقا دهید یا سخنران جدید بسازید."
             emptyIcon={<Mic aria-hidden="true" className="h-5 w-5" />}
           />
           <AdminListCapNotice shown={result.items.length} cap={result.cap ?? 50} />
@@ -270,6 +324,21 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
           </p>
         </>
       )}
+
+      {speakerToDemote ? (
+        <AdminDialog
+          title="حذف نقش سخنران"
+          description={`نقش سخنران از «${speakerToDemote.name || `کاربر ${fa(speakerToDemote.userId)}`}» برداشته می‌شود. حساب کاربری و اطلاعات آن باقی می‌ماند و می‌توان آن را دوباره ارتقا داد.`}
+          confirmLabel="حذف نقش"
+          tone="danger"
+          busy={demoteBusy}
+          error={demoteError}
+          onConfirm={() => void demote()}
+          onClose={() => {
+            if (!demoteBusy) setSpeakerToDemote(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

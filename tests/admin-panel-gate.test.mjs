@@ -96,6 +96,7 @@ test("every admin page re-checks the role before running its own queries", () =>
     "app/(app)/admin/squares/map/page.tsx",
     "app/(app)/admin/speakers/page.tsx",
     "app/(app)/admin/speakers/new/page.tsx",
+    "app/(app)/admin/speakers/new-account/page.tsx",
     "app/(app)/admin/speakers/[id]/page.tsx",
     "app/(app)/admin/speaker-requests/page.tsx",
     "app/(app)/admin/speaker-requests/[id]/page.tsx",

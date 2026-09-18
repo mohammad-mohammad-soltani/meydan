@@ -14,6 +14,7 @@ import { ChannelFields } from "./ChannelFields";
 import { fa, primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
   adminErrorMessage,
+  createSpeakerAccount,
   demoteSpeaker,
   getSpeakerCategories,
   promoteSpeaker,
@@ -54,16 +55,16 @@ function readApiFields(reason: unknown): Record<string, string> | undefined {
 }
 
 /**
- * Promotion only attaches the speaker role to an existing account. Identity,
- * biography and handle deliberately remain owned by that account's profile;
- * this form manages only speaker-specific metadata.
+ * Promotion only attaches the speaker role to an existing account. For direct
+ * creation, identity belongs to the newly created account while this form still
+ * owns the speaker-only metadata.
  */
 export function AdminSpeakerForm({
   mode,
   speaker,
   users = [],
 }: {
-  mode: "create" | "edit";
+  mode: "create" | "edit" | "new-account";
   speaker?: Speaker;
   /** Only used in create mode: eligible accounts from the backend. */
   users?: LinkableUser[];
@@ -71,6 +72,12 @@ export function AdminSpeakerForm({
   const router = useRouter();
   const [userId, setUserId] = useState<number | null>(speaker?.userId ?? null);
   const [userQuery, setUserQuery] = useState("");
+  const [accountFullName, setAccountFullName] = useState("");
+  const [accountPhone, setAccountPhone] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
+  const [accountAbout, setAccountAbout] = useState("");
+  const [accountProvinceId, setAccountProvinceId] = useState<number | null>(null);
+  const [accountCityId, setAccountCityId] = useState<number | null>(null);
   const [verified, setVerified] = useState(speaker?.verified ?? false);
   const [avatarMediaId, setAvatarMediaId] = useState<number | null>(null);
   const [cityIds, setCityIds] = useState<number[]>(speaker?.cities ?? []);
@@ -149,6 +156,10 @@ export function AdminSpeakerForm({
       }))
       .filter((group) => group.cities.length > 0);
   }, [citiesByProvince, cityQuery]);
+  const accountCities = useMemo(
+    () => citiesByProvince.find((group) => group.province.id === accountProvinceId)?.cities ?? [],
+    [accountProvinceId, citiesByProvince],
+  );
 
   const input: SpeakerProfileInput = {
     avatarMediaId,
@@ -166,11 +177,33 @@ export function AdminSpeakerForm({
       setErrors({ message: "حساب کاربری سخنران را انتخاب کنید.", fields: { user_id: "invalid" } });
       return;
     }
+    if (mode === "new-account") {
+      const fields: Record<string, string> = {};
+      if (!accountFullName.trim()) fields.full_name = "required";
+      if (!accountPhone.trim()) fields.phone = "required";
+      if (accountCityId && !accountProvinceId) fields.city_id = "invalid";
+      if (Object.keys(fields).length) {
+        setErrors({ message: "اطلاعات حساب را کامل کنید.", fields });
+        return;
+      }
+    }
 
     setBusy(true);
     try {
       if (mode === "create" && userId) {
         const created = await promoteSpeaker({ userId, ...input });
+        router.push(`/admin/speakers/${created.userId}` as Route);
+        router.refresh();
+      } else if (mode === "new-account") {
+        const created = await createSpeakerAccount({
+          ...input,
+          fullName: accountFullName,
+          phone: accountPhone,
+          email: accountEmail,
+          provinceId: accountProvinceId,
+          cityId: accountCityId,
+          about: accountAbout,
+        });
         router.push(`/admin/speakers/${created.userId}` as Route);
         router.refresh();
       } else {
@@ -290,6 +323,107 @@ export function AdminSpeakerForm({
                 {selectedUser.name} با شناسهٔ {fa(selectedUser.id)} برای ارتقا انتخاب شد.
               </p>
             ) : null}
+          </section>
+        ) : mode === "new-account" ? (
+          <section aria-label="اطلاعات حساب" className="admin-form-card admin-form-wide admin-speaker-account">
+            <h2>اطلاعات حساب</h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              این اطلاعات به حساب کاربر تعلق دارد؛ پس از ساخت، نقش سخنران نیز برای همان حساب ثبت می‌شود.
+            </p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-12">
+              <div className="xl:col-span-6">
+                <AdminField label="نام کامل" htmlFor="speaker-account-full-name" required error={errors.fields.full_name}>
+                  <input
+                    id="speaker-account-full-name"
+                    value={accountFullName}
+                    onChange={(event) => setAccountFullName(event.target.value)}
+                    autoComplete="name"
+                    className={fieldClass}
+                  />
+                </AdminField>
+              </div>
+              <div className="xl:col-span-6">
+                <AdminField label="شماره موبایل" htmlFor="speaker-account-phone" required error={errors.fields.phone} hint="شماره باید یکتا باشد؛ ورود بعدی کاربر با پیامک است.">
+                  <input
+                    id="speaker-account-phone"
+                    type="tel"
+                    dir="ltr"
+                    inputMode="tel"
+                    value={accountPhone}
+                    onChange={(event) => setAccountPhone(event.target.value)}
+                    autoComplete="tel"
+                    placeholder="0912…"
+                    className={`${fieldClass} text-left`}
+                  />
+                </AdminField>
+              </div>
+              <div className="xl:col-span-6">
+                <AdminField label="ایمیل" htmlFor="speaker-account-email" error={errors.fields.email} hint="اختیاری؛ در صورت ورود باید یکتا باشد.">
+                  <input
+                    id="speaker-account-email"
+                    type="email"
+                    dir="ltr"
+                    value={accountEmail}
+                    onChange={(event) => setAccountEmail(event.target.value)}
+                    autoComplete="email"
+                    className={`${fieldClass} text-left`}
+                  />
+                </AdminField>
+              </div>
+              <div className="xl:col-span-3">
+                <AdminField label="استان" htmlFor="speaker-account-province" error={errors.fields.province_id}>
+                  <select
+                    id="speaker-account-province"
+                    value={accountProvinceId ?? ""}
+                    onChange={(event) => {
+                      setAccountProvinceId(event.target.value ? Number(event.target.value) : null);
+                      setAccountCityId(null);
+                    }}
+                    className={fieldClass}
+                  >
+                    <option value="">انتخاب نشده</option>
+                    {citiesByProvince.map((group) => (
+                      <option key={group.province.id} value={group.province.id}>{group.province.name}</option>
+                    ))}
+                  </select>
+                </AdminField>
+              </div>
+              <div className="xl:col-span-3">
+                <AdminField label="شهر" htmlFor="speaker-account-city" error={errors.fields.city_id} hint={!accountProvinceId ? "ابتدا استان را انتخاب کنید." : undefined}>
+                  <select
+                    id="speaker-account-city"
+                    disabled={!accountProvinceId}
+                    value={accountCityId ?? ""}
+                    onChange={(event) => setAccountCityId(event.target.value ? Number(event.target.value) : null)}
+                    className={fieldClass}
+                  >
+                    <option value="">انتخاب نشده</option>
+                    {accountCities.map((city) => <option key={city.id} value={city.id}>{city.name}</option>)}
+                  </select>
+                </AdminField>
+              </div>
+              <div className="xl:col-span-8">
+                <AdminField label="معرفی" htmlFor="speaker-account-about" error={errors.fields.about}>
+                  <textarea
+                    id="speaker-account-about"
+                    rows={4}
+                    value={accountAbout}
+                    onChange={(event) => setAccountAbout(event.target.value)}
+                    className={fieldClass}
+                  />
+                </AdminField>
+              </div>
+              <div className="xl:col-span-4">
+                <MediaPickerField
+                  id="speaker-account-avatar"
+                  label="تصویر حساب"
+                  hint="اختیاری؛ همین تصویر برای نمایه سخنران هم استفاده می‌شود."
+                  mediaId={avatarMediaId}
+                  onChange={setAvatarMediaId}
+                  error={errors.fields.avatar_media_id}
+                />
+              </div>
+            </div>
           </section>
         ) : (
           <section aria-label="حساب سخنران" className="admin-form-card admin-form-wide admin-speaker-account">
@@ -463,9 +597,15 @@ export function AdminSpeakerForm({
           />
         </AdminDisclosureSection>
 
-        <AdminDisclosureSection title="تصویر و نشان تأیید" className="admin-speaker-verification" hasError={Boolean(errors.fields.avatar_media_id)}>
+        <AdminDisclosureSection
+          title={mode === "new-account" ? "نشان تأیید" : "تصویر و نشان تأیید"}
+          className="admin-speaker-verification"
+          hasError={Boolean(errors.fields.avatar_media_id)}
+        >
           <div className="space-y-4">
-            <MediaPickerField id="speaker-avatar" label="تصویر سخنران" hint="اگر فایلی انتخاب نکنید، تصویر فعلی تغییر نمی‌کند." mediaId={avatarMediaId} currentUrl={speaker?.avatarUrl} onChange={setAvatarMediaId} />
+            {mode !== "new-account" ? (
+              <MediaPickerField id="speaker-avatar" label="تصویر سخنران" hint="اگر فایلی انتخاب نکنید، تصویر فعلی تغییر نمی‌کند." mediaId={avatarMediaId} currentUrl={speaker?.avatarUrl} onChange={setAvatarMediaId} error={errors.fields.avatar_media_id} />
+            ) : null}
             <AdminCheckbox id="speaker-verified" label="دارای نشان تأیید" description="نشان تأیید در نمایه عمومی سخنران نمایش داده می‌شود." checked={verified} onChange={setVerified} />
           </div>
         </AdminDisclosureSection>
@@ -473,7 +613,7 @@ export function AdminSpeakerForm({
         <div className="admin-form-actions">
           <button type="submit" disabled={busy} className={primaryButtonClass}>
             {busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Save aria-hidden="true" className="h-4 w-4" />}
-            {busy ? "در حال ذخیره…" : mode === "create" ? "ارتقا به سخنران" : "ذخیره تغییرات"}
+            {busy ? "در حال ذخیره…" : mode === "create" ? "ارتقا به سخنران" : mode === "new-account" ? "ساخت سخنران" : "ذخیره تغییرات"}
           </button>
           <Link href={"/admin/speakers" as Route} className={secondaryButtonClass}>
             بازگشت به فهرست

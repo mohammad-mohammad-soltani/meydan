@@ -193,6 +193,16 @@ export type SpeakerProfileInput = {
 
 export type SpeakerCreateInput = SpeakerProfileInput & { userId: number };
 
+/** Creates an account and its speaker profile in one admin-only request. */
+export type SpeakerAccountCreateInput = SpeakerProfileInput & {
+  fullName: string;
+  phone: string;
+  email: string;
+  provinceId: number | null;
+  cityId: number | null;
+  about: string;
+};
+
 export type SpeakerStatusFilters = {
   q: string;
   verified: "" | "true";

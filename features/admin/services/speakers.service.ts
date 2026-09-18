@@ -4,6 +4,7 @@ import type {
   SocialLink,
   SocialPlatform,
   Speaker,
+  SpeakerAccountCreateInput,
   SpeakerCategory,
   SpeakerCreateInput,
   SpeakerProfileInput,
@@ -309,6 +310,28 @@ export async function promoteSpeaker(input: SpeakerCreateInput, init?: RequestIn
     },
     init,
   ),
+  );
+}
+
+/** Creates a new OTP-login account and assigns its speaker role atomically. */
+export async function createSpeakerAccount(
+  input: SpeakerAccountCreateInput,
+  init?: RequestInit,
+): Promise<Speaker> {
+  return mapSpeaker(
+    await adminPost<ApiSpeaker>(
+      "/admin/speakers/new-account",
+      {
+        full_name: input.fullName.trim(),
+        phone: input.phone.trim(),
+        email: input.email.trim(),
+        province_id: input.provinceId ?? 0,
+        city_id: input.cityId ?? 0,
+        about: input.about.trim(),
+        ...speakerProfileBody(input),
+      },
+      init,
+    ),
   );
 }
 

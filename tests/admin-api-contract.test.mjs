@@ -90,12 +90,41 @@ test("the speaker surfaces use the promote/demote routes, not user edits", () =>
   assert.match(speakers, /user_id/);
   assert.match(speakers, /eitaa_channel: input\.eitaaChannel\.trim\(\)/);
   assert.match(speakers, /bale_channel: input\.baleChannel\.trim\(\)/);
+  assert.match(speakers, /\/admin\/speakers\/new-account/);
+  for (const key of ["full_name", "phone", "email", "province_id", "city_id", "about"]) {
+    assert.match(speakers, new RegExp(`${key}:`), `new speaker account body must send ${key}`);
+  }
   // The request and invitation inboxes share one controller under two prefixes.
   assert.match(speakers, /\/admin\/speaker-requests/);
   assert.match(speakers, /\/admin\/speaker-invitations/);
   // Both are hard-capped lists, so the cap travels with the result.
   assert.match(speakers, /SPEAKER_LIST_CAP\s*=\s*50/);
   assert.match(speakers, /SPEAKER_REQUEST_LIST_CAP\s*=\s*100/);
+});
+
+test("direct speaker creation remains an admin-only atomic backend operation", () => {
+  const routes = readFileSync(
+    path.resolve(root, "../meydan-backend/wp-content/plugins/meydan-core/src/Rest/Routes.php"),
+    "utf8",
+  );
+  const controller = readFileSync(
+    path.resolve(root, "../meydan-backend/wp-content/plugins/meydan-core/src/Rest/SpeakerController.php"),
+    "utf8",
+  );
+  const service = readFileSync(
+    path.resolve(root, "../meydan-backend/wp-content/plugins/meydan-core/src/Domain/SpeakerAdminService.php"),
+    "utf8",
+  );
+
+  assert.match(routes, /admin\/speakers\/new-account/);
+  assert.match(controller, /current_user_can\('manage_meydan_speakers'\)/);
+  assert.match(controller, /adminCreateAccount/);
+  assert.match(service, /OtpService::normalizePhone/);
+  assert.match(service, /phoneOwner/);
+  assert.match(service, /cityBelongsTo/);
+  assert.match(service, /SpeakerService::promote/);
+  assert.match(service, /SpeakerService::save/);
+  assert.match(service, /wp_delete_user/);
 });
 
 test("content creation tolerates the null body a non-published save returns", () => {
