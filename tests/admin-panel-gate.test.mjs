@@ -41,6 +41,23 @@ test("speaker promotion searches accounts and never overwrites their identity", 
   assert.match(source("app\/globals.css"), /admin-speaker-city/);
 });
 
+test("editor feedback keeps one grid column and success appears as an animated toast", () => {
+  const css = source("features/admin/admin.css");
+  const square = source("features/admin/components/AdminSquareDetailView.tsx");
+  const speaker = source("features/admin/components/AdminSpeakerForm.tsx");
+  const toast = source("features/admin/components/AdminSuccessToast.tsx");
+
+  assert.match(css, /\.admin-editor-content \{[^}]*grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(css, /\.admin-shell \.admin-editor-content > \* \{ grid-column: 1;/);
+  assert.match(css, /@keyframes admin-toast-in/);
+  assert.match(css, /@keyframes admin-toast-out/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(square, /<AdminSuccessToast/);
+  assert.match(speaker, /<AdminSuccessToast/);
+  assert.match(toast, /role="status"/);
+  assert.match(toast, /setPhase\("closing"\)/);
+});
+
 test("/admin is a protected prefix so an anonymous visitor never sees the shell", async () => {
   const { PROTECTED_ROUTE_PREFIXES, isProtectedPath } = await import(
     new URL("../lib/protected-routes.ts", import.meta.url).href

@@ -20,6 +20,7 @@ import { AdminDialog } from "./AdminDialog";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminField, fieldClass } from "./AdminField";
 import { AdminNotice } from "./AdminNotice";
+import { AdminSuccessToast } from "./AdminSuccessToast";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { ChannelFields } from "./ChannelFields";
 import { GeoPickerField, type GeoValue } from "./GeoPickerField";
@@ -90,7 +91,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
-  const [saved, setSaved] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{ id: number; message: string } | null>(null);
 
   const [statusDialog, setStatusDialog] = useState<SquareStatus | null>(null);
   const [adminNote, setAdminNote] = useState(initial.adminNote);
@@ -121,8 +122,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
       const updated = await updateSquare(String(square.id), buildSquareUpdate(form));
       setSquare(updated);
       setForm(toFormState(updated));
-      setSaved("تغییرات ذخیره شد.");
-      router.refresh();
+      setSaved({ id: Date.now(), message: "تغییرات ذخیره شد." });
     } catch (reason) {
       const fields =
         reason && typeof reason === "object" && "fields" in reason
@@ -143,8 +143,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
       const updated = await setSquareStatus(String(square.id), statusDialog, adminNote);
       setSquare(updated);
       setStatusDialog(null);
-      setSaved(`وضعیت به «${SQUARE_STATUS_LABELS[statusDialog]}» تغییر کرد.`);
-      router.refresh();
+      setSaved({ id: Date.now(), message: `وضعیت به «${SQUARE_STATUS_LABELS[statusDialog]}» تغییر کرد.` });
     } catch (reason) {
       setStatusError(adminErrorMessage(reason, "تغییر وضعیت ممکن نشد."));
     } finally {
@@ -174,7 +173,6 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
       />
 
       <AdminEditor title="ویرایش اطلاعات میدان" onSubmit={(event) => event.preventDefault()}>
-        {saved ? <div className="admin-form-notice"><AdminNotice tone="success" message={saved} autoHideMs={4000} /></div> : null}
         {formError ? (
           <div className="admin-form-notice"><AdminNotice tone="error" message={formError} onDismiss={() => setFormError(null)} /></div>
         ) : null}
@@ -412,6 +410,8 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
         </div>
 
       </AdminEditor>
+
+      {saved ? <AdminSuccessToast key={saved.id} message={saved.message} /> : null}
 
       {statusDialog ? (
         <AdminDialog

@@ -12,6 +12,7 @@ import { AdminDialog } from "./AdminDialog";
 import { MediaPickerField } from "./MediaPickerField";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminFieldMessage } from "./AdminFieldMessage";
+import { AdminSuccessToast } from "./AdminSuccessToast";
 import { ChannelFields } from "./ChannelFields";
 import { dangerButtonClass, fa, primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
@@ -97,7 +98,7 @@ export function AdminSpeakerForm({
   const [errors, setErrors] = useState<SpeakerFormErrors>({ message: null, fields: {} });
   const [busy, setBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<number | null>(null);
   const [confirmDemote, setConfirmDemote] = useState(false);
   const [demoteError, setDemoteError] = useState<string | null>(null);
 
@@ -176,6 +177,7 @@ export function AdminSpeakerForm({
 
   const submit = async () => {
     if (busy || uploadBusy) return;
+    setSaved(null);
     setErrors({ message: null, fields: {} });
     if (mode === "create" && !userId) {
       setErrors({ message: "حساب کاربری سخنران را انتخاب کنید.", fields: { user_id: "invalid" } });
@@ -212,7 +214,7 @@ export function AdminSpeakerForm({
         router.refresh();
       } else {
         await updateSpeaker(String(speaker?.userId), input);
-        setSaved(true);
+        setSaved(Date.now());
         router.refresh();
       }
     } catch (reason) {
@@ -257,7 +259,7 @@ export function AdminSpeakerForm({
       >
         <div className="admin-form-notice">
           <AdminFieldMessage
-            message={saved ? "پروفایل سخنران ذخیره شد." : errors.message}
+            message={errors.message}
             fields={errors.fields}
           />
         </div>
@@ -636,6 +638,8 @@ export function AdminSpeakerForm({
           ) : null}
         </div>
       </AdminEditor>
+
+      {saved ? <AdminSuccessToast key={saved} message="پروفایل سخنران ذخیره شد." /> : null}
 
       {confirmDemote ? (
         <AdminDialog

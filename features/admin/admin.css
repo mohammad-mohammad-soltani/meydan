@@ -748,7 +748,8 @@
 .admin-editor-index nav button[aria-current] > span { background: var(--brand); border-color: var(--brand); color: var(--brand-foreground); }
 .admin-editor-save-hint { display: flex; gap: .6rem; margin: 1rem .5rem 0; padding-top: 1rem; border-top: 1px solid var(--divider); color: var(--muted-foreground); font-size: .67rem; line-height: 1.9; }
 .admin-editor-save-hint svg { flex-shrink: 0; margin-top: .2rem; }
-.admin-editor-content { display: grid; gap: 1.25rem; min-width: 0; padding-bottom: 1.5rem; counter-reset: editor-section; }
+.admin-editor-content { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; min-width: 0; padding-bottom: 1.5rem; counter-reset: editor-section; }
+.admin-shell .admin-editor-content > * { grid-column: 1; min-width: 0; }
 .admin-editor-content > .admin-form-notice:has(> :empty), .admin-editor-content > .admin-form-notice:empty { display: none; }
 .admin-editor-section { min-width: 0; scroll-margin-top: 1.5rem; counter-increment: editor-section; }
 .admin-editor-section:focus { outline: none; }
@@ -771,6 +772,11 @@
 .admin-shell .admin-editor-footer .admin-form-actions { position: static; margin: 0; padding: 0; border: 0; background: transparent; gap: .65rem; backdrop-filter: none; }
 .admin-editor-footer .admin-form-actions button[type="submit"] { min-width: 150px; box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 15%, transparent); }
 .admin-editor-footer .admin-form-actions > .bg-danger { margin-inline-start: auto; background: transparent; color: var(--danger-foreground); border: 1px solid var(--danger-border); }
+.admin-success-toast { position: fixed; left: max(1rem, env(safe-area-inset-left)); bottom: calc(5.5rem + env(safe-area-inset-bottom)); z-index: 80; display: flex; align-items: center; gap: .7rem; width: min(22rem, calc(100vw - 2rem)); min-height: 3.5rem; padding: .7rem .8rem .7rem 1rem; border: 1px solid var(--success-border); border-radius: .9rem; background: var(--admin-panel); color: var(--foreground); box-shadow: 0 12px 36px color-mix(in srgb, var(--foreground) 18%, transparent); font-size: .78rem; font-weight: 700; line-height: 1.7; animation: admin-toast-in .24s ease-out both; }
+.admin-success-toast-exit { animation: admin-toast-out .24s ease-in both; }
+@keyframes admin-toast-in { from { opacity: 0; transform: translateY(1rem) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes admin-toast-out { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(1rem) scale(.97); } }
+@media (prefers-reduced-motion: reduce) { .admin-success-toast, .admin-success-toast-exit { animation-duration: .01ms; } }
 .admin-media-drop { position: relative; display: flex; align-items: center; gap: 1rem; padding: 1.25rem; border: 1.5px dashed var(--border-strong); background: var(--admin-page); border-radius: 1rem; transition: border-color .2s, background .2s; }
 .admin-media-drop:hover { border-color: var(--brand); background: var(--brand-muted); }
 .admin-media-preview { display: grid; place-items: center; flex-shrink: 0; width: 72px; height: 72px; overflow: hidden; border: 1px solid var(--border); border-radius: 1rem; background: var(--admin-panel); color: var(--brand); }
