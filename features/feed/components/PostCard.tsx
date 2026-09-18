@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { BadgeCheck } from "lucide-react";
+import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
 import { PostActions } from "./PostActions";
@@ -148,6 +149,7 @@ export function PostCard({
                   className="h-[18px] w-[18px] shrink-0 fill-verified text-on-solid"
                 />
               ) : null}
+              <SpeakerBadge verified={post.author.verifiedSpeaker} size="md" />
             </div>
 
             <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
@@ -318,6 +320,7 @@ export function PostCard({
                 className="h-[17px] w-[17px] shrink-0 fill-verified text-on-solid"
               />
             ) : null}
+            <SpeakerBadge verified={post.author.verifiedSpeaker} size="md" />
 
             {post.badge ? (
               <>

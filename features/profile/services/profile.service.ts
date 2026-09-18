@@ -433,6 +433,7 @@ function mapNarrativePost(
         item.author?.verified ??
           identity.verified,
       ),
+      verifiedSpeaker: Boolean(identity.verifiedSpeaker),
     },
 
     initiativeId:
@@ -802,7 +803,11 @@ function mapUser(
 
     resumeStats:
       resumeStats.length
-        ? resumeStats
+        ? resumeStats.map((stat) =>
+            profile.verified_speaker && stat.label === "اعتبار هویت"
+              ? { ...stat, value: "سخنران" }
+              : stat,
+          )
         : [
             {
               value:
@@ -820,10 +825,9 @@ function mapUser(
               tone: "success",
             },
             {
-              value:
-                profile.verified
-                  ? "تأییدشده"
-                  : "عادی",
+              value: profile.verified_speaker
+                ? "سخنران"
+                : profile.verified ? "تأییدشده" : "عادی",
 
               label:
                 "اعتبار هویت",
@@ -878,7 +882,7 @@ export async function getProfileNarrativePage(
   identity: ProfileDetails["identity"],
   cursor?: string | null,
   own = false,
-): Promise<{ posts: FeedPost[]; nextCursor: string | null }> {
+): Promise<{ posts: FeedPost[]; nextCursor: string | null; count: number | null }> {
   const params = new URLSearchParams({ limit: "20" });
   if (cursor) params.set("cursor", cursor);
   const path = own ? "/me/narratives" : `/${type === "square" ? "squares" : "users"}/${id}/narratives`;
@@ -886,6 +890,7 @@ export async function getProfileNarrativePage(
   return {
     posts: page.data.map((item) => mapNarrativePost(item, identity)),
     nextCursor: page.nextCursor,
+    count: page.count,
   };
 }
 
@@ -906,7 +911,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
         },
       );
 
-    let narrativePage = { data: [] as ApiNarrative[], nextCursor: null as string | null };
+    let narrativePage = { data: [] as ApiNarrative[], nextCursor: null as string | null, count: null as number | null };
 
     let replies:
       ApiComment[] = [];
@@ -914,7 +919,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
     try {
       narrativePage = await meydanApiPage<ApiNarrative[]>("/me/narratives?limit=20", { headers });
     } catch {
-      narrativePage = { data: [], nextCursor: null };
+      narrativePage = { data: [], nextCursor: null, count: null };
     }
 
     const actorId =
@@ -952,7 +957,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
         me.profile,
         narrativePage.data,
         replies,
-      ), nextNarrativeCursor: narrativePage.nextCursor };
+      ), nextNarrativeCursor: narrativePage.nextCursor, narrativeCount: narrativePage.count };
     }
 
     if (
@@ -963,7 +968,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
         narrativePage.data,
         replies,
         me.speaker || null,
-      ), nextNarrativeCursor: narrativePage.nextCursor };
+      ), nextNarrativeCursor: narrativePage.nextCursor, narrativeCount: narrativePage.count };
     }
 
     if (!me.square) {
@@ -989,7 +994,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
       narrativePage.data,
       replies,
       mediaReflectionCount,
-    ), nextNarrativeCursor: narrativePage.nextCursor };
+    ), nextNarrativeCursor: narrativePage.nextCursor, narrativeCount: narrativePage.count };
   } catch {
     return null;
   }
@@ -1045,7 +1050,7 @@ export async function getPublicProfileDetails(
         narratives.data,
         replies,
         reflectionStats.count,
-      ), nextNarrativeCursor: narratives.nextCursor };
+      ), nextNarrativeCursor: narratives.nextCursor, narrativeCount: narratives.count };
     }
 
     const [
@@ -1090,7 +1095,7 @@ export async function getPublicProfileDetails(
       narratives.data,
 
       replies,
-    ), nextNarrativeCursor: narratives.nextCursor };
+    ), nextNarrativeCursor: narratives.nextCursor, narrativeCount: narratives.count };
   } catch {
     return null;
   }

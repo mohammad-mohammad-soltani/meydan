@@ -49,6 +49,7 @@ export type ProfileDetails = {
   activity: ProfileActivity;
   narratives: ProfileNarrative[];
   narrativePosts: import("@/features/feed/types").FeedPost[];
+  narrativeCount?: number | null;
   nextNarrativeCursor?: string | null;
   replies: ProfileReply[];
   about: string;

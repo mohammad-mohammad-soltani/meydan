@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { MarkdownText } from "@/components/shared/MarkdownText";
 import {
   READ_MORE_LIMIT,
   needsReadMore,
@@ -40,20 +41,20 @@ export function ReadMoreText({
   const preview = collapsible ? truncateAtWordBoundary(body, limit) : body;
 
   if (!collapsible) {
-    return <p className={`whitespace-pre-wrap break-words ${className}`}>{body}</p>;
+    return <MarkdownText body={body} className={className} />;
   }
 
   return (
     <div data-read-more className={contentClassName}>
-      <p id={bodyId} className={`whitespace-pre-wrap break-words ${className}`}>
+      <div id={bodyId} className={className}>
         <span
           className={`whitespace-pre-wrap break-words ${
             isExpanded ? "read-more-reveal-open" : ""
           }`}
         >
-          {isExpanded ? body : preview}
+          <MarkdownText body={isExpanded ? body : preview} />
         </span>
-      </p>
+      </div>
 
       <button
         type="button"

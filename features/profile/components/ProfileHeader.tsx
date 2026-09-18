@@ -31,7 +31,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
   const { requireAuth } = useAuthGate();
   const [notice, setNotice] = useState("");
   const { identity, accountType, narratives } = profile;
-  const postLabel = accountType === "square" ? new Intl.NumberFormat("fa-IR").format(narratives.length) : profile.resumeStats[0]?.value || "۰";
+  const postLabel = profile.narrativeCount != null ? new Intl.NumberFormat("fa-IR").format(profile.narrativeCount) : accountType === "square" ? new Intl.NumberFormat("fa-IR").format(narratives.length) : profile.resumeStats[0]?.value || "۰";
   const canBeInvited = !canEdit && accountType !== "square" && Boolean(identity.verifiedSpeaker);
 
   return (

@@ -1,7 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import type { Route } from "next";
 import { MapPin, Navigation } from "lucide-react";
 import type { ProfileDetails } from "../types";
 
@@ -28,7 +26,6 @@ function isIosDevice(): boolean {
 }
 
 export function SquareLocationCard({ profile }: { profile: ProfileDetails }) {
-  const router = useRouter();
   const address = (profile.identity.location || "").trim();
   const point = { latitude: profile.latitude, longitude: profile.longitude };
   const hasPoint = isValidPoint(point);
@@ -69,11 +66,9 @@ export function SquareLocationCard({ profile }: { profile: ProfileDetails }) {
       return;
     }
 
-    const query = hasPoint
-      ? `?lat=${point.latitude}&lng=${point.longitude}`
-      : "";
-
-    router.push(`/map${query}` as Route);
+    const destination = hasPoint ? `${point.latitude},${point.longitude}` : address;
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+    window.open(googleMapsUrl, "_blank", "noopener,noreferrer");
   };
 
   return (

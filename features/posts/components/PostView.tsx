@@ -69,6 +69,8 @@ function toFeedPost(
         post.author.avatarUrl,
       verified:
         post.author.verified,
+      verifiedSpeaker:
+        post.author.verifiedSpeaker,
     },
 
     initiativeId:

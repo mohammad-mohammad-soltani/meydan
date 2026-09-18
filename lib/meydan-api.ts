@@ -19,6 +19,7 @@ export type ApiEnvelope<T> = {
 export type ApiPage<T> = {
   data: T;
   nextCursor: string | null;
+  count: number | null;
 };
 
 /**
@@ -179,7 +180,8 @@ export async function meydanApiPage<T>(path: string, init?: MeydanRequestInit): 
   const body = await requestEnvelope<T>(path, init);
   const nextCursor =
     "meta" in body && typeof body.meta?.next_cursor === "string" ? body.meta.next_cursor : null;
-  return { data: body.data, nextCursor };
+  const count = "meta" in body && typeof body.meta?.count === "number" ? body.meta.count : null;
+  return { data: body.data, nextCursor, count };
 }
 
 export async function meydanApi<T>(path: string, init?: MeydanRequestInit): Promise<T> {
