@@ -37,6 +37,8 @@ test("speaker promotion searches accounts and never overwrites their identity", 
   assert.doesNotMatch(form, /id="speaker-name"/);
   assert.doesNotMatch(form, /هویت و معرفی سخنران/);
   assert.doesNotMatch(profileBody, /\b(name|bio|role|handle|expertise|initials):/);
+  assert.match(form, /admin-speaker-form/);
+  assert.match(source("app\/globals.css"), /admin-speaker-city/);
 });
 
 test("/admin is a protected prefix so an anonymous visitor never sees the shell", async () => {

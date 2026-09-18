@@ -103,6 +103,33 @@ html.black .admin-shell {
   .admin-shell .admin-form-main { grid-column: span 8; }
   .admin-shell .admin-form-side { grid-column: span 4; }
   .admin-shell .admin-form-half { grid-column: span 6; }
+
+  /* The city picker can hold hundreds of choices. Give it the primary column
+     and stack the two compact metadata sections beside it, rather than leaving
+     a tall empty half-row below topical categories. */
+  .admin-shell .admin-speaker-form > .admin-speaker-account { order: 1; }
+  .admin-shell .admin-speaker-form > .admin-speaker-city {
+    order: 2;
+    grid-column: span 8;
+    grid-row: span 2;
+  }
+  .admin-shell .admin-speaker-form > .admin-speaker-category {
+    order: 3;
+    grid-column: span 4;
+  }
+  .admin-shell .admin-speaker-form > .admin-speaker-social {
+    order: 4;
+    grid-column: span 4;
+  }
+  .admin-shell .admin-speaker-form > .admin-speaker-channels {
+    order: 5;
+    grid-column: span 6;
+  }
+  .admin-shell .admin-speaker-form > .admin-speaker-verification {
+    order: 6;
+    grid-column: span 6;
+  }
+  .admin-shell .admin-speaker-form > .admin-form-actions { order: 7; }
 }
 @container (min-width: 36rem) {
   .admin-shell .admin-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

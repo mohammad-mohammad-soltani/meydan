@@ -212,7 +212,7 @@ export function AdminSpeakerForm({
   return (
     <>
       <form
-        className="admin-form"
+        className="admin-form admin-speaker-form"
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
@@ -226,7 +226,7 @@ export function AdminSpeakerForm({
         </div>
 
         {mode === "create" ? (
-          <section aria-label="انتخاب حساب" className="admin-form-card admin-form-wide">
+          <section aria-label="انتخاب حساب" className="admin-form-card admin-form-wide admin-speaker-account">
             <h2>حساب کاربری</h2>
             <p className="mt-1 text-[11px] text-muted-foreground">
               نام، معرفی، شناسه و تصویر پایه از همین حساب خوانده می‌شود و در فرم سخنران تغییر نمی‌کند.
@@ -292,7 +292,7 @@ export function AdminSpeakerForm({
             ) : null}
           </section>
         ) : (
-          <section aria-label="حساب سخنران" className="admin-form-card admin-form-wide">
+          <section aria-label="حساب سخنران" className="admin-form-card admin-form-wide admin-speaker-account">
             <h2>حساب سخنران</h2>
             <p className="mt-1 text-sm font-black">{speaker?.name || "سخنران"}</p>
             <p className="mt-1 text-[11px] text-muted-foreground">
@@ -301,7 +301,7 @@ export function AdminSpeakerForm({
           </section>
         )}
 
-        <section aria-label="دسته‌بندی موضوعی" className="admin-form-card admin-form-half" aria-busy={categoriesStatus === "loading"}>
+        <section aria-label="دسته‌بندی موضوعی" className="admin-form-card admin-speaker-category" aria-busy={categoriesStatus === "loading"}>
           <h2>دسته‌بندی موضوعی</h2>
           <p className="mt-1 text-[10px] text-muted-foreground">
             دسته‌ها هنگام باز شدن فرم از سامانه دریافت می‌شوند.
@@ -343,7 +343,7 @@ export function AdminSpeakerForm({
           </div>
         </section>
 
-        <section aria-label="شهرها" className="admin-form-card admin-form-half" aria-busy={citiesStatus === "loading"}>
+        <section aria-label="شهرها" className="admin-form-card admin-speaker-city" aria-busy={citiesStatus === "loading"}>
           <h2>شهرهای فعالیت</h2>
           <p className="mt-1 text-[10px] text-muted-foreground">
             {fa(cityIds.length)} شهر انتخاب شده است
@@ -402,7 +402,7 @@ export function AdminSpeakerForm({
           </div>
         </section>
 
-        <AdminDisclosureSection title="شبکه‌های اجتماعی" className="admin-form-half">
+        <AdminDisclosureSection title="شبکه‌های اجتماعی" className="admin-speaker-social">
           {socialLinks.map((link, index) => (
             <div key={index} className="grid gap-2 sm:grid-cols-[10rem_1fr_auto]">
               <select
@@ -447,7 +447,7 @@ export function AdminSpeakerForm({
 
         <AdminDisclosureSection
           title="کانال‌های بله و ایتا"
-          className="admin-form-half"
+          className="admin-speaker-channels"
           defaultOpen={Boolean(channels.eitaa || channels.bale)}
           hasError={Boolean(errors.fields.eitaa_channel || errors.fields.bale_channel)}
         >
@@ -463,7 +463,7 @@ export function AdminSpeakerForm({
           />
         </AdminDisclosureSection>
 
-        <AdminDisclosureSection title="تصویر و نشان تأیید" className="admin-form-half" hasError={Boolean(errors.fields.avatar_media_id)}>
+        <AdminDisclosureSection title="تصویر و نشان تأیید" className="admin-speaker-verification" hasError={Boolean(errors.fields.avatar_media_id)}>
           <div className="space-y-4">
             <MediaPickerField id="speaker-avatar" label="تصویر سخنران" hint="اگر فایلی انتخاب نکنید، تصویر فعلی تغییر نمی‌کند." mediaId={avatarMediaId} currentUrl={speaker?.avatarUrl} onChange={setAvatarMediaId} />
             <AdminCheckbox id="speaker-verified" label="دارای نشان تأیید" description="نشان تأیید در نمایه عمومی سخنران نمایش داده می‌شود." checked={verified} onChange={setVerified} />
