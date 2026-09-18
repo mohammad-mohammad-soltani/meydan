@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import Image from "next/image";
-import { MapPin, MapPinned, Plus, RefreshCw } from "lucide-react";
+import { MapPin, MapPinned, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AdminDialog } from "./AdminDialog";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
 import { AdminPagination } from "./AdminPagination";
@@ -12,7 +13,7 @@ import { AdminTable, type AdminColumn } from "./AdminTable";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { SquareStatusBadge, VerifiedBadge } from "./AdminStatusBadge";
 import { fa, secondaryButtonClass } from "./styles";
-import { adminErrorMessage, getSquares } from "../services/squares.service";
+import { adminErrorMessage, deleteSquare, getSquares } from "../services/squares.service";
 import { getCities, getProvinces } from "../services/programs.service";
 import type { AdminPage, GeoOption, Square, SquareFilters } from "../types";
 import {
@@ -40,6 +41,9 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
   const [provinces, setProvinces] = useState<GeoOption[]>([]);
   const [cities, setCities] = useState<GeoOption[]>([]);
   const firstRender = useRef(true);
+  const [squareToDelete, setSquareToDelete] = useState<Square | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     void getProvinces()
@@ -100,6 +104,21 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
     setApplied(EMPTY_SQUARE_FILTERS);
     setPage(1);
     void load(EMPTY_SQUARE_FILTERS, 1, perPage);
+  };
+
+  const removeSquare = async () => {
+    if (!squareToDelete) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await deleteSquare(String(squareToDelete.id));
+      setSquareToDelete(null);
+      await load(applied, page, perPage);
+    } catch (reason) {
+      setDeleteError(adminErrorMessage(reason, "حذف میدان ممکن نشد."));
+    } finally {
+      setDeleteBusy(false);
+    }
   };
 
   const filterDescriptors: AdminFilter[] = useMemo(
@@ -242,6 +261,33 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
         </span>
       ),
     },
+    {
+      key: "actions",
+      header: "عملیات",
+      className: "w-56 whitespace-nowrap",
+      render: (square) => (
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/admin/squares/${square.id}` as Route}
+            className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-control border border-border bg-surface px-3 text-[11px] font-black text-foreground transition-colors hover:bg-hover"
+          >
+            <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
+            ویرایش
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteError(null);
+              setSquareToDelete(square);
+            }}
+            className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-control border border-danger-border bg-danger-surface px-3 text-[11px] font-black text-danger-foreground transition-colors hover:opacity-80"
+          >
+            <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
+            حذف میدان
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -315,7 +361,21 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
           </p>
         </>
       )}
+
+      {squareToDelete ? (
+        <AdminDialog
+          title="حذف میدان"
+          description={`«${squareToDelete.name || `میدان ${fa(squareToDelete.id)}`}» به زباله‌دان منتقل می‌شود. حساب مالک و اطلاعات کاربر باقی می‌ماند.`}
+          confirmLabel="حذف میدان"
+          tone="danger"
+          busy={deleteBusy}
+          error={deleteError}
+          onConfirm={() => void removeSquare()}
+          onClose={() => {
+            if (!deleteBusy) setSquareToDelete(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
-
