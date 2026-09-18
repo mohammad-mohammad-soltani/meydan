@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminEditor } from "./AdminEditor";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
@@ -138,8 +140,8 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
   };
 
   return (
-    <form
-      className="admin-form"
+    <AdminEditor
+      className=""
       onSubmit={(event) => {
         event.preventDefault();
         void submit();
@@ -204,7 +206,7 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
             label="وضعیت انتشار"
             htmlFor="content-status"
             error={fieldErrors.status}
-            hint="برای پیش‌نویس، بدنه پاسخ خالی برمی‌گردد."
+            hint="پیش‌نویس برای مخاطبان نمایش داده نمی‌شود."
           >
             <select
               id="content-status"
@@ -224,7 +226,7 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
             label="شناسه دسته‌بندی"
             htmlFor="content-category"
             error={fieldErrors.category}
-            hint="شناسه عددی ترم دسته‌بندی محتوا؛ خالی بگذارید تا دسته‌ای تنظیم نشود."
+            hint="اختیاری؛ در صورت نداشتن شناسه، خالی بگذارید."
           >
             <input
               id="content-category"
@@ -251,7 +253,7 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
       <section aria-label="ضمیمه‌ها" className="admin-form-card admin-form-main space-y-4">
         <h2>ضمیمه‌ها</h2>
         <p className="text-[10px] leading-5 text-muted-foreground">
-          هر ضمیمه یک شناسه رسانه است. ترتیب فهرست، ترتیب نمایش را تعیین می‌کند.
+          تصویر، صدا یا ویدئو اضافه کنید. فایل‌ها به ترتیب این فهرست نمایش داده می‌شوند.
         </p>
 
         <MediaPickerField
@@ -408,6 +410,6 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
           بازگشت به فهرست
         </Link>
       </div>
-    </form>
+    </AdminEditor>
   );
 }

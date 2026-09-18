@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Children, cloneElement, isValidElement, type ReactNode, type ReactElement, type HTMLAttributes } from "react";
 import { fieldClass, labelClass } from "./styles";
 
 /**
@@ -35,27 +35,20 @@ export function AdminField({
   const errorId = error ? `${htmlFor}-error` : undefined;
   const hintId = hint && !error ? `${htmlFor}-hint` : undefined;
 
+  const controls = Children.map(children, (child) => {
+    if (!isValidElement(child) || !["input", "textarea", "select"].includes(String(child.type))) return child;
+    const control = child as ReactElement<HTMLAttributes<HTMLElement>>;
+    return cloneElement(control, {
+      "aria-invalid": error ? true : control.props["aria-invalid"],
+      "aria-required": required || undefined,
+      "aria-describedby": [control.props["aria-describedby"], errorId ?? hintId].filter(Boolean).join(" ") || undefined,
+    });
+  });
   return (
-    <div className={`min-w-0 ${className}`}>
-      <label htmlFor={htmlFor} className={labelClass}>
-        {label}
-        {required ? (
-          <span className="ms-1 text-danger" aria-hidden="true">
-            *
-          </span>
-        ) : null}
-      </label>
-      {hint ? (
-        <p id={hintId} className="mt-1 text-[10px] leading-5 text-muted-foreground">
-          {hint}
-        </p>
-      ) : null}
-      <div className="mt-1">{children}</div>
-      {error ? (
-        <p id={errorId} role="alert" className="mt-1 text-[10px] font-bold text-danger-foreground">
-          {error}
-        </p>
-      ) : null}
+    <div className={`admin-field min-w-0 ${className}`}>
+      <label htmlFor={htmlFor} className={labelClass}>{label}{required ? <span className="ms-1 text-danger" aria-hidden="true">*</span> : null}</label>
+      <div className="admin-field-control mt-1">{controls}</div>
+      {error ? <p id={errorId} role="alert" className="admin-field-error mt-1 text-xs text-danger-foreground">{error}</p> : hint ? <p id={hintId} className="admin-field-hint mt-1 text-[11px] leading-5 text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }

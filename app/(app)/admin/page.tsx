@@ -2,6 +2,11 @@ import Link from "next/link";
 import type { Route } from "next";
 import {
   Bell,
+  ArrowUpLeft,
+  CircleCheck,
+  Clock3,
+  CircleX,
+  PauseCircle,
   ChevronLeft,
   FolderKanban,
   Image,
@@ -132,166 +137,240 @@ export default async function AdminDashboardPage() {
     label: string;
     value: number | null;
     tone: string;
+    icon: ShortcutIcon;
+    description: string;
   }> = [
     {
       href: "/admin/squares?status=pending_verification",
       label: "میدان در انتظار تأیید",
       value: countsByStatus.get("pending_verification") ?? null,
-      tone: "border-warning-border bg-warning-surface",
+      tone: "warning",
+      icon: MapPinned,
+      description: "بررسی اطلاعات و تأیید میادین جدید",
     },
     {
       href: "/admin/speaker-requests?status=pending",
       label: "درخواست سخنرانی در انتظار",
       value: requests,
-      tone: "border-info-border bg-info-surface",
+      tone: "info",
+      icon: Mic,
+      description: "رسیدگی به درخواست‌های ثبت‌شده",
     },
     {
       href: "/admin/speaker-invitations?status=pending",
       label: "دعوت‌نامه در انتظار",
       value: invitations,
-      tone: "border-info-border bg-info-surface",
+      tone: "brand",
+      icon: Megaphone,
+      description: "پیگیری دعوت‌نامه‌های سخنرانی",
     },
   ];
 
+  const availableCounts = STATUS_ORDER.map((status) =>
+    countsByStatus.get(status),
+  );
+  const total = availableCounts.every((value) => typeof value === "number")
+    ? availableCounts.reduce<number>((sum, value) => sum + (value ?? 0), 0)
+    : null;
+  const statusIcons = {
+    pending_verification: Clock3,
+    approved: CircleCheck,
+    rejected: CircleX,
+    suspended: PauseCircle,
+  };
+  const today = new Intl.DateTimeFormat("fa-IR", {
+    dateStyle: "full",
+    timeZone: "Asia/Tehran",
+  }).format(new Date());
+
   return (
-    <div className="min-h-full bg-background">
+    <div className="admin-dashboard">
       <AdminPageHeader
-        title="پنل مدیریت میدان"
-        description="وضعیت کلی میادین و صف‌های بررسی. سرخط این پنل «افزودن میدان» است."
+        title="نمای کلی"
+        description="نبض میدان، در یک نگاه"
         actions={
-          <Link
-            href={"/admin/squares/new" as Route}
-            className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand px-4 text-xs font-black text-brand-foreground transition-colors hover:bg-brand-hover"
-          >
-            <Plus aria-hidden="true" className="h-4 w-4" />
-            افزودن میدان
-          </Link>
+          <span className="admin-date">
+            <Clock3 size={15} aria-hidden="true" />
+            {today}
+          </span>
         }
       />
-
-      <section
-        aria-label="صف‌های بررسی"
-        className="border-b border-divider px-4 py-6 sm:px-6 lg:px-10"
-      >
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-[10px] font-black text-brand">مرکز عملیات</p>
-            <h2 className="mt-1 text-lg font-black text-foreground">
-              نیازمند اقدام
-            </h2>
-          </div>
-          <span className="text-[11px] text-muted-foreground">
-            صف‌های بررسی امروز
-          </span>
-        </div>
-        <ul className="mt-4 grid gap-3 md:grid-cols-3">
-          {queues.map((queue) => (
-            <li key={queue.href}>
-              <Link
-                href={queue.href as Route}
-                className={`flex min-h-24 items-center justify-between gap-3 rounded-2xl border px-4 py-4 transition-all hover:-translate-y-0.5 hover:shadow-card ${queue.tone}`}
-              >
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-bold text-foreground-secondary">
-                    {queue.label}
-                  </span>
-                  <span className="mt-1 block text-xl font-black text-foreground">
-                    {queue.value === null
-                      ? "—"
-                      : queue.value.toLocaleString("fa-IR")}
-                  </span>
-                  {queue.value === null ? (
-                    <span className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <ShieldAlert aria-hidden="true" className="h-3 w-3" />
-                      شمارش ممکن نشد
-                    </span>
-                  ) : null}
-                </span>
-                <ChevronLeft
-                  aria-hidden="true"
-                  className="h-4 w-4 shrink-0 text-icon-muted"
-                />
+      <div className="admin-dashboard-body">
+        <section className="admin-hero" aria-labelledby="admin-welcome">
+          <div className="admin-hero-copy">
+            <span className="admin-eyebrow">
+              <span /> مرکز مدیریت میدان
+            </span>
+            <h2 id="admin-welcome">از اینجا، میدان را پیش ببرید.</h2>
+            <p>
+              میادین را سامان دهید، درخواست‌ها را بررسی کنید و جریان محتوا را
+              زنده نگه دارید.
+            </p>
+            <div className="admin-hero-actions">
+              <Link href="/admin/squares/new" className="admin-hero-primary">
+                <Plus size={18} aria-hidden="true" />
+                افزودن میدان
               </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+              <Link href="/admin/squares/map" className="admin-hero-secondary">
+                مشاهده نقشه میادین
+                <ArrowUpLeft size={17} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+          <div className="admin-hero-art" aria-hidden="true">
+            <span className="admin-orbit admin-orbit-one" />
+            <span className="admin-orbit admin-orbit-two" />
+            <span className="admin-orbit-node node-one">
+              <Mic size={22} />
+            </span>
+            <span className="admin-orbit-node node-two">
+              <FolderKanban size={22} />
+            </span>
+            <span className="admin-orbit-node node-three">
+              <Sparkles size={20} />
+            </span>
+            <span className="admin-orbit-center">
+              <MapPinned size={48} strokeWidth={1.3} />
+            </span>
+          </div>
+        </section>
 
-      <section
-        aria-label="وضعیت میادین"
-        className="border-b border-divider px-4 py-6 sm:px-6 lg:px-10"
-      >
-        <h2 className="text-lg font-black text-foreground">
-          نمایش وضعیت میادین
-        </h2>
-        <ul className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {SQUARE_STATUSES.map((status) => (
-            <li
-              key={status}
-              className="rounded-2xl border border-border bg-surface-elevated px-4 py-4 shadow-sm"
-            >
-              <span className="block text-[11px] text-muted-foreground">
-                {SQUARE_STATUS_LABELS[status]}
-              </span>
-              <span className="mt-1 block text-lg font-black text-foreground">
-                {(() => {
-                  const value = countsByStatus.get(status);
-                  return value === null || value === undefined
-                    ? "—"
-                    : value.toLocaleString("fa-IR");
-                })()}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section aria-label="بخش‌های پنل" className="px-4 py-6 sm:px-6 lg:px-10">
-        <h2 className="text-lg font-black text-foreground">دسترسی سریع</h2>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SHORTCUTS.map((shortcut) => {
-            const Icon = shortcut.icon;
-            return (
-              <li key={shortcut.href}>
-                <Link
-                  href={shortcut.href as Route}
-                  className="flex min-h-20 items-center gap-3 rounded-2xl border border-border bg-surface-elevated px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-brand-border hover:shadow-card"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-muted text-brand">
-                    <Icon aria-hidden="true" className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-black text-foreground">
-                      {shortcut.label}
+        <section aria-labelledby="admin-stats-title">
+          <div className="admin-section-heading">
+            <div>
+              <span className="admin-kicker">تصویر کلی</span>
+              <h2 id="admin-stats-title">وضعیت میادین</h2>
+            </div>
+            <span className="admin-section-meta">
+              {total === null
+                ? "آمار قابل دریافت"
+                : `${total.toLocaleString("fa-IR")} میدان در مجموع`}
+            </span>
+          </div>
+          <ul className="admin-stats-grid">
+            {SQUARE_STATUSES.map((status) => {
+              const Icon = statusIcons[status];
+              const value = countsByStatus.get(status);
+              return (
+                <li key={status}>
+                  <Link
+                    href={`/admin/squares?status=${status}` as Route}
+                    className={`admin-stat-card admin-stat-${status}`}
+                  >
+                    <div className="admin-stat-top">
+                      <span className="admin-stat-icon">
+                        <Icon size={21} aria-hidden="true" />
+                      </span>
+                      <ChevronLeft size={16} aria-hidden="true" />
+                    </div>
+                    <strong className="admin-stat-value">
+                      {value == null ? "—" : value.toLocaleString("fa-IR")}
+                    </strong>
+                    <span className="admin-stat-label">
+                      {SQUARE_STATUS_LABELS[status]}
                     </span>
-                    <span className="mt-0.5 block text-[10px] text-muted-foreground">
-                      {shortcut.description}
+                    <span className="admin-stat-foot">
+                      {value == null ? "شمارش در دسترس نیست" : "مشاهده میادین"}
+                      <ArrowUpLeft size={14} aria-hidden="true" />
                     </span>
-                  </span>
-                  <ChevronLeft
-                    aria-hidden="true"
-                    className="h-4 w-4 shrink-0 text-icon-muted"
-                  />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
 
-      <section aria-label="یادآوری‌ها" className="px-3 pb-6 sm:px-4">
-        <div className="rounded-card border border-warning-border bg-warning-surface px-3.5 py-3 text-[11px] leading-6 text-warning-foreground">
-          <p className="flex items-center gap-1.5 font-black">
-            <Megaphone aria-hidden="true" className="h-3.5 w-3.5" />
-            نکته
-          </p>
-          <p className="mt-1">
-            ساخت میدان با وضعیت «تأییدشده» هیچ اعلانی برای مالک ارسال نمی‌کند؛
-            اگر می‌خواهید مالک مطلع شود، ابتدا با وضعیت «در انتظار تأیید» بسازید
-            و سپس از صفحه میدان تأیید کنید.
-          </p>
-        </div>
-      </section>
+        <section aria-labelledby="admin-queues-title">
+          <div className="admin-section-heading">
+            <div>
+              <span className="admin-kicker">میز کار شما</span>
+              <h2 id="admin-queues-title">نیازمند رسیدگی</h2>
+            </div>
+            <span className="admin-section-meta">در انتظار بررسی شما</span>
+          </div>
+          <ul className="admin-queue-grid">
+            {queues.map((queue) => {
+              const Icon = queue.icon;
+              return (
+                <li key={queue.href}>
+                  <Link
+                    href={queue.href as Route}
+                    className={`admin-queue-card admin-queue-${queue.tone}`}
+                  >
+                    <div className="admin-queue-top">
+                      <span className="admin-queue-icon">
+                        <Icon size={21} aria-hidden="true" />
+                      </span>
+                      <strong>
+                        {queue.value === null
+                          ? "—"
+                          : queue.value.toLocaleString("fa-IR")}
+                      </strong>
+                    </div>
+                    <h3>{queue.label}</h3>
+                    <p>{queue.description}</p>
+                    <span className="admin-queue-footer">
+                      {queue.value === null ? (
+                        <>
+                          <ShieldAlert size={14} aria-hidden="true" />
+                          شمارش ممکن نشد؛ مشاهده فهرست
+                        </>
+                      ) : (
+                        "مشاهده و بررسی"
+                      )}
+                      <ArrowUpLeft size={17} aria-hidden="true" />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <section aria-labelledby="admin-shortcuts-title">
+          <div className="admin-section-heading">
+            <div>
+              <span className="admin-kicker">مسیرهای کوتاه‌تر</span>
+              <h2 id="admin-shortcuts-title">دسترسی سریع</h2>
+            </div>
+          </div>
+          <ul className="admin-shortcut-grid">
+            {SHORTCUTS.map((shortcut) => {
+              const Icon = shortcut.icon;
+              return (
+                <li key={shortcut.href}>
+                  <Link
+                    href={shortcut.href as Route}
+                    className="admin-shortcut"
+                  >
+                    <span className="admin-shortcut-icon">
+                      <Icon size={21} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>{shortcut.label}</strong>
+                      <small>{shortcut.description}</small>
+                    </span>
+                    <ChevronLeft size={16} aria-hidden="true" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+        <aside className="admin-dashboard-note">
+          <span>
+            <Megaphone size={20} aria-hidden="true" />
+          </span>
+          <div>
+            <strong>یادآوری هنگام ساخت میدان</strong>
+            <p>
+              برای اطلاع‌رسانی به مالک، میدان را ابتدا با وضعیت «در انتظار
+              تأیید» بسازید و سپس تأیید کنید. ساخت مستقیم میدان تأییدشده اعلانی
+              ارسال نمی‌کند.
+            </p>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

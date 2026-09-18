@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminEditor } from "./AdminEditor";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
@@ -244,8 +246,8 @@ export function AdminSpeakerForm({
 
   return (
     <>
-      <form
-        className="admin-form admin-speaker-form"
+      <AdminEditor
+        className="admin-speaker-form"
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
@@ -438,7 +440,7 @@ export function AdminSpeakerForm({
         <section aria-label="دسته‌بندی موضوعی" className="admin-form-card admin-speaker-category" aria-busy={categoriesStatus === "loading"}>
           <h2>دسته‌بندی موضوعی</h2>
           <p className="mt-1 text-[10px] text-muted-foreground">
-            دسته‌ها هنگام باز شدن فرم از سامانه دریافت می‌شوند.
+            موضوع‌هایی را انتخاب کنید که سخنران در آن‌ها تخصص دارد.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {categoriesList.map((category) => {
@@ -632,7 +634,7 @@ export function AdminSpeakerForm({
             </button>
           ) : null}
         </div>
-      </form>
+      </AdminEditor>
 
       {confirmDemote ? (
         <AdminDialog

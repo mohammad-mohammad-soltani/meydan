@@ -15,7 +15,7 @@ export default async function AdminContentCreatePage() {
     <div className="min-h-full bg-background">
       <AdminPageHeader
         title="محتوای تازه"
-        description="ساخت محتوا با وضعیت دلخواه. اگر وضعیت «منتشرشده» نباشد، پاسخ سرور بدنه‌ای ندارد."
+        description="محتوا را آماده کنید، رسانه‌ها را اضافه کنید و زمان نمایش آن به مخاطبان را تعیین کنید."
         crumbs={[{ label: "بسته محتوا", href: "/admin/content" }, { label: "محتوای تازه" }]}
       />
       <AdminContentForm />

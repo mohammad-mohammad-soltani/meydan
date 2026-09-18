@@ -172,7 +172,7 @@ export function GeoPickerField({
           label="شهر"
           htmlFor={`${idPrefix}-city`}
           error={errors?.city_id}
-          hint="شهر باید فعال و عضو همان استان باشد."
+          hint="پس از انتخاب استان، شهر را انتخاب کنید."
           required
         >
           <select
@@ -236,7 +236,7 @@ export function GeoPickerField({
           label="عرض جغرافیایی"
           htmlFor={`${idPrefix}-lat`}
           error={errors?.latitude}
-          hint="اگر خالی بماند، سرور مرکز تهران را جای‌گذاری می‌کند."
+          hint="با انتخاب نقطه روی نقشه، مختصات خودکار تکمیل می‌شود. اگر خالی بماند، مرکز تهران ثبت می‌شود."
         >
           <input
             id={`${idPrefix}-lat`}

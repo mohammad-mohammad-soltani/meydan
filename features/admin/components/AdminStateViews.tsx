@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { AlertTriangle, LoaderCircle, RefreshCw } from "lucide-react";
+import { Inbox, AlertTriangle, LoaderCircle, RefreshCw } from "lucide-react";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
 
 /** The one empty state every list renders, with an optional primary action. */
@@ -19,12 +19,10 @@ export function AdminEmptyState({
   icon?: ReactNode;
 }) {
   return (
-    <div className="mx-4 my-6 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface-elevated px-4 py-16 text-center shadow-card lg:mx-10">
-      {icon ? (
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-surface-muted text-icon-muted">
-          {icon}
-        </span>
-      ) : null}
+    <div className="admin-empty-state mx-4 my-6 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface-elevated px-4 py-16 text-center shadow-card lg:mx-10">
+      <span className="grid h-11 w-11 place-items-center rounded-full bg-surface-muted text-icon-muted">
+        {icon ?? <Inbox size={25} strokeWidth={1.5} aria-hidden="true" />}
+      </span>
       <p className="mt-3 text-xs font-black text-foreground-secondary">
         {title}
       </p>

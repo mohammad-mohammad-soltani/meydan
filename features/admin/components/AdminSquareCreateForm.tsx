@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminEditor } from "./AdminEditor";
+
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
@@ -203,14 +205,68 @@ export function AdminSquareCreateForm() {
         crumbs={[{ label: "میادین", href: "/admin/squares" }, { label: "افزودن میدان" }]}
       />
 
-      <form
-        className="admin-form"
+      <AdminEditor
+        className=""
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
         }}
       >
         {formError ? <div className="admin-form-notice"><AdminNotice tone="error" message={formError} onDismiss={() => setFormError(null)} /></div> : null}
+
+        <section aria-label="مشخصات میدان" className="admin-form-card admin-form-main space-y-4">
+          <h2>مشخصات میدان</h2>
+
+          <AdminField
+            label="نام میدان"
+            htmlFor="square-name"
+            required
+            error={fieldErrors.square_name}
+            hint="نامی که مخاطبان در فهرست میادین می‌بینند."
+          >
+            <input
+              id="square-name"
+              value={squareName}
+              aria-invalid={fieldErrors.square_name ? true : undefined}
+              onChange={(event) => setSquareName(event.target.value)}
+              className={fieldClass}
+            />
+          </AdminField>
+
+          <AdminField label="توضیحات" htmlFor="square-description" error={fieldErrors.description}>
+            <textarea
+              id="square-description"
+              value={description}
+              rows={3}
+              onChange={(event) => setDescription(event.target.value)}
+              className={`${fieldClass} resize-none`}
+            />
+          </AdminField>
+
+          <div>
+            <span className="block text-[11px] font-black text-foreground-secondary">
+              تاریخ شروع فعالیت (اختیاری)
+            </span>
+            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+              روز آغاز فعالیت میدان را در تقویم انتخاب کنید.
+            </p>
+            <div className="mt-1.5">
+              <PersianDatePicker
+                value={startDate}
+                onChange={setStartDate}
+                allow="any"
+                ariaLabel="انتخاب تاریخ شروع فعالیت"
+                placeholder="انتخاب تاریخ شروع"
+              />
+            </div>
+            {fieldErrors.start_date ? (
+              <p role="alert" className="mt-1 text-[10px] font-bold text-danger-foreground">
+                {fieldErrors.start_date}
+              </p>
+            ) : null}
+          </div>
+
+        </section>
 
         <section aria-label="حساب مالک" className="admin-form-card admin-form-side">
           <h2>حساب مالک میدان</h2>
@@ -265,60 +321,6 @@ export function AdminSquareCreateForm() {
               />
             </AdminField>
           </div>
-        </section>
-
-        <section aria-label="مشخصات میدان" className="admin-form-card admin-form-main space-y-4">
-          <h2>مشخصات میدان</h2>
-
-          <AdminField
-            label="نام میدان"
-            htmlFor="square-name"
-            required
-            error={fieldErrors.square_name}
-            hint="این همان عنوان میدان است؛ فیلد جداگانه‌ای به نام name وجود ندارد."
-          >
-            <input
-              id="square-name"
-              value={squareName}
-              aria-invalid={fieldErrors.square_name ? true : undefined}
-              onChange={(event) => setSquareName(event.target.value)}
-              className={fieldClass}
-            />
-          </AdminField>
-
-          <AdminField label="توضیحات" htmlFor="square-description" error={fieldErrors.description}>
-            <textarea
-              id="square-description"
-              value={description}
-              rows={3}
-              onChange={(event) => setDescription(event.target.value)}
-              className={`${fieldClass} resize-none`}
-            />
-          </AdminField>
-
-          <div>
-            <span className="block text-[11px] font-black text-foreground-secondary">
-              تاریخ شروع فعالیت (اختیاری)
-            </span>
-            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-              تاریخ نامعتبر در سرور بی‌صدا نادیده گرفته می‌شود، بنابراین مقدار همین‌جا بررسی می‌شود.
-            </p>
-            <div className="mt-1.5">
-              <PersianDatePicker
-                value={startDate}
-                onChange={setStartDate}
-                allow="any"
-                ariaLabel="انتخاب تاریخ شروع فعالیت"
-                placeholder="انتخاب تاریخ شروع"
-              />
-            </div>
-            {fieldErrors.start_date ? (
-              <p role="alert" className="mt-1 text-[10px] font-bold text-danger-foreground">
-                {fieldErrors.start_date}
-              </p>
-            ) : null}
-          </div>
-
         </section>
 
         <section aria-label="موقعیت میدان" className="admin-form-card admin-form-wide">
@@ -387,7 +389,7 @@ export function AdminSquareCreateForm() {
         </AdminDisclosureSection>
 
         <AdminDisclosureSection title="تصویر میدان" className="admin-form-side" hasError={Boolean(fieldErrors.avatar_media_id)}>
-          <MediaPickerField id="square-avatar" label="نشان میدان" hint="فقط تصویر؛ شناسه رسانه ذخیره می‌شود." mediaId={avatarMediaId} onChange={setAvatarMediaId} />
+          <MediaPickerField id="square-avatar" label="نشان میدان" hint="یک تصویر واضح برای معرفی میدان انتخاب کنید." mediaId={avatarMediaId} onChange={setAvatarMediaId} />
         </AdminDisclosureSection>
 
         <AdminDisclosureSection
@@ -427,7 +429,7 @@ export function AdminSquareCreateForm() {
             انصراف
           </Link>
         </div>
-      </form>
+      </AdminEditor>
     </div>
   );
 }

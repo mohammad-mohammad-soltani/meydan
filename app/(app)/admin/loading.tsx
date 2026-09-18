@@ -11,14 +11,19 @@ export default function AdminLoading() {
         <span className="block h-4 w-40 animate-pulse rounded bg-skeleton" />
         <span className="mt-2 block h-3 w-64 animate-pulse rounded bg-skeleton-highlight" />
       </div>
-      <div className="border-b border-divider bg-surface px-3 py-3 sm:px-4">
+      <div className="admin-filters border-b border-divider bg-surface px-3 py-3 sm:px-4">
         <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((index) => (
-            <span key={index} className="block h-9 animate-pulse rounded-control bg-skeleton" />
+            <span
+              key={index}
+              className="block h-9 animate-pulse rounded-control bg-skeleton"
+            />
           ))}
         </div>
       </div>
-      <AdminTableSkeleton rows={6} />
+      <div className="mx-4 mb-6 overflow-hidden rounded-2xl border border-border bg-surface sm:mx-6 lg:mx-10">
+        <AdminTableSkeleton rows={6} />
+      </div>
     </div>
   );
 }

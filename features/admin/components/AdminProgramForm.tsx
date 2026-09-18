@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminEditor } from "./AdminEditor";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
@@ -149,8 +151,8 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
 
   return (
     <>
-      <form
-        className="admin-form"
+      <AdminEditor
+        className=""
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
@@ -184,7 +186,7 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
             <AdminField
               label="وضعیت چرخه عمر"
               htmlFor="program-status"
-              hint="وضعیت ناشناخته در سرور به پیش‌نویس تبدیل می‌شود."
+              hint="مشخص کنید برنامه پیش‌نویس، فعال یا پایان‌یافته است."
             >
               <select
                 id="program-status"
@@ -203,7 +205,7 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
             <AdminField
               label="وضعیت انتشار"
               htmlFor="program-post-status"
-              hint="وضعیت وردپرس؛ مقدار ناشناخته به «منتشرشده» تبدیل می‌شود."
+              hint="برای نمایش عمومی، «منتشرشده» را انتخاب کنید."
             >
               <select
                 id="program-post-status"
@@ -433,7 +435,7 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
             </button>
           ) : null}
         </div>
-      </form>
+      </AdminEditor>
 
       {deleteOpen ? (
         <AdminDialog

@@ -1,3 +1,4 @@
+import { LayoutDashboard } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Route } from "next";
@@ -55,19 +56,12 @@ export function AdminPageHeader({
             ))}
           </ol>
         </nav>
-      ) : null}
+      ) : (
+        <span className="admin-header-label">
+          <LayoutDashboard size={14} aria-hidden="true" /> فضای مدیریت میدان
+        </span>
+      )}
 
-      {/*
-        Stacked on narrow screens: the title and a two-button action row cannot
-        share one line inside `max-w-xl` without the buttons wrapping into the
-        description. Side by side once there is room.
-      */}
-      {/*
-        The title owns the first line and the actions own the second, right
-        aligned. At `max-w-xl` a title plus a two-button action row does not fit
-        on one line in either direction, and squeezing them made the buttons
-        wrap under the description.
-      */}
       <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-xl font-black leading-8 text-foreground lg:text-2xl">

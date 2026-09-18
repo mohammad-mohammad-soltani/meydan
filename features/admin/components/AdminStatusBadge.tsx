@@ -41,18 +41,30 @@ const PROGRAM_TONES: Record<ProgramStatus, Tone> = {
 function Badge({ tone, children }: { tone: Tone; children: string }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-pill border px-2 py-0.5 text-[10px] font-black ${TONE_CLASS[tone]}`}
+      className={`admin-status-badge inline-flex shrink-0 items-center gap-1.5 rounded-pill border px-2.5 py-1 text-[11px] font-bold ${TONE_CLASS[tone]}`}
     >
+      <span
+        aria-hidden="true"
+        className="h-1.5 w-1.5 rounded-full bg-current opacity-70"
+      />
       {children}
     </span>
   );
 }
 
 export function SquareStatusBadge({ status }: { status: SquareStatus }) {
-  return <Badge tone={SQUARE_TONES[status] ?? "neutral"}>{SQUARE_STATUS_LABELS[status] ?? status}</Badge>;
+  return (
+    <Badge tone={SQUARE_TONES[status] ?? "neutral"}>
+      {SQUARE_STATUS_LABELS[status] ?? status}
+    </Badge>
+  );
 }
 
-export function SpeakerRequestStatusBadge({ status }: { status: SpeakerRequestStatus }) {
+export function SpeakerRequestStatusBadge({
+  status,
+}: {
+  status: SpeakerRequestStatus;
+}) {
   return (
     <Badge tone={REQUEST_TONES[status] ?? "neutral"}>
       {SPEAKER_REQUEST_STATUS_LABELS[status] ?? status}
@@ -63,7 +75,9 @@ export function SpeakerRequestStatusBadge({ status }: { status: SpeakerRequestSt
 export function ProgramStatusBadge({ status }: { status: string }) {
   const known = status as ProgramStatus;
   return (
-    <Badge tone={PROGRAM_TONES[known] ?? "neutral"}>{PROGRAM_STATUS_LABELS[known] ?? status}</Badge>
+    <Badge tone={PROGRAM_TONES[known] ?? "neutral"}>
+      {PROGRAM_STATUS_LABELS[known] ?? status}
+    </Badge>
   );
 }
 
@@ -83,7 +97,9 @@ const POST_STATUS_LABELS: Record<string, { label: string; tone: Tone }> = {
 
 export function PostStatusBadge({ status }: { status: string }) {
   const known = POST_STATUS_LABELS[status];
-  return <Badge tone={known?.tone ?? "neutral"}>{known?.label ?? status}</Badge>;
+  return (
+    <Badge tone={known?.tone ?? "neutral"}>{known?.label ?? status}</Badge>
+  );
 }
 
 /**

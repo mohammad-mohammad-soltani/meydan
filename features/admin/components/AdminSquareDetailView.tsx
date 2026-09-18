@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminEditor } from "./AdminEditor";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
@@ -187,7 +189,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
         }
       />
 
-      <div className="admin-form">
+      <AdminEditor title="ویرایش اطلاعات میدان" onSubmit={(event) => event.preventDefault()}>
         {saved ? <div className="admin-form-notice"><AdminNotice tone="success" message={saved} autoHideMs={4000} /></div> : null}
         {formError ? (
           <div className="admin-form-notice"><AdminNotice tone="error" message={formError} onDismiss={() => setFormError(null)} /></div>
@@ -410,7 +412,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
           </button>
         </div>
 
-      </div>
+      </AdminEditor>
 
       {statusDialog ? (
         <AdminDialog

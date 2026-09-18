@@ -23,24 +23,7 @@ export type AdminColumn<T> = {
   primary?: boolean;
 };
 
-/**
- * A responsive data table.
- *
- * The admin panel renders inside the app's `max-w-xl` column, which is too
- * narrow for four or five real columns: a plain `<table>` wrapped every cell
- * onto three or four lines and read as noise. The same column definitions now
- * drive two layouts:
- *
- * - `md` and up: a real `<table>`, keeping row/column semantics;
- * - below `md`: one card per row, the primary column as its heading and every
- *   other column as a labelled field.
- *
- * Both render from one `columns` array, so a new column cannot drift between
- * them. The app column stays `max-w-xl` at every viewport width, so even the
- * table layout only ever has ~36rem: a `hideOnMobile` column is therefore
- * dropped from *both* layouts above two or three columns, because it would
- * wrap onto three lines in a cell that narrow.
- */
+/** Shared column definitions render a semantic desktop table and labelled mobile cards. */
 export function AdminTable<T>({
   columns,
   rows,
@@ -78,7 +61,7 @@ export function AdminTable<T>({
   return (
     <>
       {/* Wide screens: a genuine table. */}
-      <div className="hidden overflow-x-auto no-scrollbar md:block">
+      <div className="admin-table-desktop hidden overflow-x-auto md:block">
         <table className="w-full border-collapse text-right">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead className={tableHeadClass}>
@@ -99,7 +82,7 @@ export function AdminTable<T>({
               <tr
                 key={rowKey(row, index)}
                 {...interactiveProps(onRowClick, row)}
-                className="align-middle odd:bg-surface/40 even:bg-surface-elevated/30"
+                className={`admin-table-row align-middle ${onRowClick ? "cursor-pointer" : ""}`}
               >
                 {columns.map((column) => (
                   <td
@@ -116,12 +99,12 @@ export function AdminTable<T>({
       </div>
 
       {/* Narrow screens: one card per row, driven by the same columns. */}
-      <ul className="divide-y divide-divider md:hidden">
+      <ul className="admin-table-cards md:hidden">
         {rows.map((row, index) => (
           <li
             key={rowKey(row, index)}
             {...interactiveProps(onRowClick, row)}
-            className="px-3 py-3"
+            className={`admin-table-mobile-card px-3 py-3 ${onRowClick ? "cursor-pointer" : ""}`}
           >
             <div className="min-w-0">{primaryColumn.render(row, index)}</div>
             {cardColumns.length ? (
@@ -158,7 +141,6 @@ function interactiveProps<T>(
   onClick?: () => void;
   tabIndex?: number;
   onKeyDown?: (event: KeyboardEvent) => void;
-  className?: string;
 } {
   if (!onRowClick) return {};
   return {
@@ -170,7 +152,5 @@ function interactiveProps<T>(
         onRowClick(row);
       }
     },
-    className:
-      "cursor-pointer transition-colors hover:bg-hover focus-visible:bg-hover focus-visible:outline-none",
   };
 }

@@ -1,10 +1,12 @@
 "use client";
 
+import { AdminEditor } from "./AdminEditor";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import Link from "next/link";
-import { LoaderCircle, Plus, Save, Trash2 } from "lucide-react";
+import { LoaderCircle, Plus, Save, Trash2, Search, X } from "lucide-react";
 import { AdminCheckbox, AdminField, fieldClass } from "./AdminField";
 import { AdminDialog } from "./AdminDialog";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
@@ -76,7 +78,8 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
   const mode = creator ? "edit" : "create";
 
   const [form, setForm] = useState<CreatorInput>(() => toInput(creator));
-  const [provinces, setProvinces] = useState<GeoOption[]>([]);
+  const [cityQuery, setCityQuery] = useState("");
+  const [cityLoadStatus, setCityLoadStatus] = useState<"loading" | "ready" | "error">("loading");
   const [cities, setCities] = useState<GeoOption[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -89,15 +92,15 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
     void getProvinces()
       .then(async (items) => {
         if (!active) return;
-        setProvinces(items ?? []);
+
         const groups = await Promise.all(
-          (items ?? []).map((province) => getCities(province.id).catch(() => [])),
+          (items ?? []).map((province) => getCities(province.id)),
         );
-        if (active) setCities(groups.flat());
+        if (active) { setCities(groups.flat()); setCityLoadStatus("ready"); }
       })
       .catch(() => {
         if (active) {
-          setProvinces([]);
+          setCityLoadStatus("error");
           setCities([]);
         }
       });
@@ -164,8 +167,8 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
 
   return (
     <>
-      <form
-        className="admin-form"
+      <AdminEditor
+        className=""
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
@@ -236,7 +239,7 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
         <section aria-label="نوع فعالیت" className="admin-form-card admin-form-half">
           <h2 className="text-base font-black text-foreground">نوع فعالیت و تخصص</h2>
           <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-            اسلاگ‌های ناشناخته در سرور حذف می‌شوند؛ بنابراین فقط موارد شناخته‌شده پیشنهاد می‌شود.
+            یک یا چند زمینهٔ فعالیت را انتخاب کنید.
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {[
@@ -276,14 +279,16 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
           <p className="mt-1 text-[10px] text-muted-foreground">
             {fa(form.cities.length)} شهر انتخاب شده است.
           </p>
+          <label className="admin-city-search"><Search size={17} aria-hidden="true" /><input aria-label="جست‌وجوی شهرهای فعالیت" placeholder="نام شهر را جست‌وجو کنید…" value={cityQuery} onChange={(event) => setCityQuery(event.target.value)} /></label>
+          {form.cities.length > 0 && <div className="mb-3 flex flex-wrap gap-2" aria-label="شهرهای انتخاب‌شده">{form.cities.map((id) => <button key={id} type="button" onClick={() => patch({ cities: form.cities.filter((value) => value !== id) })} aria-label={`حذف ${cities.find((city) => city.id === id)?.name ?? id}`} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-brand-border bg-brand-muted px-3 text-xs text-brand">{cities.find((city) => city.id === id)?.name ?? `شهر ${fa(id)}`}<X size={13} aria-hidden="true" /></button>)}</div>}
           <div className="mt-2 max-h-48 overflow-y-auto rounded-control border border-border p-2 no-scrollbar">
             {cities.length === 0 ? (
               <p className="py-3 text-center text-[11px] text-muted-foreground">
-                شهرها در حال بارگذاری است…
+                {cityLoadStatus === "loading" ? "در حال دریافت شهرها…" : cityLoadStatus === "error" ? "دریافت شهرها ممکن نشد؛ صفحه را دوباره بارگذاری کنید." : "شهری ثبت نشده است."}
               </p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
-                {cities.map((city) => {
+                {cities.filter((city) => city.name.replace(/ي/g, "ی").replace(/ك/g, "ک").includes(cityQuery.trim().replace(/ي/g, "ی").replace(/ك/g, "ک"))).map((city) => {
                   const active = form.cities.includes(city.id);
                   return (
                     <button
@@ -311,7 +316,7 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
             )}
           </div>
           <p className="mt-2 text-[10px] text-muted-foreground">
-            استان‌های بارگذاری‌شده: {fa(provinces.length)}
+            برای برداشتن هر شهر، دوباره روی آن بزنید.
           </p>
         </section>
 
@@ -407,7 +412,7 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
             </button>
           ) : null}
         </div>
-      </form>
+      </AdminEditor>
 
       {deleteOpen ? (
         <AdminDialog

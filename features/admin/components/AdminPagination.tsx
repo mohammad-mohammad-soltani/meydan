@@ -33,7 +33,7 @@ export function AdminPagination({
   return (
     <nav
       aria-label="صفحه‌بندی"
-      className="flex flex-wrap items-center justify-between gap-2 border-t border-divider bg-surface-muted/40 px-3 py-2.5"
+      className="admin-pagination flex flex-wrap items-center justify-between gap-2 border-t border-divider bg-surface-muted/40 px-3 py-2.5"
     >
       <p className="text-[11px] text-muted-foreground">
         {fa(total)} مورد · صفحه {fa(page)} از {fa(Math.max(1, pages))}
@@ -63,7 +63,7 @@ export function AdminPagination({
           onClick={() => onPageChange(page - 1)}
           disabled={busy || page <= 1}
           aria-label="صفحه قبل"
-          className="grid h-8 w-8 place-items-center rounded-control border border-border bg-surface text-icon-muted transition-colors hover:bg-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="grid h-10 w-10 place-items-center rounded-control border border-border bg-surface text-icon-muted transition-colors hover:bg-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ChevronRight aria-hidden="true" className="h-4 w-4" />
         </button>
@@ -72,7 +72,7 @@ export function AdminPagination({
           onClick={() => onPageChange(page + 1)}
           disabled={busy || page >= pages}
           aria-label="صفحه بعد"
-          className="grid h-8 w-8 place-items-center rounded-control border border-border bg-surface text-icon-muted transition-colors hover:bg-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="grid h-10 w-10 place-items-center rounded-control border border-border bg-surface text-icon-muted transition-colors hover:bg-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ChevronLeft aria-hidden="true" className="h-4 w-4" />
         </button>
@@ -85,7 +85,13 @@ export function AdminPagination({
  * The few capped lists (such as request inboxes and participants) have no
  * pagination at all. This states their ceiling instead of faking pages.
  */
-export function AdminListCapNotice({ shown, cap }: { shown: number; cap: number }) {
+export function AdminListCapNotice({
+  shown,
+  cap,
+}: {
+  shown: number;
+  cap: number;
+}) {
   if (shown < cap) return null;
 
   return (
