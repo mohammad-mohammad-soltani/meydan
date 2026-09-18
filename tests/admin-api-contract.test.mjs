@@ -97,8 +97,11 @@ test("the speaker surfaces use the promote/demote routes, not user edits", () =>
   // The request and invitation inboxes share one controller under two prefixes.
   assert.match(speakers, /\/admin\/speaker-requests/);
   assert.match(speakers, /\/admin\/speaker-invitations/);
-  // Both are hard-capped lists, so the cap travels with the result.
-  assert.match(speakers, /SPEAKER_LIST_CAP\s*=\s*50/);
+  // The directory uses a real page/per_page envelope; only request inboxes
+  // remain intentionally capped.
+  assert.match(speakers, /adminGetEnvelope<ApiSpeaker\[\]>/);
+  assert.match(speakers, /per_page: perPage/);
+  assert.match(speakers, /page: metaInt\(meta, \["page"\], page\)/);
   assert.match(speakers, /SPEAKER_REQUEST_LIST_CAP\s*=\s*100/);
 });
 
@@ -119,6 +122,9 @@ test("direct speaker creation remains an admin-only atomic backend operation", (
   assert.match(routes, /admin\/speakers\/new-account/);
   assert.match(controller, /current_user_can\('manage_meydan_speakers'\)/);
   assert.match(controller, /adminCreateAccount/);
+  assert.match(controller, /WP_User_Query/);
+  assert.match(controller, /per_page/);
+  assert.match(controller, /count_total/);
   assert.match(service, /OtpService::normalizePhone/);
   assert.match(service, /phoneOwner/);
   assert.match(service, /cityBelongsTo/);

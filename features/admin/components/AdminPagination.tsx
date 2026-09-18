@@ -82,8 +82,8 @@ export function AdminPagination({
 }
 
 /**
- * The capped lists (speakers 50, requests 100, participants 100) have no
- * pagination at all. This states the ceiling instead of faking pages.
+ * The few capped lists (such as request inboxes and participants) have no
+ * pagination at all. This states their ceiling instead of faking pages.
  */
 export function AdminListCapNotice({ shown, cap }: { shown: number; cap: number }) {
   if (shown < cap) return null;

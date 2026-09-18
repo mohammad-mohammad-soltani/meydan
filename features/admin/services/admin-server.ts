@@ -115,8 +115,10 @@ export async function getSpeakerInvitations(
 
 export async function getAdminSpeakers(
   filters: SpeakerStatusFilters,
-): Promise<AdminListResult<Speaker>> {
-  return getAdminSpeakersRaw(filters, await withAdminAuth());
+  page = 1,
+  perPage = 20,
+): Promise<AdminPage<Speaker>> {
+  return getAdminSpeakersRaw(filters, page, perPage, await withAdminAuth());
 }
 
 export async function getLinkableUsers(): Promise<LinkableUser[]> {

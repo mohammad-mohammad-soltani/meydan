@@ -1,4 +1,5 @@
 import type {
+  AdminPage,
   AdminListResult,
   LinkableUser,
   SocialLink,
@@ -19,10 +20,12 @@ import {
 import {
   adminDelete,
   adminErrorMessage,
+  adminGetEnvelope,
   adminGetItem,
   adminPatch,
   adminPost,
   isNotFound,
+  metaInt,
   query,
   segment,
 } from "./admin-api";
@@ -149,26 +152,35 @@ export const EMPTY_SPEAKER_FILTERS: SpeakerStatusFilters = {
   cityId: null,
 };
 
-/**
- * The admin speaker list is capped at 50 rows by `SpeakerController::query` and
- * has no pagination, so the UI labels the cap instead of inventing pages.
- */
-export const SPEAKER_LIST_CAP = 50;
-
+/** Every speaker in the selected filter is available through page/per_page. */
 export async function getAdminSpeakers(
   filters: SpeakerStatusFilters,
+  page = 1,
+  perPage = 20,
   init?: RequestInit,
-): Promise<AdminListResult<Speaker>> {
-  const rows = await adminGetItem<ApiSpeaker[]>(
+): Promise<AdminPage<Speaker>> {
+  const { data, meta } = await adminGetEnvelope<ApiSpeaker[]>(
     `/admin/speakers${query({
       q: filters.q.trim(),
       verified: filters.verified,
       speaker_category: filters.speakerCategory,
       city_id: filters.cityId,
+      page,
+      per_page: perPage,
     })}`,
     init,
   );
-  return { items: (rows ?? []).map(mapSpeaker), paginated: false, cap: SPEAKER_LIST_CAP };
+  const items = (data ?? []).map(mapSpeaker);
+  const total = metaInt(meta, ["total"], items.length);
+  const reportedPerPage = metaInt(meta, ["per_page"], perPage);
+  return {
+    items,
+    page: metaInt(meta, ["page"], page),
+    perPage: reportedPerPage,
+    total,
+    pages: metaInt(meta, ["pages"], Math.max(1, Math.ceil(total / Math.max(1, reportedPerPage)))),
+    paginated: "total" in meta,
+  };
 }
 
 /**

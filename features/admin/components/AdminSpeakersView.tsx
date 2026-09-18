@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { Mic, Pencil, RefreshCw, Trash2, UserPlus, UserRoundPlus } from "lucide-react";
 import { AdminDialog } from "./AdminDialog";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
-import { AdminListCapNotice } from "./AdminPagination";
+import { AdminPagination } from "./AdminPagination";
 import { AdminTable, type AdminColumn } from "./AdminTable";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { VerifiedBadge } from "./AdminStatusBadge";
@@ -21,7 +21,7 @@ import {
 } from "../services/speakers.service";
 import { getCities, getProvinces } from "../services/programs.service";
 import type {
-  AdminListResult,
+  AdminPage,
   GeoOption,
   Speaker,
   SpeakerCategory,
@@ -31,14 +31,14 @@ import type {
 /**
  * The speaker directory.
  *
- * `GET /admin/speakers` is capped at 50 rows with no pagination
- * (`SpeakerController::query` uses `number => 50`), so the view labels the
- * ceiling instead of rendering fake page controls. `phone` never appears here:
- * the admin schema omits it entirely (`phone_visible: false`).
+ * `GET /admin/speakers` uses real server pagination, so every matching speaker
+ * remains reachable. Phone numbers deliberately never appear in this list.
  */
-export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speaker> }) {
+export function AdminSpeakersView({ initial }: { initial: AdminPage<Speaker> }) {
   const [filters, setFilters] = useState<SpeakerStatusFilters>(EMPTY_SPEAKER_FILTERS);
   const [applied, setApplied] = useState<SpeakerStatusFilters>(EMPTY_SPEAKER_FILTERS);
+  const [page, setPage] = useState(initial.page || 1);
+  const [perPage, setPerPage] = useState(initial.perPage || 20);
   const [result, setResult] = useState(initial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +48,8 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
   const [speakerToDemote, setSpeakerToDemote] = useState<Speaker | null>(null);
   const [demoteBusy, setDemoteBusy] = useState(false);
   const [demoteError, setDemoteError] = useState<string | null>(null);
+  const firstRender = useRef(true);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     void getSpeakerCategories()
@@ -78,11 +80,11 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
       .catch(() => setCities([]));
   };
 
-  const load = useCallback(async (next: SpeakerStatusFilters) => {
+  const load = useCallback(async (next: SpeakerStatusFilters, nextPage: number, nextPerPage: number) => {
     setLoading(true);
     setError(null);
     try {
-      setResult(await getAdminSpeakers(next));
+      setResult(await getAdminSpeakers(next, nextPage, nextPerPage));
     } catch (reason) {
       setError(adminErrorMessage(reason, "دریافت فهرست سخنرانان ممکن نشد."));
     } finally {
@@ -90,15 +92,25 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
     }
   }, []);
 
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    void load(applied, page, perPage);
+  }, [applied, load, page, perPage, reloadKey]);
+
   const applyFilters = () => {
+    setPage(1);
     setApplied(filters);
-    void load(filters);
+    setReloadKey((current) => current + 1);
   };
 
   const resetFilters = () => {
     setFilters(EMPTY_SPEAKER_FILTERS);
     setApplied(EMPTY_SPEAKER_FILTERS);
-    void load(EMPTY_SPEAKER_FILTERS);
+    setPage(1);
+    setReloadKey((current) => current + 1);
   };
 
   const demote = async () => {
@@ -108,7 +120,7 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
     try {
       await demoteSpeaker(String(speakerToDemote.userId));
       setSpeakerToDemote(null);
-      await load(applied);
+      await load(applied, page, perPage);
     } catch (reason) {
       setDemoteError(adminErrorMessage(reason, "حذف نقش سخنران ممکن نشد."));
     } finally {
@@ -240,12 +252,12 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
     {
       key: "actions",
       header: "عملیات",
-      className: "w-44 whitespace-nowrap",
+      className: "w-56 whitespace-nowrap",
       render: (speaker) => (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <Link
             href={`/admin/speakers/${speaker.userId}` as Route}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-[11px] font-black text-foreground transition-colors hover:bg-hover"
+            className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-control border border-border bg-surface px-3 text-[11px] font-black text-foreground transition-colors hover:bg-hover"
           >
             <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
             ویرایش
@@ -256,7 +268,7 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
               setDemoteError(null);
               setSpeakerToDemote(speaker);
             }}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-danger-border bg-danger-surface px-3 text-[11px] font-black text-danger-foreground transition-colors hover:opacity-80"
+            className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-control border border-danger-border bg-danger-surface px-3 text-[11px] font-black text-danger-foreground transition-colors hover:opacity-80"
           >
             <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
             حذف نقش
@@ -272,31 +284,32 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
         title="سخنرانان"
         description="ارتقای حساب کاربری به سخنران، ویرایش پروفایل و حذف نقش سخنران."
         crumbs={[{ label: "سخنرانان" }]}
-        limitation="این فهرست صفحه‌بندی ندارد و حداکثر ۵۰ سخنران را برمی‌گرداند."
         actions={
           <>
             <button
               type="button"
-              onClick={() => void load(applied)}
+              onClick={() => void load(applied, page, perPage)}
               className={secondaryButtonClass}
             >
               <RefreshCw aria-hidden="true" className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               بازخوانی
             </button>
-            <Link
-              href={"/admin/speakers/new" as Route}
-              className={secondaryButtonClass}
-            >
-              <UserPlus aria-hidden="true" className="h-4 w-4" />
-              ارتقای کاربر
-            </Link>
-            <Link
-              href={"/admin/speakers/new-account" as Route}
-              className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand px-4 text-xs font-black text-brand-foreground transition-colors hover:bg-brand-hover"
-            >
-              <UserRoundPlus aria-hidden="true" className="h-4 w-4" />
-              افزودن سخنران
-            </Link>
+            <div role="group" aria-label="افزودن سخنران" className="flex items-center rounded-control border border-border bg-surface-muted p-1">
+              <Link
+                href={"/admin/speakers/new" as Route}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-control px-3 text-[11px] font-black text-foreground transition-colors hover:bg-hover"
+              >
+                <UserPlus aria-hidden="true" className="h-4 w-4" />
+                ارتقای کاربر
+              </Link>
+              <Link
+                href={"/admin/speakers/new-account" as Route}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-control bg-brand px-3 text-[11px] font-black text-brand-foreground transition-colors hover:bg-brand-hover"
+              >
+                <UserRoundPlus aria-hidden="true" className="h-4 w-4" />
+                افزودن سخنران
+              </Link>
+            </div>
           </>
         }
       />
@@ -304,7 +317,7 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
       <AdminFilters filters={descriptors} onSubmit={applyFilters} onReset={resetFilters} busy={loading} />
 
       {error ? (
-        <AdminErrorState message={error} onRetry={() => void load(applied)} retrying={loading} />
+        <AdminErrorState message={error} onRetry={() => void load(applied, page, perPage)} retrying={loading} />
       ) : loading ? (
         <AdminTableSkeleton rows={5} />
       ) : (
@@ -318,9 +331,20 @@ export function AdminSpeakersView({ initial }: { initial: AdminListResult<Speake
             emptyDescription="فیلترها را تغییر دهید، یک حساب را ارتقا دهید یا سخنران جدید بسازید."
             emptyIcon={<Mic aria-hidden="true" className="h-5 w-5" />}
           />
-          <AdminListCapNotice shown={result.items.length} cap={result.cap ?? 50} />
+          <AdminPagination
+            page={result.page}
+            pages={result.pages}
+            total={result.total}
+            perPage={result.perPage}
+            busy={loading}
+            onPageChange={setPage}
+            onPerPageChange={(value) => {
+              setPage(1);
+              setPerPage(value);
+            }}
+          />
           <p className="px-3 pb-6 pt-2 text-[10px] text-muted-foreground sm:px-4">
-            {fa(result.items.length)} سخنران نمایش داده شد
+            {fa(result.total)} سخنران در این فیلتر
           </p>
         </>
       )}
