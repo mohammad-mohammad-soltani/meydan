@@ -70,7 +70,7 @@ export function MediaLightbox({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select")) return;
+      if (event.key !== "Tab" && target?.closest("input, textarea, select")) return;
 
       if (event.key === "Escape") {
         event.preventDefault();
@@ -85,7 +85,7 @@ export function MediaLightbox({
 
         const focusable = [
           ...dialog.querySelectorAll<HTMLElement>(
-            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
           ),
         ].filter((element) => element.offsetParent !== null);
         if (!focusable.length) return;
@@ -136,7 +136,7 @@ export function MediaLightbox({
       aria-modal="true"
       aria-label={label}
       dir="rtl"
-      className="fixed inset-0 z-[130] flex select-none flex-col bg-scrim/95 backdrop-blur-md"
+      className="fixed inset-0 z-[130] flex select-none flex-col bg-black/80 backdrop-blur-sm"
     >
       <header className="relative flex shrink-0 items-center justify-between gap-3 p-3">
         <span
@@ -193,7 +193,7 @@ export function MediaLightbox({
         </div>
       </header>
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center px-3 pb-6">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center px-3 pb-4 sm:px-20 sm:pb-6">
         {/* Keyed by item so zoom/pan reset naturally when the item changes. */}
         <MediaStage
           key={current.id}
@@ -430,7 +430,7 @@ function MediaStage({
 
   if (item.kind === "video") {
     return (
-      <div className="h-full w-full py-2">
+      <div className="flex h-full w-full items-center justify-center [container-type:size]">
         <VideoPlayer item={item} variant="immersive" autoPlay />
       </div>
     );
@@ -490,7 +490,7 @@ function MediaStage({
           draggable={false}
           onLoad={() => setImageState("ready")}
           onError={() => setImageState("error")}
-          className={`max-h-full max-w-full rounded-xl object-contain shadow-dialog ${
+          className={`max-h-full  min-w-[25vw] max-w-full rounded-xl object-contain shadow-dialog ${
             isGesturing ? "" : "transition-transform duration-200 ease-out motion-reduce:transition-none"
           } ${zoom > MIN_ZOOM ? "cursor-grab" : "cursor-zoom-in"} ${
             imageState === "ready" ? "opacity-100" : "opacity-0"

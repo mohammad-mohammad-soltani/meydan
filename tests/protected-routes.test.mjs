@@ -13,15 +13,13 @@ async function loadProtectedRoutes() {
   return import(pathToFileURL(file).href);
 }
 
-test("the middleware guards the speaker dispatch pages", async () => {
+test("the speaker directory is public while the invitations inbox remains protected", async () => {
   const { isProtectedPath, PROTECTED_ROUTE_PREFIXES } = await loadProtectedRoutes();
 
-  // اعزام سخنران and the invitations inbox are the pages this guard exists for.
-  assert.ok(PROTECTED_ROUTE_PREFIXES.includes("/speakers"));
   assert.ok(PROTECTED_ROUTE_PREFIXES.includes("/speaker-invitations"));
 
-  assert.equal(isProtectedPath("/speakers"), true);
-  assert.equal(isProtectedPath("/speakers/42"), true);
+  assert.equal(isProtectedPath("/speakers"), false);
+  assert.equal(isProtectedPath("/speakers/42"), false);
   assert.equal(isProtectedPath("/speaker-invitations"), true);
   assert.equal(isProtectedPath("/speaker-invitations/received/9"), true);
 });
@@ -61,11 +59,11 @@ test("the proxy redirects a visitor without a session to the login page", () => 
   assert.match(proxy, /NextResponse\.redirect\(/);
   assert.match(proxy, /loginHref\(returnToFrom\(pathname, search\)\)/);
 
-  // Public requests pass through; stale protected sessions renew with the
-  // refresh credential before downstream server components read the cookie.
-  assert.match(proxy, /if \(!isProtectedPath\(pathname\)\) return NextResponse\.next\(\)/);
+  // Public requests also pass through after an opportunistic refresh; stale
+  // protected sessions renew before downstream server components read cookies.
+  assert.match(proxy, /const isProtected = isProtectedPath\(pathname\)/);
+  assert.match(proxy, /if \(accessToken \|\| !isProtected\) return NextResponse\.next\(\)/);
   assert.match(proxy, /refreshSession\(refreshToken\)/);
-  assert.match(proxy, /if \(accessToken\) return NextResponse\.next\(\)/);
 
   // The redirect must be built from the request origin, not a hardcoded host.
   assert.match(proxy, /request\.nextUrl\.origin/);
@@ -75,19 +73,17 @@ test("the matcher covers the protected subtrees and nothing static", () => {
   const proxy = source("proxy.ts");
 
   assert.match(proxy, /matcher: \[/);
-  for (const route of ["/speakers/:path*", "/speaker-invitations/:path*"]) {
-    assert.ok(proxy.includes(route), `matcher must include ${route}`);
-  }
+  assert.match(proxy, /_next\/static/);
+  assert.match(proxy, /_next\/image/);
+  assert.match(proxy, /isProtectedPath\(pathname\)/);
 
   // Static assets and API routes must never be intercepted, or the guard could
   // block the very JS/CSS needed to render the login page.
-  assert.doesNotMatch(proxy, /matcher[^\]]*_next\/static/);
-  assert.doesNotMatch(proxy, /matcher[^\]]*\/api\//);
+  assert.match(proxy, /\(\?!api\|_next\/static\|_next\/image/);
 });
 
 test("the guarded pages still verify the session server-side", () => {
-  // Defence in depth: the middleware is the optimistic gate, the pages are the
-  // authoritative check. Both must hold for the speaker routes.
+  // The directory renders for everyone; compose and chat verify their sessions.
   assert.match(source("app/(app)/speakers/page.tsx"), /SpeakersView/);
   assert.match(source("app/(app)/speaker-invitations/page.tsx"), /SpeakerInvitationsView/);
 

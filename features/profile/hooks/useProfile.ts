@@ -30,6 +30,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [isChatOpening, setIsChatOpening] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [narrativePosts, setNarrativePosts] = useState<FeedPost[]>(profile.narrativePosts);
+  const [latestNarrativePageStart, setLatestNarrativePageStart] = useState(0);
   const [nextNarrativeCursor, setNextNarrativeCursor] = useState(profile.nextNarrativeCursor ?? null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreFailed, setLoadMoreFailed] = useState(false);
@@ -180,9 +181,12 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       });
       if (!response.ok) throw new Error("Profile narratives request failed");
       const page = await response.json() as { posts: FeedPost[]; nextCursor: string | null };
+      const knownIds = new Set(narrativePosts.map((post) => post.id));
+      const freshPosts = page.posts.filter((post) => !knownIds.has(post.id));
+      setLatestNarrativePageStart(narrativePosts.length);
       setNarrativePosts((current) => {
         const seen = new Set(current.map((post) => post.id));
-        return [...current, ...page.posts.filter((post) => !seen.has(post.id))];
+        return [...current, ...freshPosts.filter((post) => !seen.has(post.id))];
       });
       setLikedNarrativeIds((current) => {
         const next = new Set(current);
@@ -196,7 +200,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       loadingMoreRef.current = false;
       setIsLoadingMore(false);
     }
-  }, [canManage, nextNarrativeCursor, profile.actorId, profile.identity, targetActorType]);
+  }, [canManage, narrativePosts, nextNarrativeCursor, profile.actorId, profile.identity, targetActorType]);
 
   const saveUserDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
     if (!requireAuth("/profile/edit")) return;
@@ -238,6 +242,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   return {
     profile,
     narrativePosts,
+    latestNarrativePageStart,
     nextNarrativeCursor,
     isLoadingMore,
     loadMoreFailed,

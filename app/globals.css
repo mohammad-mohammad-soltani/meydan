@@ -815,3 +815,13 @@ html.dark {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Fullscreen has its own viewport; discard the fitted lightbox/card bounds. */
+.media-video-player:fullscreen {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  aspect-ratio: auto !important;
+  border: 0;
+  border-radius: 0;
+}

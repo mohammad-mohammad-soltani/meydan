@@ -18,7 +18,10 @@ const exists = (relative) => existsSync(path.join(root, relative));
 test("the proxy matcher covers the admin subtree", () => {
   const proxy = source("proxy.ts");
 
-  assert.match(proxy, /["']\/admin\/:path\*["']/);
+  // The shared document matcher covers /admin; the runtime guard still uses
+  // the protected route policy to decide whether to redirect.
+  assert.match(proxy, /isProtectedPath\(pathname\)/);
+  assert.match(source("lib/protected-routes.ts"), /"\/admin"/);
 });
 
 test("speaker promotion searches accounts and never overwrites their identity", () => {

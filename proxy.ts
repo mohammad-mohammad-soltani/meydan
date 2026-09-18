@@ -61,8 +61,7 @@ function requestWithAccessToken(request: NextRequest, accessToken: string): Head
  */
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-
-  if (!isProtectedPath(pathname)) return NextResponse.next();
+  const isProtected = isProtectedPath(pathname);
 
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
@@ -90,8 +89,9 @@ export async function proxy(request: NextRequest) {
 
   // An older access cookie may still be valid if the expiry marker was absent
   // (for example, immediately after deploying this change). Let the backend
-  // decide rather than treating the cookie migration as a logout.
-  if (accessToken) return NextResponse.next();
+  // decide rather than treating the cookie migration as a logout. Public
+  // pages must also remain available to guests when no session exists.
+  if (accessToken || !isProtected) return NextResponse.next();
 
   const loginUrl = new URL(
     loginHref(returnToFrom(pathname, search)),
@@ -102,16 +102,11 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   /**
-   * Only the protected prefixes run the guard. Static assets, API routes and
-   * image optimisation are excluded, so the middleware can never block CSS,
-   * JS or media from loading.
+   * Run on document/app requests so a valid refresh credential can restore a
+   * session before public pages render. API routes, static assets and files
+   * with extensions are excluded because they have their own lifecycle.
    */
   matcher: [
-    "/speakers/:path*",
-    "/speaker-invitations/:path*",
-    "/compose/:path*",
-    "/chat/:path*",
-    "/profile/:path*",
-    "/admin/:path*",
+    "/((?!api|_next/static|_next/image|.*\\.[^.]+$).*)",
   ],
 };

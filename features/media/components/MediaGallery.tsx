@@ -16,6 +16,7 @@ import { MediaAudioCard } from "./MediaAudioCard";
 import { MediaFileCard } from "./MediaFileCard";
 import { MediaLightbox } from "./MediaLightbox";
 import { VideoPlayer } from "./VideoPlayer";
+import { VideoPreview } from "./VideoPreview";
 
 /** X shows at most four tiles; the rest are summarised on the last one. */
 const MAX_TILES = 4;
@@ -69,6 +70,11 @@ export function MediaGallery({
   const shown = visuals.slice(0, MAX_TILES);
   const hiddenCount = visuals.length - shown.length;
   const layout = TILE_LAYOUTS[Math.min(visuals.length, MAX_TILES)];
+  const pairedVideos = shown.length === 2 && shown.every((item) => item.kind === "video");
+  const pairRatio = pairedVideos ? shown.reduce((sum, item) => {
+    const ratio = item.width && item.height ? item.width / item.height : naturalRatios[item.id] ?? 9 / 16;
+    return sum + Math.min(16 / 9, Math.max(9 / 16, ratio));
+  }, 0) : undefined;
   const isBubble = tone === "bubble";
   const frameRadius = isBubble ? "rounded-xl" : "rounded-2xl";
   const tileRadius = isBubble ? "rounded-lg" : "rounded-none";
@@ -125,7 +131,7 @@ export function MediaGallery({
           </button>
         )
       ) : visuals.length > 1 && layout ? (
-        <div className={`ui-enter grid gap-1 overflow-hidden ${frameRadius} ${layout.grid} ${layout.container}`}>
+        <div className={`ui-enter grid gap-1 overflow-hidden ${frameRadius} ${layout.grid} ${pairedVideos ? "" : layout.container}`} style={pairRatio ? { aspectRatio: pairRatio } : undefined}>
           {shown.map((item, index) => (
             <button
               key={item.id}
@@ -135,29 +141,12 @@ export function MediaGallery({
               className={`group/tile relative min-h-0 overflow-hidden bg-surface-sunken ${layout.tiles[index] ?? ""} ${tileRadius}`}
             >
               {item.kind === "video" ? (
-                /*
-                 * A tile only opens the lightbox, so it must never mount a
-                 * <video>: preloading metadata for every card is what made a
-                 * timeline fetch file heads and tails for clips nobody watched.
-                 * The still appears once the backend serves a poster; until
-                 * then the dark tile and play badge are the affordance.
-                 */
                 <>
-                  {item.poster ? (
-                    <Image
-                      src={item.poster}
-                      alt={item.title}
-                      fill
-                      quality={MEDIA_THUMB_QUALITY}
-                      sizes="(max-width: 640px) 50vw, 260px"
-                      className="object-cover"
-                      draggable={false}
-                    />
-                  ) : (
-                    <span aria-hidden="true" className="absolute inset-0 bg-black" />
-                  )}
+                  <VideoPreview key={item.src} item={item} onRatio={(ratio) => {
+                    setNaturalRatios((current) => current[item.id] === ratio ? current : { ...current, [item.id]: ratio });
+                  }} />
                   <span aria-hidden="true" className="absolute inset-0 grid place-items-center bg-black/25">
-                    <span className="grid h-11 w-11 place-items-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+                    <span className="grid h-11 w-11 place-items-center rounded-full border border-white/25 bg-white/15 text-white shadow-lg backdrop-blur-md transition-transform group-hover/tile:scale-110">
                       <Play className="ml-0.5 h-5 w-5 fill-current" />
                     </span>
                   </span>

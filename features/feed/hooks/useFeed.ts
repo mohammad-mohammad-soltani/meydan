@@ -54,7 +54,7 @@ export function useFeed(
   initialNextCursor: string | null = null,
   initialPageReady = true,
 ) {
-  const { requireAuth } = useAuthGate();
+  const { isAuthenticated, requireAuth } = useAuthGate();
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
   const [remotePosts, setRemotePosts] = useState(initialPosts);
@@ -62,7 +62,7 @@ export function useFeed(
   const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
   const [followedActorKeys, setFollowedActorKeys] = useState<Set<string>>(() => new Set());
   const [pendingFollowKeys, setPendingFollowKeys] = useState<Set<string>>(() => new Set());
-  const [followStateReady, setFollowStateReady] = useState(false);
+  const [followStateReady, setFollowStateReady] = useState(() => !isAuthenticated);
   const [followingRequiresAuth, setFollowingRequiresAuth] = useState(false);
   const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.joined).map((post) => post.id)));
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
@@ -146,6 +146,8 @@ export function useFeed(
   }, []);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     let active = true;
     void getViewerFollowing()
       .then((actors) => {
@@ -164,7 +166,7 @@ export function useFeed(
         if (active) setFollowStateReady(true);
       });
     return () => { active = false; };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const isInitialTimeline = activeTab === "for-you" && activeFilter === "all";

@@ -71,9 +71,8 @@ export function useInfiniteScroll({
 
     const check = () => {
       frame = 0;
-      const remaining = root
-        ? root.scrollHeight - root.scrollTop - root.clientHeight
-        : document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+      const remaining = sentinel.getBoundingClientRect().top -
+        (root ? root.getBoundingClientRect().bottom : window.innerHeight);
       if (remaining <= threshold) onLoadMoreRef.current();
     };
 

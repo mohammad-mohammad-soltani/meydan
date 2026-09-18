@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { ArrowRight, Inbox, Mic } from "lucide-react";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { SpeakerCard } from "./SpeakerCard";
 import { SpeakersFilters } from "./SpeakersFilters";
 import { SpeakersSearch } from "./SpeakersSearch";
@@ -23,6 +24,7 @@ export function SpeakersView({
   /** The inviting square's own address, previewed in the composer. */
   venue?: string;
 }) {
+  const { isAuthenticated } = useAuthGate();
   const speakers = useSpeakers(initialSpeakers, categories);
   const shown = speakers.speakers.length;
 
@@ -46,13 +48,15 @@ export function SpeakersView({
               {initialSpeakers.length.toLocaleString("fa-IR")} سخنران در فهرست · جستجو بر اساس نام، موضوع یا شهر
             </p>
           </div>
-          <Link
-            href={"/speaker-invitations" as Route}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-brand-border bg-surface px-3 py-1.5 text-[10px] font-black text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
-          >
-            <Inbox aria-hidden="true" className="h-3.5 w-3.5" />
-            دعوت‌های من
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              href={"/speaker-invitations" as Route}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-brand-border bg-surface px-3 py-1.5 text-[10px] font-black text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
+            >
+              <Inbox aria-hidden="true" className="h-3.5 w-3.5" />
+              دعوت‌های من
+            </Link>
+          ) : null}
         </div>
       </header>
 

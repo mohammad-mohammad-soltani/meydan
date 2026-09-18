@@ -9,11 +9,10 @@
 /**
  * Prefixes whose whole subtree is protected. A page is protected when its
  * pathname equals a prefix or continues past it at a `/` boundary, so
- * `/speakers` and `/speakers/anything` are both guarded while `/speakers-archive`
- * is not.
+ * `/speaker-invitations` and its descendants are guarded while the public
+ * `/speakers` directory remains available to guests.
  */
 export const PROTECTED_ROUTE_PREFIXES = [
-  "/speakers",
   "/speaker-invitations",
   "/compose",
   "/chat",

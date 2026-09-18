@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
@@ -19,6 +20,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { VideoPreview } from "./VideoPreview";
 import type { MediaItem } from "../types";
 import {
   clamp,
@@ -103,6 +105,9 @@ export function VideoPlayer({
   const progressRef = useRef<HTMLDivElement>(null);
   const seekingRef = useRef(false);
 
+  const [hasFrame, setHasFrame] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const hideControlsRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -159,6 +164,22 @@ export function VideoPlayer({
 
     setCurrentTime(Number.isFinite(video.currentTime) ? video.currentTime : 0);
     setRate(video.playbackRate || 1);
+  };
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    const timeout = setTimeout(() => setControlsVisible(false), 2600);
+    return () => clearTimeout(timeout);
+  }, [isPlaying]);
+
+  useEffect(() => () => {
+    if (hideControlsRef.current) clearTimeout(hideControlsRef.current);
+  }, []);
+
+  const revealControls = () => {
+    setControlsVisible(true);
+    if (hideControlsRef.current) clearTimeout(hideControlsRef.current);
+    hideControlsRef.current = setTimeout(() => setControlsVisible(false), 2600);
   };
 
   const togglePlayback = async () => {
@@ -432,18 +453,23 @@ export function VideoPlayer({
       tabIndex={0}
       role="group"
       aria-label={item.title || "پخش‌کننده ویدیو"}
-      className={`group/video pointer-events-auto relative overflow-hidden bg-black outline-none ${
+      className={`media-video-player group/video pointer-events-auto relative mx-auto overflow-hidden bg-black outline-none [container-type:inline-size] ${
         isImmersive
-          ? "h-full w-full"
+          ? "rounded-2xl border border-white/10 shadow-[0_24px_100px_#0008]"
           : `w-full rounded-2xl border border-border shadow-sm ${className}`
       }`}
-      style={isImmersive ? undefined : {
+      style={{
         aspectRatio,
-        maxWidth: aspectRatio < 1 ? `min(100%, ${aspectRatio * 80}dvh)` : undefined,
-      }}
+        "--video-ratio": aspectRatio,
+        width: isImmersive ? `min(100cqw, calc(100cqh * ${aspectRatio}))` : "100%",
+        maxWidth: !isImmersive && aspectRatio < 1 ? `min(100%, ${aspectRatio * 72}dvh)` : undefined,
+      } as CSSProperties}
+      onPointerMove={revealControls}
+      onFocus={revealControls}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => {
         event.stopPropagation();
+        if ((event.target as HTMLElement).closest("button, [role=slider]")) return;
 
         // X-style double tap: rewind on the left side, fast-forward on the right.
         const rect = wrapperRef.current?.getBoundingClientRect();
@@ -464,8 +490,12 @@ export function VideoPlayer({
 
         void toggleFullscreen();
       }}
-      onPointerDown={() => wrapperRef.current?.focus({ preventScroll: true })}
+      onPointerDown={(event) => {
+        revealControls();
+        if (!(event.target as HTMLElement).closest("button, input, [role=slider]")) wrapperRef.current?.focus({ preventScroll: true });
+      }}
       onKeyDown={(event) => {
+        if ((event.target as HTMLElement).closest("button, input, select, [role=slider]")) return;
         const key = event.key;
         if (key === " " || key === "k" || key === "K") {
           event.preventDefault();
@@ -508,7 +538,7 @@ export function VideoPlayer({
           void togglePlayback();
         }}
         onLoadedMetadata={(event) => syncVideoMetrics(event.currentTarget)}
-        onLoadedData={(event) => syncVideoMetrics(event.currentTarget)}
+        onLoadedData={(event) => { setHasFrame(true); syncVideoMetrics(event.currentTarget); }}
         onResize={(event) => syncVideoMetrics(event.currentTarget)}
         onDurationChange={(event) => syncDuration(event.currentTarget)}
         onProgress={(event) => {
@@ -550,6 +580,12 @@ export function VideoPlayer({
         }}
       />
 
+      {!hasFrame && !isPlaying && !item.poster && !hasError ? (
+        <span className="pointer-events-none absolute inset-0">
+          <VideoPreview key={source} item={item} onRatio={(ratio) => setDecodedRatio({ source: source || "", ratio })} />
+        </span>
+      ) : null}
+
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
@@ -572,7 +608,7 @@ export function VideoPlayer({
             event.stopPropagation();
             void togglePlayback();
           }}
-          className="absolute inset-0 z-30 m-auto grid h-14 w-14 place-items-center rounded-full bg-black/60 text-white shadow-xl backdrop-blur-md transition hover:scale-105 hover:bg-black/70 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90"
+          className="absolute inset-0 z-30 m-auto grid h-16 w-16 place-items-center rounded-full border border-white/25 bg-white/15 text-white shadow-xl backdrop-blur-md transition hover:scale-105 hover:bg-black/70 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90"
         >
           <Play aria-hidden="true" className="ml-0.5 h-6 w-6 fill-current" />
         </button>
@@ -581,9 +617,9 @@ export function VideoPlayer({
       {!hasError ? (
         <div
           dir="ltr"
-          className={`absolute inset-x-0 bottom-0 z-40 px-3 pb-2.5 pt-7 transition-opacity duration-200 ${
-            isPlaying && !isSeeking
-              ? "opacity-0 group-hover/video:opacity-100 group-focus-within/video:opacity-100"
+          className={`absolute inset-x-0 bottom-0 z-40 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-3 pb-3 pt-8 transition-opacity duration-200 ${
+            isPlaying && !isSeeking && !controlsVisible
+              ? "pointer-events-none opacity-0 focus-within:pointer-events-auto focus-within:opacity-100"
               : "opacity-100"
           }`}
           onClick={(event) => event.stopPropagation()}
@@ -596,6 +632,7 @@ export function VideoPlayer({
             aria-valuemin={0}
             aria-valuemax={Math.round(duration)}
             aria-valuenow={Math.round(currentTime)}
+            aria-valuetext={`${formatClock(currentTime)} از ${formatClock(duration)}`}
             className="relative mb-2 h-5 w-full cursor-pointer touch-none select-none focus-visible:outline-none"
             onPointerDown={(event) => {
               event.preventDefault();
@@ -646,13 +683,13 @@ export function VideoPlayer({
               }
             }}
           >
-            <span className="pointer-events-none absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/35" />
+            <span className="pointer-events-none absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/35" />
             <span
-              className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/25"
+              className="pointer-events-none absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/25"
               style={{ width: `${bufferedProgress}%` }}
             />
             <span
-              className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white"
+              className="pointer-events-none absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-red-500"
               style={{ width: `${progress}%` }}
             />
             <span
@@ -663,7 +700,7 @@ export function VideoPlayer({
             />
           </div>
 
-          <div className="flex h-8 items-center gap-1.5 text-white">
+          <div className="flex min-h-9 items-center gap-1 text-white">
             <button
               type="button"
               aria-label={isPlaying ? "توقف موقت ویدیو" : "پخش ویدیو"}
@@ -672,7 +709,7 @@ export function VideoPlayer({
                 event.stopPropagation();
                 void togglePlayback();
               }}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             >
               {isPlaying ? (
                 <Pause aria-hidden="true" className="h-[18px] w-[18px] fill-current" />
@@ -689,7 +726,7 @@ export function VideoPlayer({
                 event.stopPropagation();
                 skip(-SKIP_SECONDS);
               }}
-              className="hidden h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:grid"
+              className="hidden h-9 w-9 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 @[360px]:grid"
             >
               <RotateCcw aria-hidden="true" className="h-[18px] w-[18px]" />
             </button>
@@ -702,12 +739,12 @@ export function VideoPlayer({
                 event.stopPropagation();
                 skip(SKIP_SECONDS);
               }}
-              className="hidden h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:grid"
+              className="hidden h-9 w-9 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 @[360px]:grid"
             >
               <RotateCw aria-hidden="true" className="h-[18px] w-[18px]" />
             </button>
 
-            <span className="shrink-0 text-[12px] font-medium tabular-nums text-white/95">
+            <span className="shrink-0 text-[11px] font-medium tabular-nums text-white/95">
               {formatClock(currentTime)} / {formatClock(duration)}
             </span>
 
@@ -721,7 +758,7 @@ export function VideoPlayer({
                 event.stopPropagation();
                 cycleRate();
               }}
-              className="hidden h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-black tabular-nums transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:flex"
+              className="hidden h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-black tabular-nums transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 @[420px]:flex"
             >
               {faDigits(String(rate))}×
             </button>
@@ -734,7 +771,7 @@ export function VideoPlayer({
                 event.stopPropagation();
                 toggleMute();
               }}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             >
               {isMuted ? (
                 <VolumeX aria-hidden="true" className="h-[18px] w-[18px]" />
@@ -752,7 +789,7 @@ export function VideoPlayer({
                   event.stopPropagation();
                   void togglePictureInPicture();
                 }}
-                className="hidden h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:grid"
+                className="hidden h-9 w-9 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 @[360px]:grid"
               >
                 <PictureInPicture2 aria-hidden="true" className="h-[18px] w-[18px]" />
               </button>
@@ -766,7 +803,7 @@ export function VideoPlayer({
                 event.stopPropagation();
                 void toggleFullscreen();
               }}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition hover:bg-white/15 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             >
               <Maximize2 aria-hidden="true" className="h-[18px] w-[18px]" />
             </button>
@@ -782,6 +819,10 @@ export function VideoPlayer({
             <p className="mt-1 text-xs text-white/65">
               فایل ویدیو در دسترس نیست یا مرورگر نتوانست آن را پخش کند.
             </p>
+            <button type="button" className="mt-4 rounded-full border border-white/25 px-5 py-2 text-sm hover:bg-white/10"
+              onClick={() => { setHasError(false); setIsWaiting(true); videoRef.current?.load(); }}>
+              تلاش دوباره
+            </button>
           </div>
         </div>
       ) : null}
