@@ -169,7 +169,7 @@ export function creatorBody(input: CreatorInput): Record<string, unknown> {
     handle: input.handle.trim(),
     expertise: input.expertise.trim(),
     initials: input.initials.trim(),
-    avatar_media_id: input.avatarMediaId ?? 0,
+    ...(input.avatarMediaId !== null ? { avatar_media_id: input.avatarMediaId } : {}),
     verified: input.verified,
     cities: input.cities,
     social_links: input.socialLinks,
@@ -193,7 +193,7 @@ export async function deleteCreator(id: string, init?: RequestInit): Promise<voi
 export function outletBody(input: MediaOutletInput): Record<string, unknown> {
   return {
     name: input.name.trim(),
-    avatar_media_id: input.avatarMediaId ?? 0,
+    ...(input.avatarMediaId !== null ? { avatar_media_id: input.avatarMediaId } : {}),
     website: input.website.trim(),
     bale: input.bale.trim(),
     eitaa: input.eitaa.trim(),

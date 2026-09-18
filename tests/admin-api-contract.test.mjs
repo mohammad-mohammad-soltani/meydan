@@ -43,6 +43,35 @@ test("admin writes mint a fresh idempotency key per request", () => {
   }
 });
 
+test("bodyless admin deletes use DELETE rather than the fetch default GET", () => {
+  const api = source(SERVICE.api);
+  const start = api.indexOf("export async function adminDelete");
+  assert.ok(start >= 0);
+  const helper = api.slice(start, start + 550);
+  assert.match(helper, /body === undefined\s*\?\s*\{ method: "DELETE"/);
+  assert.match(helper, /jsonInit\("DELETE", body\)/);
+});
+
+test("speaker saves preserve the existing avatar when no replacement was selected", () => {
+  const speakers = source(SERVICE.speakers);
+  const start = speakers.indexOf("function speakerProfileBody");
+  assert.ok(start >= 0);
+  const body = speakers.slice(start, start + 450);
+  assert.match(body, /input\.avatarMediaId !== null \? \{ avatar_media_id: input\.avatarMediaId \}/);
+  assert.doesNotMatch(body, /avatar_media_id: input\.avatarMediaId \?\? 0/);
+});
+
+test("creator and media outlet edits preserve an untouched avatar", () => {
+  const creators = source(SERVICE.creators);
+  for (const name of ["creatorBody", "outletBody"]) {
+    const start = creators.indexOf(`export function ${name}`);
+    assert.ok(start >= 0);
+    const body = creators.slice(start, start + 600);
+    assert.match(body, /input\.avatarMediaId !== null \? \{ avatar_media_id: input\.avatarMediaId \}/);
+    assert.doesNotMatch(body, /avatar_media_id: input\.avatarMediaId \?\? 0/);
+  }
+});
+
 test("the square create body uses the API's own field names", () => {
   const squares = source(SERVICE.squares);
 
@@ -103,6 +132,15 @@ test("the speaker surfaces use the promote/demote routes, not user edits", () =>
   assert.match(speakers, /per_page: perPage/);
   assert.match(speakers, /page: metaInt\(meta, \["page"\], page\)/);
   assert.match(speakers, /SPEAKER_REQUEST_LIST_CAP\s*=\s*100/);
+});
+
+test("invitation details read the shared request GET route", () => {
+  const speakers = source(SERVICE.speakers);
+  const start = speakers.indexOf("export async function getSpeakerInvitation(");
+  assert.ok(start >= 0);
+  const body = speakers.slice(start, start + 400);
+  assert.match(body, /return getSpeakerRequest\(id, init\)/);
+  assert.doesNotMatch(body, /adminGetItem.*speaker-invitations/);
 });
 
 test("direct speaker creation remains an admin-only atomic backend operation", () => {

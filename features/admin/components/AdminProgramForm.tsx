@@ -428,7 +428,7 @@ export function AdminProgramForm({ kind, program }: { kind: ProgramKind; program
                 setDeleteError(null);
                 setDeleteOpen(true);
               }}
-              className="inline-flex min-h-10 items-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-danger-foreground transition-colors hover:opacity-90"
+              className="inline-flex min-h-10 items-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-danger-solid-foreground transition-colors hover:opacity-90"
             >
               <Trash2 aria-hidden="true" className="h-4 w-4" />
               حذف

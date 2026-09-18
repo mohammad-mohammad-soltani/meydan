@@ -68,6 +68,7 @@ export function AdminSquareCreateForm() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
 
   const input: SquareCreateInput = useMemo(
     () => ({
@@ -107,6 +108,7 @@ export function AdminSquareCreateForm() {
   );
 
   const submit = async () => {
+    if (busy || uploadBusy) return;
     setFormError(null);
     setFieldErrors({});
 
@@ -388,8 +390,8 @@ export function AdminSquareCreateForm() {
           </div>
         </AdminDisclosureSection>
 
-        <AdminDisclosureSection title="تصویر میدان" className="admin-form-side" hasError={Boolean(fieldErrors.avatar_media_id)}>
-          <MediaPickerField id="square-avatar" label="نشان میدان" hint="یک تصویر واضح برای معرفی میدان انتخاب کنید." mediaId={avatarMediaId} onChange={setAvatarMediaId} />
+        <AdminDisclosureSection title="تصویر میدان" className="admin-form-side" defaultOpen hasError={Boolean(fieldErrors.avatar_media_id)}>
+          <MediaPickerField id="square-avatar" label="نشان میدان" hint="یک تصویر واضح برای معرفی میدان انتخاب کنید." mediaId={avatarMediaId} onChange={setAvatarMediaId} onBusyChange={setUploadBusy} />
         </AdminDisclosureSection>
 
         <AdminDisclosureSection
@@ -417,7 +419,7 @@ export function AdminSquareCreateForm() {
         ) : null}
 
         <div className="admin-form-actions">
-          <button type="submit" disabled={busy} className={primaryButtonClass}>
+          <button type="submit" disabled={busy || uploadBusy} className={primaryButtonClass}>
             {busy ? (
               <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
             ) : (
@@ -426,7 +428,7 @@ export function AdminSquareCreateForm() {
             {busy ? "در حال ساخت…" : "ساخت میدان"}
           </button>
           <Link href={"/admin/squares" as Route} className={secondaryButtonClass}>
-            انصراف
+            بازگشت به فهرست
           </Link>
         </div>
       </AdminEditor>

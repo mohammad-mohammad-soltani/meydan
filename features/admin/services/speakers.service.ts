@@ -286,21 +286,16 @@ export async function getSpeakerInvitation(
   id: string,
   init?: RequestInit,
 ): Promise<SpeakerRequest | null> {
-  try {
-    return mapSpeakerRequest(
-      await adminGetItem<ApiSpeakerRequest>(`/admin/speaker-invitations/${segment(id)}`, init),
-    );
-  } catch (reason) {
-    if (isNotFound(reason)) return null;
-    throw reason;
-  }
+  // Both inboxes read the same request table. The invitations alias has a
+  // list and PATCH route, while the canonical requests route owns GET by id.
+  return getSpeakerRequest(id, init);
 }
 
 /* ------------------------------------------------------------------ writes */
 
 function speakerProfileBody(input: SpeakerProfileInput): Record<string, unknown> {
   return {
-    avatar_media_id: input.avatarMediaId ?? 0,
+    ...(input.avatarMediaId !== null ? { avatar_media_id: input.avatarMediaId } : {}),
     verified: input.verified,
     cities: input.cities,
     categories: input.categories,

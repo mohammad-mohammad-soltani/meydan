@@ -110,7 +110,7 @@ export async function adminDelete<T>(
 ): Promise<T> {
   const request: RequestInit =
     body === undefined
-      ? { headers: { "idempotency-key": newIdempotencyKey() } }
+      ? { method: "DELETE", headers: { "idempotency-key": newIdempotencyKey() } }
       : jsonInit("DELETE", body);
   return meydanApi<T>(path, mergeInit(request, init));
 }

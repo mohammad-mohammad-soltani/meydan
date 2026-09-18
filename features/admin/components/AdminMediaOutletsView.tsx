@@ -46,6 +46,7 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
 
   const [pendingDelete, setPendingDelete] = useState<MediaOutlet | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -81,6 +82,7 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
   };
 
   const submit = async () => {
+    if (busy || uploadBusy) return;
     setFormMessage(null);
     setFieldErrors({});
     if (!name.trim()) {
@@ -260,7 +262,7 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
           title={editing === "new" ? "رسانه تازه" : `ویرایش «${editing.name}»`}
           description="برای پیوندها، آدرس کامل با https:// را وارد کنید تا در گزارش‌ها قابل کلیک باشد."
           confirmLabel={editing === "new" ? "ساخت رسانه" : "ذخیره تغییرات"}
-          busy={busy}
+          busy={busy || uploadBusy}
           onConfirm={() => void submit()}
           onClose={() => setEditing(null)}
         >
@@ -313,6 +315,7 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
               mediaId={avatarMediaId}
               currentUrl={editing === "new" ? null : editing.avatarUrl}
               onChange={setAvatarMediaId}
+              onBusyChange={setUploadBusy}
             />
             </AdminDisclosureSection>
           </div>

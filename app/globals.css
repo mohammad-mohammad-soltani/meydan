@@ -263,6 +263,7 @@ html.black .admin-shell {
   --color-warning-border: var(--warning-border);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-danger-solid-foreground: var(--danger-solid-foreground);
   --color-danger-surface: var(--danger-surface);
   --color-danger-border: var(--danger-border);
   --color-info: var(--info);
@@ -376,6 +377,7 @@ html.black .admin-shell {
   --warning-border: #fde68a;
   --danger: #dc2626;
   --danger-foreground: #b91c1c;
+  --danger-solid-foreground: #ffffff;
   --danger-surface: #fef2f2;
   --danger-border: #fecaca;
   --info: #2563eb;
@@ -489,6 +491,7 @@ html.dark {
   --warning-border: rgb(251 191 36 / 0.3);
   --danger: #f87171;
   --danger-foreground: #fca5a5;
+  --danger-solid-foreground: #1f1400;
   --danger-surface: rgb(239 68 68 / 0.12);
   --danger-border: rgb(248 113 113 / 0.32);
   --info: #60a5fa;

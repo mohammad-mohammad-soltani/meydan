@@ -376,7 +376,7 @@ export function buildSquareUpdate(input: SquareFormState): SquareUpdateInput {
     contactName: input.contactName,
     contactPhone: input.contactPhone,
     startDate: input.startDate,
-    avatarMediaId: input.avatarMediaId,
+    ...(input.avatarMediaId !== null ? { avatarMediaId: input.avatarMediaId } : {}),
     eitaaChannel: input.eitaaChannel,
     baleChannel: input.baleChannel,
   };

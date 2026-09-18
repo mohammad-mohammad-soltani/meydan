@@ -48,6 +48,24 @@ test("a 0,0 coordinate is rejected because the API would treat it as absent", as
   assert.equal(parseCoordinate("0"), 0);
 });
 
+test("square edit omits an untouched avatar and includes a replacement", async () => {
+  const { buildSquareUpdate } = await load("features/admin/lib/normalize.ts");
+  const form = {
+    squareName: "میدان",
+    description: "",
+    contactName: "",
+    contactPhone: "",
+    startDate: "",
+    avatarMediaId: null,
+    eitaaChannel: "",
+    baleChannel: "",
+    geoMoved: false,
+    location: { provinceId: null, cityId: null, address: "", latitude: null, longitude: null },
+  };
+  assert.equal("avatarMediaId" in buildSquareUpdate(form), false);
+  assert.equal(buildSquareUpdate({ ...form, avatarMediaId: 712 }).avatarMediaId, 712);
+});
+
 test("schedule rows are cleaned, ordered and stripped of blanks", async () => {
   const { normalizeSchedule } = await load("features/admin/lib/normalize.ts");
 

@@ -89,6 +89,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
 
   const [statusDialog, setStatusDialog] = useState<SquareStatus | null>(null);
@@ -103,6 +104,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
   const geo: GeoValue = form.location;
 
   const save = async () => {
+    if (saving || uploadBusy) return;
     setFieldErrors({});
     setFormError(null);
     setSaved(null);
@@ -169,24 +171,6 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
         title={square.name || `میدان #${square.id}`}
         description={square.location?.address || "نشانی ثبت نشده است."}
         crumbs={[{ label: "میادین", href: "/admin/squares" }, { label: square.name || `#${square.id}` }]}
-        actions={
-          <>
-            <Link href={"/admin/squares" as Route} className={secondaryButtonClass}>
-              بازگشت به فهرست
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setDeleteError(null);
-                setDeleteOpen(true);
-              }}
-              className={dangerButtonClass}
-            >
-              <Trash2 aria-hidden="true" className="h-4 w-4" />
-              حذف میدان
-            </button>
-          </>
-        }
       />
 
       <AdminEditor title="ویرایش اطلاعات میدان" onSubmit={(event) => event.preventDefault()}>
@@ -358,7 +342,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
         </AdminDisclosureSection>
 
         <AdminDisclosureSection title="تصویر میدان" className="admin-form-side" defaultOpen={Boolean(square.avatarUrl)} hasError={Boolean(fieldErrors.avatar_media_id)}>
-          <MediaPickerField id="detail-avatar" label="تغییر نشان میدان" hint="اگر فایلی انتخاب نکنید، تصویر فعلی دست‌نخورده می‌ماند." mediaId={form.avatarMediaId} currentUrl={square.avatarUrl} onChange={(mediaId) => setForm({ ...form, avatarMediaId: mediaId })} />
+          <MediaPickerField id="detail-avatar" label="تغییر نشان میدان" hint="اگر فایلی انتخاب نکنید، تصویر فعلی دست‌نخورده می‌ماند." mediaId={form.avatarMediaId} currentUrl={square.avatarUrl} onChange={(mediaId) => setForm((current) => ({ ...current, avatarMediaId: mediaId }))} onBusyChange={setUploadBusy} />
         </AdminDisclosureSection>
 
         <section aria-label="وضعیت تأیید" className="admin-form-card admin-form-wide space-y-3">
@@ -406,9 +390,24 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
         </section>
 
         <div className="admin-form-actions">
-          <button type="button" onClick={() => void save()} disabled={saving} className={primaryButtonClass}>
+          <button type="button" onClick={() => void save()} disabled={saving || uploadBusy} className={primaryButtonClass}>
             {saving ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Save aria-hidden="true" className="h-4 w-4" />}
             {saving ? "در حال ذخیره…" : "ذخیره تغییرات"}
+          </button>
+          <Link href={"/admin/squares" as Route} className={secondaryButtonClass}>
+            بازگشت به فهرست
+          </Link>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => {
+              setDeleteError(null);
+              setDeleteOpen(true);
+            }}
+            className={dangerButtonClass}
+          >
+            <Trash2 aria-hidden="true" className="h-4 w-4" />
+            حذف میدان
           </button>
         </div>
 

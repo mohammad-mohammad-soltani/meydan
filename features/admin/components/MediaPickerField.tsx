@@ -7,7 +7,7 @@ import { uploadNarrativeFile } from "@/lib/meydan-upload";
 import { AdminField } from "./AdminField";
 import { adminErrorMessage } from "../services/admin-api";
 
-export function MediaPickerField({ id, label, hint, error, purpose = "avatar", mediaId, currentUrl, onChange, disabled = false }: {
+export function MediaPickerField({ id, label, hint, error, purpose = "avatar", mediaId, currentUrl, onChange, onBusyChange, disabled = false }: {
   id: string;
   label: string;
   hint?: string;
@@ -16,6 +16,7 @@ export function MediaPickerField({ id, label, hint, error, purpose = "avatar", m
   mediaId: number | null;
   currentUrl?: string | null;
   onChange: (mediaId: number | null) => void;
+  onBusyChange?: (busy: boolean) => void;
   disabled?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
@@ -38,6 +39,7 @@ export function MediaPickerField({ id, label, hint, error, purpose = "avatar", m
     }
     uploading.current = true;
     setBusy(true);
+    onBusyChange?.(true);
     setLocalError(null);
     setProgress(0);
     try {
@@ -49,6 +51,7 @@ export function MediaPickerField({ id, label, hint, error, purpose = "avatar", m
     } finally {
       uploading.current = false;
       setBusy(false);
+      onBusyChange?.(false);
       if (input.current) input.current.value = "";
     }
   };

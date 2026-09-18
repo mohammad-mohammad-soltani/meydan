@@ -84,6 +84,7 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
   const [message, setMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -112,6 +113,7 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
   const patch = (next: Partial<CreatorInput>) => setForm((current) => ({ ...current, ...next }));
 
   const submit = async () => {
+    if (busy || uploadBusy) return;
     setMessage(null);
     setFieldErrors({});
     if (!form.name.trim()) {
@@ -383,11 +385,12 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
             mediaId={form.avatarMediaId}
             currentUrl={creator?.avatarUrl}
             onChange={(avatarMediaId) => patch({ avatarMediaId })}
+            onBusyChange={setUploadBusy}
           />
         </AdminDisclosureSection>
 
         <div className="admin-form-actions flex flex-wrap items-center gap-2">
-          <button type="submit" disabled={busy} className={primaryButtonClass}>
+          <button type="submit" disabled={busy || uploadBusy} className={primaryButtonClass}>
             {busy ? (
               <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
             ) : (
@@ -405,7 +408,7 @@ export function AdminCreatorForm({ creator }: { creator?: Creator }) {
                 setDeleteError(null);
                 setDeleteOpen(true);
               }}
-              className="inline-flex min-h-10 items-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-danger-foreground transition-colors hover:opacity-90"
+              className="inline-flex min-h-10 items-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-danger-solid-foreground transition-colors hover:opacity-90"
             >
               <Trash2 aria-hidden="true" className="h-4 w-4" />
               حذف تولیدکننده

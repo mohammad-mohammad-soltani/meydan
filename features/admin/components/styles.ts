@@ -25,7 +25,7 @@ export const secondaryButtonClass =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 py-2 text-sm font-bold text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60";
 
 export const dangerButtonClass =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-danger px-4 py-2 text-sm font-black text-danger-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-danger px-4 py-2 text-sm font-black text-danger-solid-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60";
 
 export const chipClass =
   "inline-flex min-h-8 shrink-0 items-center gap-1 rounded-pill border px-2.5 text-[10px] font-black transition-colors";

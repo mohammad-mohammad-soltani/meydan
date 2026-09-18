@@ -13,7 +13,7 @@ import { MediaPickerField } from "./MediaPickerField";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminFieldMessage } from "./AdminFieldMessage";
 import { ChannelFields } from "./ChannelFields";
-import { fa, primaryButtonClass, secondaryButtonClass } from "./styles";
+import { dangerButtonClass, fa, primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
   adminErrorMessage,
   createSpeakerAccount,
@@ -96,6 +96,7 @@ export function AdminSpeakerForm({
   const [categoriesStatus, setCategoriesStatus] = useState<ReferenceStatus>("loading");
   const [errors, setErrors] = useState<SpeakerFormErrors>({ message: null, fields: {} });
   const [busy, setBusy] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [confirmDemote, setConfirmDemote] = useState(false);
   const [demoteError, setDemoteError] = useState<string | null>(null);
@@ -174,6 +175,7 @@ export function AdminSpeakerForm({
   };
 
   const submit = async () => {
+    if (busy || uploadBusy) return;
     setErrors({ message: null, fields: {} });
     if (mode === "create" && !userId) {
       setErrors({ message: "حساب کاربری سخنران را انتخاب کنید.", fields: { user_id: "invalid" } });
@@ -600,20 +602,19 @@ export function AdminSpeakerForm({
         </AdminDisclosureSection>
 
         <AdminDisclosureSection
-          title={mode === "new-account" ? "نشان تأیید" : "تصویر و نشان تأیید"}
+          title="تصویر و نشان تأیید"
           className="admin-speaker-verification"
+          defaultOpen={mode !== "edit" || Boolean(speaker?.avatarUrl)}
           hasError={Boolean(errors.fields.avatar_media_id)}
         >
           <div className="space-y-4">
-            {mode !== "new-account" ? (
-              <MediaPickerField id="speaker-avatar" label="تصویر سخنران" hint="اگر فایلی انتخاب نکنید، تصویر فعلی تغییر نمی‌کند." mediaId={avatarMediaId} currentUrl={speaker?.avatarUrl} onChange={setAvatarMediaId} error={errors.fields.avatar_media_id} />
-            ) : null}
+            <MediaPickerField id="speaker-avatar" label="تصویر سخنران" hint="اگر فایلی انتخاب نکنید، تصویر فعلی تغییر نمی‌کند." mediaId={avatarMediaId} currentUrl={speaker?.avatarUrl} onChange={setAvatarMediaId} onBusyChange={setUploadBusy} error={errors.fields.avatar_media_id} />
             <AdminCheckbox id="speaker-verified" label="دارای نشان تأیید" description="نشان تأیید در نمایه عمومی سخنران نمایش داده می‌شود." checked={verified} onChange={setVerified} />
           </div>
         </AdminDisclosureSection>
 
         <div className="admin-form-actions">
-          <button type="submit" disabled={busy} className={primaryButtonClass}>
+          <button type="submit" disabled={busy || uploadBusy} className={primaryButtonClass}>
             {busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Save aria-hidden="true" className="h-4 w-4" />}
             {busy ? "در حال ذخیره…" : mode === "create" ? "ارتقا به سخنران" : mode === "new-account" ? "ساخت سخنران" : "ذخیره تغییرات"}
           </button>
@@ -627,7 +628,7 @@ export function AdminSpeakerForm({
                 setDemoteError(null);
                 setConfirmDemote(true);
               }}
-              className="inline-flex min-h-10 items-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-danger-foreground transition-colors hover:opacity-90"
+              className={dangerButtonClass}
             >
               <Trash2 aria-hidden="true" className="h-4 w-4" />
               حذف نقش سخنران
