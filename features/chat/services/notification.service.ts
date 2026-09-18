@@ -11,8 +11,8 @@ export async function getNotifications(): Promise<ChatNotification[]> {
     .map(mapApiNotification);
 }
 
-export async function getUnreadNotificationCount(): Promise<number> {
-  const result = await meydanApi<{ count: number }>("/notifications/unread-count");
+export async function getUnreadNotificationCount(background = false): Promise<number> {
+  const result = await meydanApi<{ count: number }>("/notifications/unread-count", { suppressAuthRedirect: background });
   return Math.max(0, Number(result.count || 0));
 }
 

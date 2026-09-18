@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
@@ -30,6 +30,10 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [isChatOpening, setIsChatOpening] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [narrativePosts, setNarrativePosts] = useState<FeedPost[]>(profile.narrativePosts);
+  const [nextNarrativeCursor, setNextNarrativeCursor] = useState(profile.nextNarrativeCursor ?? null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loadMoreFailed, setLoadMoreFailed] = useState(false);
+  const loadingMoreRef = useRef(false);
   const [likedNarrativeIds, setLikedNarrativeIds] = useState<Set<string>>(() => new Set(profile.narrativePosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
   const [isLoading] = useState(false);
   const [isSavingManagement, setIsSavingManagement] = useState(false);
@@ -163,6 +167,37 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     await navigator.clipboard?.writeText(text);
   };
 
+  const loadMore = useCallback(async () => {
+    if (!nextNarrativeCursor || loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    setLoadMoreFailed(false);
+    try {
+      const response = await fetch("/api/profile/narratives", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: targetActorType, id: profile.actorId, identity: profile.identity, cursor: nextNarrativeCursor, own: canManage }),
+      });
+      if (!response.ok) throw new Error("Profile narratives request failed");
+      const page = await response.json() as { posts: FeedPost[]; nextCursor: string | null };
+      setNarrativePosts((current) => {
+        const seen = new Set(current.map((post) => post.id));
+        return [...current, ...page.posts.filter((post) => !seen.has(post.id))];
+      });
+      setLikedNarrativeIds((current) => {
+        const next = new Set(current);
+        for (const post of page.posts) if (post.viewerState?.liked) next.add(post.id);
+        return next;
+      });
+      setNextNarrativeCursor(page.nextCursor);
+    } catch {
+      setLoadMoreFailed(true);
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [canManage, nextNarrativeCursor, profile.actorId, profile.identity, targetActorType]);
+
   const saveUserDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
     if (!requireAuth("/profile/edit")) return;
     setIsSavingManagement(true);
@@ -203,6 +238,10 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   return {
     profile,
     narrativePosts,
+    nextNarrativeCursor,
+    isLoadingMore,
+    loadMoreFailed,
+    loadMore,
     selectedTab,
     expandedSections,
     isFollowing,

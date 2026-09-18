@@ -2,22 +2,28 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { MessageCircle, Sparkles } from "lucide-react";
+import { LoaderCircle, MessageCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { PostCard } from "@/features/feed/components/PostCard";
 import type { FeedPost } from "@/features/feed/types";
 import type { ProfileReply } from "../types";
+import { useInfiniteScroll } from "@/features/feed/hooks/useInfiniteScroll";
 
-type ProfileActivityProps = { posts: FeedPost[]; replies: ProfileReply[]; likedPostIds: Set<string>; onLike: (postId: string) => void; onShare: (post: FeedPost) => void };
+type ProfileActivityProps = { posts: FeedPost[]; replies: ProfileReply[]; likedPostIds: Set<string>; onLike: (postId: string) => void; onShare: (post: FeedPost) => void; hasMore: boolean; isLoadingMore: boolean; loadMoreFailed: boolean; onLoadMore: () => void };
 type ProfileFeedTab = "posts" | "replies" | "media";
 
 const tabs: Array<{ id: ProfileFeedTab; label: string }> = [{ id: "posts", label: "روایت‌ها" }, { id: "replies", label: "پاسخ‌ها" }, { id: "media", label: "رسانه" }];
 
-export function ProfileActivity({ posts, replies, likedPostIds, onLike, onShare }: ProfileActivityProps) {
+export function ProfileActivity({ posts, replies, likedPostIds, onLike, onShare, hasMore, isLoadingMore, loadMoreFailed, onLoadMore }: ProfileActivityProps) {
   const [activeTab, setActiveTab] = useState<ProfileFeedTab>("posts");
+  const sentinelRef = useInfiniteScroll({
+    enabled: activeTab !== "replies" && hasMore && !isLoadingMore && !loadMoreFailed,
+    onLoadMore,
+    revision: posts.length,
+  });
   const visiblePosts = activeTab === "media" ? posts.filter((post) => post.attachments.some((attachment) => attachment.icon === "image" || attachment.icon === "video")) : posts;
   const emptyLabel = activeTab === "media" ? "هنوز رسانه‌ای منتشر نشده" : "هنوز روایتی منتشر نشده";
-  return <section><div role="tablist" aria-label="محتوای پروفایل" className="sticky top-14 z-20 grid h-14 grid-cols-3 border-b border-divider bg-surface/95 backdrop-blur">{tabs.map((tab) => <button key={tab.id} role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`relative text-sm transition-colors hover:bg-hover ${activeTab === tab.id ? "font-black text-foreground after:absolute after:bottom-0 after:right-1/2 after:h-1 after:w-12 after:translate-x-1/2 after:rounded-full after:bg-brand" : "font-bold text-foreground-subtle"}`}>{tab.label}</button>)}</div>{activeTab === "replies" ? <Replies items={replies} /> : visiblePosts.length === 0 ? <EmptyState label={emptyLabel} /> : visiblePosts.map((post) => <PostCard key={post.id} post={post} liked={likedPostIds.has(post.id)} reposted={false} joined={Boolean(post.viewerState?.joined)} onLike={() => onLike(post.id)} onRepost={() => undefined} onShare={() => void onShare(post)} onJoin={() => undefined} onOpenMedia={() => undefined} />)}</section>;
+  return <section><div role="tablist" aria-label="محتوای پروفایل" className="sticky top-14 z-20 grid h-14 grid-cols-3 border-b border-divider bg-surface/95 backdrop-blur">{tabs.map((tab) => <button key={tab.id} role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`relative text-sm transition-colors hover:bg-hover ${activeTab === tab.id ? "font-black text-foreground after:absolute after:bottom-0 after:right-1/2 after:h-1 after:w-12 after:translate-x-1/2 after:rounded-full after:bg-brand" : "font-bold text-foreground-subtle"}`}>{tab.label}</button>)}</div>{activeTab === "replies" ? <Replies items={replies} /> : <>{visiblePosts.length === 0 && !hasMore ? <EmptyState label={emptyLabel} /> : visiblePosts.map((post) => <PostCard key={post.id} post={post} liked={likedPostIds.has(post.id)} reposted={false} joined={Boolean(post.viewerState?.joined)} onLike={() => onLike(post.id)} onRepost={() => undefined} onShare={() => void onShare(post)} onJoin={() => undefined} onOpenMedia={() => undefined} />)}<div ref={sentinelRef} className="min-h-px px-4 py-5">{isLoadingMore ? <p role="status" className="flex items-center justify-center gap-2 text-xs text-foreground-subtle"><LoaderCircle className="h-4 w-4 animate-spin" />در حال بارگذاری روایت‌های بیشتر…</p> : loadMoreFailed ? <div className="flex flex-col items-center gap-3 text-xs text-foreground-subtle"><p>بارگذاری روایت‌های بیشتر ناموفق بود.</p><button type="button" onClick={onLoadMore} className="rounded-pill border border-border px-4 py-2 font-black">تلاش دوباره</button></div> : hasMore ? <button type="button" onClick={onLoadMore} className="mx-auto block rounded-pill border border-border px-4 py-2 text-xs font-black">بارگذاری بیشتر</button> : posts.length > 0 ? <p className="text-center text-xs text-foreground-subtle">به پایان روایت‌ها رسیدید.</p> : null}</div></>}</section>;
 }
 
 function Replies({ items }: { items: ProfileReply[] }) {

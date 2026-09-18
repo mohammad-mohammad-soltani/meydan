@@ -1,4 +1,4 @@
-import { compactFa, meydanApi, plainText } from "@/lib/meydan-api";
+import { compactFa, meydanApi, meydanApiPage, plainText } from "@/lib/meydan-api";
 import { accessTokenHeader } from "@/lib/meydan-session";
 import type { FeedAttachment, FeedPost } from "@/features/feed/types";
 import type {
@@ -872,6 +872,23 @@ function mapUser(
   };
 }
 
+export async function getProfileNarrativePage(
+  type: "user" | "square",
+  id: number,
+  identity: ProfileDetails["identity"],
+  cursor?: string | null,
+  own = false,
+): Promise<{ posts: FeedPost[]; nextCursor: string | null }> {
+  const params = new URLSearchParams({ limit: "20" });
+  if (cursor) params.set("cursor", cursor);
+  const path = own ? "/me/narratives" : `/${type === "square" ? "squares" : "users"}/${id}/narratives`;
+  const page = await meydanApiPage<ApiNarrative[]>(`${path}?${params}`, own ? { headers: await accessTokenHeader() } : undefined);
+  return {
+    posts: page.data.map((item) => mapNarrativePost(item, identity)),
+    nextCursor: page.nextCursor,
+  };
+}
+
 async function authenticatedProfile(): Promise<ProfileDetails | null> {
   const headers =
     await accessTokenHeader();
@@ -889,21 +906,15 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
         },
       );
 
-    let narratives:
-      ApiNarrative[] = [];
+    let narrativePage = { data: [] as ApiNarrative[], nextCursor: null as string | null };
 
     let replies:
       ApiComment[] = [];
 
     try {
-      narratives =
-        await meydanApi<
-          ApiNarrative[]
-        >("/me/narratives", {
-          headers,
-        });
+      narrativePage = await meydanApiPage<ApiNarrative[]>("/me/narratives?limit=20", { headers });
     } catch {
-      narratives = [];
+      narrativePage = { data: [], nextCursor: null };
     }
 
     const actorId =
@@ -937,22 +948,22 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
     if (
       me.account_type === "user"
     ) {
-      return mapUser(
+      return { ...mapUser(
         me.profile,
-        narratives,
+        narrativePage.data,
         replies,
-      );
+      ), nextNarrativeCursor: narrativePage.nextCursor };
     }
 
     if (
       me.account_type === "speaker"
     ) {
-      return mapUser(
+      return { ...mapUser(
         me.profile,
-        narratives,
+        narrativePage.data,
         replies,
         me.speaker || null,
-      );
+      ), nextNarrativeCursor: narrativePage.nextCursor };
     }
 
     if (!me.square) {
@@ -973,12 +984,12 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
       mediaReflectionCount = 0;
     }
 
-    return mapSquare(
+    return { ...mapSquare(
       me.square,
-      narratives,
+      narrativePage.data,
       replies,
       mediaReflectionCount,
-    );
+    ), nextNarrativeCursor: narrativePage.nextCursor };
   } catch {
     return null;
   }
@@ -1013,8 +1024,8 @@ export async function getPublicProfileDetails(
           `/squares/${id}`,
         ),
 
-        meydanApi<ApiNarrative[]>(
-          `/squares/${id}/narratives`,
+        meydanApiPage<ApiNarrative[]>(
+          `/squares/${id}/narratives?limit=20`,
         ),
 
         meydanApi<ApiComment[]>(
@@ -1029,12 +1040,12 @@ export async function getPublicProfileDetails(
         })),
       ]);
 
-      return mapSquare(
+      return { ...mapSquare(
         square,
-        narratives,
+        narratives.data,
         replies,
         reflectionStats.count,
-      );
+      ), nextNarrativeCursor: narratives.nextCursor };
     }
 
     const [
@@ -1046,8 +1057,8 @@ export async function getPublicProfileDetails(
         `/users/${id}`,
       ),
 
-      meydanApi<ApiNarrative[]>(
-        `/users/${id}/narratives`,
+      meydanApiPage<ApiNarrative[]>(
+        `/users/${id}/narratives?limit=20`,
       ),
 
       meydanApi<ApiComment[]>(
@@ -1055,7 +1066,7 @@ export async function getPublicProfileDetails(
       ),
     ]);
 
-    return mapUser(
+    return { ...mapUser(
       {
         id: user.id,
 
@@ -1076,10 +1087,10 @@ export async function getPublicProfileDetails(
           user.actor.verified_speaker,
       },
 
-      narratives,
+      narratives.data,
 
       replies,
-    );
+    ), nextNarrativeCursor: narratives.nextCursor };
   } catch {
     return null;
   }

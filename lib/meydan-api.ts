@@ -31,6 +31,11 @@ export type ApiEnvelopeResult<T> = {
   meta: Record<string, unknown>;
 };
 
+export type MeydanRequestInit = RequestInit & {
+  /** Background reads may fail without navigating away from a public page. */
+  suppressAuthRedirect?: boolean;
+};
+
 type ApiErrorBody = {
   error?: {
     message?: string;
@@ -138,7 +143,8 @@ function redirectClientToLogin(): void {
   window.location.assign(loginHref(returnTo));
 }
 
-function redirectProtectedClientRequest(path: string, init?: RequestInit): void {
+function redirectProtectedClientRequest(path: string, init?: MeydanRequestInit): void {
+  if (init?.suppressAuthRedirect) return;
   if (typeof window === "undefined" || !requiresClientAuthentication(path, init)) return;
   if (document.documentElement.dataset.meydanAuthenticated === "true") return;
 
@@ -169,14 +175,14 @@ export async function meydanApiEnvelope<T>(
  * cursor-based feeds (the timeline) need to request the next page. Every other
  * caller only wants the payload and should keep using `meydanApi`.
  */
-export async function meydanApiPage<T>(path: string, init?: RequestInit): Promise<ApiPage<T>> {
+export async function meydanApiPage<T>(path: string, init?: MeydanRequestInit): Promise<ApiPage<T>> {
   const body = await requestEnvelope<T>(path, init);
   const nextCursor =
     "meta" in body && typeof body.meta?.next_cursor === "string" ? body.meta.next_cursor : null;
   return { data: body.data, nextCursor };
 }
 
-export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T> {
+export async function meydanApi<T>(path: string, init?: MeydanRequestInit): Promise<T> {
   return (await meydanApiPage<T>(path, init)).data;
 }
 
@@ -186,13 +192,14 @@ export async function meydanApi<T>(path: string, init?: RequestInit): Promise<T>
  * from the original single-endpoint implementation; only the structured
  * `error.code`/`error.fields` are new.
  */
-async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<ApiEnvelope<T>> {
+async function requestEnvelope<T>(path: string, init?: MeydanRequestInit): Promise<ApiEnvelope<T>> {
   redirectProtectedClientRequest(path, init);
 
   const base = getMeydanApiBaseUrl();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const { suppressAuthRedirect, ...requestInit } = init ?? {};
   const response = await fetch(url, {
-    ...init,
+    ...requestInit,
     cache: init?.cache ?? "no-store",
     headers: {
       Accept: "application/json",
@@ -217,7 +224,7 @@ async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Api
     if (
       typeof window !== "undefined" &&
       response.status === 401 &&
-      requiresClientAuthentication(path, init)
+      !suppressAuthRedirect && requiresClientAuthentication(path, init)
     ) {
       redirectClientToLogin();
     }

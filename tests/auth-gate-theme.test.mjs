@@ -73,7 +73,7 @@ test("speaker accounts are mapped instead of bounced back to login", () => {
   // unhandled type used to fall through to `null` and redirect to /auth.
   assert.match(service, /account_type:\s*"speaker"/);
   assert.match(service, /me\.account_type === "speaker"/);
-  assert.match(service, /mapUser\(\s*me\.profile,\s*narratives,\s*replies,\s*me\.speaker/);
+  assert.match(service, /mapUser\(\s*me\.profile,\s*narrativePage\.data,\s*replies,\s*me\.speaker/);
   // Replies are keyed on `user|square`: `/actors/{type}` has no `speaker` route.
   assert.doesNotMatch(service, /\/actors\/\$\{me\.account_type\}/);
   assert.match(service, /\/actors\/\$\{actorType\}/);

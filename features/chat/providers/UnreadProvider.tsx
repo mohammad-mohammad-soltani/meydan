@@ -65,7 +65,7 @@ export function UnreadProvider({
     const refresh = async () => {
       const [conversations, notifications] = await Promise.allSettled([
         getConversations(),
-        getUnreadNotificationCount(),
+        getUnreadNotificationCount(true),
       ]);
       if (!active) return;
       if (conversations.status === "fulfilled") {

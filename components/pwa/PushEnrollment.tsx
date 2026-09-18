@@ -77,7 +77,7 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
     }
 
     let cancelled = false;
-    meydanApi<WebPushConfig>("/push/config")
+    meydanApi<WebPushConfig>("/push/config", { suppressAuthRedirect: true })
       .then((value) => {
         if (cancelled) return;
         setConfig(value);

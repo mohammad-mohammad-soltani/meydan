@@ -31,10 +31,11 @@ async function registration(): Promise<ServiceWorkerRegistration> {
   return navigator.serviceWorker.ready;
 }
 
-async function saveSubscription(subscription: PushSubscription): Promise<void> {
+async function saveSubscription(subscription: PushSubscription, background: boolean): Promise<void> {
   const json = subscription.toJSON();
   await meydanApi<{ subscribed: boolean }>("/push/subscriptions", {
     method: "POST",
+    suppressAuthRedirect: background,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       endpoint: subscription.endpoint,
@@ -86,7 +87,7 @@ export async function enableWebPush(config: WebPushConfig, interactive: boolean)
     });
   }
 
-  await saveSubscription(subscription);
+  await saveSubscription(subscription, !interactive);
   return "enabled";
 }
 
