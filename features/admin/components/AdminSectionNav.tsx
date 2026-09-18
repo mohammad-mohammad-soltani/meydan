@@ -18,6 +18,7 @@ import {
   PencilLine,
   Sparkles,
   UserCheck,
+  UsersRound,
   X,
   BarChart3,
   Search,
@@ -32,6 +33,7 @@ const SECTIONS: Section[] = [
   { href: "/admin/squares", label: "میادین", icon: Map },
   { href: "/admin/squares/map", label: "نقشه میادین", icon: Map },
   { href: "/admin/speakers", label: "سخنرانان", icon: Mic },
+  { href: "/admin/users", label: "کاربران", icon: UsersRound },
   {
     href: "/admin/speaker-requests",
     label: "درخواست‌های سخنرانی",
@@ -52,15 +54,15 @@ const SECTIONS: Section[] = [
 ];
 
 const GROUPS = [
-  { label: "میز کار", items: [SECTIONS[0], SECTIONS[4], SECTIONS[5]] },
+  { label: "میز کار", items: [SECTIONS[0], SECTIONS[5], SECTIONS[6]] },
   {
     label: "افراد و میادین",
-    items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[7]],
+    items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[4], SECTIONS[8]],
   },
-  { label: "محتوا و رسانه", items: [SECTIONS[6], SECTIONS[8], SECTIONS[9]] },
+  { label: "محتوا و رسانه", items: [SECTIONS[7], SECTIONS[9], SECTIONS[10]] },
   {
     label: "برنامه‌ها و ارتباطات",
-    items: [SECTIONS[10], SECTIONS[11], SECTIONS[12]],
+    items: [SECTIONS[11], SECTIONS[12], SECTIONS[13]],
   },
 ];
 

@@ -16,6 +16,8 @@ import type {
   SquareStatus,
 } from "../types";
 import { withAdminAuth } from "./admin-request";
+import { getUsers as getUsersRaw, getUser as getUserRaw, getUserRoles as getUserRolesRaw, type UserFilters } from "./users.service";
+import type { AdminUser, AdminUserRole } from "./users.service";
 import {
   getContent as getContentRaw,
   getContentList as getContentListRaw,
@@ -81,6 +83,18 @@ import {
 
 export async function countSquares(status: SquareStatus): Promise<number> {
   return countSquaresRaw(status, await withAdminAuth());
+}
+
+export async function getUsers(filters: UserFilters, page = 1, perPage = 20): Promise<AdminPage<AdminUser>> {
+  return getUsersRaw(filters, page, perPage, await withAdminAuth());
+}
+
+export async function getUser(id: string): Promise<AdminUser> {
+  return getUserRaw(id, await withAdminAuth());
+}
+
+export async function getUserRoles(): Promise<AdminUserRole[]> {
+  return getUserRolesRaw(await withAdminAuth());
 }
 
 export async function getSquare(id: string): Promise<Square | null> {

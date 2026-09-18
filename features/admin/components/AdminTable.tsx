@@ -29,6 +29,7 @@ export function AdminTable<T>({
   rows,
   rowKey,
   onRowClick,
+  rowClassName,
   emptyTitle = "موردی پیدا نشد.",
   emptyDescription,
   emptyIcon,
@@ -38,6 +39,7 @@ export function AdminTable<T>({
   rows: T[];
   rowKey: (row: T, index: number) => string | number;
   onRowClick?: (row: T) => void;
+  rowClassName?: (row: T) => string;
   emptyTitle?: string;
   emptyDescription?: string;
   emptyIcon?: ReactNode;
@@ -82,7 +84,7 @@ export function AdminTable<T>({
               <tr
                 key={rowKey(row, index)}
                 {...interactiveProps(onRowClick, row)}
-                className={`admin-table-row align-middle ${onRowClick ? "cursor-pointer" : ""}`}
+                className={`admin-table-row align-middle ${onRowClick ? "cursor-pointer" : ""} ${rowClassName?.(row) ?? ""}`}
               >
                 {columns.map((column) => (
                   <td
@@ -104,7 +106,7 @@ export function AdminTable<T>({
           <li
             key={rowKey(row, index)}
             {...interactiveProps(onRowClick, row)}
-            className={`admin-table-mobile-card px-3 py-3 ${onRowClick ? "cursor-pointer" : ""}`}
+            className={`admin-table-mobile-card px-3 py-3 ${onRowClick ? "cursor-pointer" : ""} ${rowClassName?.(row) ?? ""}`}
           >
             <div className="min-w-0">{primaryColumn.render(row, index)}</div>
             {cardColumns.length ? (
