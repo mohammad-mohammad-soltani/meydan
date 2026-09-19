@@ -9,7 +9,7 @@
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint",
     "test:map": "node --experimental-strip-types --test tests/map-theme.test.mjs",
-    "test:admin": "node --experimental-strip-types --test tests/admin-normalize.test.mjs tests/admin-api-contract.test.mjs tests/admin-panel-gate.test.mjs"
+    "test:admin": "node --experimental-strip-types --test tests/admin-normalize.test.mjs tests/admin-api-contract.test.mjs tests/admin-panel-gate.test.mjs tests/admin-user-deletion.test.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.22",
