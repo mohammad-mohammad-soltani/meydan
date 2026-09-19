@@ -22,6 +22,7 @@ import {
   BadgeCheck,
   X,
   BarChart3,
+  ListFilter,
   Search,
   ChevronLeft,
 } from "lucide-react";
@@ -53,13 +54,14 @@ const SECTIONS: Section[] = [
   { href: "/admin/campaigns", label: "کمپین‌ها", icon: Newspaper },
   { href: "/admin/notifications", label: "اعلان گروهی", icon: Bell },
   { href: "/admin/officials", label: "رسمی‌ها", icon: BadgeCheck },
+  { href: "/admin/feed", label: "فید", icon: ListFilter },
 ];
 
 const GROUPS = [
   { label: "میز کار", items: [SECTIONS[0], SECTIONS[5], SECTIONS[6]] },
   {
     label: "افراد و میادین",
-    items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[4], SECTIONS[8], SECTIONS[14]],
+    items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[4], SECTIONS[8], SECTIONS[14], SECTIONS[15]],
   },
   { label: "محتوا و رسانه", items: [SECTIONS[7], SECTIONS[9], SECTIONS[10]] },
   {
