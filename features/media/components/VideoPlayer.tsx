@@ -84,6 +84,11 @@ type VideoPlayerProps = {
    */
   preload?: "none" | "metadata" | "auto";
   className?: string;
+  /**
+   * For a single inline landscape video, keep the mobile idle state clean:
+   * only the large centered play button is shown until playback starts.
+   */
+  hideIdleControlsOnMobile?: boolean;
 };
 
 /**
@@ -99,6 +104,7 @@ export function VideoPlayer({
   autoPlay = false,
   preload = "metadata",
   className = "",
+  hideIdleControlsOnMobile = false,
 }: VideoPlayerProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -147,6 +153,8 @@ export function VideoPlayer({
     : videoAspectRatio(item.width, item.height);
   const progress = duration > 0 ? clamp((currentTime / duration) * 100, 0, 100) : 0;
   const bufferedProgress = duration > 0 ? clamp((buffered / duration) * 100, 0, 100) : 0;
+  const hideIdleMobileChrome =
+    hideIdleControlsOnMobile && variant === "inline" && aspectRatio >= 1 && !isPlaying;
 
   const syncDuration = (video: HTMLVideoElement) => {
     const resolved = resolveMediaDuration(video);
@@ -588,7 +596,9 @@ export function VideoPlayer({
 
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-black/75 via-black/25 to-transparent"
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-black/75 via-black/25 to-transparent transition-opacity duration-200 ${
+          hideIdleMobileChrome ? "opacity-0 sm:opacity-100" : "opacity-100"
+        }`}
       />
 
       {isWaiting && !hasError ? (
@@ -618,9 +628,11 @@ export function VideoPlayer({
         <div
           dir="ltr"
           className={`absolute inset-x-0 bottom-0 z-40 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-3 pb-3 pt-8 transition-opacity duration-200 ${
-            isPlaying && !isSeeking && !controlsVisible
-              ? "pointer-events-none opacity-0 focus-within:pointer-events-auto focus-within:opacity-100"
-              : "opacity-100"
+            hideIdleMobileChrome
+              ? "pointer-events-none opacity-0 sm:pointer-events-auto sm:opacity-100"
+              : isPlaying && !isSeeking && !controlsVisible
+                ? "pointer-events-none opacity-0 focus-within:pointer-events-auto focus-within:opacity-100"
+                : "opacity-100"
           }`}
           onClick={(event) => event.stopPropagation()}
         >
