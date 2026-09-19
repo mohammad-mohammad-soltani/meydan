@@ -1,4 +1,4 @@
-import { adminGetEnvelope, adminGetItem, adminPatch, adminPost, query, segment } from "./admin-api";
+import { adminDelete, adminGetEnvelope, adminGetItem, adminPatch, adminPost, query, segment } from "./admin-api";
 import type { AdminPage } from "../types";
 
 export type AdminUser = {
@@ -49,3 +49,13 @@ export type UserInput = Partial<Pick<AdminUser, "full_name" | "phone" | "email" 
 export function createUser(input: UserInput) { return adminPost<AdminUser>("/admin/users", input); }
 export function updateUser(id: number, input: UserInput) { return adminPatch<AdminUser>(`/admin/users/${segment(id)}`, input); }
 export function setUserDisabled(id: number, disabled: boolean) { return adminPatch<AdminUser>(`/admin/users/${segment(id)}/status`, { disabled }); }
+export type DeleteUserResult = {
+  deleted: boolean;
+  permanent: boolean;
+  id: number;
+  purged?: Record<string, number>;
+};
+
+export function deleteUser(id: number) {
+  return adminDelete<DeleteUserResult>(`/admin/users/${segment(id)}`);
+}
