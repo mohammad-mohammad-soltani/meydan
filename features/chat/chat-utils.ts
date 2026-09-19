@@ -1,3 +1,4 @@
+import { canonicalPublicProfileHref, publicProfileHref } from "@/lib/profile-route";
 import type { ChatAttachment, ChatNotification, ChatNotificationKind, ChatUser } from "./types";
 
 export type ChatAttachmentKind = "image" | "video" | "audio" | "file";
@@ -91,7 +92,7 @@ export function collectConversationSharedItems<T extends SearchableMessage>(mess
 export function participantProfileHref(participant: Pick<ChatUser, "id"> & Partial<Pick<ChatUser, "profileType" | "profileId">>): string {
   const type = participant.profileType === "square" ? "square" : "user";
   const id = participant.profileId || participant.id;
-  return `/users/${type}/${id}`;
+  return publicProfileHref(type, id);
 }
 
 export function chatContactHref(conversationId: string | number): string {
@@ -281,7 +282,9 @@ export function getNotificationPresentation(notification: ChatNotification): Not
  */
 export function notificationHref(notification: ChatNotification): string | undefined {
   const link = notification.targetUrl?.trim();
-  if (link && !PLACEHOLDER_LINKS.has(link)) return link;
+  if (link && !PLACEHOLDER_LINKS.has(link)) {
+    return canonicalPublicProfileHref(link);
+  }
 
   const entityId = notification.entityId?.trim();
   const isActorTarget = notification.rawType === "follow" || notification.entityType === "actor";
@@ -289,12 +292,12 @@ export function notificationHref(notification: ChatNotification): string | undef
     const actorId = notificationActorId(notification.actor);
     if (actorId) {
       const kind = notification.actor?.profileType === "square" ? "square" : "user";
-      return `/users/${kind}/${actorId}`;
+      return publicProfileHref(kind, actorId);
     }
   }
   if (notification.entityType === "narrative" && entityId) return `/posts/${entityId}`;
   // Square-scoped notices (verification, rejection) target the square itself.
-  if (notification.entityType === "square" && entityId) return `/users/square/${entityId}`;
+  if (notification.entityType === "square" && entityId) return publicProfileHref("square", entityId);
   return link || undefined;
 }
 
