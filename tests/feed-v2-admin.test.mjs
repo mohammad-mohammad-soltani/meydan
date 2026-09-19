@@ -28,3 +28,18 @@ test("Feed V2 frontend maps settings only and contains no ranking logic", () => 
   assert.doesNotMatch(settings, /log1p|final_score/i);
   assert.match(service, /feedSettingsBody/);
 });
+
+test("Feed V2 has an administrator-only grouped configuration screen", () => {
+  const nav = source("features/admin/components/AdminSectionNav.tsx");
+  const page = source("app/(app)/admin/feed/page.tsx");
+  const view = source("features/admin/components/AdminFeedSettingsView.tsx");
+
+  assert.match(nav, /href: "\/admin\/feed", label: "فید"/);
+  assert.match(page, /if \(!\(await isAdministrator\(\)\)\) return null/);
+  for (const group of ["تعامل کاربران", "نقش کاربران", "محتوای ویژه", "موقعیت مکانی", "تازگی محتوا", "ایندکسینگ", "Diversity", "Candidate Generation"]) {
+    assert.match(view, new RegExp(group));
+  }
+  assert.match(view, /previewFeed/);
+  assert.doesNotMatch(view, /["'`]\/timeline/);
+  assert.doesNotMatch(view, /getTimeline|incrementViewsBulk|recordServed/);
+});
