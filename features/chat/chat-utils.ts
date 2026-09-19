@@ -1,7 +1,19 @@
-import { canonicalPublicProfileHref, publicProfileHref } from "@/lib/profile-route";
 import type { ChatAttachment, ChatNotification, ChatNotificationKind, ChatUser } from "./types";
 
 export type ChatAttachmentKind = "image" | "video" | "audio" | "file";
+
+function publicProfileHref(type: "user" | "square", id: string | number): string {
+  const numericId = String(id).match(/(\d+)$/)?.[1] || "";
+  if (!numericId) return "/";
+  return type === "square" ? `/square/${numericId}` : `/${numericId}`;
+}
+
+function canonicalPublicProfileHref(href: string): string {
+  const value = href.trim();
+  const match = value.match(/^\/(?:users|profile)\/(user|square)\/(\d+)([?#].*)?$/);
+  if (!match) return value;
+  return `${publicProfileHref(match[1] as "user" | "square", match[2])}${match[3] || ""}`;
+}
 
 type SearchableMessage = {
   id: string;
