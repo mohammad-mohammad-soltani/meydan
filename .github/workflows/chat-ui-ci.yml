@@ -29,6 +29,7 @@ on:
       - "tests/admin-normalize.test.mjs"
       - "tests/admin-api-contract.test.mjs"
       - "tests/admin-panel-gate.test.mjs"
+      - "tests/admin-user-deletion.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -60,6 +61,7 @@ on:
       - "tests/admin-normalize.test.mjs"
       - "tests/admin-api-contract.test.mjs"
       - "tests/admin-panel-gate.test.mjs"
+      - "tests/admin-user-deletion.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -103,5 +105,7 @@ jobs:
         run: node --experimental-strip-types --test tests/admin-api-contract.test.mjs
       - name: Run admin panel gate tests
         run: node --experimental-strip-types --test tests/admin-panel-gate.test.mjs
+      - name: Run admin user deletion tests
+        run: node --experimental-strip-types --test tests/admin-user-deletion.test.mjs
       - name: Build frontend
         run: npm run build
