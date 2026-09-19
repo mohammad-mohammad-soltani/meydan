@@ -2,8 +2,10 @@ import type { NextConfig } from "next";
 
 type RemoteImagePatterns = NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]>;
 
-/** WordPress keeps every upload under this path, so patterns stay path-scoped. */
+/** Keep external image patterns path-scoped to the media locations we own. */
 const UPLOAD_PATH = "/wp-content/uploads/**";
+const ARVAN_MEDIA_HOST = "naghshman-media.s3.ir-thr-at1.arvanstorage.ir";
+const ARVAN_MEDIA_PATH = "/production/**";
 
 /**
  * Backends this app has been deployed against.
@@ -19,6 +21,11 @@ const KNOWN_UPLOAD_PATTERNS: RemoteImagePatterns = [
   { protocol: "https", hostname: "**.naghshman.ir", pathname: UPLOAD_PATH },
   { protocol: "https", hostname: "nabzjahan.ir", pathname: UPLOAD_PATH },
   { protocol: "https", hostname: "**.nabzjahan.ir", pathname: UPLOAD_PATH },
+  {
+    protocol: "https",
+    hostname: ARVAN_MEDIA_HOST,
+    pathname: ARVAN_MEDIA_PATH,
+  },
 ];
 
 /**
