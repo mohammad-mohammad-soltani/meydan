@@ -139,6 +139,7 @@ test("every admin page re-checks the role before running its own queries", () =>
     "app/(app)/admin/campaigns/new/page.tsx",
     "app/(app)/admin/campaigns/[id]/page.tsx",
     "app/(app)/admin/notifications/page.tsx",
+    "app/(app)/admin/officials/page.tsx",
     "app/(app)/admin/users/page.tsx",
     "app/(app)/admin/users/new/page.tsx",
     "app/(app)/admin/users/[id]/page.tsx",
