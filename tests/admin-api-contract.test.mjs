@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -143,7 +143,13 @@ test("invitation details read the shared request GET route", () => {
   assert.doesNotMatch(body, /adminGetItem.*speaker-invitations/);
 });
 
-test("direct speaker creation remains an admin-only atomic backend operation", () => {
+test("direct speaker creation remains an admin-only atomic backend operation", (t) => {
+  const backendRoot = path.resolve(root, "../meydan-backend");
+  if (!existsSync(backendRoot)) {
+    t.skip("backend sibling repository is not part of the frontend CI checkout");
+    return;
+  }
+
   const routes = readFileSync(
     path.resolve(root, "../meydan-backend/wp-content/plugins/meydan-core/src/Rest/Routes.php"),
     "utf8",
