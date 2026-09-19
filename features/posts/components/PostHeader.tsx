@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
+import { OfficialBadge } from "@/components/shared/OfficialBadge";
 import type { PostAuthor } from "../types";
 
 type PostHeaderProps = { timeAgo: string };
@@ -31,7 +32,7 @@ export function PostAuthorInfo({ author, badge }: { author: PostAuthor; badge: s
     <div className="flex items-center gap-2.5">
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-muted text-sm font-black text-icon" aria-hidden="true">{author.initials}</span>
       <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-1"><strong className="truncate text-sm text-foreground">{author.name}</strong>{author.verified ? <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" /> : null}<SpeakerBadge verified={author.verifiedSpeaker} size="md" /></div>
+        <div className="flex min-w-0 items-center gap-1"><strong className="truncate text-sm text-foreground">{author.name}</strong>{author.verified ? <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" /> : null}<SpeakerBadge verified={author.verifiedSpeaker} size="md" /><OfficialBadge official={author.verifiedOfficial} size="md" /></div>
         <span className="shrink-0 rounded-md bg-brand-muted px-2 py-1 text-[10px] font-bold text-brand">{badge}</span>
       </div>
     </div>
