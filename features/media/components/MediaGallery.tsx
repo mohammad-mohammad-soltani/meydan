@@ -94,7 +94,12 @@ export function MediaGallery({
         single.kind === "video" ? (
           // `preload="none"`: an upload can be tens of megabytes and is not
           // web-optimized, so a card must not fetch anything until play.
-          <VideoPlayer item={single} variant="inline" preload="none" />
+          <VideoPlayer
+            item={single}
+            variant="inline"
+            preload="none"
+            hideIdleControlsOnMobile
+          />
         ) : (
           <button
             type="button"
