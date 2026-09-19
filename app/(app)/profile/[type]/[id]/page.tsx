@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { publicProfileHref } from "@/lib/profile-route";
 
@@ -16,5 +17,5 @@ export default async function LegacyPublicProfilePage({ params }: Props) {
     notFound();
   }
 
-  redirect(publicProfileHref(type, id));
+  redirect(publicProfileHref(type, id) as Route);
 }
