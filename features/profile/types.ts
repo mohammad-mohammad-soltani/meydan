@@ -11,6 +11,8 @@ export type ProfileIdentity = {
   verified: boolean;
   /** Red speaker badge — granted via the linked curated speaker profile. */
   verifiedSpeaker?: boolean;
+  /** Grey badge for accounts with the Meydan official role. */
+  verifiedOfficial?: boolean;
 };
 
 export type ProfileStat = { label: string; value: string; tone?: "default" | "success"; };
