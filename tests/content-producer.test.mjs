@@ -29,7 +29,7 @@ test("a user producer takes precedence over a different legacy creator", async (
     name: "نویسندهٔ روایت",
     role: "تولیدکننده محتوا",
     avatar: "https://cdn.example/user.jpg",
-    profileHref: "/users/user/42",
+    profileHref: "/42",
     bio: "",
     publishedCount: "",
   });
@@ -48,7 +48,7 @@ test("a square producer is shown as the square itself", async () => {
   assert.equal(producer.name, "میدان آزادی");
   assert.equal(producer.role, "میدان");
   assert.equal(producer.avatar, "https://cdn.example/square.jpg");
-  assert.equal(producer.profileHref, "/users/square/136");
+  assert.equal(producer.profileHref, "/square/136");
 });
 
 test("legacy creators and an empty content row retain their fallbacks", async () => {
