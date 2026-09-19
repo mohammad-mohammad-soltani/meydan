@@ -16,9 +16,9 @@ import { adminErrorMessage } from "../services/admin-api";
 import { EMPTY_USER_FILTERS, getUsers, setUserDisabled, type AdminUser, type AdminUserRole, type UserFilters } from "../services/users.service";
 import type { AdminPage } from "../types";
 
-export function AdminUsersView({ initial, roles }: { initial: AdminPage<AdminUser>; roles: AdminUserRole[] }) {
-  const [filters, setFilters] = useState<UserFilters>(EMPTY_USER_FILTERS);
-  const [applied, setApplied] = useState<UserFilters>(EMPTY_USER_FILTERS);
+export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FILTERS, title = "کاربران", description = "مدیریت حساب‌های سایت و پنل", newHref = "/admin/users/new", fixedRole }: { initial: AdminPage<AdminUser>; roles: AdminUserRole[]; initialFilters?: UserFilters; title?: string; description?: string; newHref?: string; fixedRole?: string }) {
+  const [filters, setFilters] = useState<UserFilters>(initialFilters);
+  const [applied, setApplied] = useState<UserFilters>(initialFilters);
   const [page, setPage] = useState(initial.page);
   const [perPage, setPerPage] = useState(initial.perPage);
   const [result, setResult] = useState(initial);
@@ -59,7 +59,7 @@ export function AdminUsersView({ initial, roles }: { initial: AdminPage<AdminUse
 
   const descriptors: AdminFilter[] = [
     { kind: "search", key: "q", label: "جست‌وجوی نام، شماره یا ایمیل", value: filters.q, onChange: (q) => setFilters((f) => ({ ...f, q })) },
-    { kind: "select", key: "role", label: "نقش", value: filters.role, options: [{ value: "", label: "همه نقش‌ها" }, ...roles], onChange: (role) => setFilters((f) => ({ ...f, role })) },
+    ...(!fixedRole ? [{ kind: "select", key: "role", label: "نقش", value: filters.role, options: [{ value: "", label: "همه نقش‌ها" }, ...roles], onChange: (role: string) => setFilters((f) => ({ ...f, role })) } as AdminFilter] : []),
     { kind: "select", key: "status", label: "وضعیت", value: filters.status, options: [{ value: "", label: "همه" }, { value: "active", label: "فعال" }, { value: "disabled", label: "غیرفعال" }], onChange: (status) => setFilters((f) => ({ ...f, status })) },
   ];
   const columns: AdminColumn<AdminUser>[] = [
@@ -71,8 +71,8 @@ export function AdminUsersView({ initial, roles }: { initial: AdminPage<AdminUse
   ];
 
   return <div className="min-h-full bg-background">
-    <AdminPageHeader title="کاربران" description="مدیریت حساب‌های سایت و پنل" crumbs={[{ label: "کاربران" }]} actions={<Link href={"/admin/users/new" as Route} className={primaryButtonClass}><UserPlus size={17} />افزودن کاربر</Link>} />
-    <AdminFilters filters={descriptors} busy={loading} onSubmit={() => { setPage(1); setApplied({ ...filters }); setRevision((n) => n + 1); }} onReset={() => { setFilters(EMPTY_USER_FILTERS); setApplied(EMPTY_USER_FILTERS); setPage(1); setRevision((n) => n + 1); }} />
+    <AdminPageHeader title={title} description={description} crumbs={[{ label: title }]} actions={<Link href={newHref as Route} className={primaryButtonClass}><UserPlus size={17} />{fixedRole === "meydan_official" ? "افزودن رسمی" : "افزودن کاربر"}</Link>} />
+    <AdminFilters filters={descriptors} busy={loading} onSubmit={() => { setPage(1); setApplied({ ...filters, ...(fixedRole ? { role: fixedRole } : {}) }); setRevision((n) => n + 1); }} onReset={() => { setFilters(initialFilters); setApplied(initialFilters); setPage(1); setRevision((n) => n + 1); }} />
     <section className="mx-auto max-w-7xl px-4 py-6 lg:px-10">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
         {error ? <AdminErrorState message={error} onRetry={() => void load(applied, page, perPage)} /> : loading ? <AdminTableSkeleton rows={6} /> : <AdminTable columns={columns} rows={result.items} rowKey={(user) => user.id} rowClassName={(user) => user.disabled ? "bg-danger-surface/40 border-r-2 border-danger-border" : ""} emptyTitle="کاربری با این مشخصات پیدا نشد." emptyIcon={<UserRound />} />}

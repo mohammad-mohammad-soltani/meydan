@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { BadgeCheck } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
+import { OfficialBadge } from "@/components/shared/OfficialBadge";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
 import { PostActions } from "./PostActions";
@@ -150,6 +151,7 @@ export function PostCard({
                 />
               ) : null}
               <SpeakerBadge verified={post.author.verifiedSpeaker} size="md" />
+              <OfficialBadge official={post.author.verifiedOfficial} size="md" />
             </div>
 
             <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
@@ -321,6 +323,7 @@ export function PostCard({
               />
             ) : null}
             <SpeakerBadge verified={post.author.verifiedSpeaker} size="md" />
+              <OfficialBadge official={post.author.verifiedOfficial} size="md" />
 
             {post.badge ? (
               <>

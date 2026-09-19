@@ -10,6 +10,7 @@ export type PostAuthor = {
   verified: boolean;
   /** Red speaker badge — granted via the linked curated speaker profile. */
   verifiedSpeaker?: boolean;
+  verifiedOfficial?: boolean;
   avatarUrl?: string;
 };
 
@@ -44,6 +45,7 @@ export type PostComment = {
   authorId?: number;
   authorType?: "user" | "square";
   verified?: boolean;
+  verifiedOfficial?: boolean;
   initials: string;
   timeAgo: string;
   content: string;

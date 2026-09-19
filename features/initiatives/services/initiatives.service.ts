@@ -7,6 +7,7 @@ type ApiParticipant = {
   display_name?: string | null;
   avatar_url?: string | null;
   verified?: boolean | null;
+  verified_official?: boolean | null;
   joined_at?: string | null;
 };
 
@@ -48,6 +49,7 @@ export async function getInitiativeParticipants(initiativeId: string): Promise<I
       name: String(item.display_name),
       avatarUrl: item.avatar_url || undefined,
       verified: Boolean(item.verified),
+      verifiedOfficial: Boolean(item.verified_official),
       joinedAt: item.joined_at || undefined,
     }));
 

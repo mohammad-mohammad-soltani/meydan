@@ -11,6 +11,7 @@ type ApiConversation = {
     handle: string;
     avatar_url?: string | null;
     verified?: boolean;
+    verified_official?: boolean;
     profile_type?: "user" | "square";
     profile_id?: string | number;
   };
@@ -82,6 +83,7 @@ function mapConversation(item: ApiConversation): Conversation {
       avatarTone: avatarTone(id),
       avatarUrl: item.participant.avatar_url || undefined,
       isVerified: Boolean(item.participant.verified),
+      isOfficial: Boolean(item.participant.verified_official),
       profileType: item.participant.profile_type || "user",
       profileId: item.participant.profile_id ? String(item.participant.profile_id) : id,
     },
@@ -197,7 +199,7 @@ export type ShareableSquare = {
 };
 
 type ApiViewerMe = {
-  account_type?: "user" | "square" | "speaker";
+  account_type?: "user" | "square" | "speaker" | "official";
   square?: { id?: number; name?: string } | null;
 };
 

@@ -4,6 +4,7 @@ import { ArrowRight, BadgeCheck, Bell, BellOff, MoreVertical, Search, UserRound 
 import { useState } from "react";
 import type { Conversation } from "../types";
 import { ChatAvatar } from "./ChatAvatar";
+import { OfficialBadge } from "@/components/shared/OfficialBadge";
 
 type ChatHeaderProps = {
   conversation: Conversation;
@@ -30,7 +31,7 @@ export function ChatHeader({ conversation, isLeaving, onBack, onOpenInfo, onOpen
         <button type="button" onClick={onOpenInfo} className="flex min-w-0 items-center gap-2 rounded-xl px-1.5 py-1 text-right hover:bg-hover" aria-label={`اطلاعات ${participant.name}`}>
           <ChatAvatar participant={participant} className="h-[42px] w-[42px]" textClassName="text-sm" />
           <div className="min-w-0">
-            <div className="flex items-center gap-1"><h1 className="truncate text-[15px] font-extrabold text-foreground">{participant.name}</h1>{participant.isVerified ? <BadgeCheck className="h-3.5 w-3.5 shrink-0 fill-verified text-on-solid" aria-label="تأییدشده" /> : null}</div>
+            <div className="flex items-center gap-1"><h1 className="truncate text-[15px] font-extrabold text-foreground">{participant.name}</h1>{participant.isVerified ? <BadgeCheck className="h-3.5 w-3.5 shrink-0 fill-verified text-on-solid" aria-label="تأییدشده" /> : null}<OfficialBadge official={participant.isOfficial} /></div>
             <p className={`truncate text-[11px] ${participant.isOnline ? "text-verified" : "text-muted-foreground"}`}>{participant.isOnline ? "آنلاین" : "آخرین بازدید اخیراً"}</p>
           </div>
         </button>

@@ -8,6 +8,7 @@ type ApiActor = {
   avatar_url?: string;
   verified?: boolean;
   verified_speaker?: boolean;
+  verified_official?: boolean;
 };
 
 type ApiAttachment = {
@@ -131,6 +132,7 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
       avatarUrl: square?.avatar_url || item.author?.avatar_url,
       verified: Boolean(item.author?.verified),
       verifiedSpeaker: Boolean(item.author?.verified_speaker),
+      verifiedOfficial: Boolean(item.author?.verified_official),
     },
     initiativeId: item.initiative?.id,
     initiativeParticipantCount: item.initiative?.participant_count,

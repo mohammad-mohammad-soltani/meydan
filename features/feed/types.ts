@@ -27,7 +27,7 @@ export type MediaReflection = {
 
 export type FeedPost = {
   id: string;
-  author: { id: number; type: "user" | "square"; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean };
+  author: { id: number; type: "user" | "square"; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
   initiativeId?: number;
   initiativeParticipantCount?: number;
   viewerState?: { liked: boolean; reposted: boolean; joined: boolean };

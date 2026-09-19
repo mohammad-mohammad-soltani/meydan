@@ -4,6 +4,7 @@ import type { Route } from "next";
 import { BadgeCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import type { PostComment } from "../types";
+import { OfficialBadge } from "@/components/shared/OfficialBadge";
 
 export function CommentsList({
   comments,
@@ -89,6 +90,7 @@ export function CommentsList({
                         aria-label="تأیید شده"
                       />
                     ) : null}
+                    <OfficialBadge official={comment.verifiedOfficial} size="sm" />
 
                     {comment.isAuthor ? (
                       <span className="rounded-full bg-brand-muted px-2 py-0.5 text-[10px] font-bold text-brand">
