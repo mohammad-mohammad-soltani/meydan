@@ -211,7 +211,7 @@ export function AdminSpeakersView({ initial }: { initial: AdminPage<Speaker> }) 
             >
               {speaker.name || `کاربر #${speaker.userId}`}
             </Link>
-            <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
+            <span className="mt-0.5 block w-[30vw] truncate text-[10px] text-muted-foreground">
               {speaker.expertise || speaker.bio || "—"}
             </span>
           </span>
