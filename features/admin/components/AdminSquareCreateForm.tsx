@@ -203,7 +203,7 @@ export function AdminSquareCreateForm() {
     <div className="min-h-full bg-background">
       <AdminPageHeader
         title="افزودن میدان"
-        description="حساب مالک و میدان هم‌زمان ساخته می‌شوند؛ شماره موبایل، نام میدان، استان، شهر و نشانی الزامی‌اند."
+        description="حساب مالک و میدان هم‌زمان ساخته می‌شوند؛ نام مالک و نام میدان مستقل از هم هستند و هر دو الزامی‌اند."
         crumbs={[{ label: "میادین", href: "/admin/squares" }, { label: "افزودن میدان" }]}
       />
 
@@ -295,8 +295,9 @@ export function AdminSquareCreateForm() {
             <AdminField
               label="نام و نام خانوادگی مالک"
               htmlFor="square-full-name"
+              required
               error={fieldErrors.full_name}
-              hint="اگر خالی بماند، نام میدان استفاده می‌شود."
+              hint="این نام فقط برای حساب مالک است و مستقل از نام میدان ذخیره می‌شود."
             >
               <input
                 id="square-full-name"
