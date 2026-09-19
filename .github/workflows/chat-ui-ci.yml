@@ -23,6 +23,7 @@ on:
       - "tests/read-more.test.mjs"
       - "tests/pwa-worker.test.mjs"
       - "features/media/**"
+      - "features/content/**"
       - "tests/realtime-soketi.test.mjs"
       - "app/(app)/admin/**"
       - "features/admin/**"
@@ -31,6 +32,7 @@ on:
       - "tests/admin-panel-gate.test.mjs"
       - "tests/admin-user-deletion.test.mjs"
       - "tests/public-profile-routes.test.mjs"
+      - "tests/content-producer.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -56,6 +58,7 @@ on:
       - "tests/read-more.test.mjs"
       - "tests/pwa-worker.test.mjs"
       - "features/media/**"
+      - "features/content/**"
       - "tests/realtime-soketi.test.mjs"
       - "app/(app)/admin/**"
       - "features/admin/**"
@@ -64,6 +67,7 @@ on:
       - "tests/admin-panel-gate.test.mjs"
       - "tests/admin-user-deletion.test.mjs"
       - "tests/public-profile-routes.test.mjs"
+      - "tests/content-producer.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -111,5 +115,7 @@ jobs:
         run: node --experimental-strip-types --test tests/admin-user-deletion.test.mjs
       - name: Run public profile route tests
         run: node --experimental-strip-types --test tests/public-profile-routes.test.mjs
+      - name: Run content producer route tests
+        run: node --experimental-strip-types --test tests/content-producer.test.mjs
       - name: Build frontend
         run: npm run build
