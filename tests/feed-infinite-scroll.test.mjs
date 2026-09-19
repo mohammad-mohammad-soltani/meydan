@@ -17,6 +17,13 @@ test("the api client keeps the timeline's next cursor instead of dropping it", (
   assert.match(api, /export async function meydanApi<T>[\s\S]*?meydanApiPage<T>\(path, init\)\)\.data/);
 });
 
+test("Feed V2 keeps the existing public timeline endpoint", () => {
+  const service = source("features/feed/services/feed.service.ts");
+
+  assert.match(service, /\/timeline/);
+  assert.doesNotMatch(service, /feed\/for-you/);
+});
+
 test("the timeline service asks for a page and returns its cursor", () => {
   const service = source("features/feed/services/feed.service.ts");
 
