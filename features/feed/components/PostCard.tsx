@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
+import { publicProfileHref } from "@/lib/profile-route";
 import { BadgeCheck } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { OfficialBadge } from "@/components/shared/OfficialBadge";
@@ -95,12 +96,9 @@ export function PostCard({
 
   const mediaItems = mediaItemsFromAttachments(post.attachments);
 
-  const profileHref = (
-    `/users/${post.author.type}/${post.author.id}`
-  ) as Route;
-
-  const squareHref = (
-    `/users/${post.author.type}/${post.author.id}`
+  const profileHref = publicProfileHref(
+    post.author.type,
+    post.author.id,
   ) as Route;
 
   /*
@@ -112,7 +110,7 @@ export function PostCard({
         {/* Author */}
         <div className="flex items-center gap-2.5" dir="rtl">
           <Link
-            href={squareHref}
+            href={profileHref}
             aria-label={`مشاهده پروفایل ${post.squareName}`}
             className="pointer-events-auto shrink-0"
           >
@@ -138,7 +136,7 @@ export function PostCard({
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <Link
-                href={squareHref}
+                href={profileHref}
                 className="min-w-0 truncate text-[15px] font-black leading-6 text-foreground hover:underline"
               >
                 {post.squareName}

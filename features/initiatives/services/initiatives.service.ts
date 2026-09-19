@@ -1,4 +1,5 @@
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
+import { publicProfileHref } from "@/lib/profile-route";
 import type { InitiativeParticipant, InitiativeParticipants } from "../types";
 
 type ApiParticipant = {
@@ -16,10 +17,10 @@ type ApiParticipants = {
   participant_count?: number | null;
 };
 
-/** `usr_9` / `sq_54` -> `/users/user/9` / `/users/square/54`. */
+/** `usr_9` / `sq_54` -> `/9` / `/square/54`. */
 export function participantProfileHref(participant: Pick<InitiativeParticipant, "type" | "id">): string {
   const numericId = String(participant.id).match(/(\d+)$/)?.[1] || "";
-  return `/users/${participant.type}/${numericId}`;
+  return publicProfileHref(participant.type, numericId);
 }
 
 /**

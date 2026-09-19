@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { CalendarDays, Check, LoaderCircle, MapPin, Phone, X } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
+import { publicProfileHref } from "@/lib/profile-route";
 import type { InvitationActor, SpeakerInvitation } from "../types";
 
 const statusStyles: Record<SpeakerInvitation["status"], string> = {
@@ -28,11 +29,11 @@ const statusLabels: Record<SpeakerInvitation["status"], string> = {
   cancelled: "لغو‌شده",
 };
 
-/** `usr_9` / `sq_54` -> `/profile/user/9` (the public route needs the digits). */
+/** `usr_9` / `sq_54` -> `/9` / `/square/54`. */
 function actorProfileHref(actor: InvitationActor | null): Route | null {
   const numericId = actor?.id?.match(/(\d+)$/)?.[1];
   if (!numericId) return null;
-  return `/profile/${actor?.type === "square" ? "square" : "user"}/${numericId}` as Route;
+  return publicProfileHref(actor?.type === "square" ? "square" : "user", numericId) as Route;
 }
 
 function ActorAvatar({ actor }: { actor: InvitationActor | null }) {

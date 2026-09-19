@@ -5,6 +5,7 @@ import { BadgeCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import type { PostComment } from "../types";
 import { OfficialBadge } from "@/components/shared/OfficialBadge";
+import { publicProfileHref } from "@/lib/profile-route";
 
 export function CommentsList({
   comments,
@@ -31,7 +32,7 @@ export function CommentsList({
         <div className="divide-y divide-divider">
           {comments.map((comment) => {
             const profileHref: Route | null = comment.authorId
-              ? (`/users/${comment.authorType || "user"}/${comment.authorId}` as Route)
+              ? (publicProfileHref(comment.authorType || "user", comment.authorId) as Route)
               : null;
 
             const avatar = comment.avatarUrl ? (

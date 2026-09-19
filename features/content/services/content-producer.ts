@@ -35,7 +35,7 @@ function producerProfileHref(producer?: ContentProducerSource | null): string | 
   const actorId = String(producer.id ?? "").replace(/^(?:usr|sq)_/, "");
   if (!/^[1-9]\d*$/.test(actorId)) return undefined;
 
-  return `/users/${producer.type}/${actorId}`;
+  return producer.type === "square" ? `/square/${actorId}` : `/${actorId}`;
 }
 
 /**

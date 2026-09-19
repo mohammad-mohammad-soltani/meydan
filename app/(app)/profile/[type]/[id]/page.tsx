@@ -1,4 +1,6 @@
+import type { Route } from "next";
 import { notFound, redirect } from "next/navigation";
+import { publicProfileHref } from "@/lib/profile-route";
 
 type Props = {
   params: Promise<{
@@ -7,19 +9,13 @@ type Props = {
   }>;
 };
 
-/**
- * Compatibility route for links created before public profiles moved to
- * `/users/[type]/[id]`. The personal `/profile` route remains separate.
- */
+/** Compatibility redirect for links created before short public URLs. */
 export default async function LegacyPublicProfilePage({ params }: Props) {
   const { type, id } = await params;
 
-  if (
-    (type !== "user" && type !== "square") ||
-    !/^\d+$/.test(id)
-  ) {
+  if ((type !== "user" && type !== "square") || !/^\d+$/.test(id)) {
     notFound();
   }
 
-  redirect(`/users/${type}/${id}`);
+  redirect(publicProfileHref(type, id) as Route);
 }

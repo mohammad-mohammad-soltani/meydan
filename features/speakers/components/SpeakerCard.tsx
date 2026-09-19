@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Route } from "next";
 
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
+import { publicProfileHref } from "@/lib/profile-route";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
 import type { Speaker } from "../types";
 
@@ -16,7 +17,7 @@ export function SpeakerCard({
   venue?: string;
 }) {
   const profileHref = speaker.userId
-    ? (`/users/user/${speaker.userId}` as Route)
+    ? (publicProfileHref("user", speaker.userId) as Route)
     : null;
 
   const letter =
