@@ -19,6 +19,7 @@ import {
   Sparkles,
   UserCheck,
   UsersRound,
+  BadgeCheck,
   X,
   BarChart3,
   Search,
@@ -51,13 +52,14 @@ const SECTIONS: Section[] = [
   { href: "/admin/initiatives", label: "ابتکارها", icon: BarChart3 },
   { href: "/admin/campaigns", label: "کمپین‌ها", icon: Newspaper },
   { href: "/admin/notifications", label: "اعلان گروهی", icon: Bell },
+  { href: "/admin/officials", label: "رسمی‌ها", icon: BadgeCheck },
 ];
 
 const GROUPS = [
   { label: "میز کار", items: [SECTIONS[0], SECTIONS[5], SECTIONS[6]] },
   {
     label: "افراد و میادین",
-    items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[4], SECTIONS[8]],
+    items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[4], SECTIONS[8], SECTIONS[14]],
   },
   { label: "محتوا و رسانه", items: [SECTIONS[7], SECTIONS[9], SECTIONS[10]] },
   {
