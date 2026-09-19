@@ -526,6 +526,62 @@ export type NotificationInput = {
   deepLink: string;
 };
 
+/* ------------------------------------------------------------------ feed */
+
+/** A contiguous, half-open age range used only to configure Feed V2. */
+export type FreshnessBucket = {
+  minHours: number;
+  maxHours: number;
+  multiplier: number;
+};
+
+/**
+ * The administrator-facing form of the backend's `meydan_feed_settings`.
+ * These values configure the server algorithm; the admin client never ranks
+ * or scores narratives itself.
+ */
+export type AdminFeedSettings = {
+  feedAlgorithmV2Enabled: boolean;
+  likeWeight: number;
+  viewWeight: number;
+  commentWeight: number;
+  shareWeight: number;
+  maxEngagementScore: number;
+  squareRoleMultiplier: number;
+  speakerRoleMultiplier: number;
+  officialRoleMultiplier: number;
+  editorialMultiplier: number;
+  goodDeedMultiplier: number;
+  sameCityMultiplier: number;
+  sameProvinceMultiplier: number;
+  followingMultiplier: number;
+  maxTotalBoost: number;
+  maxPostAgeHours: number;
+  candidatePoolSize: number;
+  maxSameAuthorInTopN: number;
+  diversityTopN: number;
+  freshnessBuckets: FreshnessBucket[];
+};
+
+export type FeedPreviewItem = {
+  narrativeId: number;
+  rank: number;
+  sourceNames: string[];
+  score: number;
+  baseScore: number;
+  freshnessMultiplier: number;
+  roleMultiplier: number;
+  locationMultiplier: number;
+  editorialMultiplier: number;
+  goodDeedMultiplier: number;
+  followingMultiplier: number;
+};
+
+export type FeedPreview = {
+  algorithmVersion: string;
+  items: FeedPreviewItem[];
+};
+
 /* ------------------------------------------------------------- pagination */
 
 export type AdminPage<T> = {

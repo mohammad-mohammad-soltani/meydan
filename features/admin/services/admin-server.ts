@@ -6,6 +6,7 @@ import type {
   InitiativeMember,
   LinkableUser,
   MediaOutlet,
+  FeedPreview,
   Program,
   Speaker,
   SpeakerRequest,
@@ -34,6 +35,8 @@ import {
   getEditorialNarratives as getEditorialNarrativesRaw,
   type EditorialPage,
 } from "./narratives.service";
+import { getFeedSettings as getFeedSettingsRaw, previewFeed as previewFeedRaw } from "./feed.service";
+import type { AdminFeedSettingsResponse } from "./feed.service";
 import {
   getParticipants as getParticipantsRaw,
   getProgram as getProgramRaw,
@@ -192,4 +195,12 @@ export async function getPrograms(
 
 export async function getEditorialNarratives(page = 1, limit = 20): Promise<EditorialPage> {
   return getEditorialNarrativesRaw(page, limit, await withAdminAuth());
+}
+
+export async function getFeedSettings(): Promise<AdminFeedSettingsResponse> {
+  return getFeedSettingsRaw(await withAdminAuth());
+}
+
+export async function previewFeed(userId: number, limit = 20): Promise<FeedPreview> {
+  return previewFeedRaw(userId, limit, await withAdminAuth());
 }
