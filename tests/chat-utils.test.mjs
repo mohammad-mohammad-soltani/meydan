@@ -221,7 +221,7 @@ test("routes legacy placeholder deep links to the real actor profile", () => {
   assert.equal(notificationHref(follow), "/users/user/54");
 
   const squareFollow = { ...follow, actor: { ...follow.actor, profileType: "square", profileId: "136" } };
-  assert.equal(notificationHref(squareFollow), "/profile/square/136");
+  assert.equal(notificationHref(squareFollow), "/users/square/136");
 });
 
 test("prefers a specific stored deep link over derived routes", () => {
