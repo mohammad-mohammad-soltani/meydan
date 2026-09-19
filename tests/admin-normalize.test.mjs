@@ -247,6 +247,7 @@ test("the square create form reports the same field keys the API does", async ()
   // Field names are the API's own (`square_name`, not `name`), so a local
   // failure and a server 422 land on the same form field.
   assert.ok("square_name" in empty, "the square name is reported as square_name");
+  assert.ok("full_name" in empty, "the owner name is required independently");
   assert.ok("province_id" in empty);
   assert.ok("city_id" in empty);
   assert.ok("address" in empty);
