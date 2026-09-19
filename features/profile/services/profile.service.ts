@@ -54,6 +54,7 @@ type ApiUserProfile = {
   headline?: string;
   verified?: boolean;
   verified_speaker?: boolean;
+  verified_official?: boolean;
   location_label?: string;
   province_id?: number;
   city_id?: number;
@@ -95,6 +96,10 @@ type ApiMe =
       speaker?: ApiSpeaker | null;
     }
   | {
+      account_type: "official";
+      profile: ApiUserProfile;
+    }
+  | {
       account_type: "user";
       profile: ApiUserProfile;
     };
@@ -106,6 +111,7 @@ type ApiPublicUser = {
     display_name?: string;
     verified?: boolean;
     verified_speaker?: boolean;
+    verified_official?: boolean;
   };
   profile: Omit<
     ApiUserProfile,
@@ -434,6 +440,7 @@ function mapNarrativePost(
           identity.verified,
       ),
       verifiedSpeaker: Boolean(identity.verifiedSpeaker),
+      verifiedOfficial: Boolean(identity.verifiedOfficial),
     },
 
     initiativeId:
@@ -767,6 +774,10 @@ function mapUser(
       speaker?.verified ??
         profile.verified_speaker,
     ),
+
+    verifiedOfficial: Boolean(
+      profile.verified_official,
+    ),
   };
 
   // The API can answer an unset list meta as `[""]`; treating that as a real
@@ -951,7 +962,8 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
     }
 
     if (
-      me.account_type === "user"
+      me.account_type === "user" ||
+      me.account_type === "official"
     ) {
       return { ...mapUser(
         me.profile,
@@ -1090,6 +1102,9 @@ export async function getPublicProfileDetails(
 
         verified_speaker:
           user.actor.verified_speaker,
+
+        verified_official:
+          user.actor.verified_official,
       },
 
       narratives.data,
