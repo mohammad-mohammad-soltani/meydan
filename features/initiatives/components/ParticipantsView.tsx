@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, BadgeCheck, ChevronLeft, HandHeart } from "lucide-react";
 import type { InitiativeParticipant } from "../types";
 import { participantProfileHref } from "../services/initiatives.service";
+import { OfficialBadge } from "@/components/shared/OfficialBadge";
 
 const typeLabels: Record<InitiativeParticipant["type"], string> = {
   user: "کاربر میدان",
@@ -43,6 +44,7 @@ function ParticipantRow({ participant }: { participant: InitiativeParticipant })
           {participant.verified ? (
             <BadgeCheck aria-label="حساب تأییدشده" className="h-4 w-4 shrink-0 fill-verified text-on-solid" />
           ) : null}
+          <OfficialBadge official={participant.verifiedOfficial} />
         </div>
         <p className="mt-0.5 text-[11px] text-foreground-subtle">{typeLabels[participant.type]}</p>
       </div>
