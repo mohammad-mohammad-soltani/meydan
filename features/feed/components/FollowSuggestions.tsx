@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { BadgeCheck, Check, LoaderCircle, UserRoundPlus } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { actorKey, type ActorType } from "@/lib/meydan-follow";
+import { publicProfileHref } from "@/lib/profile-route";
 import type { FollowSuggestion } from "../types";
 
 type FollowSuggestionsProps = {
@@ -33,7 +34,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
           const key = actorKey(suggestion.actorType, suggestion.id);
           const followed = followedActorKeys.has(key);
           const pending = pendingFollowKeys.has(key);
-          const profileHref = `/users/${suggestion.actorType}/${suggestion.id}` as Route;
+          const profileHref = publicProfileHref(suggestion.actorType, suggestion.id) as Route;
           const meta = suggestion.followerCount != null
             ? `${number.format(suggestion.followerCount)} دنبال‌کننده`
             : suggestion.narrativeCount != null
