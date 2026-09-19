@@ -22,7 +22,7 @@ export function OfficialBadge({
     <span title="حساب رسمی" className="inline-flex shrink-0">
       <BadgeCheck
         aria-label="حساب رسمی"
-        className={`${sizes[size]} shrink-0 fill-muted-foreground text-surface ${className}`}
+        className={`${sizes[size]} shrink-0 fill-muted-foreground text-on-solid ${className}`}
       />
     </span>
   );
