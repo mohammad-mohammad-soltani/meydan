@@ -317,6 +317,7 @@ export function validateSquareCreate(input: SquareCreateInput): Record<string, s
   const errors: Record<string, string> = {};
 
   if (!isIranianMobile(input.phone)) errors.phone = "invalid";
+  if (!input.fullName.trim()) errors.full_name = "required";
   if (!input.squareName.trim()) errors.square_name = "required";
   if (!input.provinceId) errors.province_id = "invalid";
   if (!input.cityId) errors.city_id = "invalid";
