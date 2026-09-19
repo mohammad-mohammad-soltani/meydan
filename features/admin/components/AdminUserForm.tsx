@@ -8,6 +8,7 @@ import { LoaderCircle, Save } from "lucide-react";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminField, fieldClass } from "./AdminField";
 import { MediaPickerField } from "./MediaPickerField";
+import { ChannelFields } from "./ChannelFields";
 import { AdminSuccessToast } from "./AdminSuccessToast";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
 import { adminErrorMessage } from "../services/admin-api";
@@ -19,14 +20,15 @@ import type { GeoOption } from "../types";
 type SquareFields = { name: string; address: string; province_id: number; city_id: number; latitude: string; longitude: string };
 const emptySquare: SquareFields = { name: "", address: "", province_id: 0, city_id: 0, latitude: "", longitude: "" };
 
-export function AdminUserForm({ user, roles, created = false }: { user?: AdminUser; roles: AdminUserRole[]; created?: boolean }) {
+export function AdminUserForm({ user, roles, created = false, initialRole }: { user?: AdminUser; roles: AdminUserRole[]; created?: boolean; initialRole?: string }) {
   const router = useRouter();
   const [form, setForm] = useState<UserInput>({
     full_name: user?.full_name ?? "", phone: user?.phone ?? "", email: user?.email ?? "",
-    role: user?.role ?? "meydan_user", headline: user?.headline ?? "", about: user?.about ?? "",
+    role: user?.role ?? initialRole ?? "meydan_user", headline: user?.headline ?? "", about: user?.about ?? "",
     location_label: user?.location_label ?? "", province_id: user?.province_id ?? null,
     city_id: user?.city_id ?? null, avatar_media_id: user?.avatar_media_id ?? null,
     cover_media_id: user?.cover_media_id ?? null,
+    eitaa_channel: user?.eitaa_channel ?? "", bale_channel: user?.bale_channel ?? "",
   });
   const [square, setSquare] = useState<SquareFields>(emptySquare);
   const [provinces, setProvinces] = useState<GeoOption[]>([]);
@@ -86,6 +88,17 @@ export function AdminUserForm({ user, roles, created = false }: { user?: AdminUs
         <MediaPickerField id="user-avatar" label="تصویر پروفایل" mediaId={form.avatar_media_id ?? null} currentUrl={user?.avatar_url} onChange={(id) => set("avatar_media_id", id)} onBusyChange={setUploadBusy} error={fieldErrors.avatar_media_id} />
         <MediaPickerField id="user-cover" label="تصویر کاور" purpose="cover" mediaId={form.cover_media_id ?? null} currentUrl={user?.cover_url} onChange={(id) => set("cover_media_id", id)} onBusyChange={setUploadBusy} error={fieldErrors.cover_media_id} />
       </section>
+      {(form.role === "meydan_official" || form.role === "meydan_speaker") && <section className="rounded-2xl border border-border bg-surface p-5 shadow-card">
+        <h2 className="mb-2 text-base font-black">کانال‌های همگام‌سازی</h2>
+        <p className="mb-5 text-xs leading-6 text-muted-foreground">پست‌های کانال‌های ثبت‌شده به‌صورت خودکار با نام همین حساب وارد میدان می‌شوند.</p>
+        <ChannelFields
+          idPrefix="user-sync"
+          eitaa={form.eitaa_channel ?? ""}
+          bale={form.bale_channel ?? ""}
+          errors={fieldErrors}
+          onChange={({ eitaa, bale }) => setForm((current) => ({ ...current, eitaa_channel: eitaa, bale_channel: bale }))}
+        />
+      </section>}
       {needsSquare && <section className="rounded-2xl border border-border bg-surface p-5 shadow-card"><h2 className="mb-2 text-base font-black">اطلاعات میدان جدید</h2><p className="mb-5 text-xs text-muted-foreground">میدان با وضعیت «در انتظار تأیید» ساخته می‌شود.</p><div className="grid gap-4 md:grid-cols-2">
         <AdminField label="نام میدان" htmlFor="square-name" required error={fieldErrors["square.name"]}><input id="square-name" required className={fieldClass} value={square.name} onChange={(event) => setSquare((s) => ({ ...s, name: event.target.value }))} /></AdminField>
         <AdminField label="نشانی" htmlFor="square-address" required error={fieldErrors["square.address"]}><input id="square-address" required className={fieldClass} value={square.address} onChange={(event) => setSquare((s) => ({ ...s, address: event.target.value }))} /></AdminField>
