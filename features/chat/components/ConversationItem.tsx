@@ -8,6 +8,7 @@ import { BadgeCheck, CheckCheck } from "lucide-react";
 import type { Conversation } from "../types";
 import { participantProfileHref } from "../chat-utils";
 import { ChatAvatar } from "./ChatAvatar";
+import { OfficialBadge } from "@/components/shared/OfficialBadge";
 
 type ConversationItemProps = { conversation: Conversation };
 
@@ -35,6 +36,7 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
           <div className="flex min-w-0 items-center gap-1">
             <span className="truncate text-[15px] font-bold leading-5 text-foreground">{participant.name}</span>
             {participant.isVerified ? <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" aria-label="تأییدشده" /> : null}
+            <OfficialBadge official={participant.isOfficial} />
           </div>
           <span className="shrink-0 text-[11px] leading-5 text-foreground-subtle">{conversation.updatedAt}</span>
         </div>
