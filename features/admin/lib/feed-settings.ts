@@ -26,7 +26,10 @@ export function validateFeedSettings(settings: AdminFeedSettings): FeedSettingsV
   for (const field of numberFields) {
     const value = settings[field] as number;
     const range = integerRanges[field];
-    if (!validNumber(value) || (range && (!Number.isInteger(value) || value < range[0] || value > range[1]))) {
+    const invalid = range
+      ? !Number.isFinite(value) || !Number.isInteger(value) || value < range[0] || value > range[1]
+      : !validNumber(value);
+    if (invalid) {
       errors[field] = "مقدار واردشده معتبر نیست.";
     }
   }

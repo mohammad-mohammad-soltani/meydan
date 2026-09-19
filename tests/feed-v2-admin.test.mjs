@@ -27,6 +27,8 @@ test("Feed V2 frontend maps settings only and contains no ranking logic", () => 
   assert.doesNotMatch(service, /log1p|final_score/i);
   assert.doesNotMatch(settings, /log1p|final_score/i);
   assert.match(service, /feedSettingsBody/);
+  assert.match(settings, /candidatePoolSize: \[1, 1000\]/);
+  assert.match(settings, /range\s*\?\s*!Number\.isFinite\(value\)/);
 });
 
 test("Feed V2 has an administrator-only grouped configuration screen", () => {
