@@ -39,7 +39,7 @@ test("collects telegram-style Media, Files and Links without stories", () => {
 });
 
 test("builds the real Meydan user profile route", () => {
-  assert.equal(participantProfileHref({ id: "42" }), "/profile/user/42");
+  assert.equal(participantProfileHref({ id: "42" }), "/users/user/42");
 });
 
 test("builds a dedicated full-screen contact page inside the conversation", () => {
@@ -194,7 +194,7 @@ test("routes square-scoped notices to the square profile", () => {
       id: "13", kind: "system", rawType: "square_verified", title: "", description: "",
       createdAt: "", targetUrl: "/profile", entityType: "square", entityId: "136",
     }),
-    "/profile/square/136",
+    "/users/square/136",
   );
 });
 
@@ -218,7 +218,7 @@ test("routes legacy placeholder deep links to the real actor profile", () => {
     targetUrl: "/profile", entityType: "actor", entityId: "54",
     actor: { id: "54", name: "رضا", handle: "", avatarLabel: "رض", avatarTone: "slate", profileType: "user", profileId: "54" },
   };
-  assert.equal(notificationHref(follow), "/profile/user/54");
+  assert.equal(notificationHref(follow), "/users/user/54");
 
   const squareFollow = { ...follow, actor: { ...follow.actor, profileType: "square", profileId: "136" } };
   assert.equal(notificationHref(squareFollow), "/profile/square/136");
