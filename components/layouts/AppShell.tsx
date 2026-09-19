@@ -40,8 +40,11 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
   const mainScrollRef = useRef<HTMLElement>(null);
   const isPostPage = pathname.startsWith("/posts/");
   const isComposePage = pathname === "/compose";
-  const isPublicProfilePage = pathname.startsWith("/users/");
-  // Conversation routes own their internal scrolling (header + list + composer).
+  const isPublicProfilePage =
+    pathname.startsWith("/users/") ||
+    pathname.startsWith("/profile/") ||
+    /^\/\d+$/.test(pathname);
+    // Conversation routes own their internal scrolling (header + list + composer).
   const isChatRoute = pathname.startsWith("/chat/");
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
