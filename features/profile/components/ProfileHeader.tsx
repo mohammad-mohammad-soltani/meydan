@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { useState } from "react";
 import { ArrowRight, BadgeCheck, Check, LoaderCircle, MessageCircle, UserRoundPlus } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
+import { OfficialBadge } from "@/components/shared/OfficialBadge";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { ProfileActionsMenu } from "./ProfileActionsMenu";
@@ -38,7 +39,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
     <>
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-divider bg-surface/95 px-3 backdrop-blur">
         <button type="button" aria-label="بازگشت" onClick={() => history.back()} className="grid h-11 w-11 place-items-center rounded-full text-icon hover:bg-hover"><ArrowRight className="h-5 w-5" /></button>
-        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postLabel} روایت</p></div>
+        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} /><OfficialBadge official={identity.verifiedOfficial} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postLabel} روایت</p></div>
       </header>
 
       <div className="bg-surface">
@@ -76,7 +77,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
             </div>
           </div>
           <div className="mt-2">
-            <div className="flex flex-wrap items-center gap-1.5"><h2 className="text-xl font-black leading-8 text-foreground">{identity.name}</h2>{identity.verified ? <BadgeCheck aria-label="حساب تأییدشده" className="h-5 w-5 fill-verified text-on-solid" /> : null}<SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /></div>
+            <div className="flex flex-wrap items-center gap-1.5"><h2 className="text-xl font-black leading-8 text-foreground">{identity.name}</h2>{identity.verified ? <BadgeCheck aria-label="حساب تأییدشده" className="h-5 w-5 fill-verified text-on-solid" /> : null}<SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /><OfficialBadge official={identity.verifiedOfficial} size="lg" /></div>
             <p dir="ltr" className="mt-0.5 text-left text-sm text-foreground-subtle">@{identity.handle}</p>
           </div>
         </div>
