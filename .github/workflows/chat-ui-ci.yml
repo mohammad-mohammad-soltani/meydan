@@ -30,6 +30,7 @@ on:
       - "tests/admin-api-contract.test.mjs"
       - "tests/admin-panel-gate.test.mjs"
       - "tests/admin-user-deletion.test.mjs"
+      - "tests/public-profile-routes.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -62,6 +63,7 @@ on:
       - "tests/admin-api-contract.test.mjs"
       - "tests/admin-panel-gate.test.mjs"
       - "tests/admin-user-deletion.test.mjs"
+      - "tests/public-profile-routes.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/chat-ui-ci.yml"
@@ -107,5 +109,7 @@ jobs:
         run: node --experimental-strip-types --test tests/admin-panel-gate.test.mjs
       - name: Run admin user deletion tests
         run: node --experimental-strip-types --test tests/admin-user-deletion.test.mjs
+      - name: Run public profile route tests
+        run: node --experimental-strip-types --test tests/public-profile-routes.test.mjs
       - name: Build frontend
         run: npm run build
