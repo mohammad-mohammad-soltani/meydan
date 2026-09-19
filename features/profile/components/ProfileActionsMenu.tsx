@@ -17,7 +17,7 @@ import type { ProfileDetails } from "../types";
  */
 export function profilePath(profile: Pick<ProfileDetails, "accountType" | "actorId">): string {
   const segment = profile.accountType === "square" ? "square" : "user";
-  return `/${segment}/${profile.actorId}`;
+  return `/${profile.actorId}`;
 }
 
 const itemClass =
