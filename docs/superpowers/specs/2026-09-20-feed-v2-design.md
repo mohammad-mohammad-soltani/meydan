@@ -36,11 +36,19 @@ view increments and existing frontend feed service remain compatible.
 | previously served | `meydan_served_history` |
 | event foundation | `meydan_events`, via `EventLogger` |
 
-The applicable author-role multiplier is the greatest of: normal `1.0`,
-Square actor `1.25`, a `meydan_speaker` owner `1.50`, and a
-`meydan_official` owner `2.25`. Multipliers never stack. A Square post is
-resolved through its owner only when a role check is required; user posts are
-resolved from their user actor.
+## Author-role resolution
+
+Role resolution reads only the author actor stored on the narrative; it does
+not search arbitrary users or make unrelated role lookups.
+
+- A `user` actor resolves directly to that user's WordPress roles.
+- A `square` actor resolves through that square's actual owner, then reads only
+  that owner's WordPress roles.
+
+The applicable multiplier is the single greatest value: normal `1.0`, Square
+`1.25`, `meydan_speaker` `1.50`, or `meydan_official` `2.25`. It never stacks.
+For example, a (legacy or manually assigned) owner with both official and
+speaker roles receives `2.25`, never `2.25 * 1.50`.
 
 ## Request path
 
@@ -78,35 +86,72 @@ relationships. Existing served history remains the source of served signals.
 
 ## Scoring
 
-The base score is an intentionally simple score with normalized engagement:
+The ranking formula is intentionally explicit and uses no interest-based
+signal. `max_engagement_score` bounds even normalized viral engagement before
+any boost is considered:
 
 ```text
-engagement = log1p(likes) * likeWeight
-           + log1p(views) * viewWeight
-           + log1p(comments) * commentWeight
-           + log1p(shares + reposts) * shareWeight
+calculated_engagement_score = log1p(likes) * likeWeight
+                              + log1p(views) * viewWeight
+                              + log1p(comments) * commentWeight
+                              + log1p(shares + reposts) * shareWeight
 
-final = baseScore * min(product(applicable multipliers), maxTotalBoost)
+engagement_score = min(calculated_engagement_score, max_engagement_score)
+
+base_score = engagement_score
+
+total_boost = min(
+    product(all_applicable_positive_multipliers),
+    max_total_boost
+)
+
+final_score = base_score * freshness_multiplier * total_boost
 ```
 
-Freshness is selected from ordered, editable buckets and narratives older than
-the configured maximum age never become candidates. Location selects exactly
-one multiplier: same city, otherwise same province, otherwise 1.0. Following,
-editorial and Good Deed are separate conditional multipliers. The response
-order is stable for a snapshot through existing `TimelineSession` behaviour;
-ties are explicitly resolved by date then ID.
+`freshness_multiplier` is selected from ordered, editable freshness buckets;
+the default buckets are listed below. Narratives older than the configured
+maximum age never become candidates, so they cannot receive a freshness score.
+`max_engagement_score` and `max_total_boost` are editable Feed Settings;
+`max_total_boost` defaults to `6.0`.
+
+Location selects exactly one multiplier: same city, otherwise same province,
+otherwise `1.0`; city and province never stack. Following is an independent
+positive multiplier: when the viewer follows the narrative author it uses the
+configured `following_multiplier` (default `1.60`), otherwise it is `1.0`.
+It is included alongside role, editorial, location and Good Deed multipliers,
+then the combined positive product is capped by `max_total_boost` before it is
+applied. The response order is stable for a snapshot through existing
+`TimelineSession` behaviour; ties are explicitly resolved by date then ID.
 
 `FeedDiversity` runs after ranking and enforces the configured per-author cap
 inside the configured top-N window, preferring the next eligible ranked item.
 It does not destroy lower-ranked content outside that window.
 
-## Settings, cache and feature flag
+## Admin Feed Configuration
+
+### Storage
 
 `FeedSettings` owns defaults, normalization, validation, persistence and cache
 invalidation. It persists one namespaced WordPress option:
 `meydan_feed_settings`. The option includes the feature flag, engagement and
-role weights, all boost values, candidate limits, age cap, diversity values,
-served policy, and freshness buckets.
+role weights, `max_engagement_score`, all boost values, candidate limits, age
+cap, diversity values, served policy, and freshness buckets. Persistence is
+behind a settings store interface/service; `FeedScorer` consumes the resolved
+settings object and never calls `get_option()` itself.
+
+### API and permission
+
+The existing `/admin/*` route permission policy is authoritative: only a
+WordPress `administrator` may read, preview, reset or update these settings.
+
+- `GET /admin/feed/settings` returns the effective settings and defaults.
+- `PUT /admin/feed/settings` validates and saves a complete settings document.
+  A reset submits the defaults through this same endpoint and validation path,
+  rather than bypassing validation in a separate write route.
+- `GET /admin/feed/preview?user_id={id}&limit={1..50}` returns an ephemeral V2
+  ranking result for the selected user.
+
+### Cache, audit and feature flag
 
 All reads use `wp_cache_*` with a dedicated group and fall back to the option.
 Every successful save or reset clears the group. Defaults are returned when the
@@ -118,33 +163,59 @@ non-overlapping freshness intervals, and every bucket within the post-age cap.
 The V1 branch is selected before constructing any V2 service. Consequently
 switching the flag off is immediate and cannot mutate the V1 ranking data.
 
-## Administration and debug surface
+Every successful update or reset invalidates this cache and calls
+`AuditLogger::log('feed_settings_updated', …)` with complete before/after
+values. Backend validation is authoritative: finite numeric values only,
+bounded non-negative weights and multipliers, positive limits, sorted
+non-overlapping freshness intervals, and every bucket within the post-age cap.
 
-New administrator-only routes under the existing `/admin/*` permission policy:
-
-- `GET /admin/feed/settings` returns effective settings and defaults.
-- `PUT /admin/feed/settings` validates and saves a complete settings document.
-- `POST /admin/feed/settings/reset` validates the default document through the
-  same path and invalidates the same cache.
-- `GET /admin/feed/preview?user_id={id}&limit={1..50}` returns an ephemeral V2
-  ranking result with sources, rank and score explanation.
-
-Each settings save/reset calls `AuditLogger::log('feed_settings_updated', …)`
-with complete before/after values. Preview constructs a `Viewer` context and
-calls the read-only pipeline with `recordSideEffects=false`: it writes no
-views, served rows, event rows, user-specific cache, or analytics.
-
-`GET /timeline?debug_feed=1` only adds a debug breakdown for a confirmed
-administrator. Normal timeline responses remain exactly their current shape;
-they contain neither score nor ranking metadata. Feed result metadata stays
-internal until the controller is operating in authorised debug/preview mode.
+## Feed Admin UI
 
 The Next.js `/admin/feed` page follows the existing per-page administrator
-gate and uses the existing authenticated proxy/service pattern. It groups
-Persian fields under engagement, roles, location, special content, freshness,
-indexing, diversity and candidate generation. Client validation gives immediate
-feedback but sends all writes to the backend validator. Each group can reset
-to defaults, and the page includes a read-only preview user selector.
+gate, uses the existing authenticated proxy/service pattern, is titled «فید»,
+and appears in administrator navigation. It groups Persian fields under:
+
+- تعامل کاربران
+- نقش کاربران
+- محتوای ویژه
+- موقعیت مکانی
+- تازگی محتوا
+- ایندکسینگ
+- Diversity
+- Candidate Generation
+
+Every setting has a Persian label and explanation, its current and default
+values, client validation, a reset for its section, and a whole-document reset.
+Client validation gives immediate feedback but sends every write—including
+resets—to the backend validator and cache-invalidation path.
+
+## Preview and explainability
+
+Preview constructs a `Viewer` context and calls the read-only V2 pipeline with
+`recordSideEffects=false`. It must not increment views, add served-history
+rows, emit analytics/events, or mutate cache for a real user. Its internal
+items contain at least:
+
+```json
+{
+  "narrative_id": 123,
+  "rank": 1,
+  "source_names": ["following", "same_city"],
+  "score": 12.34,
+  "base_score": 4.56,
+  "freshness_multiplier": 1.35,
+  "role_multiplier": 2.25,
+  "location_multiplier": 1.5,
+  "editorial_multiplier": 1.7,
+  "good_deed_multiplier": 1.0,
+  "following_multiplier": 1.6
+}
+```
+
+`GET /timeline?debug_feed=1` exposes an equivalent breakdown only to a
+confirmed administrator. Normal timeline responses remain exactly their
+current shape: they contain neither score nor ranking metadata. Feed result
+metadata stays internal outside authorised debug/preview output.
 
 ## Frontend compatibility
 
@@ -158,6 +229,7 @@ flag makes the existing endpoint serve its V2 snapshot.
 | Setting | Default |
 |---|---:|
 | like / view / comment / share | 1.00 / 0.08 / 2.00 / 1.50 |
+| maximum engagement score | 25.0 |
 | Square / speaker / official | 1.25 / 1.50 / 2.25 |
 | editorial / Good Deed | 1.70 / 1.25 |
 | same city / same province | 1.50 / 1.25 |
@@ -168,13 +240,40 @@ flag makes the existing endpoint serve its V2 snapshot.
 | max author posts in top 20 | 3 |
 | freshness buckets | 0–6: 1.45; 6–12: 1.35; 12–24: 1.20; 24–48: 0.85; 48–72: 0.60 |
 
-## Verification
+## Testing requirements
 
-Unit tests will exercise scorer mathematics, bucket boundaries, cap behaviour,
-role selection, locality selection, source aggregation and settings validation.
-Backend contract checks will cover API routes, permissions, non-leaking debug
-data, preview side-effect freedom, audit/cache behaviour and V1 fallback.
-Frontend tests will pin the feed admin navigation, per-page guard, service
-verbs, reset/validation, and the unchanged `/timeline` consumer contract.
+### Ranking
+
+- official ranks above speaker, Square and normal authors for equal base score;
+- only the highest role multiplier applies, including official plus speaker;
+- editorial, Good Deed and following boosts apply when their conditions hold;
+- same city ranks above same province, and city/province do not stack;
+- comments contribute more than likes, and likes more than views;
+- each freshness bucket applies at its exact boundary and posts over 72 hours
+  never become candidates at the default setting;
+- the engagement cap and `max_total_boost` cap both apply.
+
+### Feature flag
+
+- an enabled flag selects V2 for the eligible existing `/timeline` path;
+- a disabled flag selects V1 unchanged, with no migration.
+
+### Administration
+
+- an administrator can read and update settings; a non-administrator cannot;
+- update and reset both validate, invalidate cache and record audit before/after
+  values;
+- frontend validation gives feedback but backend validation rejects malformed,
+  out-of-range and invalid bucket documents.
+
+### Preview and compatibility
+
+- preview produces no views, served history, analytics event or real-user cache
+  mutation;
+- preview and authorised `debug_feed=1` output return the correct score
+  breakdown, while normal `/timeline` never leaks it;
+- frontend infinite scroll and the existing `/timeline` response contract remain
+  unchanged.
+
 The final verification runs the relevant backend checks, Next admin/feed tests,
 lint, frontend build and backend build/smoke command available in this checkout.
