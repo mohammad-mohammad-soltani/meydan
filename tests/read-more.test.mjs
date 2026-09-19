@@ -104,7 +104,7 @@ test("the reveal animation respects reduced motion", () => {
   // The global reduced-motion block collapses every animation duration, so the
   // reveal must be covered by it rather than opting out with its own rule.
   const reducedMotion = css.slice(css.indexOf("prefers-reduced-motion"));
-  assert.match(reducedMotion, /animation-duration: \.01ms !important/);
+  assert.match(reducedMotion, /animation-duration: 0\.01ms !important/);
 });
 
 test("both post layouts fold their long bodies", () => {

@@ -21,14 +21,14 @@ async function load(relative) {
 test("soketi config is the single public realtime endpoint", async () => {
   const { SOKETI_CONFIG, getSoketiUrl } = await load("lib/realtime/soketi.ts");
 
-  assert.equal(SOKETI_CONFIG.host, "naghshman.ir");
+  assert.equal(SOKETI_CONFIG.host, "socket.naghshman.ir");
   assert.equal(SOKETI_CONFIG.port, 443);
   assert.equal(SOKETI_CONFIG.secure, true);
-  assert.equal(SOKETI_CONFIG.path, "/socket");
+  assert.equal(SOKETI_CONFIG.path, "");
 
   const url = getSoketiUrl();
   assert.ok(
-    url.startsWith(`wss://naghshman.ir/socket/app/${SOKETI_CONFIG.appKey}`),
+    url.startsWith(`wss://socket.naghshman.ir/app/${SOKETI_CONFIG.appKey}`),
     `unexpected realtime URL: ${url}`,
   );
   for (const forbidden of ["localhost", "127.0.0.1", ":6001", ":3001", "socket.io"]) {

@@ -202,7 +202,7 @@ test("timeline video cards fetch nothing until the reader presses play", () => {
 
   // Uploads are not web-optimized, so even a metadata preload costs extra
   // range requests per card; a timeline must stay silent until play.
-  assert.match(gallery, /<VideoPlayer item=\{single\} variant="inline" preload="none"/);
+  assert.match(gallery, /<VideoPlayer\s+item=\{single\}[\s\S]*?variant="inline"[\s\S]*?preload="none"/);
   assert.doesNotMatch(galleryCode, /<video[\s>]/, "gallery tiles must not mount a video element");
 
   const player = source("features/media/components/VideoPlayer.tsx");

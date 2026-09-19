@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { Pencil, UserPlus, UserRound } from "lucide-react";
+import { Pencil, Trash2, UserPlus, UserRound } from "lucide-react";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
 import { AdminTable, type AdminColumn } from "./AdminTable";
@@ -11,9 +11,9 @@ import { AdminPagination } from "./AdminPagination";
 import { AdminDialog } from "./AdminDialog";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminSuccessToast } from "./AdminSuccessToast";
-import { primaryButtonClass, secondaryButtonClass } from "./styles";
+import { dangerButtonClass, primaryButtonClass, secondaryButtonClass } from "./styles";
 import { adminErrorMessage } from "../services/admin-api";
-import { EMPTY_USER_FILTERS, getUsers, setUserDisabled, type AdminUser, type AdminUserRole, type UserFilters } from "../services/users.service";
+import { deleteUser, EMPTY_USER_FILTERS, getUsers, setUserDisabled, type AdminUser, type AdminUserRole, type UserFilters } from "../services/users.service";
 import type { AdminPage } from "../types";
 
 export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FILTERS, title = "کاربران", description = "مدیریت حساب‌های سایت و پنل", newHref = "/admin/users/new", fixedRole }: { initial: AdminPage<AdminUser>; roles: AdminUserRole[]; initialFilters?: UserFilters; title?: string; description?: string; newHref?: string; fixedRole?: string }) {
@@ -25,6 +25,7 @@ export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FIL
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [target, setTarget] = useState<AdminUser | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
@@ -57,6 +58,19 @@ export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FIL
     finally { setBusy(false); }
   };
 
+  const submitDelete = async () => {
+    if (!deleteTarget) return;
+    setBusy(true);
+    setActionError(null);
+    try {
+      await deleteUser(deleteTarget.id);
+      setToast({ id: Date.now(), message: "کاربر و همه اطلاعات وابسته به او برای همیشه حذف شد." });
+      setDeleteTarget(null);
+      await load(applied, page, perPage);
+    } catch (reason) { setActionError(adminErrorMessage(reason, "حذف دائمی کاربر ممکن نشد.")); }
+    finally { setBusy(false); }
+  };
+
   const descriptors: AdminFilter[] = [
     { kind: "search", key: "q", label: "جست‌وجوی نام، شماره یا ایمیل", value: filters.q, onChange: (q) => setFilters((f) => ({ ...f, q })) },
     ...(!fixedRole ? [{ kind: "select", key: "role", label: "نقش", value: filters.role, options: [{ value: "", label: "همه نقش‌ها" }, ...roles], onChange: (role: string) => setFilters((f) => ({ ...f, role })) } as AdminFilter] : []),
@@ -67,7 +81,7 @@ export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FIL
     { key: "phone", header: "شماره", render: (user) => <span dir="ltr">{user.phone || "—"}</span> },
     { key: "role", header: "نقش", render: (user) => roles.find((r) => r.value === user.role)?.label ?? user.role },
     { key: "status", header: "وضعیت", render: (user) => <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${user.disabled ? "border border-danger-border bg-danger-surface text-danger-foreground" : "bg-success-surface text-success"}`}>{user.disabled ? "غیرفعال" : "فعال"}</span> },
-    { key: "actions", header: "عملیات", render: (user) => <span className="flex flex-wrap gap-2"><Link href={`/admin/users/${user.id}` as Route} className={secondaryButtonClass} aria-label={`ویرایش ${user.full_name}`}><Pencil size={15} />ویرایش</Link><button type="button" className={secondaryButtonClass} onClick={(event) => { event.stopPropagation(); setActionError(null); setTarget(user); }}>{user.disabled ? "فعال‌سازی" : "غیرفعال‌سازی"}</button></span> },
+    { key: "actions", header: "عملیات", render: (user) => <span className="flex flex-wrap gap-2">{user.disabled ? <button type="button" className={dangerButtonClass} aria-label={`حذف دائمی ${user.full_name}`} onClick={(event) => { event.stopPropagation(); setActionError(null); setDeleteTarget(user); }}><Trash2 size={15} />حذف</button> : <Link href={`/admin/users/${user.id}` as Route} className={secondaryButtonClass} aria-label={`ویرایش ${user.full_name}`}><Pencil size={15} />ویرایش</Link>}<button type="button" className={secondaryButtonClass} onClick={(event) => { event.stopPropagation(); setActionError(null); setTarget(user); }}>{user.disabled ? "فعال‌سازی" : "غیرفعال‌سازی"}</button></span> },
   ];
 
   return <div className="min-h-full bg-background">
@@ -81,5 +95,6 @@ export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FIL
     </section>
     {toast ? <AdminSuccessToast key={toast.id} message={toast.message} /> : null}
     {target ? <AdminDialog title={target.disabled ? "فعال‌سازی حساب" : "غیرفعال‌سازی حساب"} description={target.disabled ? `حساب ${target.full_name} دوباره اجازه ورود و نمایش عمومی خواهد داشت.` : `نشست‌های ${target.full_name} قطع می‌شود و پروفایل و محتوای عمومی‌اش تا فعال‌سازی دوباره پنهان می‌ماند.`} confirmLabel={target.disabled ? "فعال‌سازی" : "غیرفعال‌سازی"} tone={target.disabled ? "default" : "danger"} busy={busy} error={actionError} onClose={() => setTarget(null)} onConfirm={() => void submitStatus()} /> : null}
+    {deleteTarget ? <AdminDialog title="حذف دائمی کاربر" description={`حساب ${deleteTarget.full_name} همراه با پروفایل، روایت‌ها، نظرات، تعامل‌ها، گفتگوهای مستقیم، عضویت‌ها، فایل‌های متعلق به حساب و اتصال‌های همگام‌سازی برای همیشه حذف می‌شود. این عملیات قابل بازگشت نیست.`} confirmLabel="حذف برای همیشه" tone="danger" busy={busy} error={actionError} onClose={() => setDeleteTarget(null)} onConfirm={() => void submitDelete()} /> : null}
   </div>;
 }
