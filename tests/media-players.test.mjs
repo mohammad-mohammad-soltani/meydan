@@ -236,6 +236,16 @@ test("immersive images always keep the landscape chrome while swiping mixed aspe
   );
 });
 
+test("immersive image and video layouts share one back button", () => {
+  const slide = source("features/media/components/ImmersivePostSlide.tsx");
+
+  assert.match(slide, /className=\{chrome\("viewer-topbar"\)\}/);
+  assert.match(slide, /ref=\{closeRef\}/);
+  assert.match(slide, /aria-label="بازگشت"/);
+  assert.match(slide, /<ArrowLeft aria-hidden="true" \/>/);
+  assert.match(slide, /onClick=\{\(event\) => \{[\s\S]*?event\.stopPropagation\(\);[\s\S]*?onClose\(\);/);
+});
+
 test("immersive viewer author identity links to the public profile in both layouts", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
 

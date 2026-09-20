@@ -12,7 +12,6 @@ import {
 } from "react";
 import {
   ArrowLeft,
-  MoreVertical,
   Heart,
   MessageCircle,
   Share2,
@@ -217,6 +216,24 @@ export function ImmersivePostSlide({
         gesture.current = null;
       }}
     >
+      <div
+        className={chrome("viewer-topbar")}
+        inert={!visible}
+        dir="ltr"
+      >
+        <button
+          ref={closeRef}
+          type="button"
+          className="video-feed-button"
+          aria-label="بازگشت"
+          onClick={(event) => {
+            event.stopPropagation();
+            onClose();
+          }}
+        >
+          <ArrowLeft aria-hidden="true" />
+        </button>
+      </div>
       <div
         className="viewer-media-stage"
         onClick={(event) => {
