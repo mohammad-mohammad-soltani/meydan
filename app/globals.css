@@ -849,6 +849,9 @@ html.dark {
   }
 }
 .is-landscape .viewer-media-stage { bottom: 300px; }
+/* Images keep the landscape chrome, but the image itself owns the full viewport.
+   This prevents the landscape chrome reservation from clipping tall photos. */
+.is-image-viewer .viewer-media-stage { inset: 0; }
 .viewer-chrome { transition: opacity 200ms ease; }
 .viewer-chrome-hidden { opacity: 0; pointer-events: none; }
 .viewer-topbar { position: absolute; inset: 0 0 auto; z-index: 40; display: flex; justify-content: space-between; padding: max(12px, env(safe-area-inset-top)) 16px 8px; }
@@ -908,6 +911,7 @@ html.dark {
 @media (max-height: 600px) and (orientation: landscape) {
   .immersive-post { max-width: none; }
   .viewer-media-stage, .is-landscape .viewer-media-stage { inset: 0 40% 0 0; }
+  .is-image-viewer .viewer-media-stage { inset: 0; }
   .viewer-bottom, .is-landscape .viewer-bottom { left: 60%; min-height: 0; gap: 6px; max-height: calc(100% - 60px); overflow-y: auto; }
   .viewer-top-author { right: 40%; }
 }

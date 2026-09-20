@@ -187,6 +187,17 @@ test("view counts use the same chart icon across feed and content", () => {
   assert.doesNotMatch(contentDetail, /\bEye\b/);
 });
 
+test("immersive image stage uses the full viewport so photos are never clipped by chrome", () => {
+  const css = source("app/globals.css");
+
+  assert.match(css, /\.is-landscape \.viewer-media-stage\s*\{\s*bottom:\s*300px;\s*\}/);
+  assert.match(css, /\.is-image-viewer \.viewer-media-stage\s*\{\s*inset:\s*0;\s*\}/);
+  assert.match(
+    css,
+    /@media \(max-height: 600px\) and \(orientation: landscape\)[\s\S]*?\.is-image-viewer \.viewer-media-stage\s*\{\s*inset:\s*0;\s*\}/,
+  );
+});
+
 test("immersive images fill width unless their aspect would exceed the viewport height", () => {
   const lightbox = source("features/media/components/MediaLightbox.tsx");
 
