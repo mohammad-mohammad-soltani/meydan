@@ -127,8 +127,9 @@ function MediaStage({
   }
 
   if (item.media.kind === "video") return null;
-
-  const coverSrc = item.media.coverImage ?? "/images/generated/content-hero.svg";
+    console.log(item.media)
+  if(!item.media.coverImage ) return null;
+  const coverSrc = item.media.coverImage ;
 
   return (
     <div className="relative aspect-[4/3] overflow-hidden bg-surface-sunken sm:aspect-video">
@@ -282,8 +283,10 @@ export function ContentDetailView({
     document
       .getElementById("download-options")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  
+    const files = item.files.filter((data) => data.id !== 'undefined');
+    return (
 
-  return (
     <article className="ui-enter min-h-full bg-background pb-8 text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between border-b border-divider bg-surface-glass px-2 backdrop-blur-md">
@@ -338,10 +341,12 @@ export function ContentDetailView({
       {/* Intro */}
       <section className="border-b border-divider px-4 py-5" dir="rtl">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-brand">
-            <KindIcon aria-hidden="true" className="h-4 w-4" />
-            {kindLabels[item.media.kind]}
-          </span>
+          <div className="w-full flex justify-end">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-black bg-brand text-white p-1 rounded-full">
+              <KindIcon aria-hidden="true" className="h-4 w-4" />
+              {kindLabels[item.media.kind]}
+            </span>
+          </div>
 
           {item.badge ? (
             <>
@@ -362,9 +367,6 @@ export function ContentDetailView({
           {item.title}
         </h1>
 
-        <p className="mt-2 text-[14px] leading-7 text-foreground-secondary">
-          {item.description}
-        </p>
 
         <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
@@ -383,14 +385,17 @@ export function ContentDetailView({
             <Eye aria-hidden="true" className="h-3.5 w-3.5" />
             {item.viewCount} بازدید
           </span>
+          {
+            files.length > 0 &&
 
-          <span className="inline-flex items-center gap-1.5">
-            <Download aria-hidden="true" className="h-3.5 w-3.5" />
-            {item.downloadCount} دریافت
-          </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Download aria-hidden="true" className="h-3.5 w-3.5" />
+              {item.downloadCount} دریافت
+            </span>
+          }
         </div>
 
-        {item.files.length ? (
+        {files.length ? (
           <button
             type="button"
             onClick={scrollToDownloads}
@@ -403,6 +408,132 @@ export function ContentDetailView({
       </section>
 
       {/* Creator */}
+      
+
+      {/* Body */}
+      <section
+        className="border-b border-divider px-4 py-5"
+        aria-labelledby="about-content-heading"
+        dir="rtl"
+      >
+        <h2
+          id="about-content-heading"
+          className="text-[15px] font-black text-foreground"
+        >
+          محتوا :
+        </h2>
+
+        <div className="mt-4 space-y-4">
+          {item.body.map((paragraph) => (
+            <p
+              key={paragraph}
+              className="text-[14px] leading-8 text-foreground-secondary"
+            >
+              {paragraph}
+            </p>
+          ))}
+        </div>
+
+        {item.tags.length ? (
+          <div className="mt-5 flex flex-wrap gap-x-3 gap-y-2">
+            {item.tags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[11px] font-bold text-brand"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      {/* Downloads */}
+      {files.length > 0 ? (
+        <section
+          id="download-options"
+          className="scroll-mt-20  border-divider px-4 py-5"
+          aria-labelledby="download-heading"
+          dir="rtl"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2
+                id="download-heading"
+                className="text-[15px] font-black text-foreground"
+              >
+                فایل‌های قابل دانلود
+              </h2>
+              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                فرمت مناسب استفاده‌تان را انتخاب کنید.
+              </p>
+            </div>
+
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-muted text-brand">
+              <Download aria-hidden="true" className="h-4 w-4" />
+            </span>
+          </div>
+
+          <div className="mt-3 divide-y divide-divider">
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className="flex items-center gap-3 py-3.5"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-muted px-1 text-[10px] font-black text-foreground-secondary">
+                  {file.format}
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-[13px] font-black text-foreground">
+                    {file.label}
+                  </h3>
+                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                    {file.detail} · {file.size}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    void handleDownload(file.id, file.label)
+                  }
+                  disabled={downloadingId === file.id}
+                  aria-label={`دانلود ${file.label}`}
+                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-[11px] font-black text-foreground-secondary outline-none transition-colors hover:border-brand-border hover:text-brand focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:bg-disabled disabled:text-disabled-foreground"
+                >
+                  {downloadingId === file.id ? (
+                    <LoaderCircle
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5 animate-spin"
+                    />
+                  ) : (
+                    <Download
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5"
+                    />
+                  )}
+                  دریافت
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 flex gap-2.5 rounded-[14px] bg-success-surface p-3 text-success-foreground">
+            <ShieldCheck
+              aria-hidden="true"
+              className="mt-0.5 h-[18px] w-[18px] shrink-0"
+            />
+            <p className="text-[11px] leading-6">
+              <strong className="block font-black">
+                مجوز استفاده و بازنشر
+              </strong>
+              {item.usageNote}
+            </p>
+          </div>
+        </section>
+      ) : null}
+
       <section
         className="border-b border-divider px-4 py-4"
         aria-labelledby="creator-heading"
@@ -476,130 +607,6 @@ export function ContentDetailView({
         ) : null}
       </section>
 
-      {/* Body */}
-      <section
-        className="border-b border-divider px-4 py-5"
-        aria-labelledby="about-content-heading"
-        dir="rtl"
-      >
-        <h2
-          id="about-content-heading"
-          className="text-[15px] font-black text-foreground"
-        >
-          درباره این محتوا
-        </h2>
-
-        <div className="mt-4 space-y-4">
-          {item.body.map((paragraph) => (
-            <p
-              key={paragraph}
-              className="text-[14px] leading-8 text-foreground-secondary"
-            >
-              {paragraph}
-            </p>
-          ))}
-        </div>
-
-        {item.tags.length ? (
-          <div className="mt-5 flex flex-wrap gap-x-3 gap-y-2">
-            {item.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-[11px] font-bold text-brand"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        ) : null}
-      </section>
-
-      {/* Downloads */}
-      {item.files.length ? (
-        <section
-          id="download-options"
-          className="scroll-mt-20 border-b border-divider px-4 py-5"
-          aria-labelledby="download-heading"
-          dir="rtl"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2
-                id="download-heading"
-                className="text-[15px] font-black text-foreground"
-              >
-                فایل‌های قابل دانلود
-              </h2>
-              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                فرمت مناسب استفاده‌تان را انتخاب کنید.
-              </p>
-            </div>
-
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-muted text-brand">
-              <Download aria-hidden="true" className="h-4 w-4" />
-            </span>
-          </div>
-
-          <div className="mt-3 divide-y divide-divider">
-            {item.files.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center gap-3 py-3.5"
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-muted px-1 text-[10px] font-black text-foreground-secondary">
-                  {file.format}
-                </span>
-
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-[13px] font-black text-foreground">
-                    {file.label}
-                  </h3>
-                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                    {file.detail} · {file.size}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    void handleDownload(file.id, file.label)
-                  }
-                  disabled={downloadingId === file.id}
-                  aria-label={`دانلود ${file.label}`}
-                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-[11px] font-black text-foreground-secondary outline-none transition-colors hover:border-brand-border hover:text-brand focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:bg-disabled disabled:text-disabled-foreground"
-                >
-                  {downloadingId === file.id ? (
-                    <LoaderCircle
-                      aria-hidden="true"
-                      className="h-3.5 w-3.5 animate-spin"
-                    />
-                  ) : (
-                    <Download
-                      aria-hidden="true"
-                      className="h-3.5 w-3.5"
-                    />
-                  )}
-                  دریافت
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-3 flex gap-2.5 rounded-[14px] bg-success-surface p-3 text-success-foreground">
-            <ShieldCheck
-              aria-hidden="true"
-              className="mt-0.5 h-[18px] w-[18px] shrink-0"
-            />
-            <p className="text-[11px] leading-6">
-              <strong className="block font-black">
-                مجوز استفاده و بازنشر
-              </strong>
-              {item.usageNote}
-            </p>
-          </div>
-        </section>
-      ) : null}
-
       {/* Related */}
       {relatedItems.length ? (
         <section
@@ -634,12 +641,12 @@ export function ContentDetailView({
                   href={`/content/${related.id}` as Route}
                   className="group flex min-h-[72px] items-center gap-3 py-3 outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-muted text-brand">
+                  {/* <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-muted text-brand">
                     <RelatedIcon
                       aria-hidden="true"
                       className="h-[18px] w-[18px]"
                     />
-                  </span>
+                  </span> */}
 
                   <span className="min-w-0 flex-1">
                     <strong className="line-clamp-1 block text-[13px] font-black text-foreground">

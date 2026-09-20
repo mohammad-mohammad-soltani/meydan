@@ -86,7 +86,7 @@ export function FeedView({
 
       {feed.activeTab === "for-you" ? (
         <>
-          <section className="mt-2 flex w-full items-center justify-between border-y border-warning-border bg-warning-surface px-4 py-3 text-xs font-black text-warning-foreground" aria-label="روایت‌های برگزیده میادین">
+          <section className="mt-2 hidden flex w-full items-center justify-between border-y border-warning-border bg-warning-surface px-4 py-3 text-xs font-black text-warning-foreground" aria-label="روایت‌های برگزیده میادین">
             <span className="inline-flex min-w-0 items-center gap-2"><BellRing className="h-5 w-5 shrink-0" aria-hidden="true" /><span>پژواک‌ها و روایت‌های برگزیده میادین</span></span>
             <span className="shrink-0 rounded-md bg-warning px-2 py-1 text-[10px] text-warning-solid-foreground">زنده</span>
           </section>

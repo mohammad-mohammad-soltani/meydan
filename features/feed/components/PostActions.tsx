@@ -23,7 +23,7 @@ export function PostActions({ postId, likes, comments, views, liked, onLike, onS
   const { requireAuth } = useAuthGate();
 
   return (
-    <div dir="ltr" className={`feed-post-actions pointer-events-auto relative z-20 mt-3 grid h-10 grid-cols-4 items-center rounded-2xl border border-border bg-surface-glass px-1 text-icon-muted shadow-xs ${className}`}>
+    <div dir="ltr" className={`feed-post-actions pointer-events-auto relative z-20 mt-3 grid h-10 grid-cols-4 items-center rounded-xl border border-border bg-surface-glass px-1 text-icon-muted shadow-xs ${className}`}>
       <button type="button" onClick={(event) => { event.stopPropagation(); onShare(); }} aria-label="اشتراک‌گذاری روایت" className={`${actionBase} hover:bg-info-surface hover:text-info`}><Share2 className="h-[17px] w-[17px]" /></button>
       <Link
         scroll={false}

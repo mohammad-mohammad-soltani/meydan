@@ -1,6 +1,5 @@
 import {
-  BriefcaseBusiness,
-  CalendarDays,
+  Pencil,
   MapPin,
 } from "lucide-react";
 
@@ -27,7 +26,7 @@ function Stats({
   return (
     <div
       dir="rtl"
-      className="mt-5 grid grid-cols-3 border-y border-divider"
+      className="mt-2 mb-3 grid grid-cols-3  border-divider"
     >
       {items.slice(0, 3).map((item, index) => (
         <div
@@ -89,7 +88,7 @@ export function ProfileInfo({
         <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-foreground-subtle">
           {profile.identity.subtitle ? (
             <span className="inline-flex items-center gap-1.5">
-              <BriefcaseBusiness
+              <Pencil
                 aria-hidden="true"
                 className="h-4 w-4"
               />
@@ -108,15 +107,6 @@ export function ProfileInfo({
               {profile.identity.location}
             </span>
           ) : null}
-
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarDays
-              aria-hidden="true"
-              className="h-4 w-4"
-            />
-
-            عضو میدان
-          </span>
         </div>
       </div>
 

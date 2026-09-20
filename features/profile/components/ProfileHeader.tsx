@@ -34,12 +34,18 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
   const { identity, accountType, narratives } = profile;
   const postLabel = profile.narrativeCount != null ? new Intl.NumberFormat("fa-IR").format(profile.narrativeCount) : accountType === "square" ? new Intl.NumberFormat("fa-IR").format(narratives.length) : profile.resumeStats[0]?.value || "۰";
   const canBeInvited = !canEdit && accountType !== "square" && Boolean(identity.verifiedSpeaker);
+  
 
+  const stats = accountType === "square" ? 
+      profile.squareStats
+    : profile.resumeStats;
+
+  const postCounts = stats[0].value;
   return (
     <>
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-divider bg-surface/95 px-3 backdrop-blur">
         <button type="button" aria-label="بازگشت" onClick={() => history.back()} className="grid h-11 w-11 place-items-center rounded-full text-icon hover:bg-hover"><ArrowRight className="h-5 w-5" /></button>
-        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} /><OfficialBadge official={identity.verifiedOfficial} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postLabel} روایت</p></div>
+        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} /><OfficialBadge official={identity.verifiedOfficial} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postCounts} روایت</p></div>
       </header>
 
       <div className="bg-surface">
@@ -76,10 +82,13 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
               <ProfileActionsMenu profile={profile} canEdit={canEdit} onNotice={setNotice} />
             </div>
           </div>
-          <div className="mt-2">
+          {/* <div className="mt-2">
             <div className="flex flex-wrap items-center gap-1.5"><h2 className="text-xl font-black leading-8 text-foreground">{identity.name}</h2>{identity.verified ? <BadgeCheck aria-label="حساب تأییدشده" className="h-5 w-5 fill-verified text-on-solid" /> : null}<SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /><OfficialBadge official={identity.verifiedOfficial} size="lg" /></div>
             <p dir="ltr" className="mt-0.5 text-left text-sm text-foreground-subtle">@{identity.handle}</p>
-          </div>
+          </div> 
+          TODO: i will add id here
+          */}
+          
         </div>
       </div>
 

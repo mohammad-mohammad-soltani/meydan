@@ -10,7 +10,7 @@ type FeedTabsProps = {
 
 export function FeedTabs({ activeTab, onChange }: FeedTabsProps) {
   const { requireAuth } = useAuthGate();
-  const tabClass = (active: boolean) => `relative z-10 flex-1 px-2 py-4 text-xs font-black transition-colors duration-200 ${active ? "text-brand font-black" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`;
+  const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-4 text-xs font-black transition-colors duration-200 ${active ? "text-brand font-black" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`;
 
   return (
     <div role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="relative flex w-full border-b border-border bg-surface-glass backdrop-blur">

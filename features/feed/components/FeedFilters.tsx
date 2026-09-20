@@ -58,7 +58,7 @@ export function FeedFilters({
               active:scale-[0.97]
               ${
                 active
-                  ? "border-brand-border bg-selected text-selected-foreground"
+                  ? "border-brand-border bg-brand text-foreground "
                   : "border-border bg-surface text-muted-foreground hover:bg-hover hover:text-foreground"
               }
             `}
@@ -72,7 +72,7 @@ export function FeedFilters({
                 group-hover:scale-105
                 ${
                   active
-                    ? "text-brand"
+                    ? "text-foreground"
                     : "text-icon-muted group-hover:text-icon"
                 }
               `}
