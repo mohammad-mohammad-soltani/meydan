@@ -12,7 +12,7 @@ import {
   Check,
   Clapperboard,
   Download,
-  Eye,
+  ChartNoAxesColumn,
   FileText,
   Headphones,
   LoaderCircle,
@@ -382,7 +382,7 @@ export function ContentDetailView({
           ) : null}
 
           <span className="inline-flex items-center gap-1.5">
-            <Eye aria-hidden="true" className="h-3.5 w-3.5" />
+            <ChartNoAxesColumn aria-hidden="true" className="h-3.5 w-3.5" />
             {item.viewCount} بازدید
           </span>
           {

@@ -175,6 +175,18 @@ test("the lightbox keeps the X-style viewing controls", () => {
   }
 });
 
+test("view counts use the same chart icon across feed and content", () => {
+  const feedActions = source("features/feed/components/PostActions.tsx");
+  const contentDetail = source("features/content/components/ContentDetailView.tsx");
+  const immersive = source("features/media/components/ImmersivePostSlide.tsx");
+
+  for (const surface of [feedActions, contentDetail, immersive]) {
+    assert.match(surface, /ChartNoAxesColumn/);
+  }
+  assert.doesNotMatch(feedActions, /\bEye\b/);
+  assert.doesNotMatch(contentDetail, /\bEye\b/);
+});
+
 test("immersive viewer actions stay balanced and comments open the post detail", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
   const css = source("app/globals.css");

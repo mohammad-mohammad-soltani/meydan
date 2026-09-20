@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { Eye, Heart, MessageCircle, Share2 } from "lucide-react";
+import { ChartNoAxesColumn, Heart, MessageCircle, Share2 } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 
 type PostActionsProps = {
@@ -42,7 +42,7 @@ export function PostActions({ postId, likes, comments, views, liked, onLike, onS
         <MessageCircle className="h-[17px] w-[17px]" /><span className="text-xs">{formatCount(comments)}</span>
       </Link>
       <span aria-label={`${views} بازدید`} className={`${actionBase} text-icon-muted`}>
-        <Eye className="h-[17px] w-[17px]" /><span className="text-xs">{formatCount(views)}</span>
+        <ChartNoAxesColumn className="h-[17px] w-[17px]" /><span className="text-xs">{formatCount(views)}</span>
       </span>
       <button type="button" onClick={(event) => { event.stopPropagation(); if (!requireAuth()) return; onLike(); }} aria-label="پسندیدن روایت" aria-pressed={liked} className={`${actionBase} hover:bg-brand-muted ${liked ? "text-brand" : "hover:text-brand"}`}>
         <Heart className={`h-[17px] w-[17px] ${liked ? "fill-current" : ""}`} /><span className="text-xs">{formatCount(likes)}</span>
