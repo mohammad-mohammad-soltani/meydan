@@ -345,7 +345,7 @@ export function VideoFeedViewer({ session, onClose }: Props) {
             key={entry.key}
             inert={slide !== index}
             aria-hidden={slide !== index}
-            className="relative flex h-full w-full shrink-0 items-center justify-center px-0 pb-36 pt-16 sm:px-16 [container-type:size]"
+            className="flex h-full w-full shrink-0 items-center justify-center px-0 pb-36 pt-16 sm:px-16 [container-type:size]"
           >
             {Math.abs(slide - index) <= 1 ? (
               <VideoPlayer
@@ -381,7 +381,7 @@ export function VideoFeedViewer({ session, onClose }: Props) {
       <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black via-black/90 to-transparent px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8 sm:px-20">
         <p className="font-bold">{active.author}</p>
         <p className="mt-1 line-clamp-2 text-sm text-white/80">{active.body}</p>
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-3 md:flex items-center gap-3 hidden">
           <button
             className="video-feed-button"
             disabled={index === 0}
@@ -398,9 +398,6 @@ export function VideoFeedViewer({ session, onClose }: Props) {
           >
             <ArrowDown />
           </button>
-          <span className="text-xs text-white/70" aria-live="polite">
-            ویدیو {(index + 1).toLocaleString("fa-IR")}
-          </span>
           {ended === active.key && (
             <button
               className="text-sm underline"
