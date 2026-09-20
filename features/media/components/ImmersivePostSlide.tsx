@@ -73,7 +73,11 @@ export function ImmersivePostSlide({
   const slideRef = useRef<HTMLDivElement>(null);
   const replyRef = useRef<HTMLInputElement>(null);
   const state = useViewerPost(entry.post);
-  const portrait = ratio < 1;
+  // Images always use the stable landscape viewer layout. Their intrinsic
+  // ratio only changes how the image is fitted inside the media stage; it must
+  // never move the author/meta/actions between the top and bottom chrome.
+  const portrait = item.kind === "video" && ratio < 1;
+  const imageViewer = item.kind === "image";
   const mediaKey = `${entry.postId}:${item.id}`;
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -174,7 +178,7 @@ export function ImmersivePostSlide({
   return (
     <div
       ref={slideRef}
-      className={`immersive-post ${portrait ? "is-portrait" : "is-landscape"}`}
+      className={`immersive-post ${portrait ? "is-portrait" : "is-landscape"} ${imageViewer ? "is-image-viewer" : ""}`}
       data-chrome-visible={visible}
       onClickCapture={(event) => {
         if (suppress.current) {

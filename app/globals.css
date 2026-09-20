@@ -862,6 +862,10 @@ html.dark {
 .viewer-bottom { position: absolute; inset: auto 0 0; z-index: 30; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px max(12px, env(safe-area-inset-bottom)); }
 .is-portrait .viewer-bottom { background: linear-gradient(transparent, #0009 35%, #000d); padding-top: 36px; }
 .is-landscape .viewer-bottom { min-height: 290px; background: #000; }
+.is-image-viewer .viewer-bottom {
+  bottom: 0;
+  justify-content: flex-end;
+}
 .viewer-caption { font-size: 15px; line-height: 1.7; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; }
 .is-portrait .viewer-caption { font-size: 13px; -webkit-line-clamp: 1; }
 .viewer-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; gap: 10px; }

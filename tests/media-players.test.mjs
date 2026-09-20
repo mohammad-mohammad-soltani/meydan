@@ -187,6 +187,20 @@ test("view counts use the same chart icon across feed and content", () => {
   assert.doesNotMatch(contentDetail, /\bEye\b/);
 });
 
+test("immersive images always keep the landscape chrome while swiping mixed aspect ratios", () => {
+  const slide = source("features/media/components/ImmersivePostSlide.tsx");
+  const css = source("app/globals.css");
+
+  assert.match(slide, /const portrait = item\.kind === "video" && ratio < 1;/);
+  assert.match(slide, /const imageViewer = item\.kind === "image";/);
+  assert.match(slide, /is-image-viewer/);
+  assert.doesNotMatch(slide, /const portrait = ratio < 1;/);
+  assert.match(
+    css,
+    /\.is-image-viewer \.viewer-bottom\s*\{[\s\S]*?bottom:\s*0;[\s\S]*?justify-content:\s*flex-end;/,
+  );
+});
+
 test("immersive viewer author identity links to the public profile in both layouts", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
 
