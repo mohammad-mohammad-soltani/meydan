@@ -187,6 +187,13 @@ test("view counts use the same chart icon across feed and content", () => {
   assert.doesNotMatch(contentDetail, /\bEye\b/);
 });
 
+test("short immersive images align to the top instead of leaving empty space above", () => {
+  const lightbox = source("features/media/components/MediaLightbox.tsx");
+
+  assert.match(lightbox, /immersive \? "items-start" : "items-center"/);
+  assert.match(lightbox, /immersive \? "inset-x-0 top-0 mx-auto" : "inset-0 m-auto"/);
+});
+
 test("immersive image metadata fades over the photo instead of masking it with solid black", () => {
   const css = source("app/globals.css");
 

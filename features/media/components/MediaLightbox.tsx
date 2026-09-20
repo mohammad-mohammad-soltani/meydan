@@ -486,12 +486,12 @@ export function MediaStage({
   if (item.kind !== "image" || !item.src) return null;
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center">
+    <div className={`relative flex h-full w-full justify-center ${immersive ? "items-start" : "items-center"}`}>
       <div
         ref={stageRef}
         data-image-stage
         data-image-gesturing={zoom > MIN_ZOOM || isGesturing}
-        className="relative flex h-full w-full touch-none items-center justify-center overflow-hidden"
+        className={`relative flex h-full w-full touch-none justify-center overflow-hidden ${immersive ? "items-start" : "items-center"}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endPointer}
@@ -528,7 +528,7 @@ export function MediaStage({
             aria-hidden="true"
             draggable={false}
             onError={() => setPreviewBroken(true)}
-            className="pointer-events-none absolute inset-0 m-auto max-w-full object-contain"
+            className={`pointer-events-none absolute max-w-full object-contain ${immersive ? "inset-x-0 top-0 mx-auto" : "inset-0 m-auto"}`}
             style={immersive ? { width: immersiveImageWidth, height: "auto" } : undefined}
           />
         ) : null}
