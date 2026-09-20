@@ -35,6 +35,7 @@ import {
   continueVideoAutoplay,
   handoffHolders,
   isVideoAutoplayActive,
+  isVideoFeedOwner,
   listPlayers,
   readStoredVideoMuted,
   registerPlayer,
@@ -71,6 +72,13 @@ function pictureInPictureSupported(): boolean {
 
 type VideoPlayerProps = {
   item: MediaItem;
+  /** Defined only when playback is controlled by the immersive feed. */
+  active?: boolean;
+  initialTime?: number;
+  onPlaybackTime?: (time: number) => void;
+  onEnded?: () => void;
+  onPlaybackStart?: () => void;
+  onRequestFullscreen?: (video: HTMLVideoElement) => void;
   /** `inline` keeps the card frame; `immersive` fills the lightbox stage. */
   variant?: "inline" | "immersive";
   autoPlay?: boolean;
@@ -100,6 +108,12 @@ type VideoPlayerProps = {
  */
 export function VideoPlayer({
   item,
+  active,
+  initialTime = 0,
+  onPlaybackTime,
+  onEnded,
+  onPlaybackStart,
+  onRequestFullscreen,
   variant = "inline",
   autoPlay = false,
   preload = "metadata",
@@ -110,6 +124,23 @@ export function VideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const seekingRef = useRef(false);
+  const initialTimeRef = useRef(initialTime);
+  const appliedInitialTime = useRef(false);
+  const timeCallback = useRef(onPlaybackTime);
+  useEffect(() => { timeCallback.current = onPlaybackTime; }, [onPlaybackTime]);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || active === undefined) return;
+    if (!active || document.hidden) video.pause();
+    else {
+      if (video.ended) video.currentTime = 0;
+      void video.play().catch(() => { /* Browser policy: retain the play button. */ });
+    }
+    return () => {
+      timeCallback.current?.(video.ended ? 0 : video.currentTime);
+      video.pause();
+    };
+  }, [active]);
 
   const [hasFrame, setHasFrame] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
@@ -192,16 +223,16 @@ export function VideoPlayer({
 
   const togglePlayback = async () => {
     const video = videoRef.current;
-    if (!video || hasError) return;
+    if (!video || hasError || active === false || (active === undefined && isVideoFeedOwner())) return;
 
     if (video.paused || video.ended) {
       setHasHandoff(false);
       // A tap on play is the gesture that starts the handoff session.
-      beginVideoAutoplay();
+      if (active === undefined) beginVideoAutoplay();
       try {
         await video.play();
       } catch {
-        setHasError(true);
+        setIsPlaying(false);
       }
       return;
     }
@@ -307,6 +338,8 @@ export function VideoPlayer({
     const video = videoRef.current;
     if (!wrapper || !video) return;
 
+    if (onRequestFullscreen) { onRequestFullscreen(video); return; }
+
     try {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
@@ -354,7 +387,7 @@ export function VideoPlayer({
    */
   useEffect(() => {
     const wrapper = wrapperRef.current;
-    if (!wrapper || typeof IntersectionObserver === "undefined") return;
+    if (!wrapper || active !== undefined || typeof IntersectionObserver === "undefined") return;
 
     // Picture-in-picture and fullscreen deliberately take the video out of the
     // page flow, so leaving the viewport must not pause them there.
@@ -386,6 +419,7 @@ export function VideoPlayer({
         for (const entry of entries) {
           const video = videoRef.current;
           if (!video || isDetachedFromPage()) continue;
+          if (isVideoFeedOwner()) { video.pause(); continue; }
 
           if (entry.isIntersecting && entry.intersectionRatio >= VISIBLE_PLAYBACK_THRESHOLD) {
             // Claim the handoff only if the session is still live, this player
@@ -419,7 +453,7 @@ export function VideoPlayer({
 
     observer.observe(wrapper);
     return () => observer.disconnect();
-  }, []);
+  }, [active]);
 
   /**
    * Only one player may play at a time. The registry doubles as a veto: a
@@ -432,6 +466,12 @@ export function VideoPlayer({
     if (!wrapper || !video) return;
 
     const handlePlay = () => {
+      if (isVideoFeedOwner() && active !== true) { video.pause(); return; }
+      if (active === true) {
+        if (document.hidden) { video.pause(); return; }
+        for (const { video: other } of listPlayers()) if (other !== video) other.pause();
+        return;
+      }
       if (!isVideoAutoplayActive()) return;
 
       for (const { element, video: other } of listPlayers()) {
@@ -447,7 +487,7 @@ export function VideoPlayer({
     };
 
     return registerPlayer(wrapper, video, handlePlay);
-  }, []);
+  }, [active]);
 
   if (!source) return null;
 
@@ -536,7 +576,7 @@ export function VideoPlayer({
         src={source}
         poster={item.poster}
         playsInline
-        autoPlay={autoPlay}
+        autoPlay={active === undefined && autoPlay}
         preload={preload}
         aria-label={item.title || "ویدیو"}
         className="absolute inset-0 h-full w-full cursor-pointer bg-black object-contain"
@@ -545,7 +585,14 @@ export function VideoPlayer({
           event.stopPropagation();
           void togglePlayback();
         }}
-        onLoadedMetadata={(event) => syncVideoMetrics(event.currentTarget)}
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget;
+          if (!appliedInitialTime.current) {
+            appliedInitialTime.current = true;
+            if (initialTimeRef.current > 0) video.currentTime = Math.min(initialTimeRef.current, Number.isFinite(video.duration) ? video.duration : initialTimeRef.current);
+          }
+          syncVideoMetrics(video);
+        }}
         onLoadedData={(event) => { setHasFrame(true); syncVideoMetrics(event.currentTarget); }}
         onResize={(event) => syncVideoMetrics(event.currentTarget)}
         onDurationChange={(event) => syncDuration(event.currentTarget)}
@@ -556,10 +603,12 @@ export function VideoPlayer({
         onTimeUpdate={(event) => {
           const video = event.currentTarget;
           setCurrentTime(video.currentTime);
+          onPlaybackTime?.(video.ended ? 0 : video.currentTime);
           setBuffered(resolveBufferedEnd(video));
           syncDuration(video);
         }}
         onPlay={() => {
+          onPlaybackStart?.();
           setIsPlaying(true);
           setIsWaiting(false);
           setHasError(false);
@@ -570,6 +619,8 @@ export function VideoPlayer({
           const resolvedDuration = syncDuration(video);
           setIsPlaying(false);
           setCurrentTime(resolvedDuration || video.currentTime || 0);
+          onPlaybackTime?.(0);
+          onEnded?.();
         }}
         onWaiting={() => setIsWaiting(true)}
         onCanPlay={(event) => {
@@ -792,7 +843,7 @@ export function VideoPlayer({
               )}
             </button>
 
-            {canPictureInPicture ? (
+            {canPictureInPicture && active === undefined ? (
               <button
                 type="button"
                 aria-label="پنجرهٔ شناور"

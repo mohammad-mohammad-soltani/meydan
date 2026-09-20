@@ -825,3 +825,11 @@ html.dark {
   border: 0;
   border-radius: 0;
 }
+
+/* One viewport per video; gestures are handled by the shared transition gate. */
+.video-feed-viewer { height: 100dvh; touch-action: none; overscroll-behavior: none; }
+.video-feed-track { transition: transform 360ms cubic-bezier(.22,.7,.25,1); }
+.video-feed-button { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: #ffffff20; }
+.video-feed-button:disabled { opacity: .3; }
+.video-feed-button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .video-feed-track { transition: none; } }

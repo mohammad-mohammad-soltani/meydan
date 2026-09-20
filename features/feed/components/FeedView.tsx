@@ -64,6 +64,7 @@ export function FeedView({
           <PostCard
             key={post.id}
             post={post}
+            videoPosts={feed.posts}
             liked={feed.likedPostIds.has(post.id)}
             reposted={feed.repostedPostIds.has(post.id)}
             joined={feed.joinedPostIds.has(post.id)}

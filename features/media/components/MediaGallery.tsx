@@ -1,7 +1,10 @@
 "use client";
 
+import type { FeedPost } from "@/features/feed/types";
+import { useVideoFeed } from "./VideoFeedProvider";
+import { videosFromPosts } from "../video-feed-queue";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import type { MediaItem } from "../types";
 import {
@@ -29,6 +32,8 @@ const TILE_LAYOUTS: Record<number, { grid: string; container: string; tiles: str
 
 type MediaGalleryProps = {
   items: MediaItem[];
+  videoPost?: FeedPost;
+  videoPosts?: FeedPost[];
   /** Namespace for audio track ids, e.g. `post:12` or `chat:9`. */
   scope: string;
   /** Shown in the bottom player while an audio attachment is playing. */
@@ -50,12 +55,16 @@ type MediaGalleryProps = {
  */
 export function MediaGallery({
   items,
+  videoPost,
+  videoPosts,
   scope,
   artist,
   cover,
   className = "",
   tone = "surface",
 }: MediaGalleryProps) {
+  const openVideoFeed = useVideoFeed();
+  const galleryRef = useRef<HTMLDivElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   // Chat attachments created before intrinsic width/height metadata existed do
   // not know their ratio up front. Learn it from the decoded image so an old
@@ -84,8 +93,19 @@ export function MediaGallery({
       : naturalRatios[single.id] ?? (isBubble ? 1 : 16 / 9)
     : 16 / 9;
 
+  const canOpenFeed = Boolean(videoPost && openVideoFeed);
+  const openFeed = (item: MediaItem, source?: HTMLVideoElement) => {
+    if (!videoPost || !openVideoFeed) return;
+    const entry = videosFromPosts([videoPost]).find((entry) => entry.item.id === item.id);
+    if (!entry) return;
+    setLightboxIndex(null);
+    openVideoFeed({ entry, candidates: videosFromPosts(videoPosts ?? [videoPost]), source, returnFocus: galleryRef.current });
+  };
+
   return (
     <div
+      ref={galleryRef}
+      tabIndex={-1}
       className={className}
       data-media-interactive
       onClick={(event) => event.stopPropagation()}
@@ -96,6 +116,7 @@ export function MediaGallery({
           // web-optimized, so a card must not fetch anything until play.
           <VideoPlayer
             item={single}
+            onRequestFullscreen={canOpenFeed ? (video) => openFeed(single, video) : undefined}
             variant="inline"
             preload="none"
             hideIdleControlsOnMobile
@@ -141,7 +162,7 @@ export function MediaGallery({
             <button
               key={item.id}
               type="button"
-              onClick={() => setLightboxIndex(index)}
+              onClick={() => item.kind === "video" && canOpenFeed ? openFeed(item) : setLightboxIndex(index)}
               aria-label={`نمایش ${item.title}`}
               className={`group/tile relative min-h-0 overflow-hidden bg-surface-sunken ${layout.tiles[index] ?? ""} ${tileRadius}`}
             >
@@ -196,6 +217,7 @@ export function MediaGallery({
       {lightboxIndex !== null ? (
         <MediaLightbox
           items={visuals}
+          onOpenVideoFeed={canOpenFeed ? openFeed : undefined}
           index={lightboxIndex}
           onIndexChange={setLightboxIndex}
           onClose={() => setLightboxIndex(null)}

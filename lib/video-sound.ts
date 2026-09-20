@@ -262,3 +262,9 @@ export function listPlayers(): RegisteredPlayer[] {
   }
   return players;
 }
+
+
+/** While the immersive feed owns playback, inline observers must stand down. */
+let videoFeedOwner = false;
+export function setVideoFeedOwner(active: boolean): void { videoFeedOwner = active; }
+export function isVideoFeedOwner(): boolean { return videoFeedOwner; }

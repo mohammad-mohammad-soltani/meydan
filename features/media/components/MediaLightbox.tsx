@@ -27,6 +27,7 @@ const DISMISS_THRESHOLD = 90;
 
 type MediaLightboxProps = {
   items: MediaItem[];
+  onOpenVideoFeed?: (item: MediaItem, video: HTMLVideoElement) => void;
   index: number;
   onIndexChange: (index: number) => void;
   onClose: () => void;
@@ -44,6 +45,7 @@ type MediaLightboxProps = {
  */
 export function MediaLightbox({
   items,
+  onOpenVideoFeed,
   index,
   onIndexChange,
   onClose,
@@ -198,6 +200,7 @@ export function MediaLightbox({
         <MediaStage
           key={current.id}
           item={current}
+          onOpenVideoFeed={onOpenVideoFeed}
           onSwipe={(direction) => goTo(index + direction)}
           onBackdropClick={onClose}
         />
@@ -236,10 +239,12 @@ export function MediaLightbox({
  */
 function MediaStage({
   item,
+  onOpenVideoFeed,
   onSwipe,
   onBackdropClick,
 }: {
   item: MediaItem;
+  onOpenVideoFeed?: (item: MediaItem, video: HTMLVideoElement) => void;
   onSwipe: (direction: number) => void;
   onBackdropClick: () => void;
 }) {
@@ -431,7 +436,7 @@ function MediaStage({
   if (item.kind === "video") {
     return (
       <div className="flex h-full w-full items-center justify-center [container-type:size]">
-        <VideoPlayer item={item} variant="immersive" autoPlay />
+        <VideoPlayer item={item} variant="immersive" autoPlay onRequestFullscreen={onOpenVideoFeed ? (video) => onOpenVideoFeed(item, video) : undefined} />
       </div>
     );
   }

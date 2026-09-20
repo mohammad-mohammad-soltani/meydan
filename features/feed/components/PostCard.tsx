@@ -17,6 +17,7 @@ import type { FeedPost } from "../types";
 
 type PostCardProps = {
   post: FeedPost;
+  videoPosts?: FeedPost[];
   variant?: "timeline" | "detail";
   liked: boolean;
   reposted: boolean;
@@ -78,6 +79,7 @@ function TimelineMediaReflectionText({
 
 export function PostCard({
   post,
+  videoPosts,
   variant = "timeline",
   liked,
   reposted,
@@ -182,6 +184,8 @@ export function PostCard({
         {post.attachments.length > 0 ? (
           <MediaGallery
             items={mediaItems}
+            videoPost={post}
+            videoPosts={videoPosts}
             scope={`post:${post.id}`}
             artist={post.squareName}
             cover={post.author.avatarUrl}
@@ -369,6 +373,8 @@ export function PostCard({
           {post.attachments.length > 0 ? (
             <MediaGallery
               items={mediaItems}
+            videoPost={post}
+            videoPosts={videoPosts}
               scope={`post:${post.id}`}
               artist={post.squareName}
               cover={post.author.avatarUrl}
