@@ -843,6 +843,10 @@ html.dark {
 .viewer-media-stage { position: absolute; inset: 56px 0 0; display: flex; align-items: center; justify-content: center; }
 @media (max-width: 767px) and (orientation: portrait) {
   .is-portrait .viewer-media-stage { inset: 0; }
+  .is-portrait .immersive-video video {
+    object-fit: cover;
+    object-position: center;
+  }
 }
 .is-landscape .viewer-media-stage { bottom: 300px; }
 .viewer-chrome { transition: opacity 200ms ease; }

@@ -182,12 +182,16 @@ test("every player shares one mute preference", () => {
   assert.match(player, /video\.muted = isMuted/);
 });
 
-test("portrait mobile immersive video is centered in the full viewport", () => {
+test("portrait mobile immersive video fills the viewport from the top", () => {
   const css = source("app/globals.css");
 
   assert.match(
     css,
     /@media \(max-width: 767px\) and \(orientation: portrait\)\s*\{[\s\S]*?\.is-portrait \.viewer-media-stage\s*\{\s*inset:\s*0;\s*\}/,
+  );
+  assert.match(
+    css,
+    /\.is-portrait \.immersive-video video\s*\{[\s\S]*?object-fit:\s*cover;[\s\S]*?object-position:\s*center;/,
   );
   assert.match(css, /\.is-landscape \.viewer-media-stage\s*\{\s*bottom:\s*300px;\s*\}/);
 });
