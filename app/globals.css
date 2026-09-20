@@ -868,6 +868,8 @@ html.dark {
 .is-image-viewer .viewer-bottom {
   bottom: 0;
   justify-content: flex-end;
+  background: linear-gradient(to top, rgba(0, 0, 0, .94) 0%, rgba(0, 0, 0, .72) 52%, transparent 100%);
+  padding-top: 72px;
 }
 .viewer-caption { font-size: 15px; line-height: 1.7; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; }
 .is-portrait .viewer-caption { font-size: 13px; -webkit-line-clamp: 1; }

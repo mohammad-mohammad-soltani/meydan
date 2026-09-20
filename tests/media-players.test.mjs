@@ -187,6 +187,16 @@ test("view counts use the same chart icon across feed and content", () => {
   assert.doesNotMatch(contentDetail, /\bEye\b/);
 });
 
+test("immersive image metadata fades over the photo instead of masking it with solid black", () => {
+  const css = source("app/globals.css");
+
+  assert.match(
+    css,
+    /\.is-image-viewer \.viewer-bottom\s*\{[\s\S]*?background:\s*linear-gradient\(to top,[\s\S]*?transparent 100%\);/,
+  );
+  assert.match(css, /\.is-landscape \.viewer-bottom\s*\{\s*min-height:\s*290px;\s*background:\s*#000;\s*\}/);
+});
+
 test("immersive image stage uses the full viewport so photos are never clipped by chrome", () => {
   const css = source("app/globals.css");
 
