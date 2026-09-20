@@ -187,6 +187,17 @@ test("view counts use the same chart icon across feed and content", () => {
   assert.doesNotMatch(contentDetail, /\bEye\b/);
 });
 
+test("immersive viewer author identity links to the public profile in both layouts", () => {
+  const slide = source("features/media/components/ImmersivePostSlide.tsx");
+
+  assert.match(slide, /const authorIdentity = \(/);
+  assert.match(slide, /publicProfileHref\(\s*entry\.post\.author\.type,\s*entry\.post\.author\.id/);
+  assert.match(slide, /className="viewer-author-link flex min-w-0 flex-1 items-center gap-3 rounded-lg"/);
+  assert.match(slide, /\{authorIdentity\}/);
+  assert.match(slide, /\{portrait && \([\s\S]*?\{author\}/);
+  assert.match(slide, /\{!portrait && author\}/);
+});
+
 test("immersive viewer actions stay balanced and comments open the post detail", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
   const css = source("app/globals.css");

@@ -110,8 +110,8 @@ export function ImmersivePostSlide({
     }).format(value);
   const chrome = (className: string) =>
     `viewer-chrome ${className} ${visible ? "" : "viewer-chrome-hidden"}`;
-  const author = (
-    <div className="viewer-author" dir="ltr">
+  const authorIdentity = (
+    <>
       {entry.post?.author.avatarUrl ? (
         <img
           src={entry.post.author.avatarUrl}
@@ -123,15 +123,7 @@ export function ImmersivePostSlide({
           {entry.author.slice(0, 1)}
         </span>
       )}
-      <a
-        href={
-          entry.post
-            ? publicProfileHref(entry.post.author.type, entry.post.author.id)
-            : undefined
-        }
-        className="min-w-0 flex-1"
-        onClick={onClose}
-      >
+      <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1 truncate font-bold">
           {entry.author}
           {entry.post?.author.verified && (
@@ -141,7 +133,32 @@ export function ImmersivePostSlide({
         <span className="block truncate text-sm text-white/70">
           {entry.post?.handle}
         </span>
-      </a>
+      </span>
+    </>
+  );
+  const author = (
+    <div className="viewer-author" dir="ltr">
+      {entry.post ? (
+        <Link
+          href={
+            publicProfileHref(
+              entry.post.author.type,
+              entry.post.author.id,
+            ) as Route
+          }
+          className="viewer-author-link flex min-w-0 flex-1 items-center gap-3 rounded-lg"
+          onClick={(event) => {
+            event.stopPropagation();
+            onClose();
+          }}
+        >
+          {authorIdentity}
+        </Link>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          {authorIdentity}
+        </div>
+      )}
       {entry.post && (
         <button
           type="button"
