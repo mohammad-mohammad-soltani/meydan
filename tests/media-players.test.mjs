@@ -236,6 +236,22 @@ test("immersive images always keep the landscape chrome while swiping mixed aspe
   );
 });
 
+test("desktop immersive controls form compact left and right groups", () => {
+  const player = source("features/media/components/VideoPlayer.tsx");
+  const css = source("app/globals.css");
+
+  for (const control of ["play", "time", "spacer", "rate", "volume", "fullscreen"]) {
+    assert.match(player, new RegExp(`data-control="${control}"`));
+  }
+  assert.match(css, /\[data-control="rate"\]\s*\{\s*order:\s*1;/);
+  assert.match(css, /\[data-control="volume"\]\s*\{\s*order:\s*2;/);
+  assert.match(css, /\[data-control="fullscreen"\]\s*\{\s*order:\s*3;/);
+  assert.match(css, /\[data-control="spacer"\][\s\S]*?order:\s*4;[\s\S]*?flex:\s*1 1 auto;/);
+  assert.match(css, /\[data-control="time"\]\s*\{\s*order:\s*5;/);
+  assert.match(css, /\[data-control="play"\]\s*\{\s*order:\s*6;/);
+  assert.match(css, /\[data-control="pip"\]\s*\{\s*display:\s*none;/);
+});
+
 test("desktop immersive video uses an X-style full-viewport player", () => {
   const css = source("app/globals.css");
   const slide = source("features/media/components/ImmersivePostSlide.tsx");

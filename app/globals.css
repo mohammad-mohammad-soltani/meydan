@@ -950,7 +950,19 @@ html.dark {
   }
   .immersive-post:not(.is-image-viewer) .viewer-playback-controls > div:last-child {
     padding: 0;
+    gap: 4px;
+    justify-content: flex-start;
   }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls [data-control="rate"] { order: 1; }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls [data-control="volume"] { order: 2; }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls [data-control="fullscreen"] { order: 3; }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls [data-control="pip"] { display: none; }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls [data-control="spacer"] {
+    order: 4;
+    flex: 1 1 auto;
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls [data-control="time"] { order: 5; }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls [data-control="play"] { order: 6; }
   .immersive-post:not(.is-image-viewer) .immersive-video video {
     object-fit: contain;
     object-position: center;

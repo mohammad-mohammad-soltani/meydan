@@ -807,7 +807,8 @@ export function VideoPlayer({
           <div className="flex min-h-9 items-center gap-1 text-white">
             <button
               type="button"
-              aria-label={isPlaying ? "توقف موقت ویدیو" : "پخش ویدیو"}
+              data-control="play"
+              aria-label={isPlaying ? "توقف موقت ویدیو" : "پخش ویدیو"
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -850,14 +851,15 @@ export function VideoPlayer({
               <RotateCw aria-hidden="true" className="h-[18px] w-[18px]" />
             </button>
 
-            <span className="shrink-0 text-[11px] font-medium tabular-nums text-white/95">
+            <span data-control="time" className="shrink-0 text-[11px] font-medium tabular-nums text-white/95">
               {formatClock(currentTime)} / {formatClock(duration)}
             </span>
 
-            <span className="min-w-0 flex-1" />
+            <span data-control="spacer" className="min-w-0 flex-1" />
 
             <button
               type="button"
+              data-control="rate"
               aria-label="سرعت پخش"
               onClick={(event) => {
                 event.preventDefault();
@@ -871,7 +873,8 @@ export function VideoPlayer({
 
             <button
               type="button"
-              aria-label={isMuted ? "فعال کردن صدای ویدیو" : "بی‌صدا کردن ویدیو"}
+              data-control="volume"
+              aria-label={isMuted ? "فعال کردن صدای ویدیو" : "بی‌صدا کردن ویدیو"
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -889,6 +892,7 @@ export function VideoPlayer({
             {canPictureInPicture && (active === undefined || isImmersive) ? (
               <button
                 type="button"
+                data-control="pip"
                 aria-label="پنجرهٔ شناور"
                 onClick={(event) => {
                   event.preventDefault();
@@ -903,6 +907,7 @@ export function VideoPlayer({
 
             <button
               type="button"
+              data-control="fullscreen"
               aria-label="نمایش تمام‌صفحه"
               onClick={(event) => {
                 event.preventDefault();
