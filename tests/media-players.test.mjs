@@ -236,6 +236,22 @@ test("immersive images always keep the landscape chrome while swiping mixed aspe
   );
 });
 
+test("desktop immersive controls override portrait mobile grid styles", () => {
+  const css = source("app/globals.css");
+
+  assert.match(
+    css,
+    /@media \(min-width: 768px\)[\s\S]*?\.viewer-playback-controls\s*\{[\s\S]*?display:\s*block !important;/,
+  );
+  assert.match(
+    css,
+    /\.viewer-playback-controls > div:last-child\s*\{[\s\S]*?display:\s*flex !important;[\s\S]*?gap:\s*4px;/,
+  );
+  assert.match(css, /\[data-control="spacer"\][\s\S]*?flex:\s*1 1 auto;[\s\S]*?min-width:\s*16px;/);
+  assert.match(css, /\[data-control="rate"\][\s\S]*?display:\s*flex !important;[\s\S]*?order:\s*1;/);
+  assert.match(css, /\[data-control="play"\][\s\S]*?display:\s*grid !important;[\s\S]*?order:\s*6;/);
+});
+
 test("desktop immersive controls form compact left and right groups", () => {
   const player = source("features/media/components/VideoPlayer.tsx");
   const css = source("app/globals.css");
