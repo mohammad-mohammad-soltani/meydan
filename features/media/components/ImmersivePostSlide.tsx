@@ -216,24 +216,26 @@ export function ImmersivePostSlide({
         gesture.current = null;
       }}
     >
-      <div
-        className={chrome("viewer-topbar")}
-        inert={!visible}
-        dir="ltr"
-      >
-        <button
-          ref={closeRef}
-          type="button"
-          className="video-feed-button"
-          aria-label="بازگشت"
-          onClick={(event) => {
-            event.stopPropagation();
-            onClose();
-          }}
+      {!portrait && (
+        <div
+          className={chrome("viewer-topbar")}
+          inert={!visible}
+          dir="ltr"
         >
-          <ArrowLeft aria-hidden="true" />
-        </button>
-      </div>
+          <button
+            ref={closeRef}
+            type="button"
+            className="video-feed-button"
+            aria-label="بازگشت"
+            onClick={(event) => {
+              event.stopPropagation();
+              onClose();
+            }}
+          >
+            <ArrowLeft aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div
         className="viewer-media-stage"
         onClick={(event) => {
@@ -270,7 +272,21 @@ export function ImmersivePostSlide({
       </div>
       {portrait && (
         <div className={chrome("viewer-top-author")} inert={!visible}>
-          {author}
+          <div className="viewer-portrait-author-row" dir="ltr">
+            <button
+              ref={closeRef}
+              type="button"
+              className="video-feed-button viewer-portrait-back"
+              aria-label="بازگشت"
+              onClick={(event) => {
+                event.stopPropagation();
+                onClose();
+              }}
+            >
+              <ArrowLeft aria-hidden="true" />
+            </button>
+            {author}
+          </div>
         </div>
       )}
       <div className={chrome("viewer-bottom")} inert={!visible}>

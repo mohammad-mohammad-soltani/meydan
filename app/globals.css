@@ -859,6 +859,8 @@ html.dark {
 .is-portrait .viewer-topbar .video-feed-button { background: transparent; }
 .viewer-top-author { position: absolute; z-index: 20;left:0 ; width: 100%; padding: 8px 16px 32px; background: linear-gradient(#0007, transparent); }
 .viewer-author { display: flex; align-items: center; gap: 12px; width: 100%; font-size: 16px; }
+.viewer-portrait-author-row { display: flex; width: 100%; align-items: center; gap: 8px; }
+.viewer-portrait-back { flex: none; background: transparent; }
 .viewer-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: none; }
 .viewer-follow { border-radius: 999px; padding: 7px 16px; background: #202d35; font-size: 14px; font-weight: 700; white-space: nowrap; }
 .is-portrait .viewer-follow { border: 1px solid #fff; background: transparent; }

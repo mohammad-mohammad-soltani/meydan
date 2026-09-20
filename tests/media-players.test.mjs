@@ -236,6 +236,19 @@ test("immersive images always keep the landscape chrome while swiping mixed aspe
   );
 });
 
+test("portrait video back button sits beside the author avatar", () => {
+  const slide = source("features/media/components/ImmersivePostSlide.tsx");
+  const css = source("app/globals.css");
+
+  assert.match(slide, /\{!portrait && \([\s\S]*?className=\{chrome\("viewer-topbar"\)\}/);
+  assert.match(
+    slide,
+    /\{portrait && \([\s\S]*?viewer-portrait-author-row[\s\S]*?viewer-portrait-back[\s\S]*?\{author\}/,
+  );
+  assert.match(css, /\.viewer-portrait-author-row\s*\{[\s\S]*?display:\s*flex;[\s\S]*?gap:\s*8px;/);
+  assert.match(css, /\.viewer-portrait-back\s*\{[\s\S]*?background:\s*transparent;/);
+});
+
 test("immersive image and video layouts share one back button", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
 
