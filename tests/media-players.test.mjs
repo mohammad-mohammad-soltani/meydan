@@ -236,6 +236,17 @@ test("immersive images always keep the landscape chrome while swiping mixed aspe
   );
 });
 
+test("desktop immersive video uses an X-style full-viewport player", () => {
+  const css = source("app/globals.css");
+  const slide = source("features/media/components/ImmersivePostSlide.tsx");
+
+  assert.match(slide, /className=\{chrome\("viewer-topbar"\)\}/);
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.immersive-post:not\(\.is-image-viewer\) \.viewer-media-stage\s*\{\s*inset:\s*0;/);
+  assert.match(css, /\.immersive-post:not\(\.is-image-viewer\) \.viewer-bottom > :not\(\.viewer-controls-slot\)\s*\{\s*display:\s*none;/);
+  assert.match(css, /\.immersive-post:not\(\.is-image-viewer\) \.immersive-video video\s*\{[\s\S]*?object-fit:\s*contain;[\s\S]*?object-position:\s*center;/);
+  assert.match(css, /\.is-portrait \.viewer-topbar\s*\{\s*display:\s*none;\s*\}/);
+});
+
 test("portrait video back button sits beside the author avatar", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
   const css = source("app/globals.css");

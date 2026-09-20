@@ -843,6 +843,7 @@ html.dark {
 .viewer-media-stage { position: absolute; inset: 56px 0 0; display: flex; align-items: center; justify-content: center; }
 @media (max-width: 767px) and (orientation: portrait) {
   .is-portrait .viewer-media-stage { inset: 0; }
+  .is-portrait .viewer-topbar { display: none; }
   .is-portrait .immersive-video video {
     object-fit: cover;
     object-position: center;
@@ -912,6 +913,50 @@ html.dark {
 .viewer-feed-navigation:empty { display: none; }
 .viewer-feed-navigation { order: 6; }
 @media (max-width: 767px) { .viewer-media-arrows { display: none; } }
+
+/* Desktop video viewer follows X: the video owns the entire viewport and the
+   playback controls float over the bottom edge. Post metadata stays a mobile
+   concern, while the back button remains available above the media. */
+@media (min-width: 768px) {
+  .immersive-post:not(.is-image-viewer) {
+    max-width: none;
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-media-stage {
+    inset: 0;
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-top-author {
+    display: none;
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-portrait-back {
+    display: none;
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-bottom {
+    inset: auto 0 0;
+    min-height: 0;
+    gap: 0;
+    padding: 40px 10px 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, .88) 0%, rgba(0, 0, 0, .42) 48%, transparent 100%);
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-bottom > :not(.viewer-controls-slot) {
+    display: none;
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-controls-slot {
+    order: 0;
+    margin: 0;
+    width: 100%;
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls {
+    width: 100%;
+  }
+  .immersive-post:not(.is-image-viewer) .viewer-playback-controls > div:last-child {
+    padding: 0;
+  }
+  .immersive-post:not(.is-image-viewer) .immersive-video video {
+    object-fit: contain;
+    object-position: center;
+  }
+}
+
 @media (max-height: 600px) and (orientation: landscape) {
   .immersive-post { max-width: none; }
   .viewer-media-stage, .is-landscape .viewer-media-stage { inset: 0 40% 0 0; }

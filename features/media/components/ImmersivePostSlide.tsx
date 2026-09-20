@@ -216,26 +216,24 @@ export function ImmersivePostSlide({
         gesture.current = null;
       }}
     >
-      {!portrait && (
-        <div
-          className={chrome("viewer-topbar")}
-          inert={!visible}
-          dir="ltr"
+      <div
+        className={chrome("viewer-topbar")}
+        inert={!visible}
+        dir="ltr"
+      >
+        <button
+          ref={!portrait ? closeRef : undefined}
+          type="button"
+          className="video-feed-button"
+          aria-label="بازگشت"
+          onClick={(event) => {
+            event.stopPropagation();
+            onClose();
+          }}
         >
-          <button
-            ref={closeRef}
-            type="button"
-            className="video-feed-button"
-            aria-label="بازگشت"
-            onClick={(event) => {
-              event.stopPropagation();
-              onClose();
-            }}
-          >
-            <ArrowLeft aria-hidden="true" />
-          </button>
-        </div>
-      )}
+          <ArrowLeft aria-hidden="true" />
+        </button>
+      </div>
       <div
         className="viewer-media-stage"
         onClick={(event) => {
