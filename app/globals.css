@@ -854,7 +854,7 @@ html.dark {
 .viewer-topbar { position: absolute; inset: 0 0 auto; z-index: 40; display: flex; justify-content: space-between; padding: max(12px, env(safe-area-inset-top)) 16px 8px; }
 .viewer-topbar .video-feed-button { background: #202d35; }
 .is-portrait .viewer-topbar .video-feed-button { background: transparent; }
-.viewer-top-author { position: absolute; inset: calc(64px + env(safe-area-inset-top)) 0 auto; z-index: 20; padding: 8px 16px 32px; background: linear-gradient(#0007, transparent); }
+.viewer-top-author { position: absolute; z-index: 20;left:0 ; width: 100%; padding: 8px 16px 32px; background: linear-gradient(#0007, transparent); }
 .viewer-author { display: flex; align-items: center; gap: 12px; width: 100%; font-size: 16px; }
 .viewer-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: none; }
 .viewer-follow { border-radius: 999px; padding: 7px 16px; background: #202d35; font-size: 14px; font-weight: 700; white-space: nowrap; }
