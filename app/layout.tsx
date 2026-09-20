@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { VideoFeedProvider } from "@/features/media/components/VideoFeedProvider";
 import { PwaRuntime } from "@/components/pwa/PwaRuntime";
 import "./globals.css";
 import "./black-theme.css";
@@ -29,7 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className="min-h-dvh bg-background text-foreground transition-colors duration-150">
         <PwaRuntime />
-        <VideoFeedProvider>{children}</VideoFeedProvider>
+        {children}
       </body>
     </html>
   );

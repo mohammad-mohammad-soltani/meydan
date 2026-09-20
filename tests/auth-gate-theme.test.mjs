@@ -39,6 +39,22 @@ test("protected UI redirects before protected actions", () => {
   assert.match(api, /window\.location\.assign/);
 });
 
+test("video feed viewer stays inside the auth gate provider", () => {
+  const rootLayout = source("app/layout.tsx");
+  const appLayout = source("app/(app)/layout.tsx");
+  const viewerPost = source("features/media/hooks/useViewerPost.ts");
+
+  // Immersive video actions call useAuthGate through useViewerPost. Rendering
+  // VideoFeedProvider above the app auth layout makes its viewer a sibling of
+  // AuthGateProvider, so opening a video throws at runtime.
+  assert.match(viewerPost, /useAuthGate/);
+  assert.doesNotMatch(rootLayout, /VideoFeedProvider/);
+  assert.match(
+    appLayout,
+    /<AuthGateProvider[\\s\\S]*?<VideoFeedProvider[\\s\\S]*?<\\/VideoFeedProvider>[\\s\\S]*?<\\/AuthGateProvider>/,
+  );
+});
+
 test("notification center API endpoints are treated as authenticated client requests", () => {
   const api = source("lib/meydan-api.ts");
   assert.match(api, /cleanPath\s*===\s*["']\/notifications["']/);
