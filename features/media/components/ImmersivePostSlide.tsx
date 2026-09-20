@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   MoreVertical,
   Heart,
-  Repeat2,
   MessageCircle,
   Share2,
   ChartNoAxesColumn,
@@ -279,17 +278,6 @@ export function ImmersivePostSlide({
             >
               <MessageCircle />
               <span>{count(state.stats.comments)}</span>
-            </button>
-            <button
-              type="button"
-              aria-label="بازنشر"
-              aria-pressed={state.viewerState.reposted}
-              disabled={state.busy}
-              onClick={() => void state.toggle("repost")}
-              className={state.viewerState.reposted ? "text-green-400" : ""}
-            >
-              <Repeat2 />
-              <span>{count(state.stats.reposts)}</span>
             </button>
             <button
               type="button"

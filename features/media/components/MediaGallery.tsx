@@ -121,6 +121,16 @@ export function MediaGallery({
           // web-optimized, so a card must not fetch anything until play.
           <VideoPlayer
             item={single}
+            onRequestPlay={canOpenFeed ? (video) => {
+              if (
+                typeof window === "undefined" ||
+                !window.matchMedia("(max-width: 767px)").matches
+              ) {
+                return false;
+              }
+              openFeed(single, video);
+              return true;
+            } : undefined}
             onRequestFullscreen={canOpenFeed ? (video) => openFeed(single, video) : undefined}
             variant="inline"
             preload="none"

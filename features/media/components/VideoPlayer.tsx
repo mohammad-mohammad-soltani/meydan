@@ -87,6 +87,8 @@ type VideoPlayerProps = {
   onPlaybackTime?: (time: number) => void;
   onEnded?: () => void;
   onPlaybackStart?: () => void;
+  /** Return true when the parent consumes a play request (for example by opening the mobile viewer). */
+  onRequestPlay?: (video: HTMLVideoElement) => boolean;
   onRequestFullscreen?: (video: HTMLVideoElement) => void;
   /** `inline` keeps the card frame; `immersive` fills the lightbox stage. */
   variant?: "inline" | "immersive";
@@ -123,6 +125,7 @@ export function VideoPlayer({
   onPlaybackTime,
   onEnded,
   onPlaybackStart,
+  onRequestPlay,
   onRequestFullscreen,
   variant = "inline",
   autoPlay = false,
@@ -245,6 +248,7 @@ export function VideoPlayer({
     if (!video || hasError || active === false || (active === undefined && isVideoFeedOwner())) return;
 
     if (video.paused || video.ended) {
+      if (onRequestPlay?.(video)) return;
       setHasHandoff(false);
       // A tap on play is the gesture that starts the handoff session.
       if (active === undefined) beginVideoAutoplay();

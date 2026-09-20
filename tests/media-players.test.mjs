@@ -175,6 +175,20 @@ test("the lightbox keeps the X-style viewing controls", () => {
   }
 });
 
+test("mobile inline video play opens the immersive viewer and viewer omits repost", () => {
+  const gallery = source("features/media/components/MediaGallery.tsx");
+  const player = source("features/media/components/VideoPlayer.tsx");
+  const slide = source("features/media/components/ImmersivePostSlide.tsx");
+
+  assert.match(player, /onRequestPlay\?: \(video: HTMLVideoElement\) => boolean/);
+  assert.match(player, /if \(onRequestPlay\?\.\(video\)\) return;/);
+  assert.match(gallery, /onRequestPlay=\{canOpenFeed/);
+  assert.match(gallery, /matchMedia\("\(max-width: 767px\)"\)\.matches/);
+  assert.match(gallery, /openFeed\(single, video\)/);
+  assert.doesNotMatch(slide, /aria-label="بازنشر"/);
+  assert.doesNotMatch(slide, /<Repeat2/);
+});
+
 test("the video player keeps the shared playback controls", () => {
   const player = source("features/media/components/VideoPlayer.tsx");
   for (const capability of [
