@@ -175,6 +175,21 @@ test("the lightbox keeps the X-style viewing controls", () => {
   }
 });
 
+test("immersive viewer actions stay balanced and comments open the post detail", () => {
+  const slide = source("features/media/components/ImmersivePostSlide.tsx");
+  const css = source("app/globals.css");
+
+  assert.match(slide, /href=\{\(`\/posts\/\$\{entry\.post\.id\}#comment-composer`\) as Route\}/);
+  assert.match(slide, /aria-label="مشاهده نظرها"/);
+  assert.match(slide, /onClick=\{onClose\}/);
+  assert.doesNotMatch(slide, /setReplying/);
+  assert.match(css, /grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
+  assert.match(
+    css,
+    /\.is-landscape \.viewer-actions > button, \.is-landscape \.viewer-actions > a, \.is-landscape \.viewer-views\s*\{\s*background:\s*#202d35;/,
+  );
+});
+
 test("mobile inline video play opens the immersive viewer and viewer omits repost", () => {
   const gallery = source("features/media/components/MediaGallery.tsx");
   const player = source("features/media/components/VideoPlayer.tsx");

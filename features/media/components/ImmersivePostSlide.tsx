@@ -1,6 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- uploaded media and avatars */
 "use client";
 
+import Link from "next/link";
+import type { Route } from "next";
 import {
   useEffect,
   useRef,
@@ -62,7 +64,6 @@ export function ImmersivePostSlide({
   const item = media[mediaIndex];
   const [visible, setVisible] = useState(true);
   const [menu, setMenu] = useState(false);
-  const [replying, setReplying] = useState(false);
   const [ratio, setRatio] = useState(
     item.width && item.height ? item.width / item.height : 9 / 16,
   );
@@ -268,17 +269,14 @@ export function ImmersivePostSlide({
         )}
         {entry.post && (
           <div className="viewer-actions" dir="ltr">
-            <button
-              type="button"
-              aria-label="پاسخ"
-              onClick={() => {
-                setReplying(true);
-                setTimeout(() => replyRef.current?.focus(), 0);
-              }}
+            <Link
+              href={(`/posts/${entry.post.id}#comment-composer`) as Route}
+              aria-label="مشاهده نظرها"
+              onClick={onClose}
             >
               <MessageCircle />
               <span>{count(state.stats.comments)}</span>
-            </button>
+            </Link>
             <button
               type="button"
               aria-label="پسندیدن"
@@ -306,7 +304,7 @@ export function ImmersivePostSlide({
             </button>
           </div>
         )}
-        {entry.post && (portrait || replying) && (
+        {entry.post && portrait && (
           <form
             className="viewer-reply"
             onSubmit={(event) => {
