@@ -808,7 +808,7 @@ export function VideoPlayer({
             <button
               type="button"
               data-control="play"
-              aria-label={isPlaying ? "توقف موقت ویدیو" : "پخش ویدیو"
+              aria-label={isPlaying ? "توقف موقت ویدیو" : "پخش ویدیو"}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -874,7 +874,7 @@ export function VideoPlayer({
             <button
               type="button"
               data-control="volume"
-              aria-label={isMuted ? "فعال کردن صدای ویدیو" : "بی‌صدا کردن ویدیو"
+              aria-label={isMuted ? "فعال کردن صدای ویدیو" : "بی‌صدا کردن ویدیو"}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
