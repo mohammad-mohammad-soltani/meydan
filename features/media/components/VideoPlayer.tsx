@@ -804,7 +804,7 @@ export function VideoPlayer({
             />
           </div>
 
-          <div className="flex min-h-9 items-center gap-1 text-white">
+          <div className="flex min-h-9 items-center gap-1 text-white flex-row-reverse">
             <button
               type="button"
               data-control="play"
