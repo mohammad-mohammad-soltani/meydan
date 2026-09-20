@@ -187,6 +187,20 @@ test("view counts use the same chart icon across feed and content", () => {
   assert.doesNotMatch(contentDetail, /\bEye\b/);
 });
 
+test("immersive images fill width unless their aspect would exceed the viewport height", () => {
+  const lightbox = source("features/media/components/MediaLightbox.tsx");
+
+  assert.match(lightbox, /const \[imageRatio, setImageRatio\] = useState<number \| null>/);
+  assert.match(
+    lightbox,
+    /immersive && imageRatio[\s\S]*?min\(100%, \$\{Math\.max\(0\.01, imageRatio\) \* 100\}dvh\)/,
+  );
+  assert.match(lightbox, /:\s*immersive\s*\?\s*"100%"\s*:\s*undefined/);
+  assert.match(lightbox, /setImageRatio\(width \/ height\)/);
+  assert.match(lightbox, /width:\s*immersiveImageWidth/);
+  assert.match(lightbox, /height:\s*immersive \? "auto" : undefined/);
+});
+
 test("immersive images always keep the landscape chrome while swiping mixed aspect ratios", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
   const css = source("app/globals.css");

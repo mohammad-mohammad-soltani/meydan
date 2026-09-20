@@ -277,6 +277,11 @@ export function MediaStage({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isGesturing, setIsGesturing] = useState(false);
   const [imageState, setImageState] = useState<"loading" | "ready" | "error">("loading");
+  const [imageRatio, setImageRatio] = useState<number | null>(
+    item.kind === "image" && item.width && item.height
+      ? item.width / item.height
+      : null,
+  );
   const [previewBroken, setPreviewBroken] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -287,6 +292,14 @@ export function MediaStage({
    */
   const previewSrc = item.kind === "image" ? mediaThumbnailSrc(item.src) : undefined;
   const showPreview = Boolean(previewSrc) && !previewBroken && imageState !== "ready";
+  // In the immersive post viewer an image fills the viewer width by default.
+  // Only an image so tall that full width would exceed the viewport is narrowed.
+  const immersiveImageWidth =
+    immersive && imageRatio
+      ? `min(100%, ${Math.max(0.01, imageRatio) * 100}dvh)`
+      : immersive
+        ? "100%"
+        : undefined;
 
   const stageRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef(MIN_ZOOM);
@@ -515,7 +528,8 @@ export function MediaStage({
             aria-hidden="true"
             draggable={false}
             onError={() => setPreviewBroken(true)}
-            className="pointer-events-none absolute inset-0 m-auto max-h-full max-w-full object-contain"
+            className="pointer-events-none absolute inset-0 m-auto max-w-full object-contain"
+            style={immersive ? { width: immersiveImageWidth, height: "auto" } : undefined}
           />
         ) : null}
 
@@ -524,14 +538,21 @@ export function MediaStage({
           src={item.src}
           alt={item.title}
           draggable={false}
-          onLoad={() => setImageState("ready")}
+          onLoad={(event) => {
+            setImageState("ready");
+            const width = event.currentTarget.naturalWidth;
+            const height = event.currentTarget.naturalHeight;
+            if (width > 0 && height > 0) setImageRatio(width / height);
+          }}
           onError={() => setImageState("error")}
-          className={`max-h-full  min-w-[25vw] max-w-full object-contain ${
+          className={`${immersive ? "" : "max-h-full min-w-[25vw]"} max-w-full object-contain ${
             isGesturing ? "" : "transition-transform duration-200 ease-out motion-reduce:transition-none"
           } ${zoom > MIN_ZOOM ? "cursor-grab" : "cursor-zoom-in"} ${
             imageState === "ready" ? "opacity-100" : "opacity-0"
           }`}
           style={{
+            width: immersiveImageWidth,
+            height: immersive ? "auto" : undefined,
             transform: `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${zoom})`,
           }}
         />
