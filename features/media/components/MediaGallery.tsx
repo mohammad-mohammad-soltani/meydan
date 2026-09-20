@@ -96,7 +96,12 @@ export function MediaGallery({
   const canOpenFeed = Boolean(videoPost && openVideoFeed);
   const openFeed = (item: MediaItem, source?: HTMLVideoElement) => {
     if (!videoPost || !openVideoFeed) return;
-    const entry = videosFromPosts([videoPost]).find((entry) => entry.item.id === item.id);
+    const videos = videosFromPosts([videoPost]);
+    const base = videos.find((entry) => entry.item.id === item.id) ?? videos[0] ?? {
+      post: videoPost, postId: videoPost.id, author: videoPost.squareName,
+      authorKey: `${videoPost.author.type}:${videoPost.author.id}`, body: videoPost.body, media: visuals,
+    };
+    const entry = base ? { ...base, item, key: `${videoPost.id}:${item.id}` } : undefined;
     if (!entry) return;
     setLightboxIndex(null);
     openVideoFeed({ entry, candidates: videosFromPosts(videoPosts ?? [videoPost]), source, returnFocus: galleryRef.current });
@@ -124,7 +129,7 @@ export function MediaGallery({
         ) : (
           <button
             type="button"
-            onClick={() => setLightboxIndex(0)}
+            onClick={() => canOpenFeed ? openFeed(single) : setLightboxIndex(0)}
             aria-label={`نمایش ${single.title}`}
             className={`group/media relative block w-full overflow-hidden border border-border bg-surface-sunken ${frameRadius}`}
           >
@@ -162,7 +167,7 @@ export function MediaGallery({
             <button
               key={item.id}
               type="button"
-              onClick={() => item.kind === "video" && canOpenFeed ? openFeed(item) : setLightboxIndex(index)}
+              onClick={() => canOpenFeed ? openFeed(item) : setLightboxIndex(index)}
               aria-label={`نمایش ${item.title}`}
               className={`group/tile relative min-h-0 overflow-hidden bg-surface-sunken ${layout.tiles[index] ?? ""} ${tileRadius}`}
             >

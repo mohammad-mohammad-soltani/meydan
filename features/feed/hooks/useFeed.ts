@@ -5,6 +5,7 @@ import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { actorKey, actorNumericId, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
+import { MEDIA_POST_UPDATE, type MediaPostUpdate } from "@/features/media/post-interactions";
 import { getFeedPage } from "../services/feed.service";
 import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
 
@@ -67,6 +68,22 @@ export function useFeed(
   const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.joined).map((post) => post.id)));
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const update = (event: Event) => {
+      const detail = (event as CustomEvent<MediaPostUpdate>).detail;
+      setRemotePosts((posts) => posts.map((post) => post.id === detail.id ? { ...post, stats: detail.stats, viewerState: { joined: Boolean(post.viewerState?.joined), ...post.viewerState, ...detail.viewerState } } : post));
+      setLikedPostIds((ids) => { const next = new Set(ids); if (detail.viewerState.liked) next.add(detail.id); else next.delete(detail.id); return next; });
+      setRepostedPostIds((ids) => { const next = new Set(ids); if (detail.viewerState.reposted) next.add(detail.id); else next.delete(detail.id); return next; });
+    };
+    const follow = (event: Event) => {
+      const detail = (event as CustomEvent<{ key: string; following: boolean }>).detail;
+      setFollowedActorKeys((keys) => { const next = new Set(keys); if (detail.following) next.add(detail.key); else next.delete(detail.key); return next; });
+    };
+    window.addEventListener(MEDIA_POST_UPDATE, update);
+    window.addEventListener("meydan:media-follow-update", follow);
+    return () => { window.removeEventListener(MEDIA_POST_UPDATE, update); window.removeEventListener("meydan:media-follow-update", follow); };
+  }, []);
 
   const timelineKey = `${modeFor(activeTab)}:${filterFor(activeTab, activeFilter)}`;
   const [paging, setPaging] = useState<TimelinePaging>(() => ({
@@ -275,8 +292,8 @@ export function useFeed(
   }, [activeFilter, activeTab, appendFreshPosts, isLoading, isLoadingMore, nextCursor, timelineKey]);
 
   const posts = useMemo(
-    () => activeTab === "for-you" ? remotePosts.filter((post) => matchesFilter(post, activeFilter)) : remotePosts,
-    [activeFilter, activeTab, remotePosts],
+    () => (activeTab === "for-you" ? remotePosts.filter((post) => matchesFilter(post, activeFilter)) : remotePosts).map((post) => ({ ...post, viewerState: { joined: Boolean(post.viewerState?.joined), ...post.viewerState, liked: likedPostIds.has(post.id), reposted: repostedPostIds.has(post.id) } })),
+    [activeFilter, activeTab, remotePosts, likedPostIds, repostedPostIds],
   );
 
   const toggleLike = useCallback(async (postId: string) => {

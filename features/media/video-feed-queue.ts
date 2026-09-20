@@ -8,6 +8,8 @@ export type VideoFeedEntry = {
   author: string;
   body: string;
   item: MediaItem;
+  post?: FeedPost;
+  media?: MediaItem[];
 };
 
 export function videosFromPosts(posts: FeedPost[]): VideoFeedEntry[] {
@@ -15,6 +17,14 @@ export function videosFromPosts(posts: FeedPost[]): VideoFeedEntry[] {
     post.attachments
       .filter((item) => item.icon === "video" && Boolean(item.previewSrc))
       .map((item) => ({
+        post,
+        media: post.attachments.filter((attachment) =>
+          (attachment.icon === "image" || attachment.icon === "video") && attachment.previewSrc,
+        ).map((attachment): MediaItem => ({
+          id: attachment.id, kind: attachment.icon === "video" ? "video" : "image",
+          src: attachment.previewSrc, poster: attachment.posterSrc, title: attachment.label,
+          width: attachment.width, height: attachment.height,
+        })),
         key: `${post.id}:${item.id}`,
         postId: post.id,
         authorKey: `${post.author.type}:${post.author.id}`,
@@ -38,11 +48,13 @@ export function appendVideos(
   queue: VideoFeedEntry[],
   candidates: VideoFeedEntry[],
 ): VideoFeedEntry[] {
+  const posts = new Set(queue.map((entry) => entry.postId));
   const keys = new Set(queue.map((entry) => entry.key));
   const sources = new Set(queue.map((entry) => entry.item.src));
   const pending = candidates.filter((entry) => {
-    if (!entry.item.src || keys.has(entry.key) || sources.has(entry.item.src))
+    if (!entry.item.src || posts.has(entry.postId) || keys.has(entry.key) || sources.has(entry.item.src))
       return false;
+    posts.add(entry.postId);
     keys.add(entry.key);
     sources.add(entry.item.src);
     return true;

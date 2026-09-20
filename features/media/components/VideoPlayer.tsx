@@ -6,6 +6,7 @@ import {
   useState,
   useSyncExternalStore,
   type CSSProperties,
+  type ReactNode,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
@@ -20,6 +21,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { VideoPreview } from "./VideoPreview";
 import type { MediaItem } from "../types";
 import {
@@ -72,6 +74,13 @@ function pictureInPictureSupported(): boolean {
 
 type VideoPlayerProps = {
   item: MediaItem;
+  /** Immersive chrome is shared with author details and post actions. */
+  chromeVisible?: boolean;
+  onToggleChrome?: () => void;
+  /** Render controls outside the fitted media without moving the video element. */
+  controlsHost?: HTMLElement | null;
+  fillStage?: boolean;
+  onAspectRatio?: (ratio: number) => void;
   /** Defined only when playback is controlled by the immersive feed. */
   active?: boolean;
   initialTime?: number;
@@ -108,6 +117,7 @@ type VideoPlayerProps = {
  */
 export function VideoPlayer({
   item,
+  chromeVisible, onToggleChrome, controlsHost, fillStage = false, onAspectRatio,
   active,
   initialTime = 0,
   onPlaybackTime,
@@ -120,6 +130,9 @@ export function VideoPlayer({
   className = "",
   hideIdleControlsOnMobile = false,
 }: VideoPlayerProps) {
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [skipFeedback, setSkipFeedback] = useState<number | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -182,6 +195,9 @@ export function VideoPlayer({
   const aspectRatio = decodedRatio && decodedRatio.source === source
     ? decodedRatio.ratio
     : videoAspectRatio(item.width, item.height);
+  useEffect(() => { onAspectRatio?.(aspectRatio); }, [aspectRatio, onAspectRatio]);
+  const showChrome = chromeVisible ?? controlsVisible;
+  const renderControls = (node: ReactNode) => controlsHost ? createPortal(node, controlsHost) : node;
   const progress = duration > 0 ? clamp((currentTime / duration) * 100, 0, 100) : 0;
   const bufferedProgress = duration > 0 ? clamp((buffered / duration) * 100, 0, 100) : 0;
   const hideIdleMobileChrome =
@@ -206,16 +222,19 @@ export function VideoPlayer({
   };
 
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || variant === "immersive") return;
     const timeout = setTimeout(() => setControlsVisible(false), 2600);
     return () => clearTimeout(timeout);
-  }, [isPlaying]);
+  }, [isPlaying, variant]);
 
   useEffect(() => () => {
     if (hideControlsRef.current) clearTimeout(hideControlsRef.current);
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
   }, []);
 
   const revealControls = () => {
+    if (variant === "immersive") return;
     setControlsVisible(true);
     if (hideControlsRef.current) clearTimeout(hideControlsRef.current);
     hideControlsRef.current = setTimeout(() => setControlsVisible(false), 2600);
@@ -503,13 +522,13 @@ export function VideoPlayer({
       aria-label={item.title || "پخش‌کننده ویدیو"}
       className={`media-video-player group/video pointer-events-auto relative mx-auto overflow-hidden bg-black outline-none [container-type:inline-size] ${
         isImmersive
-          ? "rounded-2xl border border-white/10 shadow-[0_24px_100px_#0008]"
+          ? `immersive-video ${fillStage ? "h-full w-full" : ""}`
           : `w-full rounded-2xl border border-border shadow-sm ${className}`
       }`}
       style={{
-        aspectRatio,
+        aspectRatio: fillStage ? undefined : aspectRatio,
         "--video-ratio": aspectRatio,
-        width: isImmersive ? `min(100cqw, calc(100cqh * ${aspectRatio}))` : "100%",
+        width: fillStage ? "100%" : isImmersive ? `min(100cqw, calc(100cqh * ${aspectRatio}))` : "100%",
         maxWidth: !isImmersive && aspectRatio < 1 ? `min(100%, ${aspectRatio * 72}dvh)` : undefined,
       } as CSSProperties}
       onPointerMove={revealControls}
@@ -519,6 +538,7 @@ export function VideoPlayer({
         event.stopPropagation();
         if ((event.target as HTMLElement).closest("button, [role=slider]")) return;
 
+        if (tapTimer.current) { clearTimeout(tapTimer.current); tapTimer.current = null; }
         // X-style double tap: rewind on the left side, fast-forward on the right.
         const rect = wrapperRef.current?.getBoundingClientRect();
         if (!rect || rect.width <= 0) {
@@ -528,15 +548,21 @@ export function VideoPlayer({
 
         const ratio = (event.clientX - rect.left) / rect.width;
         if (ratio <= 0.34) {
-          skip(-SKIP_SECONDS);
+          skip(isImmersive ? -5 : -SKIP_SECONDS);
+          setSkipFeedback(isImmersive ? -5 : -SKIP_SECONDS);
+          if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+          feedbackTimer.current = setTimeout(() => setSkipFeedback(null), 650);
           return;
         }
         if (ratio >= 0.66) {
-          skip(SKIP_SECONDS);
+          skip(isImmersive ? 5 : SKIP_SECONDS);
+          setSkipFeedback(isImmersive ? 5 : SKIP_SECONDS);
+          if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+          feedbackTimer.current = setTimeout(() => setSkipFeedback(null), 650);
           return;
         }
 
-        void toggleFullscreen();
+        if (!isImmersive) void toggleFullscreen();
       }}
       onPointerDown={(event) => {
         revealControls();
@@ -583,7 +609,14 @@ export function VideoPlayer({
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          void togglePlayback();
+          if (!isImmersive) { void togglePlayback(); return; }
+          if (tapTimer.current) clearTimeout(tapTimer.current);
+          if (event.detail > 1) return;
+          tapTimer.current = setTimeout(() => {
+            tapTimer.current = null;
+            if (onToggleChrome) onToggleChrome();
+            else setControlsVisible((visible) => !visible);
+          }, 240);
         }}
         onLoadedMetadata={(event) => {
           const video = event.currentTarget;
@@ -647,6 +680,7 @@ export function VideoPlayer({
 
       <span
         aria-hidden="true"
+        hidden={isImmersive}
         className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-black/75 via-black/25 to-transparent transition-opacity duration-200 ${
           hideIdleMobileChrome ? "opacity-0 sm:opacity-100" : "opacity-100"
         }`}
@@ -660,7 +694,8 @@ export function VideoPlayer({
         </span>
       ) : null}
 
-      {!isPlaying && !isWaiting && !hasError ? (
+      {skipFeedback !== null && <span aria-live="polite" className={`pointer-events-none absolute top-1/2 z-40 rounded-full bg-black/50 p-6 text-white ${skipFeedback < 0 ? "left-4" : "right-4"}`}>{skipFeedback > 0 ? "+" : "−"}{faDigits(String(Math.abs(skipFeedback)))} ثانیه</span>}
+      {!isImmersive && !isPlaying && !isWaiting && !hasError ? (
         <button
           type="button"
           aria-label="پخش ویدیو"
@@ -675,11 +710,13 @@ export function VideoPlayer({
         </button>
       ) : null}
 
-      {!hasError ? (
+      {!hasError ? renderControls(
         <div
+          inert={isImmersive && !showChrome}
+          data-playback-controls
           dir="ltr"
-          className={`absolute inset-x-0 bottom-0 z-40 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-3 pb-3 pt-8 transition-opacity duration-200 ${
-            hideIdleMobileChrome
+          className={`${controlsHost ? "viewer-playback-controls relative" : "absolute inset-x-0 bottom-0 z-40 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-3 pb-3 pt-8"} transition-opacity duration-200 motion-reduce:transition-none ${
+            isImmersive ? (showChrome ? "opacity-100" : "pointer-events-none opacity-0") : hideIdleMobileChrome
               ? "pointer-events-none opacity-0 sm:pointer-events-auto sm:opacity-100"
               : isPlaying && !isSeeking && !controlsVisible
                 ? "pointer-events-none opacity-0 focus-within:pointer-events-auto focus-within:opacity-100"
@@ -752,7 +789,7 @@ export function VideoPlayer({
               style={{ width: `${bufferedProgress}%` }}
             />
             <span
-              className="pointer-events-none absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-red-500"
+              className={`pointer-events-none absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full ${isImmersive ? "bg-white" : "bg-red-500"}`}
               style={{ width: `${progress}%` }}
             />
             <span
@@ -783,6 +820,7 @@ export function VideoPlayer({
 
             <button
               type="button"
+              data-skip-button
               aria-label={`${faDigits(String(SKIP_SECONDS))} ثانیه عقب`}
               onClick={(event) => {
                 event.preventDefault();
@@ -796,6 +834,7 @@ export function VideoPlayer({
 
             <button
               type="button"
+              data-skip-button
               aria-label={`${faDigits(String(SKIP_SECONDS))} ثانیه جلو`}
               onClick={(event) => {
                 event.preventDefault();
@@ -843,7 +882,7 @@ export function VideoPlayer({
               )}
             </button>
 
-            {canPictureInPicture && active === undefined ? (
+            {canPictureInPicture && (active === undefined || isImmersive) ? (
               <button
                 type="button"
                 aria-label="پنجرهٔ شناور"

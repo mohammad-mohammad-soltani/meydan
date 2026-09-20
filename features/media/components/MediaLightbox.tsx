@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { MediaItem } from "../types";
 import { clamp, faDigits, mediaThumbnailSrc } from "../media-utils";
+import { setVideoFeedOwner, stopVideoAutoplay } from "@/lib/video-sound";
 import { VideoPlayer } from "./VideoPlayer";
 
 const MIN_ZOOM = 1;
@@ -51,6 +52,8 @@ export function MediaLightbox({
   onClose,
   label = "نمایشگر رسانه",
 }: MediaLightboxProps) {
+  const [chromeVisible, setChromeVisible] = useState(true);
+  const [playbackTimes] = useState(() => new Map<string, number>());
   const current = items[index];
   const total = items.length;
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -58,12 +61,17 @@ export function MediaLightbox({
   const restoreFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    stopVideoAutoplay();
+    setVideoFeedOwner(true);
+    document.querySelectorAll("video").forEach((video) => { if (!dialogRef.current?.contains(video)) video.pause(); });
     restoreFocusRef.current = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
 
     return () => {
+      stopVideoAutoplay();
+      setVideoFeedOwner(false);
       document.body.style.overflow = previousOverflow;
       restoreFocusRef.current?.focus?.();
     };
@@ -89,7 +97,7 @@ export function MediaLightbox({
           ...dialog.querySelectorAll<HTMLElement>(
             'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
           ),
-        ].filter((element) => element.offsetParent !== null);
+        ].filter((element) => element.offsetParent !== null && !element.closest("[inert]"));
         if (!focusable.length) return;
 
         const first = focusable[0];
@@ -111,9 +119,11 @@ export function MediaLightbox({
 
       if (event.key === "ArrowLeft" && index < total - 1) {
         event.preventDefault();
+        setChromeVisible(true);
         onIndexChange(index + 1);
       } else if (event.key === "ArrowRight" && index > 0) {
         event.preventDefault();
+        setChromeVisible(true);
         onIndexChange(index - 1);
       }
     };
@@ -126,6 +136,7 @@ export function MediaLightbox({
 
   const goTo = (next: number) => {
     if (next < 0 || next > total - 1 || next === index) return;
+    setChromeVisible(true);
     onIndexChange(next);
   };
 
@@ -138,9 +149,9 @@ export function MediaLightbox({
       aria-modal="true"
       aria-label={label}
       dir="rtl"
-      className="fixed inset-0 z-[130] flex select-none flex-col bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[130] flex select-none flex-col bg-black"
     >
-      <header className="relative flex shrink-0 items-center justify-between gap-3 p-3">
+      <header inert={!chromeVisible} className={`viewer-chrome relative flex shrink-0 items-center justify-between gap-3 p-3 ${chromeVisible ? "" : "viewer-chrome-hidden"}`}>
         <span
           aria-live="polite"
           className="rounded-pill bg-surface-glass/15 px-3 py-1.5 text-[11px] font-black tabular-nums text-on-solid"
@@ -203,6 +214,10 @@ export function MediaLightbox({
           onOpenVideoFeed={onOpenVideoFeed}
           onSwipe={(direction) => goTo(index + direction)}
           onBackdropClick={onClose}
+          chromeVisible={chromeVisible}
+          onToggleChrome={() => setChromeVisible((value) => !value)}
+          initialTime={playbackTimes.get(current.id) || 0}
+          onPlaybackTime={(time) => playbackTimes.set(current.id, time)}
         />
       </div>
 
@@ -213,7 +228,9 @@ export function MediaLightbox({
             onClick={() => goTo(index - 1)}
             disabled={index === 0}
             aria-label="رسانهٔ قبلی"
-            className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-surface-glass/15 text-on-solid outline-none transition-colors hover:bg-surface-glass/25 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-white/80 sm:right-4"
+            inert={!chromeVisible}
+            style={{ opacity: chromeVisible ? 1 : 0, pointerEvents: chromeVisible ? undefined : "none" }}
+            className="viewer-chrome absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-surface-glass/15 text-on-solid outline-none transition-colors hover:bg-surface-glass/25 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-white/80 sm:right-4"
           >
             <ChevronRight aria-hidden="true" className="h-6 w-6" />
           </button>
@@ -222,7 +239,9 @@ export function MediaLightbox({
             onClick={() => goTo(index + 1)}
             disabled={index === total - 1}
             aria-label="رسانهٔ بعدی"
-            className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-surface-glass/15 text-on-solid outline-none transition-colors hover:bg-surface-glass/25 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-white/80 sm:left-4"
+            inert={!chromeVisible}
+            style={{ opacity: chromeVisible ? 1 : 0, pointerEvents: chromeVisible ? undefined : "none" }}
+            className="viewer-chrome absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-surface-glass/15 text-on-solid outline-none transition-colors hover:bg-surface-glass/25 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-white/80 sm:left-4"
           >
             <ChevronLeft aria-hidden="true" className="h-6 w-6" />
           </button>
@@ -237,16 +256,22 @@ export function MediaLightbox({
  * The stage owns zoom/pan because it is remounted per item (`key`), which keeps
  * every item starting at 1× without a reset effect.
  */
-function MediaStage({
+export function MediaStage({
   item,
   onOpenVideoFeed,
   onSwipe,
   onBackdropClick,
+  immersive = false, chromeVisible = true, onToggleChrome, initialTime = 0, onPlaybackTime,
 }: {
   item: MediaItem;
   onOpenVideoFeed?: (item: MediaItem, video: HTMLVideoElement) => void;
   onSwipe: (direction: number) => void;
   onBackdropClick: () => void;
+  immersive?: boolean;
+  chromeVisible?: boolean;
+  onToggleChrome?: () => void;
+  initialTime?: number;
+  onPlaybackTime?: (time: number) => void;
 }) {
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -341,10 +366,10 @@ function MediaStage({
   };
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (item.kind !== "image") return;
+    if ((event.target as HTMLElement).closest("button, input, [role=slider]")) return;
 
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    event.currentTarget.setPointerCapture(event.pointerId);
+    if (item.kind === "image") event.currentTarget.setPointerCapture(event.pointerId);
     setIsGesturing(true);
     moved.current = false;
 
@@ -423,20 +448,24 @@ function MediaStage({
     const dy = event.clientY - gesture.y;
 
     // A downward pull dismisses, the way every touch viewer behaves.
-    if (dy > DISMISS_THRESHOLD && Math.abs(dy) > Math.abs(dx) * 1.5) {
+    if (!immersive && dy > DISMISS_THRESHOLD && Math.abs(dy) > Math.abs(dx) * 1.5) {
       onBackdropClick();
       return;
     }
 
-    if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
     // RTL: dragging toward the right reveals the previous item.
     onSwipe(dx > 0 ? -1 : 1);
   };
 
   if (item.kind === "video") {
     return (
-      <div className="flex h-full w-full items-center justify-center [container-type:size]">
-        <VideoPlayer item={item} variant="immersive" autoPlay onRequestFullscreen={onOpenVideoFeed ? (video) => onOpenVideoFeed(item, video) : undefined} />
+      <div className="flex h-full w-full touch-none items-center justify-center [container-type:size]"
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endPointer}
+        onPointerCancel={() => { swipe.current = null; pointers.current.clear(); }}
+        onClickCapture={(event) => { if (moved.current) { event.preventDefault(); event.stopPropagation(); moved.current = false; } }}
+      >
+        <VideoPlayer item={item} variant="immersive" active initialTime={initialTime} onPlaybackTime={onPlaybackTime} chromeVisible={chromeVisible} onToggleChrome={onToggleChrome} autoPlay onRequestFullscreen={onOpenVideoFeed ? (video) => onOpenVideoFeed(item, video) : undefined} />
       </div>
     );
   }
@@ -447,14 +476,16 @@ function MediaStage({
     <div className="relative flex h-full w-full items-center justify-center">
       <div
         ref={stageRef}
+        data-image-stage
+        data-image-gesturing={zoom > MIN_ZOOM || isGesturing}
         className="relative flex h-full w-full touch-none items-center justify-center overflow-hidden"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endPointer}
-        onPointerCancel={endPointer}
+        onPointerCancel={() => { swipe.current = null; pointers.current.clear(); pinch.current = null; pan.current = null; setIsGesturing(false); }}
         onClick={(event) => {
           // A tap on the empty backdrop closes; gestures never do.
-          if (!moved.current && event.target === event.currentTarget) onBackdropClick();
+          if (!moved.current && (immersive || event.target === event.currentTarget)) onBackdropClick();
         }}
         onDoubleClick={(event) => {
           if (zoomRef.current > MIN_ZOOM) {
@@ -484,7 +515,7 @@ function MediaStage({
             aria-hidden="true"
             draggable={false}
             onError={() => setPreviewBroken(true)}
-            className="pointer-events-none absolute inset-0 m-auto max-h-full max-w-full rounded-xl object-contain"
+            className="pointer-events-none absolute inset-0 m-auto max-h-full max-w-full object-contain"
           />
         ) : null}
 
@@ -495,7 +526,7 @@ function MediaStage({
           draggable={false}
           onLoad={() => setImageState("ready")}
           onError={() => setImageState("error")}
-          className={`max-h-full  min-w-[25vw] max-w-full rounded-xl object-contain shadow-dialog ${
+          className={`max-h-full  min-w-[25vw] max-w-full object-contain ${
             isGesturing ? "" : "transition-transform duration-200 ease-out motion-reduce:transition-none"
           } ${zoom > MIN_ZOOM ? "cursor-grab" : "cursor-zoom-in"} ${
             imageState === "ready" ? "opacity-100" : "opacity-0"
@@ -537,6 +568,7 @@ function MediaStage({
 
       <div
         data-media-controls
+        hidden={immersive && !chromeVisible}
         className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-pill bg-surface-glass/15 px-1.5 py-1 text-on-solid backdrop-blur-sm"
       >
         <button

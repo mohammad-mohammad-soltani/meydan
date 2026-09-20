@@ -170,7 +170,7 @@ export function ContentView({
               <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
                 <div className="max-w-xl text-right" dir="rtl">
                   <span className="inline-flex rounded-full bg-brand px-2.5 py-1 text-[10px] font-black text-brand-foreground">
-                    {featuredItem.badge || "منبر شبانه"}
+                    محتوای برگزیده                    
                   </span>
 
                   <h2 className="mt-2 text-[18px] font-black leading-8 text-on-solid sm:text-xl">

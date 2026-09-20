@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowDown, ArrowUp, Maximize2, X } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { getFeedPage } from "@/features/feed/services/feed.service";
 import { setVideoFeedOwner, stopVideoAutoplay } from "@/lib/video-sound";
 import {
@@ -11,7 +11,8 @@ import {
   type VideoFeedEntry,
   type VideoPageState,
 } from "../video-feed-queue";
-import { VideoPlayer } from "./VideoPlayer";
+import { MEDIA_POST_UPDATE, type MediaPostUpdate } from "../post-interactions";
+import { ImmersivePostSlide } from "./ImmersivePostSlide";
 
 type Props = {
   session: {
@@ -28,19 +29,18 @@ type LoadStatus = "idle" | "loading" | "more" | "error" | "end";
 export function VideoFeedViewer({ session, onClose }: Props) {
   const [queue, setQueue] = useState(session.queue);
   const [index, setIndex] = useState(0);
-  const [startTimes, setStartTimes] = useState(
-    new Map([[session.queue[0].key, session.startTime]]),
-  );
   const [status, setStatus] = useState<LoadStatus>("idle");
   const [ended, setEnded] = useState<string | null>(null);
-  const [replay, setReplay] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const queueRef = useRef(session.queue);
   const indexRef = useRef(0);
   const locked = useRef(false);
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const times = useRef(new Map([[session.queue[0].key, session.startTime]]));
+  const [selections] = useState(() => new Map<string, string>());
+  const [times] = useState(
+    () => new Map([[session.queue[0].key, session.startTime]]),
+  );
   const pageState = useRef<VideoPageState>({
     cursor: null,
     exhausted: false,
@@ -51,6 +51,32 @@ export function VideoFeedViewer({ session, onClose }: Props) {
   const touch = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
   const wheel = useRef({ delta: 0, last: 0, consumed: false });
+
+  useEffect(() => {
+    const update = (event: Event) => {
+      const detail = (event as CustomEvent<MediaPostUpdate>).detail;
+      const next = queueRef.current.map((entry) =>
+        entry.postId === detail.id && entry.post
+          ? {
+              ...entry,
+              post: {
+                ...entry.post,
+                stats: detail.stats,
+                viewerState: {
+                  ...entry.post.viewerState,
+                  joined: Boolean(entry.post.viewerState?.joined),
+                  ...detail.viewerState,
+                },
+              },
+            }
+          : entry,
+      );
+      queueRef.current = next;
+      setQueue(next);
+    };
+    window.addEventListener(MEDIA_POST_UPDATE, update);
+    return () => window.removeEventListener(MEDIA_POST_UPDATE, update);
+  }, []);
 
   const move = useCallback((direction: number, origin?: number) => {
     if (document.hidden) return;
@@ -67,7 +93,6 @@ export function VideoFeedViewer({ session, onClose }: Props) {
     pendingEnd.current = null;
     root.current?.querySelectorAll("video").forEach((video) => video.pause());
     indexRef.current = next;
-    setStartTimes(new Map(times.current));
     setIndex(next);
     root.current?.focus({ preventScroll: true });
     setEnded(null);
@@ -143,7 +168,7 @@ export function VideoFeedViewer({ session, onClose }: Props) {
     background.forEach((element) => {
       element.inert = true;
     });
-    closeButton.current?.focus({ preventScroll: true });
+    (closeButton.current ?? root.current)?.focus({ preventScroll: true });
     const visibility = () => {
       if (document.hidden) {
         pendingEnd.current = null;
@@ -166,7 +191,7 @@ export function VideoFeedViewer({ session, onClose }: Props) {
         (event.key === "ArrowDown" || event.key === "ArrowUp") &&
         !(
           event.target instanceof Element &&
-          event.target.closest("[role=slider], input")
+          event.target.closest("[role=slider], input, textarea")
         )
       ) {
         event.preventDefault();
@@ -179,7 +204,7 @@ export function VideoFeedViewer({ session, onClose }: Props) {
     document.addEventListener("visibilitychange", visibility);
     const originalSource = session.source;
     const originalKey = session.queue[0].key;
-    const savedTimes = times.current;
+    const savedTimes = times;
     const viewer = root.current;
     return () => {
       request.current?.abort();
@@ -209,12 +234,29 @@ export function VideoFeedViewer({ session, onClose }: Props) {
       else if (session.returnFocus?.isConnected)
         session.returnFocus.focus({ preventScroll: true });
     };
-  }, [session, onClose, move]);
+  }, [session, onClose, move, times]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const resize = () => {
+      if (root.current) {
+        root.current.style.height = `${viewport.height}px`;
+        root.current.style.top = `${viewport.offsetTop}px`;
+      }
+    };
+    resize();
+    viewport.addEventListener("resize", resize);
+    viewport.addEventListener("scroll", resize);
+    return () => {
+      viewport.removeEventListener("resize", resize);
+      viewport.removeEventListener("scroll", resize);
+    };
+  }, []);
 
   const active = queue[index];
   const finish = (key: string, slide: number) => {
     if (document.hidden || indexRef.current !== slide) return;
-    times.current.set(key, 0);
     pendingEnd.current = key;
     setEnded(key);
     move(1, slide);
@@ -224,6 +266,61 @@ export function VideoFeedViewer({ session, onClose }: Props) {
       void document.exitFullscreen().catch(() => {});
     else void root.current?.requestFullscreen?.().catch(() => {});
   };
+
+  const footer = (
+    <div className="viewer-feed-navigation">
+      <div className="mt-3 md:flex items-center gap-3 hidden">
+        <button
+          className="video-feed-button"
+          disabled={index === 0}
+          onClick={() => move(-1)}
+          aria-label="ویدیوی قبلی"
+        >
+          <ArrowUp />
+        </button>
+        <button
+          className="video-feed-button"
+          disabled={index + 1 >= queue.length}
+          onClick={() => move(1)}
+          aria-label="ویدیوی بعدی"
+        >
+          <ArrowDown />
+        </button>
+        {ended === active.key && (
+          <button
+            className="text-sm underline"
+            onClick={() => {
+              const video = root.current?.querySelector<HTMLVideoElement>(
+                "section:not([inert]) video",
+              );
+              if (video) {
+                video.currentTime = 0;
+                void video.play().catch(() => {});
+              }
+              pendingEnd.current = null;
+              setEnded(null);
+              root.current?.focus({ preventScroll: true });
+            }}
+          >
+            پخش دوباره
+          </button>
+        )}
+      </div>
+      <div role="status" className="text-xs text-white/80">
+        {status === "loading" && "در حال دریافت ویدیوهای بیشتر…"}
+        {status === "end" &&
+          index === queue.length - 1 &&
+          "به پایان ویدیوها رسیدید."}
+        {(status === "more" || status === "error") && (
+          <button className="underline" onClick={() => void load()}>
+            {status === "error"
+              ? "دریافت ویدیو ناموفق بود؛ تلاش دوباره"
+              : "جست‌وجوی بیشتر"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
   return createPortal(
     <div
@@ -247,16 +344,24 @@ export function VideoFeedViewer({ session, onClose }: Props) {
           (event.key === " " || event.key.toLowerCase() === "k")
         ) {
           event.preventDefault();
-          root.current
-            ?.querySelector<HTMLVideoElement>("section:not([inert]) video")
-            ?.click();
+          const video = root.current?.querySelector<HTMLVideoElement>(
+            "section:not([inert]) video",
+          );
+          if (video) {
+            if (video.paused) void video.play().catch(() => {});
+            else video.pause();
+          }
         }
         if (event.key === "Tab") {
           const nodes = Array.from(
             root.current?.querySelectorAll<HTMLElement>(
-              "button:not(:disabled), [tabindex='0'], a[href]",
+              "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [tabindex='0'], a[href]",
             ) || [],
-          ).filter((element) => !element.closest("[inert]"));
+          ).filter(
+            (element) =>
+              !element.closest("[inert]") &&
+              element.getClientRects().length > 0,
+          );
           const position = nodes.indexOf(document.activeElement as HTMLElement);
           if (event.shiftKey && position <= 0) {
             event.preventDefault();
@@ -271,7 +376,11 @@ export function VideoFeedViewer({ session, onClose }: Props) {
         }
       }}
       onWheel={(event) => {
-        if ((event.target as HTMLElement).closest("[role=slider], input"))
+        if (
+          (event.target as HTMLElement).closest(
+            "[role=slider], input, textarea, [data-image-stage]",
+          )
+        )
           return;
         const now = performance.now();
         const state = wheel.current;
@@ -295,10 +404,14 @@ export function VideoFeedViewer({ session, onClose }: Props) {
       }}
       onPointerDown={(event) => {
         suppressClick.current = false;
+        if (!event.isPrimary) {
+          touch.current = null;
+          return;
+        }
         if (
           event.pointerType === "mouse" ||
           (event.target as HTMLElement).closest(
-            "button, input, [role=slider], a",
+            "button, input, textarea, [role=slider], a, [data-image-gesturing=true]",
           )
         )
           return;
@@ -319,23 +432,6 @@ export function VideoFeedViewer({ session, onClose }: Props) {
         touch.current = null;
       }}
     >
-      <div className="absolute inset-x-0 top-0 z-30 flex justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))]">
-        <button
-          ref={closeButton}
-          onClick={onClose}
-          aria-label="بستن فید ویدیوها"
-          className="video-feed-button"
-        >
-          <X />
-        </button>
-        <button
-          onClick={toggleFullscreen}
-          aria-label="تمام‌صفحه"
-          className="video-feed-button"
-        >
-          <Maximize2 />
-        </button>
-      </div>
       <div
         className="video-feed-track h-full w-full"
         style={{ transform: `translateY(-${index * 100}%)` }}
@@ -345,19 +441,18 @@ export function VideoFeedViewer({ session, onClose }: Props) {
             key={entry.key}
             inert={slide !== index}
             aria-hidden={slide !== index}
-            className="flex h-full w-full shrink-0 items-center justify-center px-0 pb-36 pt-16 sm:px-16 [container-type:size]"
+            className="relative h-full w-full shrink-0"
           >
             {Math.abs(slide - index) <= 1 ? (
-              <VideoPlayer
-                key={`${entry.key}:${slide === index ? replay : 0}`}
-                item={entry.item}
-                variant="immersive"
+              <ImmersivePostSlide
+                key={entry.key}
+                entry={entry}
                 active={slide === index}
-                initialTime={startTimes.get(entry.key) || 0}
-                preload="metadata"
-                onPlaybackTime={(time) => {
-                  times.current.set(entry.key, time);
-                }}
+                times={times}
+                selections={selections}
+                onMediaChange={() => { pendingEnd.current = null; setEnded(null); }}
+                onClose={onClose}
+                closeRef={slide === index ? closeButton : undefined}
                 onPlaybackStart={() => {
                   if (pendingEnd.current === entry.key) {
                     pendingEnd.current = null;
@@ -365,7 +460,8 @@ export function VideoFeedViewer({ session, onClose }: Props) {
                   }
                 }}
                 onEnded={() => finish(entry.key, slide)}
-                onRequestFullscreen={toggleFullscreen}
+                onFullscreen={toggleFullscreen}
+                footer={slide === index ? footer : undefined}
               />
             ) : entry.item.poster ? (
               <div
@@ -377,56 +473,6 @@ export function VideoFeedViewer({ session, onClose }: Props) {
             ) : null}
           </section>
         ))}
-      </div>
-      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black via-black/90 to-transparent px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8 sm:px-20">
-        <p className="font-bold">{active.author}</p>
-        <p className="mt-1 line-clamp-2 text-sm text-white/80">{active.body}</p>
-        <div className="mt-3 md:flex items-center gap-3 hidden">
-          <button
-            className="video-feed-button"
-            disabled={index === 0}
-            onClick={() => move(-1)}
-            aria-label="ویدیوی قبلی"
-          >
-            <ArrowUp />
-          </button>
-          <button
-            className="video-feed-button"
-            disabled={index + 1 >= queue.length}
-            onClick={() => move(1)}
-            aria-label="ویدیوی بعدی"
-          >
-            <ArrowDown />
-          </button>
-          {ended === active.key && (
-            <button
-              className="text-sm underline"
-              onClick={() => {
-                times.current.set(active.key, 0);
-                setStartTimes(new Map(times.current));
-                pendingEnd.current = null;
-                setEnded(null);
-                setReplay((value) => value + 1);
-                root.current?.focus({ preventScroll: true });
-              }}
-            >
-              پخش دوباره
-            </button>
-          )}
-        </div>
-        <div role="status" className="mt-2 text-xs text-white/80">
-          {status === "loading" && "در حال دریافت ویدیوهای بیشتر…"}
-          {status === "end" &&
-            index === queue.length - 1 &&
-            "به پایان ویدیوها رسیدید."}
-          {(status === "more" || status === "error") && (
-            <button className="underline" onClick={() => void load()}>
-              {status === "error"
-                ? "دریافت ویدیو ناموفق بود؛ تلاش دوباره"
-                : "جست‌وجوی بیشتر"}
-            </button>
-          )}
-        </div>
       </div>
     </div>,
     document.body,

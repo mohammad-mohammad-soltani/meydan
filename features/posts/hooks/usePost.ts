@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
+import { MEDIA_POST_UPDATE, type MediaPostUpdate } from "@/features/media/post-interactions";
 import type { PostComment, PostDetail } from "../types";
 
 function redirectToLogin() {
@@ -22,6 +23,17 @@ export function usePost(post: PostDetail) {
   const [isLiveJoined, setIsLiveJoined] = useState(false);
   const [isLoading] = useState(false);
   const [counts, setCounts] = useState({ likes: post.likes, reposts: post.reposts, comments: post.commentsCount });
+
+  useEffect(() => {
+    const update = (event: Event) => {
+      const detail = (event as CustomEvent<MediaPostUpdate>).detail;
+      if (detail.id !== post.id) return;
+      setLiked(detail.viewerState.liked); setReposted(detail.viewerState.reposted);
+      setCounts({ likes: detail.stats.likes, reposts: detail.stats.reposts, comments: detail.stats.comments });
+    };
+    window.addEventListener(MEDIA_POST_UPDATE, update);
+    return () => window.removeEventListener(MEDIA_POST_UPDATE, update);
+  }, [post.id]);
 
   useEffect(() => {
     let active = true;

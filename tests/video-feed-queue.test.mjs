@@ -132,3 +132,16 @@ test("one shared transition gate rejects duplicate ended/swipe and stale slide e
   assert.equal(nextVideoIndex(0, -1, 3, false), 0);
   assert.equal(nextVideoIndex(2, 1, 3, false), 2);
 });
+
+test("viewer keeps every visual attachment and queues a post only once", () => {
+  const mixed = post(8);
+  mixed.attachments = [
+    { id: 'photo', icon: 'image', label: 'photo', previewSrc: '/photo.jpg' },
+    ...mixed.attachments,
+    { id: 'second', icon: 'video', label: 'second', previewSrc: '/second.mp4' },
+  ];
+  const candidates = entries(mixed);
+  assert.deepEqual(candidates[1].media?.map(item => item.id), ['photo', '8', 'second']);
+  assert.equal(candidates[1].post, mixed);
+  assert.equal(appendVideos([candidates[1]], candidates).length, 1);
+});
