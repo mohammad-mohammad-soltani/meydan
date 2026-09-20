@@ -432,16 +432,14 @@ export function VideoFeedViewer({ session, onClose }: Props) {
         touch.current = null;
       }}
     >
-      <div
-        className="video-feed-track h-full w-full"
-        style={{ transform: `translateY(-${index * 100}%)` }}
-      >
+      <div className="video-feed-track relative h-full w-full">
         {queue.map((entry, slide) => (
           <section
             key={entry.key}
             inert={slide !== index}
             aria-hidden={slide !== index}
-            className="relative h-full w-full shrink-0"
+            className="video-feed-slide absolute inset-0 h-full w-full"
+            style={{ transform: `translateY(${(slide - index) * 100}%)` }}
           >
             {Math.abs(slide - index) <= 1 ? (
               <ImmersivePostSlide

@@ -182,6 +182,18 @@ test("every player shares one mute preference", () => {
   assert.match(player, /video\.muted = isMuted/);
 });
 
+test("immersive video feed moves each viewport slide, not the shared track", () => {
+  const viewer = source("features/media/components/VideoFeedViewer.tsx");
+  const css = source("app/globals.css");
+
+  // Each slide is pinned to the viewport and translated relative to the active
+  // index. This keeps the visual slide in sync with the active player's audio.
+  assert.match(viewer, /video-feed-slide absolute inset-0 h-full w-full/);
+  assert.match(viewer, /translateY\(\$\{\(slide - index\) \* 100\}%\)/);
+  assert.doesNotMatch(viewer, /translateY\(-\$\{index \* 100\}%\)/);
+  assert.match(css, /\.video-feed-slide\s*\{[\s\S]*?transition:\s*transform/);
+});
+
 test("the video player remains the single player for every surface", () => {
   for (const file of [
     "features/media/components/MediaGallery.tsx",
