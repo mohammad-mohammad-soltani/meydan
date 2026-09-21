@@ -134,6 +134,26 @@ test("the speaker surfaces use the promote/demote routes, not user edits", () =>
   assert.match(speakers, /SPEAKER_REQUEST_LIST_CAP\s*=\s*100/);
 });
 
+test("representative is an API category used by every admin speaker surface", (t) => {
+  const backendRoot = path.resolve(root, "../meydan-backend");
+  if (!existsSync(backendRoot)) {
+    t.skip("backend sibling repository is not part of the frontend CI checkout");
+    return;
+  }
+
+  const categories = readFileSync(
+    path.resolve(backendRoot, "wp-content/plugins/meydan-core/src/Domain/SpeakerService.php"),
+    "utf8",
+  );
+  const form = source("features/admin/components/AdminSpeakerForm.tsx");
+  const directory = source("features/admin/components/AdminSpeakersView.tsx");
+
+  assert.match(categories, /'namayande'\s*=>\s*'نماینده'/);
+  assert.match(form, /getSpeakerCategories\(\)/);
+  assert.match(form, /categoriesList\.map/);
+  assert.match(directory, /categories\.map/);
+});
+
 test("invitation details read the shared request GET route", () => {
   const speakers = source(SERVICE.speakers);
   const start = speakers.indexOf("export async function getSpeakerInvitation(");
