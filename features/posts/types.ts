@@ -73,5 +73,5 @@ export type PostDetail = {
   isContent?: boolean;
   /** Id of the linked content post, when the narrative was converted. */
   contentId?: number | null;
-  viewerState?: { liked: boolean; reposted: boolean };
+  viewerState?: { liked: boolean; reposted: boolean; canDelete?: boolean };
 };

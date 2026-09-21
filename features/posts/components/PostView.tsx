@@ -4,12 +4,14 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 
 import { CommentsList } from "./CommentsList";
 import { CommentInput } from "./CommentInput";
 import { MediaReflections } from "./MediaReflections";
 import { PostAdminActions } from "./PostAdminActions";
 import { PostHeader } from "./PostHeader";
+import { DeletePostDialog } from "@/features/feed/components/DeletePostDialog";
 
 import { PostCard } from "@/features/feed/components/PostCard";
 
@@ -50,6 +52,7 @@ type InitiativeState = {
 
 function redirectToLogin() {
   if (typeof window !== "undefined") {
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- auth redirect must replace stale interaction state.
     window.location.assign("/auth");
   }
 }
@@ -86,6 +89,7 @@ function toFeedPost(
       joined: Boolean(
         initiative?.joined,
       ),
+      canDelete: Boolean(post.viewerState?.canDelete),
     },
 
     kind: "media",
@@ -157,6 +161,10 @@ export function PostView({
 }) {
   const state =
     usePost(post);
+  const router = useRouter();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [
     initiative,
@@ -270,6 +278,7 @@ export function PostView({
 
           reposted:
             state.reposted,
+          canDelete: Boolean(state.post.viewerState?.canDelete),
         },
       },
 
@@ -353,6 +362,11 @@ export function PostView({
           onOpenMedia={
             noop
           }
+
+          onDelete={() => {
+            setDeleteError(null);
+            setDeleteOpen(true);
+          }}
         />
 
         <div
@@ -412,6 +426,23 @@ export function PostView({
           ) : null}
         </div>
       </main>
+      {deleteOpen ? (
+        <DeletePostDialog
+          busy={deleteBusy}
+          error={deleteError}
+          onCancel={() => { if (!deleteBusy) setDeleteOpen(false); }}
+          onConfirm={() => {
+            setDeleteBusy(true);
+            setDeleteError(null);
+            void state.deletePost()
+              .then((deleted) => {
+                if (deleted) router.replace("/home");
+              })
+              .catch(() => setDeleteError("حذف روایت انجام نشد. دوباره تلاش کنید."))
+              .finally(() => setDeleteBusy(false));
+          }}
+        />
+      ) : null}
     </section>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { BellRing, LoaderCircle, X } from "lucide-react";
+import { useState } from "react";
+import { DeletePostDialog } from "./DeletePostDialog";
 import { FeedFilters } from "./FeedFilters";
 import { FeedSkeleton } from "./FeedSkeleton";
 import { FeedTabs } from "./FeedTabs";
@@ -26,6 +28,9 @@ export function FeedView({
   suggestionsUnavailable = false,
 }: FeedViewProps) {
   const feed = useFeed(posts, suggestions, nextCursor, !postsUnavailable);
+  const [deleteTarget, setDeleteTarget] = useState<FeedPost | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const sentinelRef = useInfiniteScroll({
     enabled: feed.hasMore && !feed.isLoading && !feed.isLoadingMore && !feed.loadMoreFailed,
     onLoadMore: feed.loadMore,
@@ -74,7 +79,8 @@ export function FeedView({
             onJoin={() => void feed.joinInitiative(post.id)}
             onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)}
             onDelete={() => {
-              if (window.confirm("این روایت به زباله‌دان منتقل شود؟")) void feed.deletePost(post.id);
+              setDeleteError(null);
+              setDeleteTarget(post);
             }}
           />
         ))}
@@ -137,6 +143,21 @@ export function FeedView({
             ) : null}
           </div>
         </div>
+      ) : null}
+      {deleteTarget ? (
+        <DeletePostDialog
+          busy={deleteBusy}
+          error={deleteError}
+          onCancel={() => { if (!deleteBusy) setDeleteTarget(null); }}
+          onConfirm={() => {
+            setDeleteBusy(true);
+            setDeleteError(null);
+            void feed.deletePost(deleteTarget.id)
+              .then(() => setDeleteTarget(null))
+              .catch(() => setDeleteError("حذف روایت انجام نشد. دوباره تلاش کنید."))
+              .finally(() => setDeleteBusy(false));
+          }}
+        />
       ) : null}
     </div>
   );

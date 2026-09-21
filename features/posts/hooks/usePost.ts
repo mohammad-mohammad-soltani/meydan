@@ -104,9 +104,20 @@ export function usePost(post: PostDetail) {
     }
   };
 
+  const deletePost = async (): Promise<boolean> => {
+    if (!post.viewerState?.canDelete) return false;
+    try {
+      await meydanApi(`/narratives/${post.id}`, { method: "DELETE" });
+      return true;
+    } catch (reason) {
+      if (isAuthApiError(reason)) redirectToLogin();
+      throw reason;
+    }
+  };
+
   const joinLive = () => {
     if (requireAuth(`/posts/${post.id}`)) setIsLiveJoined(true);
   };
 
-  return { post, comments, commentDraft, counts, liked, reposted, isLiveJoined, isLoading, setCommentDraft, toggleLike, toggleRepost, submitComment, share, joinLive };
+  return { post, comments, commentDraft, counts, liked, reposted, isLiveJoined, isLoading, setCommentDraft, toggleLike, toggleRepost, submitComment, share, joinLive, deletePost };
 }
