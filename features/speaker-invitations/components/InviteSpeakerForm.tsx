@@ -141,7 +141,7 @@ export function InviteSpeakerForm({
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-1.5">
                     <strong className="truncate text-xs font-black text-foreground">{selected.name}</strong>
-                    <SpeakerBadge verified={selected.verifiedSpeaker} always />
+                    <SpeakerBadge verified={selected.verifiedSpeaker} />
                   </div>
                   {selected.expertise ? (
                     <p className="mt-0.5 truncate text-[10px] text-foreground-subtle">{selected.expertise}</p>
@@ -221,7 +221,7 @@ export function InviteSpeakerForm({
                             <span className="min-w-0 flex-1">
                               <span className="flex items-center gap-1">
                                 <strong className="truncate text-xs font-black text-foreground">{speaker.name}</strong>
-                                <SpeakerBadge verified={speaker.verifiedSpeaker} always />
+                                <SpeakerBadge verified={speaker.verifiedSpeaker} />
                               </span>
                               {speaker.expertise ? (
                                 <span className="mt-0.5 block truncate text-[10px] text-foreground-subtle">

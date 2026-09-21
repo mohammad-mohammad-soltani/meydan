@@ -347,12 +347,7 @@ export default function AuthPage() {
   // step back in history when the page was reached from this same site;
   // otherwise a direct open would leave the app.
   const goBack = () => {
-    const sameSiteReferrer =
-      typeof document !== "undefined" &&
-      document.referrer !== "" &&
-      document.referrer.startsWith(window.location.origin);
-    if (sameSiteReferrer && window.history.length > 1) router.back();
-    else router.push("/home");
+    router.push("/");
   };
 
   return (

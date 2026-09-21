@@ -73,6 +73,9 @@ export function FeedView({
             onShare={() => void feed.sharePost(post)}
             onJoin={() => void feed.joinInitiative(post.id)}
             onOpenMedia={() => feed.openMedia(post.mediaReflection ?? null)}
+            onDelete={() => {
+              if (window.confirm("این روایت به زباله‌دان منتقل شود؟")) void feed.deletePost(post.id);
+            }}
           />
         ))}
       </div>

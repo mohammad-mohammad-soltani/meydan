@@ -65,11 +65,9 @@ function ActorAvatar({ actor }: { actor: InvitationActor | null }) {
 function ActorIdentity({
   actor,
   role,
-  asSpeaker,
 }: {
   actor: InvitationActor | null;
   role: string;
-  asSpeaker: boolean;
 }) {
   const href = actorProfileHref(actor);
   const name = actor?.name || "کاربر میدان";
@@ -77,7 +75,7 @@ function ActorIdentity({
   const heading = (
     <span className="flex min-w-0 items-center gap-1">
       <strong className="truncate text-xs font-black text-foreground">{name}</strong>
-      <SpeakerBadge verified={actor?.verifiedSpeaker} always={asSpeaker} />
+      <SpeakerBadge verified={actor?.verifiedSpeaker} />
     </span>
   );
 
@@ -136,7 +134,7 @@ export function InvitationCard({
   return (
     <article className="ui-enter overflow-hidden rounded-card border border-border bg-card text-right shadow-xs transition-colors hover:border-border-strong">
       <div className="flex items-center gap-3 p-3.5">
-        <ActorIdentity actor={counterpart} role={counterpartRole} asSpeaker={perspective === "inviter"} />
+        <ActorIdentity actor={counterpart} role={counterpartRole} />
 
         <span
           className={`inline-flex shrink-0 items-center gap-1.5 rounded-pill px-2.5 py-1 text-[10px] font-black ${statusStyles[invitation.status]}`}

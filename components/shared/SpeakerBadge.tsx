@@ -11,24 +11,19 @@ const sizes = {
  * speaker stays distinguishable from a verified account. The fill reads
  * `--brand` so it always matches the site's brand red in every theme.
  *
- * `always` is for curated speaker rows where the row itself proves the actor is
- * a speaker even when the API did not flag it as verified; the accessible label
- * then only claims the speaker role and drops the verification claim.
  */
 export function SpeakerBadge({
   verified,
-  always = false,
   size = "sm",
   className = "",
 }: {
   verified?: boolean;
-  always?: boolean;
   size?: keyof typeof sizes;
   className?: string;
 }) {
-  if (!verified && !always) return null;
+  if (!verified) return null;
 
-  const label = verified ? "سخنران تأییدشده" : "سخنران";
+  const label = "سخنران تأییدشده";
 
   return (
     <span title={label} className="inline-flex shrink-0">

@@ -95,8 +95,11 @@ export function LocationPickerMap({
     try {
       const data = await reverseGeocodeCached(latitude, longitude);
       onSelectRef.current({
-        latitude: data.latitude,
-        longitude: data.longitude,
+        // Reverse geocoders may snap or round the point they return. The
+        // marker's coordinates are the user's explicit selection and must be
+        // the coordinates persisted for the square.
+        latitude,
+        longitude,
         address: data.address,
         provinceId: data.province_id,
         cityId: data.city_id,

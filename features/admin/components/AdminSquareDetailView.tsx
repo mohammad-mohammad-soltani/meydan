@@ -201,7 +201,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
               </div>
               <p className="mt-1.5 text-xs text-muted-foreground">
                 شناسه میدان #{square.id}
-                {square.ownerUserId ? ` · مالک #${square.ownerUserId}` : ""}
+                {square.ownerUserId ? ` · خادم میدان #${square.ownerUserId}` : ""}
                 {square.ownerName ? ` (${square.ownerName})` : ""}
               </p>
             </div>

@@ -815,8 +815,8 @@ function mapUser(
     resumeStats:
       resumeStats.length
         ? resumeStats.map((stat) =>
-            profile.verified_speaker && stat.label === "اعتبار هویت"
-              ? { ...stat, value: "سخنران" }
+            stat.label === "اعتبار هویت"
+              ? { ...stat, value: profile.verified_speaker ? "سخنران" : "غیر رسمی" }
               : stat,
           )
         : [
@@ -838,7 +838,7 @@ function mapUser(
             {
               value: profile.verified_speaker
                 ? "سخنران"
-                : profile.verified ? "تأییدشده" : "عادی",
+                : "غیر رسمی",
 
               label:
                 "اعتبار هویت",

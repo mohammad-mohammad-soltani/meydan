@@ -55,6 +55,7 @@ export function GeoPickerField({
   errors,
   disabled = false,
   showMap = true,
+  onPendingChange,
 }: {
   idPrefix?: string;
   value: GeoValue;
@@ -63,6 +64,8 @@ export function GeoPickerField({
   errors?: Record<string, string | undefined>;
   disabled?: boolean;
   showMap?: boolean;
+  /** Lets a containing form prevent submission while reverse geocoding. */
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [provinces, setProvinces] = useState<GeoOption[]>([]);
   const [cities, setCities] = useState<GeoOption[]>([]);
@@ -129,8 +132,13 @@ export function GeoPickerField({
   );
 
   /** A map click reverse-geocodes and fills province, city and address at once. */
+  const setMapPending = (pending: boolean) => {
+    setPendingPoint(pending);
+    onPendingChange?.(pending);
+  };
+
   const applyPicked = (picked: SelectedLocation) => {
-    setPendingPoint(false);
+    setMapPending(false);
     onChange({
       provinceId: picked.provinceId ?? value.provinceId,
       cityId: picked.cityId ?? null,
@@ -225,7 +233,7 @@ export function GeoPickerField({
           <LocationPickerMap
             initialLocation={initialLocation}
             onSelect={applyPicked}
-            onPendingChange={setPendingPoint}
+            onPendingChange={setMapPending}
             heightClassName="h-64"
           />
         </div>

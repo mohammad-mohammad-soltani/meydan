@@ -30,7 +30,7 @@ export type FeedPost = {
   author: { id: number; type: "user" | "square"; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
   initiativeId?: number;
   initiativeParticipantCount?: number;
-  viewerState?: { liked: boolean; reposted: boolean; joined: boolean };
+  viewerState?: { liked: boolean; reposted: boolean; joined: boolean; canDelete?: boolean };
   kind: PostKind;
   squareName: string;
   handle: string;

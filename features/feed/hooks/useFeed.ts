@@ -397,6 +397,14 @@ export function useFeed(
     await navigator.clipboard?.writeText(text);
   }, []);
 
+  const deletePost = useCallback(async (postId: string) => {
+    const post = remotePosts.find((item) => item.id === postId);
+    if (!post?.viewerState?.canDelete) return;
+    await meydanApi(`/narratives/${postId}`, { method: "DELETE" });
+    knownPostIdsRef.current.delete(postId);
+    setRemotePosts((items) => items.filter((item) => item.id !== postId));
+  }, [remotePosts]);
+
   return {
     activeTab,
     activeFilter,
@@ -419,6 +427,7 @@ export function useFeed(
     toggleFollow,
     joinInitiative,
     sharePost,
+    deletePost,
     openMedia: setSelectedMedia,
     closeMedia: () => setSelectedMedia(null),
     isLoading,

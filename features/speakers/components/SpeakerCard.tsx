@@ -78,7 +78,6 @@ export function SpeakerCard({
 
           <SpeakerBadge
             verified={speaker.verified}
-            always
             size="md"
           />
         </div>

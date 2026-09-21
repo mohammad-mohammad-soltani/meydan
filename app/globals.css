@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+.markdown-content img[alt="پرچم ایران"] {
+  display: inline-block;
+  width: 1.25em;
+  height: auto;
+  margin-inline: .15em;
+  vertical-align: -0.1em;
+}
+
 /* Admin workspace: keep the existing three site themes, but give forms a
  * content-aware grid. The public app's semantic colors remain the source of
  * truth; the admin no longer paints a forced dark canvas over the light theme. */

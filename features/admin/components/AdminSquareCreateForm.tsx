@@ -69,6 +69,7 @@ export function AdminSquareCreateForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [geoPending, setGeoPending] = useState(false);
 
   const input: SquareCreateInput = useMemo(
     () => ({
@@ -108,7 +109,7 @@ export function AdminSquareCreateForm() {
   );
 
   const submit = async () => {
-    if (busy || uploadBusy) return;
+    if (busy || uploadBusy || geoPending) return;
     setFormError(null);
     setFieldErrors({});
 
@@ -202,8 +203,8 @@ export function AdminSquareCreateForm() {
   return (
     <div className="min-h-full bg-background">
       <AdminPageHeader
-        title="افزودن میدان"
-        description="حساب مالک و میدان هم‌زمان ساخته می‌شوند؛ نام مالک و نام میدان مستقل از هم هستند و هر دو الزامی‌اند."
+          title="افزودن میدان"
+          description="حساب خادم میدان و میدان هم‌زمان ساخته می‌شوند؛ نام خادم و نام میدان مستقل از هم هستند و هر دو الزامی‌اند."
         crumbs={[{ label: "میادین", href: "/admin/squares" }, { label: "افزودن میدان" }]}
       />
 
@@ -270,8 +271,8 @@ export function AdminSquareCreateForm() {
 
         </section>
 
-        <section aria-label="حساب مالک" className="admin-form-card admin-form-side">
-          <h2>حساب مالک میدان</h2>
+        <section aria-label="حساب خادم میدان" className="admin-form-card admin-form-side">
+          <h2>حساب خادم میدان</h2>
           <div className="admin-field-grid">
             <AdminField
               label="شماره موبایل"
@@ -293,11 +294,11 @@ export function AdminSquareCreateForm() {
             </AdminField>
 
             <AdminField
-              label="نام و نام خانوادگی مالک"
+              label="نام و نام خانوادگی خادم میدان"
               htmlFor="square-full-name"
               required
               error={fieldErrors.full_name}
-              hint="این نام فقط برای حساب مالک است و مستقل از نام میدان ذخیره می‌شود."
+              hint="این نام فقط برای حساب خادم میدان است و مستقل از نام میدان ذخیره می‌شود."
             >
               <input
                 id="square-full-name"
@@ -339,6 +340,7 @@ export function AdminSquareCreateForm() {
               latitude: fieldErrors.latitude,
               longitude: fieldErrors.longitude,
             }}
+            onPendingChange={setGeoPending}
           />
         </section>
 
@@ -420,13 +422,13 @@ export function AdminSquareCreateForm() {
         ) : null}
 
         <div className="admin-form-actions">
-          <button type="submit" disabled={busy || uploadBusy} className={primaryButtonClass}>
+          <button type="submit" disabled={busy || uploadBusy || geoPending} className={primaryButtonClass}>
             {busy ? (
               <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
             ) : (
               <Save aria-hidden="true" className="h-4 w-4" />
             )}
-            {busy ? "در حال ساخت…" : "ساخت میدان"}
+            {busy ? "در حال ساخت…" : geoPending ? "در حال تشخیص موقعیت…" : "ساخت میدان"}
           </button>
           <Link href={"/admin/squares" as Route} className={secondaryButtonClass}>
             بازگشت به فهرست

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { publicProfileHref } from "@/lib/profile-route";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Trash2 } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { OfficialBadge } from "@/components/shared/OfficialBadge";
 
@@ -27,6 +27,7 @@ type PostCardProps = {
   onShare: () => void;
   onJoin: () => void;
   onOpenMedia: () => void;
+  onDelete?: () => void;
 };
 
 function TimelineMediaReflectionText({
@@ -89,6 +90,7 @@ export function PostCard({
   onShare,
   onJoin,
   onOpenMedia,
+  onDelete,
 }: PostCardProps) {
   void reposted;
   void onRepost;
@@ -166,6 +168,7 @@ export function PostCard({
               </span>
             </div>
           </div>
+          {post.viewerState?.canDelete ? <button type="button" onClick={onDelete} className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full text-danger-foreground hover:bg-danger-surface" aria-label="حذف روایت"><Trash2 className="h-4 w-4" /></button> : null}
         </div>
 
         {/* Text */}
@@ -352,6 +355,7 @@ export function PostCard({
             <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">
               {post.timeAgo}
             </span>
+            {post.viewerState?.canDelete ? <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete?.(); }} className="pointer-events-auto relative z-10 mr-auto grid h-7 w-7 place-items-center rounded-full text-danger-foreground hover:bg-danger-surface" aria-label="حذف روایت"><Trash2 className="h-3.5 w-3.5" /></button> : null}
           </div>
 
           <div className="mt-0.5">

@@ -326,8 +326,7 @@ export function validateSquareCreate(input: SquareCreateInput): Record<string, s
 
   // The backend substitutes Tehran's centre for a missing coordinate and only
   // rejects out-of-range values, so a half-filled pair is caught here instead.
-  const hasAnyCoordinate = input.latitude !== null || input.longitude !== null;
-  if (hasAnyCoordinate && !isValidCoordinate(input.latitude, input.longitude)) {
+  if (!isValidCoordinate(input.latitude, input.longitude)) {
     errors.latitude = "invalid";
     errors.longitude = "invalid";
   }

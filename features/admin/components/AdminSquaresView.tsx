@@ -247,7 +247,7 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
     },
     {
       key: "owner",
-      header: "مالک",
+      header: "خادم میدان",
       // Truncated to one line: the owner name is already secondary here, and
       // letting it wrap turned a four-column table into a wall of text.
       render: (square) => (
