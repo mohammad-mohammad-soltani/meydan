@@ -10,7 +10,8 @@ import {
   Search,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ProvinceAggregate, SquareMarker } from "../services/map.service";
+import type { SquareMarker } from "../services/map.service";
+import type { CountAggregate, MapLevel } from "../hooks/useMap";
 import { addOpenFreeMapBasemap } from "../services/openfreemap-basemap";
 import {
   LIVE_MAP_THEME,
@@ -49,22 +50,27 @@ function formatScale(value: number): string {
 }
 
 export function MapFrame({
-  selectedSquares,
+  squares,
   aggregates,
   center,
-  onSelectProvince,
+  level,
+  onSelectAggregate,
+  onViewportLevel,
 }: {
-  selectedSquares: SquareMarker[];
-  aggregates: ProvinceAggregate[];
+  squares: SquareMarker[];
+  aggregates: CountAggregate[];
   center: { latitude: number; longitude: number } | null;
-  onSelectProvince: (provinceId: number) => void;
+  level: MapLevel;
+  onSelectAggregate: (id: number) => void;
+  onViewportLevel: (level: MapLevel, center: { latitude: number; longitude: number }) => void;
 }) {
   const element = useRef<HTMLDivElement>(null);
   const map = useRef<import("leaflet").Map | null>(null);
   const markersRef = useRef<import("leaflet").Layer[]>([]);
   const provinceLayerRef = useRef<import("leaflet").GeoJSON | null>(null);
   const userLocationRef = useRef<import("leaflet").CircleMarker | null>(null);
-  const onSelectProvinceRef = useRef(onSelectProvince);
+  const onSelectAggregateRef = useRef(onSelectAggregate);
+  const onViewportLevelRef = useRef(onViewportLevel);
   const [ready, setReady] = useState(false);
   const [provincesVisible, setProvincesVisible] = useState(true);
   const [query, setQuery] = useState("");
@@ -73,8 +79,9 @@ export function MapFrame({
   const fittedAllRef = useRef(false);
 
   useEffect(() => {
-    onSelectProvinceRef.current = onSelectProvince;
-  }, [onSelectProvince]);
+    onSelectAggregateRef.current = onSelectAggregate;
+    onViewportLevelRef.current = onViewportLevel;
+  }, [onSelectAggregate, onViewportLevel]);
 
   const searchResults = useMemo(() => {
     const normalized = query.trim();
@@ -101,7 +108,7 @@ export function MapFrame({
 
       map.current = instance;
 
-      const syncScale = () => setScale(nextScale(instance));
+      const syncScale = () => { setScale(nextScale(instance)); const zoom = instance.getZoom(); const center = instance.getCenter(); onViewportLevelRef.current(zoom < 6.7 ? "country" : zoom < 9.2 ? "province" : "city", { latitude: center.lat, longitude: center.lng }); };
       instance.on("zoomend moveend", syncScale);
       syncScale();
 
@@ -156,20 +163,16 @@ export function MapFrame({
       for (const layer of markersRef.current) layer.remove();
       markersRef.current = [];
 
-      for (const square of selectedSquares) {
+      for (const square of squares) {
         const point: [number, number] = [square.latitude, square.longitude];
-        const marker = L.circleMarker(point, {
-          radius: 6,
-          color: "rgba(255,255,255,.9)",
-          weight: 1.5,
-          fillColor: LIVE_MAP_THEME.pin,
-          fillOpacity: 1,
-        })
-          .addTo(instance)
-          .bindPopup(
-            `<div style="font-family:inherit;text-align:center;padding:2px 6px"><strong style="font-size:12px">${square.name}</strong></div>`,
-            { closeButton: false },
-          );
+        const initial = square.name.trim().slice(0, 1) || "م";
+        const avatar = document.createElement("div"); avatar.style.cssText = `width:42px;height:42px;border:3px solid white;border-radius:50%;overflow:hidden;background:${LIVE_MAP_THEME.pin};box-shadow:0 4px 12px rgba(0,0,0,.45)`;
+        if (square.avatarUrl) { const image = document.createElement("img"); image.src = square.avatarUrl; image.alt = ""; image.style.cssText = "width:100%;height:100%;object-fit:cover"; avatar.append(image); } else { const fallback = document.createElement("span"); fallback.style.cssText = "display:grid;place-items:center;width:100%;height:100%;font-weight:900;color:white"; fallback.textContent = initial; avatar.append(fallback); }
+        const marker = L.marker(point, { icon: L.divIcon({ html: avatar, className: "", iconSize: [42, 42], iconAnchor: [21, 21] }) }).addTo(instance);
+        const popup = document.createElement("div"); popup.style.cssText = "font-family:inherit;text-align:center;padding:5px 4px;min-width:150px";
+        const name = document.createElement("strong"); name.style.cssText = "display:block;font-size:13px;margin-bottom:10px"; name.textContent = square.name;
+        const link = document.createElement("a"); link.href = `/square/${encodeURIComponent(square.id)}`; link.textContent = "مشاهده میدان"; link.style.cssText = "display:inline-block;border-radius:10px;background:#e5544b;color:white;padding:7px 12px;font-size:11px;font-weight:800;text-decoration:none";
+        popup.append(name, link); marker.bindPopup(popup, { closeButton: false });
         markersRef.current.push(marker);
       }
 
@@ -189,14 +192,14 @@ export function MapFrame({
             offset: [0, -38],
             opacity: 0.92,
           })
-          .on("click", () => onSelectProvinceRef.current(aggregate.provinceId));
+          .on("click", () => { instance.flyTo([aggregate.latitude, aggregate.longitude], level === "country" ? 7.2 : 10.2, { animate: true, duration: .7 }); onSelectAggregateRef.current(aggregate.id); });
         markersRef.current.push(marker);
       }
 
-      if (!fittedAllRef.current && (selectedSquares.length > 0 || aggregates.length > 0)) {
+      if (!fittedAllRef.current && (squares.length > 0 || aggregates.length > 0)) {
         fittedAllRef.current = true;
         const points: [number, number][] = [
-          ...selectedSquares.map((square) => [square.latitude, square.longitude] as [number, number]),
+          ...squares.map((square) => [square.latitude, square.longitude] as [number, number]),
           ...aggregates.map((aggregate) => [aggregate.latitude, aggregate.longitude] as [number, number]),
         ];
 
@@ -215,7 +218,7 @@ export function MapFrame({
     return () => {
       cancelled = true;
     };
-  }, [ready, selectedSquares, aggregates]);
+  }, [ready, squares, aggregates, level]);
 
   useEffect(() => {
     if (!ready || !map.current || !center) return;
@@ -245,14 +248,14 @@ export function MapFrame({
     setProvincesVisible(true);
   }
 
-  function selectSearchResult(aggregate: ProvinceAggregate) {
+  function selectSearchResult(aggregate: CountAggregate) {
     setQuery("");
     setSearchFocused(false);
     map.current?.flyTo([aggregate.latitude, aggregate.longitude], 7, {
       animate: true,
       duration: 0.7,
     });
-    onSelectProvinceRef.current(aggregate.provinceId);
+    onSelectAggregateRef.current(aggregate.id);
   }
 
   function locateUser() {
@@ -309,7 +312,7 @@ export function MapFrame({
             {searchResults.length ? (
               searchResults.map((aggregate) => (
                 <button
-                  key={aggregate.provinceId}
+                  key={aggregate.id}
                   type="button"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectSearchResult(aggregate)}

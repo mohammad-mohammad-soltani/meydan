@@ -1,135 +1,19 @@
 "use client";
-
 import { useEffect, useMemo, useState } from "react";
-import { getAllSquares, getCities, getCityMap, getProvinces } from "../services/map.service";
-import type { MapStatus } from "../types";
-import type { ProvinceAggregate, SquareMarker } from "../services/map.service";
-
+import { getAllSquares, getCities, type SquareMarker } from "../services/map.service";
+import type { City, MapStatus, Province } from "../types";
+export type MapLevel = "country" | "province" | "city";
+export type CountAggregate = { id: number; name: string; count: number; latitude: number; longitude: number };
+function aggregate(items: SquareMarker[], key: "provinceId" | "cityId", nameKey: "provinceName" | "cityName"): CountAggregate[] {
+  const grouped = new Map<number, CountAggregate & { lat: number; lng: number }>();
+  for (const square of items) { const id = square[key]; if (!id) continue; const item = grouped.get(id) ?? { id, name: square[nameKey] || "محدوده", count: 0, latitude: 0, longitude: 0, lat: 0, lng: 0 }; item.count++; item.lat += square.latitude; item.lng += square.longitude; item.latitude = item.lat / item.count; item.longitude = item.lng / item.count; grouped.set(id, item); }
+  return [...grouped.values()];
+}
 export function useMap() {
-  const [provinces, setProvinces] = useState<import("../types").Province[]>([]);
-  const [provinceCities, setProvinceCities] = useState<import("../types").City[]>([]);
-  const [selectedProvinceId, setSelectedProvinceId] = useState(0);
-  const [selectedCityId, setSelectedCityId] = useState(0);
-  const [provinceQuery, setProvinceQuery] = useState("");
-  const [cityQuery, setCityQuery] = useState("");
-  // ALL squares across every city/province — always shown as red dots.
-  const [allSquares, setAllSquares] = useState<SquareMarker[]>([]);
-  // Squares of the selected city — only for the info list below the map.
-  const [citySquares, setCitySquares] = useState<SquareMarker[]>([]);
-  // Map focus: derived from the dropdown selection (null = fit all).
-  const [focus, setFocus] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [status, setStatus] = useState<MapStatus>("idle");
-  const [error, setError] = useState<string | null>(null);
-  const [activeCount, setActiveCount] = useState(0);
-
-  const selectedProvince = provinces.find((province) => province.id === selectedProvinceId) ?? provinces[0];
-  const selectedCity = provinceCities.find((city) => city.id === selectedCityId) ?? provinceCities[0];
-  const visibleProvinces = useMemo(() => provinces.filter((province) => province.name.includes(provinceQuery.trim())), [provinceQuery, provinces]);
-  const visibleCities = useMemo(() => provinceCities.filter((city) => city.name.includes(cityQuery.trim())), [cityQuery, provinceCities]);
-
-  // Selected province → individual red dots. If markers carry no province
-  // info (backend didn't provide it), show everything as individual dots
-  // so nothing ever disappears from the map.
-  const selectedSquares = useMemo(() => {
-    if (!selectedProvinceId) return allSquares;
-    if (!allSquares.some((square) => square.provinceId != null)) return allSquares;
-    return allSquares.filter((square) => square.provinceId === selectedProvinceId);
-  }, [allSquares, selectedProvinceId]);
-
-  // Every other province → a single count badge at its center.
-  const otherAggregates = useMemo<ProvinceAggregate[]>(() => {
-    const grouped = new Map<number, { name: string; count: number; sumLat: number; sumLng: number }>();
-    for (const square of allSquares) {
-      if (square.provinceId == null || square.provinceId === selectedProvinceId) continue;
-      const entry = grouped.get(square.provinceId) ?? {
-        name: square.provinceName || "استان",
-        count: 0,
-        sumLat: 0,
-        sumLng: 0,
-      };
-      entry.count += 1;
-      entry.sumLat += square.latitude;
-      entry.sumLng += square.longitude;
-      if (square.provinceName) entry.name = square.provinceName;
-      grouped.set(square.provinceId, entry);
-    }
-    return [...grouped.entries()].map(([provinceId, entry]) => ({
-      provinceId,
-      name: entry.name,
-      count: entry.count,
-      latitude: entry.sumLat / entry.count,
-      longitude: entry.sumLng / entry.count,
-    }));
-  }, [allSquares, selectedProvinceId]);
-
-  // On mount: load provinces + ALL squares in parallel so every red dot
-  // is visible immediately, regardless of dropdown selection.
-  useEffect(() => {
-    let active = true;
-    queueMicrotask(() => active && setStatus("loading"));
-    void Promise.allSettled([getProvinces(), getAllSquares()]).then(([provincesResult, squaresResult]) => {
-      if (!active) return;
-      if (provincesResult.status === "fulfilled") {
-        setProvinces(provincesResult.value);
-        setSelectedProvinceId(provincesResult.value[0]?.id || 0);
-      } else {
-        setError("دریافت استان‌ها با خطا مواجه شد.");
-      }
-      if (squaresResult.status === "fulfilled") {
-        setAllSquares(squaresResult.value);
-        setActiveCount(squaresResult.value.length);
-      } else {
-        setError((current) => current ?? "دریافت میدان‌ها با خطا مواجه شد.");
-      }
-      setStatus("ready");
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // After provinces load, get cities for the selected province.
-  useEffect(() => {
-    if (!selectedProvinceId) return;
-    void getCities(selectedProvinceId)
-      .then((items) => {
-        setProvinceCities(items);
-        setSelectedCityId(items[0]?.id || 0);
-      })
-      .catch(() => setError("دریافت شهرها با خطا مواجه شد."));
-  }, [selectedProvinceId]);
-
-  // When a city is picked, focus the map on that city's squares and
-  // fill the info list (all dots stay visible — selection only moves
-  // the view and changes the list).
-  useEffect(() => {
-    if (!selectedCityId) return;
-    let active = true;
-    void getCityMap(selectedCityId)
-      .then(({ squares, center }) => {
-        if (!active) return;
-        setCitySquares(squares);
-        setFocus(center);
-      })
-      .catch(() => {
-        if (!active) return;
-        setCitySquares([]);
-        setFocus(null);
-      });
-    return () => {
-      active = false;
-    };
-  }, [selectedCityId]);
-
-  const selectProvince = (provinceId: number) => {
-    setSelectedProvinceId(provinceId);
-    setSelectedCityId(0);
-    setCityQuery("");
-    setFocus(null);
-    setCitySquares([]);
-  };
-
-  const selectCity = (cityId: number) => setSelectedCityId(cityId);
-
-  return { selectedProvince, selectedCity, selectedProvinceId, selectedCityId, provinceCities, visibleProvinces, visibleCities, provinceQuery, cityQuery, squares: selectedSquares, aggregates: otherAggregates, citySquares, center: focus, status, error, activeCount, selectProvince, selectCity, setProvinceQuery, setCityQuery };
+  const [provinces, setProvinces] = useState<Province[]>([]); const [provinceCities, setProvinceCities] = useState<City[]>([]); const [allSquares, setAllSquares] = useState<SquareMarker[]>([]); const [selectedProvinceId, setSelectedProvinceId] = useState(0); const [selectedCityId, setSelectedCityId] = useState(0); const [level, setLevel] = useState<MapLevel>("country"); const [provinceQuery, setProvinceQuery] = useState(""); const [cityQuery, setCityQuery] = useState(""); const [status, setStatus] = useState<MapStatus>("idle"); const [error, setError] = useState<string | null>(null);
+  const selectedProvince = provinces.find((item) => item.id === selectedProvinceId); const selectedCity = provinceCities.find((item) => item.id === selectedCityId); const provinceAggregates = useMemo(() => aggregate(allSquares, "provinceId", "provinceName"), [allSquares]); const provinceSquares = useMemo(() => allSquares.filter((item) => item.provinceId === selectedProvinceId), [allSquares, selectedProvinceId]); const cityAggregates = useMemo(() => aggregate(provinceSquares, "cityId", "cityName"), [provinceSquares]); const citySquares = useMemo(() => provinceSquares.filter((item) => item.cityId === selectedCityId), [provinceSquares, selectedCityId]);
+  useEffect(() => { let active = true; queueMicrotask(() => active && setStatus("loading")); void getAllSquares().then((items) => { if (!active) return; setAllSquares(items); const names = new Map<number, string>(); for (const item of items) if (item.provinceId && item.provinceName) names.set(item.provinceId, item.provinceName); setProvinces([...names].map(([id, name]) => ({ id, name }))); setStatus("ready"); }).catch(() => { if (active) { setError("دریافت میدان‌ها با خطا مواجه شد."); setStatus("error"); } }); return () => { active = false; }; }, []);
+  useEffect(() => { if (!selectedProvinceId) { queueMicrotask(() => setProvinceCities([])); return; } void getCities(selectedProvinceId).then(setProvinceCities).catch(() => setProvinceCities([])); }, [selectedProvinceId]);
+  const setViewportLevel = (next: MapLevel, center: { latitude: number; longitude: number }) => { if (next === "country") { setLevel(next); return; } if (!selectedProvinceId) { const closest = provinceAggregates.reduce<CountAggregate | null>((best, item) => !best || (item.latitude - center.latitude) ** 2 + (item.longitude - center.longitude) ** 2 < (best.latitude - center.latitude) ** 2 + (best.longitude - center.longitude) ** 2 ? item : best, null); if (closest) setSelectedProvinceId(closest.id); } if (next === "city" && !selectedCityId) { const closest = cityAggregates.reduce<CountAggregate | null>((best, item) => !best || (item.latitude - center.latitude) ** 2 + (item.longitude - center.longitude) ** 2 < (best.latitude - center.latitude) ** 2 + (best.longitude - center.longitude) ** 2 ? item : best, null); if (closest) setSelectedCityId(closest.id); } setLevel(next); };
+  return { selectedProvince, selectedCity, selectedProvinceId, selectedCityId, provinceCities, visibleProvinces: provinces.filter((item) => item.name.includes(provinceQuery.trim())), visibleCities: provinceCities.filter((item) => item.name.includes(cityQuery.trim())), provinceQuery, cityQuery, level, provinceAggregates, cityAggregates, citySquares, status, error, activeCount: allSquares.length, selectProvince: (id: number) => { setSelectedProvinceId(id); setSelectedCityId(0); setCityQuery(""); setLevel("province"); }, selectCity: (id: number) => { setSelectedCityId(id); setLevel("city"); }, setViewportLevel, setProvinceQuery, setCityQuery };
 }

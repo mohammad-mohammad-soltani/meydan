@@ -12,6 +12,7 @@ type ApiFeature = {
     province_name?: string;
     city_id?: number;
     city_name?: string;
+    avatar_url?: string;
   };
 };
 export type ReverseGeocodedLocation = { latitude: number; longitude: number; address: string; province_id: number | null; city_id: number | null; province_name: string | null; city_name: string | null; };
@@ -25,6 +26,7 @@ export type SquareMarker = {
   provinceName?: string | null;
   cityId?: number | null;
   cityName?: string | null;
+  avatarUrl?: string;
 };
 
 export type ProvinceAggregate = {
@@ -63,6 +65,7 @@ function featuresToSquares(features: ApiFeature[], prefix: string, meta?: Square
         provinceName: feature.properties?.province_name ?? meta?.provinceName ?? null,
         cityId: toFiniteNumber(feature.properties?.city_id) ?? meta?.cityId ?? null,
         cityName: feature.properties?.city_name ?? meta?.cityName ?? null,
+        avatarUrl: feature.properties?.avatar_url,
       });
     }
   }

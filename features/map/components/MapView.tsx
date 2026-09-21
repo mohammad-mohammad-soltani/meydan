@@ -56,6 +56,11 @@ export function MapView() {
     setLinkedFocus(null);
     map.selectCity(cityId);
   };
+  const mapMarkers = map.level === "country"
+    ? { squares: [], aggregates: map.provinceAggregates, onSelect: handleSelectProvince }
+    : map.level === "province"
+      ? { squares: [], aggregates: map.cityAggregates, onSelect: handleSelectCity }
+      : { squares: map.citySquares, aggregates: [], onSelect: handleSelectCity };
 
   return (
     <section
@@ -106,10 +111,12 @@ export function MapView() {
         <div className="relative overflow-hidden border-y border-border bg-[#171a1b] shadow-sm sm:rounded-[22px] sm:border">
           <div className="min-h-[430px] sm:min-h-[500px] [&>*]:min-h-[430px] sm:[&>*]:min-h-[500px]">
             <MapFrame
-              selectedSquares={map.squares}
-              aggregates={map.aggregates}
-              center={linkedFocus ?? map.center}
-              onSelectProvince={handleSelectProvince}
+              squares={mapMarkers.squares}
+              aggregates={mapMarkers.aggregates}
+              center={linkedFocus}
+              level={map.level}
+              onSelectAggregate={mapMarkers.onSelect}
+              onViewportLevel={map.setViewportLevel}
             />
           </div>
 
@@ -155,7 +162,7 @@ export function MapView() {
 
               <div className="shrink-0 text-left">
                 <strong className="block text-base font-black text-foreground">
-                  {map.citySquares.length.toLocaleString("fa-IR")}
+                  {(map.level === "city" ? map.citySquares.length : map.cityAggregates.reduce((sum, city) => sum + city.count, 0)).toLocaleString("fa-IR")}
                 </strong>
                 <span className="text-[10px] text-muted-foreground">
                   میدان فعال
@@ -165,7 +172,7 @@ export function MapView() {
 
             <div className="mt-3 flex items-center justify-between border-t border-divider pt-3 text-[10px] text-muted-foreground">
               <span>
-                {map.squares.length.toLocaleString("fa-IR")} میدان روی نقشه کشور
+                {map.activeCount.toLocaleString("fa-IR")} میدان روی نقشه کشور
               </span>
               <span className="inline-flex items-center gap-1 text-brand">
                 مشاهده روی نقشه
