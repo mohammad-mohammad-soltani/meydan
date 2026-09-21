@@ -1,5 +1,7 @@
 import { CalendarDays } from "lucide-react";
 import type { ReportDay } from "../services/report-days.service";
+import Link from "next/link";
+import type { Route } from "next";
 
 const digits = new Intl.NumberFormat("fa-IR", { useGrouping: false });
 
@@ -8,10 +10,10 @@ export function ReportDayCards({ days, compact = false }: { days: ReportDay[]; c
   return <div className={compact ? "-mx-3 flex gap-2.5 overflow-x-auto px-3 pb-1 sm:-mx-4 sm:px-4" : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3"}>
     {days.map((day) => {
       const style = { backgroundColor: day.backgroundColor || "#000000", color: day.textColor || "#ffffff" };
-      return <article key={day.date} style={style} className={`flex h-[118px] shrink-0 flex-col justify-between rounded-2xl border border-white/15 p-3 ${compact ? "w-[148px]" : "w-full"}`}>
+      return <Link href={`/content/report-days/${day.date}` as Route} key={day.date} style={style} className={`flex h-[118px] shrink-0 flex-col justify-between rounded-2xl border border-white/15 p-3 ${compact ? "w-[148px]" : "w-full"}`}>
         <div className="flex items-start justify-between gap-2"><span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold">شب {digits.format(day.nightNumber)}</span><span className="text-3xl font-black opacity-25">{digits.format(day.nightNumber).padStart(2, "۰")}</span></div>
         <div><strong className="block truncate text-xs font-black">{day.title || "روزشمار تجمعات"}</strong><span className="mt-1 block truncate text-[10px] opacity-75">{day.subtitle || ""}</span></div>
-      </article>;
+      </Link>;
     })}
   </div>;
 }

@@ -28,6 +28,8 @@ type PostCardProps = {
   onJoin: () => void;
   onOpenMedia: () => void;
   onDelete?: () => void;
+  /** Report-day pages reuse the exact card without interactive action controls. */
+  hideActions?: boolean;
 };
 
 function TimelineMediaReflectionText({
@@ -91,6 +93,7 @@ export function PostCard({
   onJoin,
   onOpenMedia,
   onDelete,
+  hideActions = false,
 }: PostCardProps) {
   void reposted;
   void onRepost;
@@ -258,7 +261,7 @@ export function PostCard({
         ) : null}
 
         {/* Actions */}
-        <PostActions
+        {!hideActions ? <PostActions
           postId={post.id}
           likes={post.stats.likes}
           comments={post.stats.comments}
@@ -267,7 +270,7 @@ export function PostCard({
           onLike={onLike}
           onShare={onShare}
           className="mt-3"
-        />
+        /> : null}
       </article>
     );
   }
@@ -416,7 +419,7 @@ export function PostCard({
             />
           ) : null}
 
-          <PostActions
+          {!hideActions ? <PostActions
             postId={post.id}
             likes={post.stats.likes}
             comments={post.stats.comments}
@@ -425,7 +428,7 @@ export function PostCard({
             onLike={onLike}
             onShare={onShare}
             className="mt-3"
-          />
+          /> : null}
         </div>
       </div>
     </article>

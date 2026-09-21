@@ -47,6 +47,7 @@ export type ContentItem = {
   author?: string;
   authorAvatar?: string;
   coverUrl?: string;
+  sourceNarrativeId?: number | null;
   media: ContentMedia;
 };
 
