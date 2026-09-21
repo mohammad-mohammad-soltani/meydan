@@ -59,7 +59,7 @@ export function MapFrame({
 }: {
   squares: SquareMarker[];
   aggregates: CountAggregate[];
-  center: { latitude: number; longitude: number } | null;
+  center: { latitude: number; longitude: number; zoom?: number } | null;
   level: MapLevel;
   onSelectAggregate: (id: number) => void;
   onViewportLevel: (level: MapLevel, center: { latitude: number; longitude: number }) => void;
@@ -76,7 +76,6 @@ export function MapFrame({
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [scale, setScale] = useState<ScaleState>({ distanceKm: 500, width: 120 });
-  const fittedAllRef = useRef(false);
 
   useEffect(() => {
     onSelectAggregateRef.current = onSelectAggregate;
@@ -181,38 +180,21 @@ export function MapFrame({
           icon: L.divIcon({
             html: makePinHtml(aggregate.count.toLocaleString("fa-IR")),
             className: "",
-            iconSize: [36, 44],
-            iconAnchor: [18, 44],
+            iconSize: [44, 44],
+            iconAnchor: [22, 22],
           }),
-          keyboard: false,
+          keyboard: true,
         })
           .addTo(instance)
           .bindTooltip(`${aggregate.name} · ${aggregate.count.toLocaleString("fa-IR")} میدان`, {
             direction: "top",
-            offset: [0, -38],
+            offset: [0, -24],
             opacity: 0.92,
           })
           .on("click", () => { instance.flyTo([aggregate.latitude, aggregate.longitude], level === "country" ? 7.2 : 10.2, { animate: true, duration: .7 }); onSelectAggregateRef.current(aggregate.id); });
         markersRef.current.push(marker);
       }
 
-      if (!fittedAllRef.current && (squares.length > 0 || aggregates.length > 0)) {
-        fittedAllRef.current = true;
-        const points: [number, number][] = [
-          ...squares.map((square) => [square.latitude, square.longitude] as [number, number]),
-          ...aggregates.map((aggregate) => [aggregate.latitude, aggregate.longitude] as [number, number]),
-        ];
-
-        if (points.length === 1) {
-          instance.setView(points[0], 8);
-        } else {
-          instance.fitBounds(L.latLngBounds(points), {
-            paddingTopLeft: [42, 78],
-            paddingBottomRight: [42, 58],
-            maxZoom: 6,
-          });
-        }
-      }
     });
 
     return () => {
@@ -222,7 +204,7 @@ export function MapFrame({
 
   useEffect(() => {
     if (!ready || !map.current || !center) return;
-    map.current.flyTo([center.latitude, center.longitude], 10.5, {
+    map.current.flyTo([center.latitude, center.longitude], center.zoom ?? 10.5, {
       animate: true,
       duration: 0.75,
     });

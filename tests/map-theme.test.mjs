@@ -23,10 +23,11 @@ test("live map uses the keyless OpenFreeMap dark vector style", () => {
   });
 });
 
-test("aggregate marker is a red teardrop pin with its count inside", () => {
+test("aggregate marker is a circular red counter", () => {
   const html = makePinHtml("۱۲");
   assert.match(html, /map-live-pin/);
   assert.match(html, /۱۲/);
   assert.match(html, /#e5544b/);
-  assert.match(html, /rotate\(45deg\)/);
+  assert.match(html, /border-radius:50%/);
+  assert.doesNotMatch(html, /rotate\(45deg\)/);
 });

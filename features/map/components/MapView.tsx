@@ -12,7 +12,7 @@ import { CitySelector } from "./CitySelector";
 import { MapFrame } from "./MapFrame";
 import { useMap } from "../hooks/useMap";
 
-type MapFocus = { latitude: number; longitude: number };
+type MapFocus = { latitude: number; longitude: number; zoom?: number };
 
 function readLinkedFocus(): MapFocus | null {
   if (typeof window === "undefined") return null;
@@ -42,6 +42,7 @@ export function MapView() {
   // A square profile links here with ?lat=&lng= so the live map opens on that
   // square. The URL is read directly to avoid a useSearchParams boundary.
   const [linkedFocus, setLinkedFocus] = useState<MapFocus | null>(null);
+  const [requestedFocus, setRequestedFocus] = useState<MapFocus | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setLinkedFocus(readLinkedFocus()));
@@ -50,17 +51,21 @@ export function MapView() {
   const handleSelectProvince = (provinceId: number) => {
     setLinkedFocus(null);
     map.selectProvince(provinceId);
+    const province = map.provinceAggregates.find((item) => item.id === provinceId);
+    if (province) setRequestedFocus({ latitude: province.latitude, longitude: province.longitude, zoom: 7.2 });
   };
 
   const handleSelectCity = (cityId: number) => {
     setLinkedFocus(null);
     map.selectCity(cityId);
+    const city = map.cityAggregates.find((item) => item.id === cityId);
+    if (city) setRequestedFocus({ latitude: city.latitude, longitude: city.longitude, zoom: 10.2 });
   };
   const mapMarkers = map.level === "country"
-    ? { squares: [], aggregates: map.provinceAggregates, onSelect: handleSelectProvince }
+    ? { squares: [], aggregates: map.provinceAggregates, onSelect: map.selectProvince }
     : map.level === "province"
-      ? { squares: [], aggregates: map.cityAggregates, onSelect: handleSelectCity }
-      : { squares: map.citySquares, aggregates: [], onSelect: handleSelectCity };
+      ? { squares: [], aggregates: map.cityAggregates, onSelect: map.selectCity }
+      : { squares: map.citySquares, aggregates: [], onSelect: map.selectCity };
 
   return (
     <section
@@ -113,7 +118,7 @@ export function MapView() {
             <MapFrame
               squares={mapMarkers.squares}
               aggregates={mapMarkers.aggregates}
-              center={linkedFocus}
+              center={linkedFocus ?? requestedFocus}
               level={map.level}
               onSelectAggregate={mapMarkers.onSelect}
               onViewportLevel={map.setViewportLevel}
