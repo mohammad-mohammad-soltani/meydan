@@ -58,7 +58,7 @@ export function FeedFilters({
               active:scale-[0.97]
               ${
                 active
-                  ? "border-brand-border bg-brand text-foreground "
+                  ? "border-brand-border bg-brand text-white "
                   : "border-border bg-surface text-muted-foreground hover:bg-hover hover:text-foreground"
               }
             `}
