@@ -22,6 +22,7 @@ import type { AdminUser, AdminUserRole } from "./users.service";
 import {
   getContent as getContentRaw,
   getContentList as getContentListRaw,
+  getContentPoster as getContentPosterRaw,
   type ContentFilters,
 } from "./content.service";
 import {
@@ -154,6 +155,10 @@ export async function getSpeakerRequests(
 
 export async function getContent(id: string): Promise<ContentItem | null> {
   return getContentRaw(id, await withAdminAuth());
+}
+
+export async function getContentPoster() {
+  return getContentPosterRaw(await withAdminAuth());
 }
 
 export async function getContentList(

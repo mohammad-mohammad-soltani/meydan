@@ -7,6 +7,8 @@ import { FolderKanban, Plus, RefreshCw } from "lucide-react";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
 import { AdminPageHeader } from "./AdminPageHeader";
+import { AdminContentPoster } from "./AdminContentPoster";
+import type { ContentPoster } from "../services/content.service";
 import { AdminTable, type AdminColumn } from "./AdminTable";
 import { PostStatusBadge } from "./AdminStatusBadge";
 import { fa, secondaryButtonClass } from "./styles";
@@ -19,18 +21,18 @@ import {
 import {
   CONTENT_FORMATS,
   CONTENT_FORMAT_LABELS,
+  CONTENT_TYPE_LABELS,
   type ContentFormat,
+  type ContentType,
   type ContentItem,
 } from "../types";
 
 /**
  * The content list.
  *
- * There is no `GET /admin/content` on the backend, so this is the *public*
- * cursor-paged list: it can only ever show published rows, and the header says
- * so. Drafts are only visible in wp-admin.
+ * The admin list reads the content API without incrementing view counts.
  */
-export function AdminContentView({ initial }: { initial: { items: ContentItem[]; nextCursor: string | null } }) {
+export function AdminContentView({ initial, poster }: { initial: { items: ContentItem[]; nextCursor: string | null }; poster: ContentPoster }) {
   const [filters, setFilters] = useState({ format: "", featured: false });
   const [applied, setApplied] = useState({ format: "", featured: false });
   const [items, setItems] = useState(initial.items);
@@ -127,6 +129,11 @@ export function AdminContentView({ initial }: { initial: { items: ContentItem[];
       ),
     },
     {
+      key: "content_type",
+      header: "نوع محتوا",
+      render: (item) => <span className="text-xs">{item.contentType ? CONTENT_TYPE_LABELS[item.contentType as ContentType] : "—"}</span>,
+    },
+    {
       key: "format",
       header: "قالب",
       render: (item) => (
@@ -192,6 +199,8 @@ export function AdminContentView({ initial }: { initial: { items: ContentItem[];
           </>
         }
       />
+
+      <AdminContentPoster initial={poster} />
 
       <AdminFilters
         filters={descriptors}

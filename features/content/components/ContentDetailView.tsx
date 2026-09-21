@@ -46,6 +46,18 @@ const kindIcons = {
   document: FileText,
 };
 
+const contentTypeLabels: Record<string, string> = {
+  placard: "پلاکارد",
+  speech: "سخنرانی",
+  music_video: "نماهنگ",
+  video: "ویدیو",
+  report: "گزارش",
+};
+
+function contentLabel(item: ContentDetailItem): string {
+  return (item.contentType && contentTypeLabels[item.contentType]) || kindLabels[item.media.kind];
+}
+
 function MediaStage({
   item,
   isPlaying,
@@ -126,10 +138,8 @@ function MediaStage({
     );
   }
 
-  if (item.media.kind === "video") return null;
-    console.log(item.media)
-  if(!item.media.coverImage ) return null;
-  const coverSrc = item.media.coverImage ;
+  if (item.media.kind === "video" || !item.media.coverImage) return null;
+  const coverSrc = item.media.coverImage;
 
   return (
     <div className="relative aspect-[4/3] overflow-hidden bg-surface-sunken sm:aspect-video">
@@ -157,7 +167,7 @@ function MediaStage({
         dir="rtl"
       >
         <span className="rounded-full bg-scrim/75 px-2.5 py-1 text-[10px] font-bold text-on-solid backdrop-blur-sm">
-          {kindLabels[item.media.kind]}
+          {contentLabel(item)}
         </span>
 
         {item.media.duration ? (
@@ -344,7 +354,7 @@ export function ContentDetailView({
           <div className="w-full flex justify-end">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-black bg-brand text-white p-1 rounded-full">
               <KindIcon aria-hidden="true" className="h-4 w-4" />
-              {kindLabels[item.media.kind]}
+              {contentLabel(item)}
             </span>
           </div>
 
@@ -654,7 +664,7 @@ export function ContentDetailView({
                     </strong>
 
                     <small className="mt-1 block truncate text-[10px] text-muted-foreground">
-                      {kindLabels[related.media.kind]} · {related.creator.name}
+                      {contentLabel(related)} · {related.creator.name}
                     </small>
                   </span>
 

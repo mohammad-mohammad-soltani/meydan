@@ -29,7 +29,7 @@ import {
   updateMediaReflection,
 } from "../services/narratives.service";
 import { getMediaOutlets } from "../services/creators.service";
-import { CONTENT_FORMATS, CONTENT_FORMAT_LABELS, type ContentFormat } from "../types";
+import { CONTENT_FORMATS, CONTENT_FORMAT_LABELS, CONTENT_TYPES, CONTENT_TYPE_LABELS, type ContentFormat, type ContentType } from "../types";
 import type { EditorialPage } from "../services/narratives.service";
 import type { Narrative, MediaReflection, MediaOutlet } from "../types";
 
@@ -63,6 +63,8 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
 
   const [convertOpen, setConvertOpen] = useState(false);
   const [format, setFormat] = useState<ContentFormat>("mixed");
+  const [contentType, setContentType] = useState<ContentType>("report");
+  const [primaryAttachmentId, setPrimaryAttachmentId] = useState<number | null>(null);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -139,10 +141,14 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
 
   const doConvert = async () => {
     if (!narrative) return;
+    if (narrative.attachments.length > 0 && !primaryAttachmentId) {
+      setActionError("فایل اصلی محتوا را انتخاب کنید.");
+      return;
+    }
     setBusy(true);
     setActionError(null);
     try {
-      await convertNarrativeToContent(String(narrative.id), format);
+      await convertNarrativeToContent(String(narrative.id), contentType, format, primaryAttachmentId);
       setConvertOpen(false);
       setNotice("روایت به محتوا تبدیل شد.");
       await openNarrative(String(narrative.id));
@@ -378,6 +384,7 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
                   type="button"
                   onClick={() => {
                     setActionError(null);
+                    setPrimaryAttachmentId(null);
                     setConvertOpen(true);
                   }}
                   className={primaryButtonClass}
@@ -520,6 +527,11 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
           onConfirm={() => void doConvert()}
           onClose={() => setConvertOpen(false)}
         >
+          <AdminField label="نوع محتوا" htmlFor="convert-content-type" required>
+            <select id="convert-content-type" value={contentType} onChange={(event) => setContentType(event.target.value as ContentType)} className={fieldClass}>
+              {CONTENT_TYPES.map((item) => <option key={item} value={item}>{CONTENT_TYPE_LABELS[item]}</option>)}
+            </select>
+          </AdminField>
           <AdminField label="قالب محتوا" htmlFor="convert-format" required>
             <select
               id="convert-format"
@@ -534,6 +546,14 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
               ))}
             </select>
           </AdminField>
+          {narrative?.attachments.length ? (
+            <AdminField label="فایل اصلی" htmlFor="convert-primary-attachment" required hint="نمای بالای صفحه محتوا با این فایل ساخته می‌شود.">
+              <select id="convert-primary-attachment" value={primaryAttachmentId ?? ""} onChange={(event) => setPrimaryAttachmentId(event.target.value ? Number(event.target.value) : null)} className={fieldClass}>
+                <option value="">انتخاب فایل اصلی</option>
+                {narrative.attachments.map((attachment) => <option key={attachment.mediaId} value={attachment.mediaId}>{attachment.type === "video" ? "ویدیو" : attachment.type === "audio" ? "صوت" : attachment.type === "image" ? "تصویر" : "فایل"} · #{attachment.mediaId}</option>)}
+              </select>
+            </AdminField>
+          ) : null}
         </AdminDialog>
       ) : null}
 

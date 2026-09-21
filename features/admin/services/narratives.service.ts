@@ -182,10 +182,10 @@ export async function setEditorial(id: string, editorial: boolean, init?: Reques
 /**
  * Converts a narrative into a content item. Idempotent: a second call returns
  * the row created by the first, so no duplicate content is produced.
- * `format` is the only input, and an empty string is a 422.
+ * `content_type` is required and must be one of the five canonical content types.
  */
-export async function convertNarrativeToContent(id: string, format: string, init?: RequestInit): Promise<void> {
-  await adminPost(`/admin/narratives/${segment(id)}/content`, { format }, init);
+export async function convertNarrativeToContent(id: string, contentType: string, format: string, primaryAttachmentId?: number | null, init?: RequestInit): Promise<void> {
+  await adminPost(`/admin/narratives/${segment(id)}/content`, { content_type: contentType, format, ...(primaryAttachmentId ? { primary_attachment_id: primaryAttachmentId } : {}) }, init);
 }
 
 /**

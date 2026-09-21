@@ -115,7 +115,7 @@ export async function getCreators(
   init?: RequestInit,
 ): Promise<Creator[]> {
   const rows = await adminGetItem<ApiCreator[]>(
-    `/creators${query({
+    `/admin/creators${query({
       q: filters.q.trim(),
       verified: filters.verified ? "true" : "",
       category: filters.category,
@@ -130,7 +130,7 @@ export async function getCreator(
   init?: RequestInit,
 ): Promise<Creator | null> {
   try {
-    return mapCreator(await adminGetItem<ApiCreator>(`/creators/${segment(id)}`, init));
+    return mapCreator(await adminGetItem<ApiCreator>(`/admin/creators/${segment(id)}`, init));
   } catch (reason) {
     if (isNotFound(reason)) return null;
     throw reason;

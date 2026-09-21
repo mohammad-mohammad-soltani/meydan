@@ -1,10 +1,12 @@
-import { compactFa, meydanApi, persianDate, plainText } from "@/lib/meydan-api";
+import { compactFa, meydanApi, meydanApiPage, persianDate, plainText } from "@/lib/meydan-api";
+import { cache } from "react";
 import type {
   ContentCategory,
   ContentDetailItem,
   ContentFile,
   ContentItem,
   ContentQuickAction,
+  ContentPoster,
   MediaKind,
   ScheduleItem,
 } from "../types";
@@ -27,6 +29,8 @@ type ApiContent = {
   excerpt?: string;
   body?: string;
   format?: string;
+  content_type?: string | null;
+  media_cover_url?: string | null;
   category?: { slug?: string; name?: string } | null;
   attachments?: Array<ContentCoverAttachment & ContentVideoAttachment & {
     label?: string;
@@ -67,7 +71,7 @@ type ApiCampaign = {
   }>;
 };
 
-type ApiConfig = { quick_actions?: ContentQuickAction[] };
+type ApiConfig = { quick_actions?: ContentQuickAction[]; content_poster?: { image_url?: string | null; href?: string | null } };
 
 function categoryOf(item: ApiContent): ContentCategory {
   const slug = item.category?.slug;
@@ -101,10 +105,9 @@ function audioOf(item: ApiContent): string | undefined {
   const primary = item.attachments?.find(
     (attachment) => attachment.id === item.primary_attachment_id,
   );
-  const audioAttachment =
-    primary?.type === "audio"
-      ? primary
-      : item.attachments?.find((attachment) => attachment.type === "audio");
+  const audioAttachment = primary
+    ? primary.type === "audio" ? primary : undefined
+    : item.attachments?.find((attachment) => attachment.type === "audio");
 
   return audioAttachment
     ? `/api/content/${item.id}/media/${audioAttachment.id}`
@@ -118,6 +121,7 @@ function toItem(item: ApiContent): ContentItem {
   return {
     id: item.slug || String(item.id),
     apiId: item.id,
+    contentType: item.content_type,
     category: categoryOf(item),
     status: item.featured ? "urgent" : "ready",
     badge: item.badge || undefined,
@@ -126,6 +130,7 @@ function toItem(item: ApiContent): ContentItem {
     description: item.excerpt || plainText(item.body || ""),
     author: producer.name,
     authorAvatar: producer.avatar,
+    coverUrl: item.media_cover_url || undefined,
     media: {
       kind: kind === "video" ? "image" : kind,
       duration: item.media_duration || undefined,
@@ -173,12 +178,15 @@ function fileList(item: ApiContent): ContentFile[] {
 
 function toDetail(item: ApiContent): ContentDetailItem {
   const creator = contentProducer(item.producer, item.creators);
-  const kind = kindOf(item.format);
+  const primary = item.attachments?.find((attachment) => attachment.id === item.primary_attachment_id);
   const video = contentVideo(item.id, item.primary_attachment_id, item.attachments);
+  const audioSrc = audioOf(item);
+  const kind = primary?.type === "video" ? "video" : primary?.type === "audio" ? "audio" : primary?.type === "image" ? "image" : primary?.type === "document" ? "document" : video ? "video" : audioSrc ? "audio" : kindOf(item.format);
 
   return {
     id: item.slug || String(item.id),
     apiId: item.id,
+    contentType: item.content_type,
     category: kind === "video" ? "video" : categoryOf(item),
     status: item.featured ? "urgent" : "ready",
     badge: item.badge || undefined,
@@ -189,12 +197,12 @@ function toDetail(item: ApiContent): ContentDetailItem {
     media: {
       kind,
       duration: item.media_duration || undefined,
-      audioSrc: audioOf(item),
+      audioSrc,
       videoSrc: video?.src,
       videoWidth: video?.width,
       videoHeight: video?.height,
       description: mediaDescription(item.format),
-      coverImage: contentCover(item.attachments, item.format),
+      coverImage: item.media_cover_url || contentCover(item.attachments, kind === "video" ? "video" : item.format, item.primary_attachment_id),
     },
     creator: {
       ...creator,
@@ -231,9 +239,37 @@ export async function getContentItems(): Promise<ContentItem[]> {
   return (await rawContent()).map(toItem);
 }
 
-export async function getContentDetailById(
+export async function getSpeechContentPage(cursor?: string | null): Promise<{ items: ContentItem[]; nextCursor: string | null }> {
+  const params = new URLSearchParams({ content_type: "speech" });
+  if (cursor) params.set("cursor", cursor);
+  const page = await meydanApiPage<ApiContent[]>(`/content?${params}`);
+  return { items: (page.data ?? []).map(toItem), nextCursor: page.nextCursor };
+}
+
+export async function getMusicVideoContentPage(cursor?: string | null): Promise<{ items: ContentItem[]; nextCursor: string | null }> {
+  const params = new URLSearchParams({ content_type: "music_video" });
+  if (cursor) params.set("cursor", cursor);
+  const page = await meydanApiPage<ApiContent[]>(`/content?${params}`);
+  return { items: (page.data ?? []).map(toItem), nextCursor: page.nextCursor };
+}
+
+export async function getContentPoster(): Promise<ContentPoster> {
+  const config = await meydanApi<ApiConfig>("/config");
+  return { imageUrl: config.content_poster?.image_url ?? null, href: config.content_poster?.href ?? "" };
+}
+
+export const getContentDetailById = cache(async function getContentDetailById(
   id: string,
 ): Promise<ContentDetailItem | undefined> {
+  if (/^[1-9]\d*$/.test(id)) {
+    try {
+      return toDetail(await meydanApi<ApiContent>(`/content/${id}`));
+    } catch (error) {
+      const status = (error as { status?: number })?.status;
+      if (status === 404) return undefined;
+      throw error;
+    }
+  }
   const list = await rawContent();
   const normalizedId = normalizeContentIdentifier(id);
   const match = list.find(
@@ -246,7 +282,7 @@ export async function getContentDetailById(
   if (!match) return undefined;
   const detail = await meydanApi<ApiContent>(`/content/${match.id}`);
   return toDetail(detail);
-}
+});
 
 export async function getContentDetailItems(): Promise<ContentDetailItem[]> {
   return (await rawContent()).map(toDetail);

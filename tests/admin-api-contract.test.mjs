@@ -215,9 +215,9 @@ test("narrative editorial marking uses PUT to add and DELETE to remove", () => {
   const fn = narratives.slice(narratives.indexOf("export async function setEditorial"));
   assert.match(fn, /adminPut</);
   assert.match(fn, /adminDelete</);
-  // Converting requires a format; an empty string is a 422.
+  // Converting requires a content type from the new content model.
   assert.match(narratives, /convertNarrativeToContent/);
-  assert.match(narratives, /\{\s*format\s*\}/);
+  assert.match(narratives, /content_type:\s*contentType/);
   // Removing the content link is not idempotent (a second call 404s), so the
   // 404 is absorbed.
   assert.match(narratives, /removeNarrativeContent/);

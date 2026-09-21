@@ -2,7 +2,7 @@
 
 import { AdminEditor } from "./AdminEditor";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import Link from "next/link";
@@ -10,6 +10,8 @@ import { LoaderCircle, Save } from "lucide-react";
 import { AdminCheckbox, AdminField, fieldClass } from "./AdminField";
 import { AdminFieldMessage } from "./AdminFieldMessage";
 import { MediaPickerField } from "./MediaPickerField";
+import { AdminDateTimeField } from "./AdminDateTimeField";
+import { getCreators } from "../services/creators.service";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
@@ -21,12 +23,16 @@ import { fieldErrorMessage } from "@/lib/meydan-api";
 import {
   CONTENT_FORMATS,
   CONTENT_FORMAT_LABELS,
+  CONTENT_TYPES,
+  CONTENT_TYPE_LABELS,
   CONTENT_STATUSES,
   CONTENT_STATUS_LABELS,
   type ContentFormat,
+  type ContentType,
   type ContentInput,
   type ContentItem,
   type ContentStatus,
+  type Creator,
 } from "../types";
 
 function toInput(content?: ContentItem): ContentInput {
@@ -39,6 +45,12 @@ function toInput(content?: ContentItem): ContentInput {
     // touching the select must not silently unpublish it.
     status: "publish",
     format: (content?.format as ContentFormat) ?? "mixed",
+    contentType: content?.contentType ?? "report",
+    isUser: content?.isUser ?? false,
+    userId: content?.userId ?? null,
+    creatorId: content?.creatorId ?? null,
+    time: content?.time ?? "",
+    mediaCover: content?.mediaCover ?? null,
     usageNote: content?.usageNote ?? "",
     subtitle: content?.subtitle ?? "",
     badge: content?.badge ?? "",
@@ -47,8 +59,10 @@ function toInput(content?: ContentItem): ContentInput {
     featured: content?.featured ?? false,
     attachments: (content?.attachments ?? []).map((attachment) => ({
       mediaId: attachment.mediaId,
-      caption: attachment.caption ?? undefined,
-      label: attachment.label ?? undefined,
+      mediaTitle: attachment.mediaTitle,
+      mediaSubtitle: attachment.mediaSubtitle,
+      mimeType: attachment.mimeType,
+      size: attachment.size,
     })),
     tags: content?.tags ?? [],
     category: content?.category?.id ?? null,
@@ -72,12 +86,17 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
   const [form, setForm] = useState<ContentInput>(() => toInput(content));
   const [tagText, setTagText] = useState((content?.tags ?? []).join("، "));
   const [mediaId, setMediaId] = useState<number | null>(null);
+  const [creators, setCreators] = useState<Creator[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [savedDraftNotice, setSavedDraftNotice] = useState(false);
 
   const patch = (next: Partial<ContentInput>) => setForm((current) => ({ ...current, ...next }));
+
+  useEffect(() => {
+    void getCreators().then(setCreators).catch(() => setCreators([]));
+  }, []);
 
   const submit = async () => {
     setMessage(null);
@@ -91,6 +110,11 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
     }
     if (!form.body.trim() && form.attachments.length === 0) {
       setMessage("متن یا حداقل یک ضمیمه لازم است؛ در غیر این صورت موردی برای ذخیره نیست.");
+      return;
+    }
+    if ((form.isUser && !form.userId) || (!form.isUser && !form.creatorId)) {
+      setFieldErrors({ [form.isUser ? "user_id" : "creator_id"]: "مالک محتوا را انتخاب کنید." });
+      setMessage("مالک محتوا الزامی است.");
       return;
     }
 
@@ -187,6 +211,34 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
         <h2>انتشار و دسته‌بندی</h2>
 
         <div className="space-y-3">
+          <AdminField label="نوع محتوا" htmlFor="content-type" required error={fieldErrors.content_type}>
+            <select id="content-type" value={form.contentType} onChange={(event) => patch({ contentType: event.target.value as ContentType })} className={fieldClass}>
+              {CONTENT_TYPES.map((type) => <option key={type} value={type}>{CONTENT_TYPE_LABELS[type]}</option>)}
+            </select>
+          </AdminField>
+
+          <AdminField label="مالک محتوا" htmlFor="content-owner-kind" required error={fieldErrors.is_user}>
+            <select id="content-owner-kind" value={form.isUser ? "user" : "creator"} onChange={(event) => patch({ isUser: event.target.value === "user", userId: null, creatorId: null })} className={fieldClass}>
+              <option value="creator">تولیدکننده بدون حساب</option>
+              <option value="user">کاربر عضو سایت</option>
+            </select>
+          </AdminField>
+          {form.isUser ? (
+            <AdminField label="شناسه کاربر" htmlFor="content-user-id" required error={fieldErrors.user_id} hint="شناسه حساب کاربری، برای سخنران و میدان هم همین شناسه است.">
+              <input id="content-user-id" type="number" min="1" value={form.userId ?? ""} onChange={(event) => patch({ userId: event.target.value ? Number(event.target.value) : null })} className={fieldClass} />
+            </AdminField>
+          ) : (
+            <AdminField label="تولیدکننده" htmlFor="content-creator-id" required error={fieldErrors.creator_id}>
+              <select id="content-creator-id" value={form.creatorId ?? ""} onChange={(event) => patch({ creatorId: event.target.value ? Number(event.target.value) : null })} className={fieldClass}>
+                <option value="">انتخاب تولیدکننده</option>
+                {form.creatorId && !creators.some((creator) => creator.id === form.creatorId) ? <option value={form.creatorId}>#{form.creatorId}</option> : null}
+                {creators.map((creator) => <option key={creator.id} value={creator.id}>{creator.name}</option>)}
+              </select>
+            </AdminField>
+          )}
+          <AdminDateTimeField label="زمان محتوا" value={form.time} onChange={(time) => patch({ time })} error={fieldErrors.time} />
+          <p className="text-[10px] leading-5 text-muted-foreground">اگر زمان را خالی بگذارید، هنگام ساخت زمان فعلی ثبت می‌شود.</p>
+
           <AdminField label="قالب" htmlFor="content-format" error={fieldErrors.format}>
             <select
               id="content-format"
@@ -264,12 +316,15 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
           onChange={setMediaId}
         />
 
+        <MediaPickerField id="content-media-cover" label="کاور محتوا" purpose="cover" mediaId={form.mediaCover} onChange={(mediaCover) => patch({ mediaCover })} error={fieldErrors.media_cover} />
+
         <button
           type="button"
           disabled={!mediaId}
           onClick={() => {
             if (!mediaId) return;
-            patch({ attachments: [...form.attachments, { mediaId }] });
+            if (form.attachments.some((item) => item.mediaId === mediaId)) return;
+            patch({ attachments: [...form.attachments, { mediaId, mediaTitle: "", mediaSubtitle: "" }] });
             setMediaId(null);
           }}
           className={`${secondaryButtonClass} min-h-9`}
@@ -280,23 +335,13 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
         {form.attachments.length > 0 ? (
           <ul className="divide-y divide-divider rounded-control border border-border">
             {form.attachments.map((attachment, index) => (
-              <li key={`${attachment.mediaId}-${index}`} className="flex items-center gap-2 px-3 py-2">
-                <span className="font-mono text-[10px] text-muted-foreground">
-                  #{attachment.mediaId}
-                </span>
-                <input
-                  value={attachment.caption ?? ""}
-                  aria-label={`توضیح ضمیمه ${index + 1}`}
-                  onChange={(event) =>
-                    patch({
-                      attachments: form.attachments.map((item, position) =>
-                        position === index ? { ...item, caption: event.target.value } : item,
-                      ),
-                    })
-                  }
-                  placeholder="توضیح"
-                  className={`${fieldClass} mt-0 flex-1`}
-                />
+              <li key={`${attachment.mediaId}-${index}`} className="flex flex-wrap items-center gap-2 px-3 py-2">
+                <span className="font-mono text-[10px] text-muted-foreground">#{attachment.mediaId}</span>
+                <input value={attachment.mediaTitle} aria-label={`عنوان رسانه ${index + 1}`} onChange={(event) => patch({ attachments: form.attachments.map((item, position) => position === index ? { ...item, mediaTitle: event.target.value } : item) })} placeholder="عنوان رسانه" className={`${fieldClass} mt-0 min-w-32 flex-1`} />
+                <input value={attachment.mediaSubtitle} aria-label={`زیرعنوان رسانه ${index + 1}`} onChange={(event) => patch({ attachments: form.attachments.map((item, position) => position === index ? { ...item, mediaSubtitle: event.target.value } : item) })} placeholder="زیرعنوان رسانه" className={`${fieldClass} mt-0 min-w-32 flex-1`} />
+                <span className="text-[10px] text-muted-foreground">{attachment.mimeType || "نوع پس از ذخیره مشخص می‌شود"} · {attachment.size ? `${attachment.size} بایت` : "اندازه پس از ذخیره مشخص می‌شود"}</span>
+                <button type="button" disabled={index === 0} onClick={() => patch({ attachments: form.attachments.map((item, position, all) => position === index - 1 ? all[index] : position === index ? all[index - 1] : item) })} aria-label={`انتقال رسانه ${index + 1} به بالا`} className="text-xs disabled:opacity-30">↑</button>
+                <button type="button" disabled={index === form.attachments.length - 1} onClick={() => patch({ attachments: form.attachments.map((item, position, all) => position === index + 1 ? all[index] : position === index ? all[index + 1] : item) })} aria-label={`انتقال رسانه ${index + 1} به پایین`} className="text-xs disabled:opacity-30">↓</button>
                 <button
                   type="button"
                   onClick={() =>
@@ -336,65 +381,6 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
             <input id="content-duration" value={form.mediaDuration} dir="ltr" placeholder="12:30" onChange={(event) => patch({ mediaDuration: event.target.value })} className={`${fieldClass} text-left`} />
           </AdminField>
         </div>
-      </AdminDisclosureSection>
-
-      <AdminDisclosureSection title="تولیدکنندگان" className="admin-form-wide" hasError={Boolean(fieldErrors.creators)}>
-        <p className="text-[10px] leading-5 text-muted-foreground">
-          شناسه تولیدکننده‌ها به‌همراه برچسب نقش. ترتیب فهرست، ترتیب نمایش است.
-        </p>
-        {form.creators.map((creator, index) => (
-          <div key={index} className="grid gap-2 sm:grid-cols-[6rem_1fr_auto]">
-            <input
-              value={creator.id}
-              inputMode="numeric"
-              aria-label={`شناسه تولیدکننده ${index + 1}`}
-              onChange={(event) =>
-                patch({
-                  creators: form.creators.map((item, position) =>
-                    position === index ? { ...item, id: Number(event.target.value) } : item,
-                  ),
-                })
-              }
-              className={fieldClass}
-            />
-            <input
-              value={creator.roleLabel}
-              aria-label={`نقش تولیدکننده ${index + 1}`}
-              onChange={(event) =>
-                patch({
-                  creators: form.creators.map((item, position) =>
-                    position === index ? { ...item, roleLabel: event.target.value } : item,
-                  ),
-                })
-              }
-              placeholder="نقش (مثلاً تصویربردار)"
-              className={fieldClass}
-            />
-            <button
-              type="button"
-              onClick={() =>
-                patch({ creators: form.creators.filter((_, position) => position !== index) })
-              }
-              className="mt-1.5 shrink-0 rounded-control border border-border px-3 text-[10px] font-black text-danger-foreground"
-            >
-              حذف
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() =>
-            patch({
-              creators: [
-                ...form.creators,
-                { id: 0, position: form.creators.length, roleLabel: "" },
-              ],
-            })
-          }
-          className={`${secondaryButtonClass} min-h-9`}
-        >
-          افزودن تولیدکننده
-        </button>
       </AdminDisclosureSection>
 
       <div className="admin-form-actions">

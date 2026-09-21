@@ -256,6 +256,11 @@ export const CONTENT_FORMATS = [
   "mixed",
 ] as const;
 export type ContentFormat = (typeof CONTENT_FORMATS)[number];
+export const CONTENT_TYPES = ["placard", "speech", "music_video", "video", "report"] as const;
+export type ContentType = (typeof CONTENT_TYPES)[number];
+export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
+  placard: "پلاکارد", speech: "سخنرانی", music_video: "نماهنگ", video: "ویدیو", report: "گزارش",
+};
 
 export const CONTENT_FORMAT_LABELS: Record<ContentFormat, string> = {
   video: "ویدیو",
@@ -282,6 +287,10 @@ export type ContentAttachment = {
   order: number;
   caption: string | null;
   label: string | null;
+  mediaTitle: string;
+  mediaSubtitle: string;
+  mimeType: string;
+  size: number;
 };
 
 export type ContentCreatorRef = {
@@ -297,6 +306,14 @@ export type ContentItem = {
   body: string;
   excerpt: string;
   format: string;
+  contentType: ContentType | null;
+  isUser: boolean;
+  userId: number | null;
+  creatorId: number | null;
+  time: string | null;
+  createdAt: string | null;
+  viewCounts: number;
+  mediaCover: number | null;
   featured: boolean;
   publishedAt: string | null;
   category: { id: number; name: string; slug: string } | null;
@@ -318,13 +335,19 @@ export type ContentInput = {
   excerpt: string;
   status: ContentStatus;
   format: ContentFormat;
+  contentType: ContentType;
+  isUser: boolean;
+  userId: number | null;
+  creatorId: number | null;
+  time: string;
+  mediaCover: number | null;
   usageNote: string;
   subtitle: string;
   badge: string;
   locationLabel: string;
   mediaDuration: string;
   featured: boolean;
-  attachments: Array<{ mediaId: number; caption?: string; label?: string }>;
+  attachments: Array<{ mediaId: number; mediaTitle: string; mediaSubtitle: string; mimeType?: string; size?: number }>;
   tags: string[];
   category: number | null;
   creators: ContentCreatorRef[];

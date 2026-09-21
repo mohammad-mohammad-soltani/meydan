@@ -4,8 +4,12 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   CircleCheckBig,
+  FileText,
+  Headphones,
+  Image as ImageIcon,
   LoaderCircle,
   Newspaper,
+  Play,
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
@@ -13,6 +17,7 @@ import {
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { useViewerRole } from "@/features/auth/hooks/useViewerRole";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
+import type { PostMedia } from "../types";
 
 type AdminAction =
   | "markEditorial"
@@ -80,28 +85,21 @@ const DIALOGS: Record<AdminAction, DialogConfig> = {
   },
 };
 
-/** Formats accepted by `POST /admin/narratives/{id}/content`. */
-const CONTENT_FORMATS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "mixed", label: "ترکیبی" },
-  { value: "text", label: "مکتوب" },
-  { value: "image", label: "تصویری" },
-  { value: "gallery", label: "گالری تصاویر" },
-  { value: "audio", label: "صوتی" },
-  { value: "video", label: "ویدئو" },
-  { value: "pdf", label: "PDF" },
-  { value: "docx", label: "سند Word" },
-  { value: "pptx", label: "ارائه PowerPoint" },
-  { value: "zip", label: "فایل فشرده" },
-  { value: "file", label: "فایل" },
-  { value: "external", label: "لینک خارجی" },
+/** Content types accepted by `POST /admin/narratives/{id}/content`. */
+const CONTENT_TYPES: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "placard", label: "پلاکارد" },
+  { value: "speech", label: "سخنرانی" },
+  { value: "music_video", label: "نماهنگ" },
+  { value: "video", label: "ویدیو" },
+  { value: "report", label: "گزارش" },
 ];
 
-const DEFAULT_CONTENT_FORMAT = "mixed";
+const DEFAULT_CONTENT_TYPE = "report";
 
-function formatLabel(value?: string | null): string {
+function contentTypeLabel(value?: string | null): string {
   if (!value) return "";
   return (
-    CONTENT_FORMATS.find((format) => format.value === value)?.label || value
+    CONTENT_TYPES.find((type) => type.value === value)?.label || value
   );
 }
 
@@ -117,26 +115,48 @@ function ContentFormatPicker({
   return (
     <div className="mt-4 w-full text-right">
       <label
-        htmlFor="post-admin-content-format"
+        htmlFor="post-admin-content-type"
         className="mb-1.5 block text-[11px] font-bold text-foreground-subtle"
       >
         نوع محتوا
       </label>
 
       <select
-        id="post-admin-content-format"
+        id="post-admin-content-type"
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         className="min-h-11 w-full rounded-control border border-border bg-background px-3 text-xs font-black text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {CONTENT_FORMATS.map((format) => (
-          <option key={format.value} value={format.value}>
-            {format.label}
+        {CONTENT_TYPES.map((type) => (
+          <option key={type.value} value={type.value}>
+            {type.label}
           </option>
         ))}
       </select>
     </div>
+  );
+}
+
+const primaryIcons = { image: ImageIcon, video: Play, microphone: Headphones, article: FileText };
+
+function PrimaryAttachmentPicker({ media, value, disabled, onChange }: { media: PostMedia[]; value: string | null; disabled: boolean; onChange: (value: string) => void }) {
+  if (!media.length) return null;
+  return (
+    <fieldset className="mt-4 w-full text-right">
+      <legend className="mb-1.5 text-[11px] font-bold text-foreground-subtle">فایل اصلی</legend>
+      <p className="mb-2 text-[10px] leading-5 text-muted-foreground">نمای بالای صفحهٔ محتوا با این فایل ساخته می‌شود.</p>
+      <div className="space-y-2">
+        {media.map((item) => {
+          const Icon = primaryIcons[item.kind];
+          return <label key={item.id} className={`flex cursor-pointer items-center gap-3 rounded-control border p-2.5 transition-colors ${value === item.id ? "border-brand bg-brand-muted" : "border-border bg-surface hover:bg-hover"}`}>
+            <input type="radio" name="primary-attachment" value={item.id} checked={value === item.id} disabled={disabled} onChange={() => onChange(item.id)} className="accent-brand" />
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-muted text-icon-muted"><Icon className="h-4 w-4" /></span>
+            <span className="min-w-0 flex-1"><strong className="block truncate text-[11px] font-black">{item.label}</strong><small className="block text-[10px] text-muted-foreground">{item.kind === "video" ? "ویدیو" : item.kind === "microphone" ? "صوت" : item.kind === "image" ? "تصویر" : "فایل"}</small></span>
+          </label>;
+        })}
+      </div>
+    </fieldset>
   );
 }
 
@@ -282,11 +302,13 @@ export function PostAdminActions({
   editorial,
   isContent,
   contentId,
+  media,
 }: {
   postId: string;
   editorial: boolean;
   isContent: boolean;
   contentId?: number | null;
+  media: PostMedia[];
 }) {
   const { isAuthenticated } = useAuthGate();
   const { isAdministrator, isLoading } = useViewerRole(isAuthenticated);
@@ -295,10 +317,11 @@ export function PostAdminActions({
     null,
   );
   const [contentOverride, setContentOverride] = useState<boolean | null>(null);
-  const [selectedFormat, setSelectedFormat] = useState<string>(
-    DEFAULT_CONTENT_FORMAT,
+  const [selectedContentType, setSelectedContentType] = useState<string>(
+    DEFAULT_CONTENT_TYPE,
   );
-  const [currentFormat, setCurrentFormat] = useState<string | null>(null);
+  const [currentContentType, setCurrentContentType] = useState<string | null>(null);
+  const [primaryAttachmentId, setPrimaryAttachmentId] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<AdminAction | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -309,7 +332,7 @@ export function PostAdminActions({
   const isPublished = contentOverride ?? isContent;
 
   /*
-   * The narrative payload only links the content id, so the stored format is
+   * The narrative payload only links the content id, so the stored content type is
    * read from the public content endpoint once the conversion exists.
    */
   useEffect(() => {
@@ -317,9 +340,9 @@ export function PostAdminActions({
 
     let active = true;
 
-    void meydanApi<{ format?: string }>(`/content/${contentId}`)
+    void meydanApi<{ content_type?: string }>(`/content/${contentId}`)
       .then((content) => {
-        if (active && content.format) setCurrentFormat(content.format);
+        if (active && content.content_type) setCurrentContentType(content.content_type);
       })
       .catch(() => undefined);
 
@@ -363,10 +386,14 @@ export function PostAdminActions({
         );
       } else {
         const publish = action === "publishContent";
+        if (publish && media.length > 0 && !primaryAttachmentId) {
+          setError("فایل اصلی محتوا را انتخاب کنید.");
+          return;
+        }
 
         const result = await meydanApi<{
           id?: number;
-          format?: string;
+          content_type?: string;
           deleted?: boolean;
         }>(
           `/admin/narratives/${postId}/content`,
@@ -374,7 +401,7 @@ export function PostAdminActions({
             ? {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: JSON.stringify({ format: selectedFormat }),
+                body: JSON.stringify({ content_type: selectedContentType, ...(primaryAttachmentId ? { primary_attachment_id: Number(primaryAttachmentId) } : {}) }),
               }
             : { method: "DELETE" },
         );
@@ -382,13 +409,13 @@ export function PostAdminActions({
         setContentOverride(publish);
 
         if (publish) {
-          const saved = result.format || selectedFormat;
-          setCurrentFormat(saved);
+          const saved = result.content_type || selectedContentType;
+          setCurrentContentType(saved);
           setNotice(
-            `روایت به عنوان محتوا (${formatLabel(saved)}) منتشر شد.`,
+            `روایت به عنوان محتوا (${contentTypeLabel(saved)}) منتشر شد.`,
           );
         } else {
-          setCurrentFormat(null);
+          setCurrentContentType(null);
           setNotice("روایت از محتوا حذف شد.");
         }
       }
@@ -437,13 +464,14 @@ export function PostAdminActions({
           type="button"
           onClick={() => {
             setError("");
+            if (!isPublished) setPrimaryAttachmentId(null);
             setPendingAction(isPublished ? "removeContent" : "publishContent");
           }}
           aria-haspopup="dialog"
           title={
             isPublished
-              ? currentFormat
-                ? `حذف از محتوا (${formatLabel(currentFormat)})`
+              ? currentContentType
+                ? `حذف از محتوا (${contentTypeLabel(currentContentType)})`
                 : "حذف از محتوا"
               : "انتشار به عنوان محتوا"
           }
@@ -457,8 +485,8 @@ export function PostAdminActions({
             <Newspaper aria-hidden="true" className="h-3.5 w-3.5" />
           )}
           {isPublished
-            ? currentFormat
-              ? `منتشرشده · ${formatLabel(currentFormat)}`
+            ? currentContentType
+              ? `منتشرشده · ${contentTypeLabel(currentContentType)}`
               : "منتشرشده به عنوان محتوا"
             : "انتشار به عنوان محتوا"}
         </button>
@@ -473,20 +501,23 @@ export function PostAdminActions({
           onConfirm={() => void applyAction(pendingAction)}
         >
           {pendingAction === "publishContent" ? (
-            <ContentFormatPicker
-              value={selectedFormat}
-              disabled={isSaving}
-              onChange={setSelectedFormat}
-            />
+            <>
+              <ContentFormatPicker
+                value={selectedContentType}
+                disabled={isSaving}
+                onChange={setSelectedContentType}
+              />
+              <PrimaryAttachmentPicker media={media} value={primaryAttachmentId} disabled={isSaving} onChange={setPrimaryAttachmentId} />
+            </>
           ) : null}
 
           {pendingAction === "removeContent" ? (
             <div className="mt-4 w-full space-y-1.5 rounded-control bg-surface-muted px-3 py-2.5 text-right">
-              {currentFormat ? (
+              {currentContentType ? (
                 <p className="text-[11px] font-bold text-foreground-secondary">
                   نوع فعلی محتوا:{" "}
                   <span className="text-foreground">
-                    {formatLabel(currentFormat)}
+                    {contentTypeLabel(currentContentType)}
                   </span>
                 </p>
               ) : null}

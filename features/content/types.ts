@@ -37,6 +37,7 @@ export type ContentFile = {
 export type ContentItem = {
   id: string;
   apiId: number;
+  contentType?: string | null;
   category: ContentCategory;
   status: ContentStatus;
   badge?: string;
@@ -45,6 +46,7 @@ export type ContentItem = {
   description: string;
   author?: string;
   authorAvatar?: string;
+  coverUrl?: string;
   media: ContentMedia;
 };
 
@@ -79,3 +81,5 @@ export type ContentQuickAction = {
   icon: "speakers" | "contact" | "print" | "safety";
   href?: string;
 };
+
+export type ContentPoster = { imageUrl: string | null; href: string };

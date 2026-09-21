@@ -14,9 +14,13 @@ export type ContentCoverAttachment = {
 export function contentCover(
   attachments: ContentCoverAttachment[] | undefined,
   format?: string,
+  primaryAttachmentId?: number,
 ): string | undefined {
+  const primary = attachments?.find((attachment) => attachment.id === primaryAttachmentId);
+  if (primary?.type === "image") return primary.url;
+
   if (format === "video") {
-    const video = attachments?.find((attachment) => attachment.type === "video");
+    const video = primary?.type === "video" ? primary : attachments?.find((attachment) => attachment.type === "video");
     return video?.poster_url || video?.thumbnail_url || undefined;
   }
 

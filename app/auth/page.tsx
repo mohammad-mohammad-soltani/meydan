@@ -237,9 +237,10 @@ export default function AuthPage() {
     setPending(true);
     resetMessages();
     try {
-      const result = await api<{ challenge_id: string }>("otp-request", { phone });
+      const result = await api<{ challenge_id: string; dev_code?: string }>("otp-request", { phone });
       setChallengeId(result.challenge_id);
-      setCode("");
+      setCode(result.dev_code ?? "");
+      setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : "");
       setStep("code");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "خطا در ورود");
@@ -278,10 +279,10 @@ export default function AuthPage() {
     setPending(true);
     resetMessages();
     try {
-      const result = await api<{ challenge_id: string }>("otp-request", { phone });
+      const result = await api<{ challenge_id: string; dev_code?: string }>("otp-request", { phone });
       setChallengeId(result.challenge_id);
-      setCode("");
-      setNotice("کد تأیید تازه ارسال شد.");
+      setCode(result.dev_code ?? "");
+      setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : "کد تأیید تازه ارسال شد.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "ارسال دوباره کد انجام نشد.");
     } finally {

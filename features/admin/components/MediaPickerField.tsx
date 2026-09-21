@@ -27,7 +27,7 @@ export function MediaPickerField({ id, label, hint, error, purpose = "avatar", m
   const [selected, setSelected] = useState<{ id: number; name: string; preview: string | null } | null>(null);
   const imageOnly = purpose !== "narrative";
   const activeSelection = selected?.id === mediaId ? selected : null;
-  const preview = activeSelection?.preview ?? (mediaId === null ? currentUrl : null);
+  const preview = activeSelection?.preview ?? (mediaId !== null ? currentUrl : null);
 
   useEffect(() => () => { if (selected?.preview) URL.revokeObjectURL(selected.preview); }, [selected]);
 

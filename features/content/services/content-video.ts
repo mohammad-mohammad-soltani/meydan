@@ -11,8 +11,8 @@ export function contentVideo(
   attachments: ContentVideoAttachment[] | undefined,
 ): { src: string; width?: number; height?: number } | undefined {
   const primary = attachments?.find((attachment) => attachment.id === primaryAttachmentId);
-  const video = primary?.type === "video"
-    ? primary
+  const video = primary
+    ? primary.type === "video" ? primary : undefined
     : attachments?.find((attachment) => attachment.type === "video");
   if (!video) return undefined;
 

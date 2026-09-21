@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   FolderKanban,
   Image,
+  CalendarDays,
   MapPinned,
   Megaphone,
   Mic,
@@ -67,6 +68,12 @@ const SHORTCUTS: Array<{
     label: "بسته محتوا",
     description: "ساخت و حذف محتوا",
     icon: FolderKanban,
+  },
+  {
+    href: "/admin/report-days",
+    label: "گزارش",
+    description: "مدیریت روزشمار تجمعات شبانه",
+    icon: CalendarDays,
   },
   {
     href: "/admin/creators",

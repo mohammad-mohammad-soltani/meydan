@@ -12,8 +12,8 @@ import { PostStatusBadge } from "./AdminStatusBadge";
 import { dangerButtonClass, fa, secondaryButtonClass } from "./styles";
 import { adminErrorMessage, deleteContent } from "../services/content.service";
 import type { ContentItem } from "../types";
-import { CONTENT_FORMAT_LABELS, type ContentFormat } from "../types";
-import { formatAdminDate } from "../lib/datetime";
+import { CONTENT_FORMAT_LABELS, CONTENT_TYPE_LABELS, type ContentFormat } from "../types";
+import { formatAdminDate, formatAdminDateTime } from "../lib/datetime";
 
 /** One labelled data row in the read-only summary. */
 function Row({ label, value }: { label: string; value: string }) {
@@ -87,6 +87,12 @@ export function AdminContentDetailView({ content }: { content: ContentItem }) {
       <div className="space-y-4 px-3 py-4 pb-24 sm:px-4">
         <section aria-label="مشخصات" className="rounded-card border border-border bg-surface px-3.5 py-2">
           <Row label="شناسه" value={`#${content.id}`} />
+          <Row label="نوع محتوا" value={content.contentType ? CONTENT_TYPE_LABELS[content.contentType] : ""} />
+          <Row label="مالک" value={content.isUser ? `کاربر #${content.userId ?? ""}` : `تولیدکننده #${content.creatorId ?? ""}`} />
+          <Row label="زمان محتوا" value={formatAdminDateTime(content.time)} />
+          <Row label="زمان ثبت" value={formatAdminDateTime(content.createdAt)} />
+          <Row label="بازدید" value={fa(content.viewCounts)} />
+          <Row label="شناسه کاور" value={content.mediaCover ? `#${content.mediaCover}` : ""} />
           <Row
             label="قالب"
             value={CONTENT_FORMAT_LABELS[content.format as ContentFormat] ?? content.format}
@@ -131,8 +137,9 @@ export function AdminContentDetailView({ content }: { content: ContentItem }) {
                     #{attachment.mediaId}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-[11px] text-foreground-secondary">
-                    {attachment.caption || attachment.label || "بدون توضیح"}
+                    {attachment.mediaTitle || "بدون عنوان"} — {attachment.mediaSubtitle || "بدون زیرعنوان"}
                   </span>
+                  <span className="text-[10px] text-muted-foreground">{attachment.mimeType} · {fa(attachment.size)} بایت</span>
                   <span className="shrink-0 text-[10px] text-muted-foreground">
                     ترتیب {fa(attachment.order)}
                   </span>
