@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { ArrowRight, Inbox, Mic } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { SpeakerCard } from "./SpeakerCard";
+import { SpeakerCardSkeleton } from "./SpeakerCardSkeleton";
 import { SpeakersFilters } from "./SpeakersFilters";
 import { SpeakersSearch } from "./SpeakersSearch";
 import { useSpeakers } from "../hooks/useSpeakers";
@@ -86,9 +87,10 @@ export function SpeakersView({
         ) : null}
 
         {speakers.isLoading ? (
-          <div className="space-y-3" aria-busy="true">
-            {[0, 1, 2].map((index) => (
-              <div key={index} className="h-28 animate-pulse rounded-card border border-border bg-card" />
+          <div className="divide-y divide-divider" aria-busy="true" aria-live="polite">
+            <span className="sr-only">در حال بارگذاری سخنرانان این دسته‌بندی</span>
+            {[0, 1, 2, 3, 4, 5].map((index) => (
+              <SpeakerCardSkeleton key={index} />
             ))}
           </div>
         ) : shown ? (
