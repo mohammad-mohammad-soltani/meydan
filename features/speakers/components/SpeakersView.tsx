@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { ArrowRight, Inbox, Mic } from "lucide-react";
@@ -8,7 +9,8 @@ import { SpeakerCard } from "./SpeakerCard";
 import { SpeakersFilters } from "./SpeakersFilters";
 import { SpeakersSearch } from "./SpeakersSearch";
 import { useSpeakers } from "../hooks/useSpeakers";
-import type { Speaker, SpeakerCategory } from "../types";
+import type { SpeakerPage } from "../services/speakers.service";
+import type { SpeakerCategory } from "../types";
 
 /** Directory of curated speakers with per-row invitations and profile links. */
 export function SpeakersView({
@@ -17,7 +19,7 @@ export function SpeakersView({
   canInvite = false,
   venue = "",
 }: {
-  initialSpeakers: Speaker[];
+  initialSpeakers: SpeakerPage;
   categories: SpeakerCategory[];
   /** True only for a signed-in square account; the API enforces it as well. */
   canInvite?: boolean;
@@ -27,6 +29,17 @@ export function SpeakersView({
   const { isAuthenticated } = useAuthGate();
   const speakers = useSpeakers(initialSpeakers, categories);
   const shown = speakers.speakers.length;
+  const { hasMore, isLoading, isLoadingMore, error, loadMore } = speakers;
+  const sentinel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = sentinel.current;
+    if (!element || !hasMore || isLoading || isLoadingMore || error) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) void loadMore();
+    }, { rootMargin: "320px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, isLoadingMore, error, loadMore]);
 
   return (
     <section id="view-speakers" className="min-h-full bg-background text-foreground">
@@ -45,7 +58,7 @@ export function SpeakersView({
               فهرست خطبا و سخنرانان جهاد تبیین
             </h1>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {initialSpeakers.length.toLocaleString("fa-IR")} سخنران در فهرست · جستجو بر اساس نام، موضوع یا شهر
+              {initialSpeakers.total.toLocaleString("fa-IR")} سخنران در فهرست · جستجو بر اساس نام، موضوع یا شهر
             </p>
           </div>
           {isAuthenticated ? (
@@ -66,9 +79,9 @@ export function SpeakersView({
       </div>
 
       <main className="space-y-3 p-4 pb-24">
-        {!speakers.isLoading && initialSpeakers.length > 0 ? (
+        {!speakers.isLoading && speakers.total > 0 ? (
           <p className="px-1 text-[10px] font-bold text-foreground-subtle">
-            نمایش {shown.toLocaleString("fa-IR")} از {initialSpeakers.length.toLocaleString("fa-IR")} سخنران
+            نمایش {shown.toLocaleString("fa-IR")} از {speakers.total.toLocaleString("fa-IR")} سخنران
           </p>
         ) : null}
 
@@ -105,6 +118,9 @@ export function SpeakersView({
             </div>
           </div>
         )}
+        {speakers.isLoadingMore ? <p className="text-center text-xs text-muted-foreground">در حال دریافت سخنرانان بعدی…</p> : null}
+        {speakers.error ? <div role="alert" className="text-center text-xs text-danger-foreground">{speakers.error}<button type="button" onClick={speakers.retry} className="mr-2 underline">تلاش دوباره</button></div> : null}
+        <div ref={sentinel} aria-hidden="true" />
       </main>
     </section>
   );

@@ -1,4 +1,4 @@
-import { meydanApi } from "@/lib/meydan-api";
+import { meydanApi, meydanApiEnvelope } from "@/lib/meydan-api";
 import type { Speaker, SpeakerCategory } from "../types";
 
 type ApiCategory = { slug?: string; name?: string };
@@ -41,9 +41,15 @@ export async function getSpeakerCategories(): Promise<SpeakerCategory[]> {
     .map((item) => ({ slug: String(item.slug), name: String(item.name || item.slug) }));
 }
 
-export async function getSpeakers(): Promise<Speaker[]> {
-  const items = await meydanApi<ApiSpeaker[]>("/speakers");
-  return items.map((item, index) => ({
+export type SpeakerPage = { items: Speaker[]; page: number; total: number; pages: number };
+
+export async function getSpeakerPage(page = 1, q = "", category = "all"): Promise<SpeakerPage> {
+  const params = new URLSearchParams({ page: String(page), per_page: "20" });
+  if (q.trim()) params.set("q", q.trim());
+  if (category !== "all") params.set("speaker_category", category);
+  const response = await meydanApiEnvelope<ApiSpeaker[]>(`/speakers?${params}`);
+  const items = response.data ?? [];
+  return { items: items.map((item, index) => ({
     id: String(item.id),
     name: item.name,
     handle: item.handle || item.slug || `speaker_${item.id}`,
@@ -62,5 +68,5 @@ export async function getSpeakers(): Promise<Speaker[]> {
     accent: accents[index % accents.length],
     verified: Boolean(item.verified),
     userId: item.user_id ? String(item.user_id) : undefined,
-  }));
+  })), page: Number(response.meta.page ?? page), total: Number(response.meta.total ?? items.length), pages: Number(response.meta.pages ?? 1) };
 }

@@ -1,28 +1,59 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { Speaker, SpeakerCategory, SpeakerFilter } from "../types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getSpeakerPage, type SpeakerPage } from "../services/speakers.service";
+import type { SpeakerCategory, SpeakerFilter } from "../types";
 
-/**
- * Browse-only: inviting happens in the speaker-invitations feature, which
- * derives the venue from the square's own profile. This hook only filters.
- */
-export function useSpeakers(initialSpeakers: Speaker[], categories: SpeakerCategory[] = []) {
+export function useSpeakers(initial: SpeakerPage, categories: SpeakerCategory[] = []) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<SpeakerFilter>("all");
-  const [isLoading] = useState(false);
+  const [result, setResult] = useState(initial);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
+  const generation = useRef(0);
+  const busy = useRef(false);
+  const first = useRef(true);
 
-  const speakers = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase("fa-IR");
-    return initialSpeakers.filter((speaker) => {
-      const matchesFilter =
-        filter === "all" || speaker.categories.some((category) => category.slug === filter);
-      const haystack = [speaker.name, speaker.handle, speaker.cities.join(" "), speaker.expertise]
-        .join(" ")
-        .toLocaleLowerCase("fa-IR");
-      return matchesFilter && (!normalized || haystack.includes(normalized));
-    });
-  }, [filter, initialSpeakers, query]);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    const token = ++generation.current;
+    setIsLoading(true);
+    setError("");
+    const timer = setTimeout(() => {
+      void getSpeakerPage(1, query, filter).then((page) => {
+        if (token === generation.current) setResult(page);
+      }).catch(() => {
+        if (token === generation.current) setError("دریافت سخنرانان ممکن نشد.");
+      }).finally(() => {
+        if (token === generation.current) setIsLoading(false);
+      });
+    }, 250);
+    return () => { clearTimeout(timer); if (generation.current === token) generation.current = token + 1; };
+  }, [query, filter, retryKey]);
 
-  return { query, filter, categories, speakers, isLoading, setQuery, setFilter };
+  const loadMore = useCallback(async () => {
+    if (busy.current || isLoading || result.page >= result.pages) return;
+    busy.current = true;
+    setIsLoadingMore(true);
+    setError("");
+    const token = generation.current;
+    try {
+      const page = await getSpeakerPage(result.page + 1, query, filter);
+      if (token !== generation.current) return;
+      setResult((current) => {
+        const ids = new Set(current.items.map((speaker) => speaker.id));
+        return { ...page, items: [...current.items, ...page.items.filter((speaker) => !ids.has(speaker.id))] };
+      });
+    } catch {
+      if (token === generation.current) setError("دریافت سخنرانان بعدی ممکن نشد.");
+    } finally {
+      busy.current = false;
+      if (token === generation.current) setIsLoadingMore(false);
+    }
+  }, [filter, isLoading, query, result.page, result.pages]);
+
+  const retry = () => setRetryKey((current) => current + 1);
+  return { query, filter, categories, speakers: result.items, total: result.total, hasMore: result.page < result.pages, isLoading, isLoadingMore, error, loadMore, retry, setQuery, setFilter };
 }

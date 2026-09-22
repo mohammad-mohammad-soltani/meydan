@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Mic, Pencil, RefreshCw, Trash2, UserPlus, UserRoundPlus } from "lucide-react";
 import { AdminDialog } from "./AdminDialog";
+import { AdminSpeakerCategories } from "./AdminSpeakerCategories";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
 import { AdminPagination } from "./AdminPagination";
@@ -313,6 +314,17 @@ export function AdminSpeakersView({ initial }: { initial: AdminPage<Speaker> }) 
           </>
         }
       />
+
+      <AdminSpeakerCategories categories={categories} onChange={(items) => {
+        setCategories(items);
+        if (applied.speakerCategory && !items.some((item) => item.slug === applied.speakerCategory)) {
+          setApplied((current) => ({ ...current, speakerCategory: "" }));
+          setFilters((current) => ({ ...current, speakerCategory: "" }));
+          setPage(1);
+        } else {
+          setReloadKey((current) => current + 1);
+        }
+      }} />
 
       <AdminFilters filters={descriptors} onSubmit={applyFilters} onReset={resetFilters} busy={loading} />
 

@@ -1,5 +1,5 @@
 import { SpeakersView } from "@/features/speakers/components/SpeakersView";
-import { getSpeakerCategories, getSpeakers } from "@/features/speakers/services/speakers.service";
+import { getSpeakerCategories, getSpeakerPage } from "@/features/speakers/services/speakers.service";
 import { getProfileDetails } from "@/features/profile/services/profile.service";
 import { isAuthenticated } from "@/lib/meydan-session";
 
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function SpeakersPage() {
   const authenticated = await isAuthenticated();
   const [speakers, categories, viewer] = await Promise.all([
-    getSpeakers(),
+    getSpeakerPage(),
     getSpeakerCategories(),
     authenticated ? getProfileDetails().catch(() => null) : null,
   ]);

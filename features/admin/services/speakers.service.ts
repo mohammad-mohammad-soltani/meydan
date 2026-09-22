@@ -232,6 +232,18 @@ export async function getSpeakerCategories(init?: RequestInit): Promise<SpeakerC
     .map((row) => ({ slug: String(row.slug), name: String(row.name ?? row.slug) }));
 }
 
+export async function createSpeakerCategory(name: string): Promise<SpeakerCategory> {
+  return adminPost<SpeakerCategory>("/admin/speaker-categories", { name });
+}
+
+export async function renameSpeakerCategory(slug: string, name: string): Promise<SpeakerCategory> {
+  return adminPatch<SpeakerCategory>(`/admin/speaker-categories/${segment(slug)}`, { name });
+}
+
+export async function deleteSpeakerCategory(slug: string): Promise<void> {
+  await adminDelete(`/admin/speaker-categories/${segment(slug)}`);
+}
+
 export const SPEAKER_REQUEST_LIST_CAP = 100;
 
 export type SpeakerRequestFilters = {

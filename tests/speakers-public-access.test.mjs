@@ -11,7 +11,8 @@ test("speaker browsing uses public data and skips the viewer lookup for guests",
   const page = source("app/(app)/speakers/page.tsx");
   const service = source("features/speakers/services/speakers.service.ts");
 
-  assert.match(service, /meydanApi<ApiSpeaker\[\]>\("\/speakers"\)/);
+  assert.match(service, /meydanApiEnvelope<ApiSpeaker\[\]>\(`\/speakers\?\$\{params\}`\)/);
+  assert.match(service, /total: Number\(response\.meta\.total/);
   assert.match(service, /meydanApi<ApiCategory\[\]>\("\/speaker-categories"\)/);
   assert.match(page, /isAuthenticated\(\)/);
   assert.match(page, /authenticated \? getProfileDetails\(\)\.catch\(\(\) => null\) : null/);
