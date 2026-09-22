@@ -17,16 +17,18 @@ import { useViewerRole } from "@/features/auth/hooks/useViewerRole";
 export function AdminNavLink({
   isAuthenticated,
   className,
+  "aria-current": ariaCurrent,
 }: {
   isAuthenticated: boolean;
   className: string;
+  "aria-current"?: "page";
 }) {
   const viewer = useViewerRole(isAuthenticated);
 
   if (!viewer.isAdministrator) return null;
 
   return (
-    <Link href={"/admin" as Route} className={className}>
+    <Link href={"/admin" as Route} className={className} aria-current={ariaCurrent}>
       <ShieldCheck className="h-5 w-5" />
       پنل مدیریت
     </Link>

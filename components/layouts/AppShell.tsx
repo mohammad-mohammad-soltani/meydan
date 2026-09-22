@@ -34,6 +34,16 @@ type AppShellProps = { children: ReactNode; isAuthenticated?: boolean };
 
 const desktopLinkClass =
   "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground";
+const activeDesktopLinkClass = "bg-brand-muted text-brand hover:bg-brand-muted hover:text-brand";
+
+function desktopLink(pathname: string, href: string) {
+  const active = pathname === href || pathname.startsWith(`${href}/`) ||
+    (href === "/speakers" && pathname.startsWith("/speaker-invitations"));
+  return {
+    className: `${desktopLinkClass} ${active ? activeDesktopLinkClass : ""}`,
+    "aria-current": active ? "page" as const : undefined,
+  };
+}
 
 export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
   const pathname = usePathname();
@@ -84,44 +94,44 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
                 aria-label="ناوبری دسکتاپ"
                 className="space-y-3 text-sm font-bold"
               >
-                <Link href="/home" className={desktopLinkClass}>
+                <Link href="/home" {...desktopLink(pathname, "/home")}>
                   <Home className="h-5 w-5" />
                   خانه و روایت‌ها
                 </Link>
-                <Link href="/content" className={desktopLinkClass}>
+                <Link href="/content" {...desktopLink(pathname, "/content")}>
                   <FolderKanban className="h-5 w-5" />
                   بسته محتوا
                 </Link>
-                <Link href="/speakers" className={desktopLinkClass}>
+                <Link href="/speakers" {...desktopLink(pathname, "/speakers")}>
                   <Mic className="h-5 w-5" />
                   اعزام سخنران
                 </Link>
-                <Link href="/map" className={desktopLinkClass}>
+                <Link href="/map" {...desktopLink(pathname, "/map")}>
                   <Map className="h-5 w-5" />
                   نقشه زنده
                 </Link>
-                <Link href="/chat" className={desktopLinkClass}>
+                <Link href="/chat" {...desktopLink(pathname, "/chat")}>
                   <MessageCircle className="h-5 w-5" />
                   گفتگو
                   <NavBadge className="ms-auto" />
                 </Link>
-                <Link href="/explore" className={desktopLinkClass}>
+                <Link href="/explore" {...desktopLink(pathname, "/explore")}>
                   <Search className="h-5 w-5" />
                   کاوش و جستجو
                 </Link>
                 {isAuthenticated ? (
                   <AdminNavLink
                     isAuthenticated={isAuthenticated}
-                    className={desktopLinkClass}
+                    {...desktopLink(pathname, "/admin")}
                   />
                 ) : null}
                 {isAuthenticated ? (
-                  <Link href="/profile" className={desktopLinkClass}>
+                  <Link href="/profile" {...desktopLink(pathname, "/profile")}>
                     <UserCheck className="h-5 w-5" />
                     نمایه
                   </Link>
                 ) : (
-                  <Link href="/auth" className={desktopLinkClass}>
+                  <Link href="/auth" {...desktopLink(pathname, "/auth")}>
                     <LogIn className="h-5 w-5" />
                     ورود
                   </Link>
