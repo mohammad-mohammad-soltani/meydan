@@ -10,12 +10,12 @@ import type { ProfileReply } from "../types";
 import { useInfiniteScroll } from "@/features/feed/hooks/useInfiniteScroll";
 import { profilePrefetchIndex } from "../profile-pagination";
 
-type ProfileActivityProps = { posts: FeedPost[]; latestPageStart: number; replies: ProfileReply[]; likedPostIds: Set<string>; onLike: (postId: string) => void; onShare: (post: FeedPost) => void; hasMore: boolean; isLoadingMore: boolean; loadMoreFailed: boolean; onLoadMore: () => void };
+type ProfileActivityProps = { posts: FeedPost[]; latestPageStart: number; replies: ProfileReply[]; likedPostIds: Set<string>; onLike: (postId: string) => void; onShare: (post: FeedPost) => void; onDelete: (post: FeedPost) => void; hasMore: boolean; isLoadingMore: boolean; loadMoreFailed: boolean; onLoadMore: () => void };
 type ProfileFeedTab = "posts" | "replies" | "media";
 
 const tabs: Array<{ id: ProfileFeedTab; label: string }> = [{ id: "posts", label: "روایت‌ها" }, { id: "replies", label: "پاسخ‌ها" }, { id: "media", label: "رسانه" }];
 
-export function ProfileActivity({ posts, latestPageStart, replies, likedPostIds, onLike, onShare, hasMore, isLoadingMore, loadMoreFailed, onLoadMore }: ProfileActivityProps) {
+export function ProfileActivity({ posts, latestPageStart, replies, likedPostIds, onLike, onShare, onDelete, hasMore, isLoadingMore, loadMoreFailed, onLoadMore }: ProfileActivityProps) {
   const [activeTab, setActiveTab] = useState<ProfileFeedTab>("posts");
   const sentinelRef = useInfiniteScroll({
     enabled: activeTab !== "replies" && hasMore && !isLoadingMore && !loadMoreFailed,
@@ -34,7 +34,7 @@ export function ProfileActivity({ posts, latestPageStart, replies, likedPostIds,
     </div>
     {activeTab === "replies" ? <Replies items={replies} /> : <>
       {visiblePosts.length === 0 && !hasMore ? <EmptyState label={emptyLabel} /> : visiblePosts.map((post, index) => <Fragment key={post.id}>
-        <PostCard post={post} liked={likedPostIds.has(post.id)} reposted={false} joined={Boolean(post.viewerState?.joined)} onLike={() => onLike(post.id)} onRepost={() => undefined} onShare={() => void onShare(post)} onJoin={() => undefined} onOpenMedia={() => undefined} />
+        <PostCard post={post} liked={likedPostIds.has(post.id)} reposted={false} joined={Boolean(post.viewerState?.joined)} onLike={() => onLike(post.id)} onRepost={() => undefined} onShare={() => void onShare(post)} onJoin={() => undefined} onOpenMedia={() => undefined} onDelete={() => onDelete(post)} />
         {index + 1 === prefetchIndex && hasMore ? <div ref={sentinelRef} className="h-px" aria-hidden="true" /> : null}
       </Fragment>)}
       {visiblePosts.length === 0 && hasMore ? <div ref={sentinelRef} className="h-px" aria-hidden="true" /> : null}

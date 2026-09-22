@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { CalendarDays, X } from "lucide-react";
+import { DeletePostDialog } from "@/features/feed/components/DeletePostDialog";
+import type { FeedPost } from "@/features/feed/types";
 import { ProfileActivity } from "./ProfileActivity";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileInfo } from "./ProfileInfo";
@@ -20,6 +22,9 @@ export function ProfileView({ initialProfile, canManage = true, canInvite = fals
   const [subtitle, setSubtitle] = useState(initialProfile.identity.subtitle);
   const [about, setAbout] = useState(initialProfile.about);
   const [skills, setSkills] = useState(initialProfile.skills.join("، "));
+  const [deleteTarget, setDeleteTarget] = useState<FeedPost | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   return (
     <section id="view-combined-profile" className="min-h-dvh bg-background pb-20 text-foreground">
@@ -29,7 +34,7 @@ export function ProfileView({ initialProfile, canManage = true, canInvite = fals
         <ProfileInfo profile={profile.profile} tab={profile.selectedTab} expandedSections={profile.expandedSections} onToggleSection={profile.toggleSection} />
         {isSquareAccount ? <SquareLocationCard profile={profile.profile} /> : null}
         {isSquareAccount ? <SquareSchedule items={profile.profile.schedule} canManage={canManage} /> : null}
-        <ProfileActivity posts={profile.narrativePosts} latestPageStart={profile.latestNarrativePageStart} replies={profile.profile.replies} likedPostIds={profile.likedNarrativeIds} onLike={(postId) => void profile.toggleLike(postId)} onShare={(post) => void profile.shareNarrative(post)} hasMore={profile.nextNarrativeCursor !== null} isLoadingMore={profile.isLoadingMore} loadMoreFailed={profile.loadMoreFailed} onLoadMore={() => void profile.loadMore()} />
+        <ProfileActivity posts={profile.narrativePosts} latestPageStart={profile.latestNarrativePageStart} replies={profile.profile.replies} likedPostIds={profile.likedNarrativeIds} onLike={(postId) => void profile.toggleLike(postId)} onShare={(post) => void profile.shareNarrative(post)} onDelete={(post) => { setDeleteError(null); setDeleteTarget(post); }} hasMore={profile.nextNarrativeCursor !== null} isLoadingMore={profile.isLoadingMore} loadMoreFailed={profile.loadMoreFailed} onLoadMore={() => void profile.loadMore()} />
       </div>
       {profile.isLoading ? <p className="px-4 text-xs text-muted-foreground">در حال دریافت پروفایل…</p> : null}
       {canManage && profile.isManagementOpen ? (
@@ -56,6 +61,19 @@ export function ProfileView({ initialProfile, canManage = true, canInvite = fals
           </div>
         </div>
       ) : null}
+      {deleteTarget ? <DeletePostDialog
+        busy={deleteBusy}
+        error={deleteError}
+        onCancel={() => { if (!deleteBusy) setDeleteTarget(null); }}
+        onConfirm={() => {
+          setDeleteBusy(true);
+          setDeleteError(null);
+          void profile.deleteNarrative(deleteTarget.id)
+            .then((deleted) => { if (deleted) setDeleteTarget(null); else setDeleteError("اجازه حذف این روایت را ندارید."); })
+            .catch(() => setDeleteError("حذف روایت انجام نشد. دوباره تلاش کنید."))
+            .finally(() => setDeleteBusy(false));
+        }}
+      /> : null}
     </section>
   );
 }

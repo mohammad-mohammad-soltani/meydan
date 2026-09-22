@@ -40,6 +40,7 @@ export function AdminUserForm({ user, roles, created = false, initialRole }: { u
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<number | null>(created ? 1 : null);
   const needsSquare = form.role === "meydan_square" && !user?.square_id;
+  const linkedSquareId = user?.role === "meydan_square" && user.square_id !== null && Number.isInteger(user.square_id) && user.square_id > 0 ? user.square_id : null;
 
   useEffect(() => { void getProvinces().then(setProvinces).catch(() => setProvinces([])); }, []);
   useEffect(() => { if (!form.province_id) return; let active = true; void getCities(form.province_id).then((rows) => { if (active) setCities(rows); }).catch(() => { if (active) setCities([]); }); return () => { active = false; }; }, [form.province_id]);
@@ -70,6 +71,13 @@ export function AdminUserForm({ user, roles, created = false, initialRole }: { u
     <AdminPageHeader title={user ? user.full_name : "افزودن کاربر"} description="اطلاعات حساب و نقش را ثبت کنید. ورود کاربران جدید با کد پیامکی انجام می‌شود." crumbs={[{ label: "کاربران", href: "/admin/users" }, { label: user ? "ویرایش کاربر" : "افزودن کاربر" }]} />
     <form onSubmit={(event) => void save(event)} className="mx-auto max-w-5xl space-y-5 px-4 py-6 lg:px-10">
       {error && <p role="alert" className="rounded-xl border border-danger-border bg-danger-surface p-4 text-sm text-danger-foreground">{error}</p>}
+      {linkedSquareId !== null && <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5 shadow-card">
+        <div>
+          <h2 className="text-base font-black">میدان مرتبط</h2>
+          <p className="mt-1 text-sm text-muted-foreground">میدان متصل به این خادم را در پنل مدیریت ویرایش کنید.</p>
+        </div>
+        <Link href={`/admin/squares/${linkedSquareId}` as Route} className={primaryButtonClass}>ویرایش میدان</Link>
+      </section>}
       <section className="rounded-2xl border border-border bg-surface p-5 shadow-card">
         <h2 className="mb-5 text-base font-black">اطلاعات حساب</h2>
         <div className="grid gap-4 md:grid-cols-2">

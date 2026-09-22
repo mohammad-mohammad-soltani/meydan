@@ -72,7 +72,7 @@ export function FeedFilters({
                 group-hover:scale-105
                 ${
                   active
-                    ? "text-foreground"
+                    ? "text-white"
                     : "text-icon-muted group-hover:text-icon"
                 }
               `}

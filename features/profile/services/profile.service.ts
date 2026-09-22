@@ -1,4 +1,4 @@
-import { compactFa, meydanApi, meydanApiPage, plainText } from "@/lib/meydan-api";
+import { compactFa, isAuthApiError, meydanApi, meydanApiPage, plainText } from "@/lib/meydan-api";
 import { accessTokenHeader } from "@/lib/meydan-session";
 import type { FeedAttachment, FeedPost } from "@/features/feed/types";
 import type {
@@ -161,6 +161,7 @@ type ApiNarrative = {
   viewer_state?: {
     liked?: boolean;
     reposted?: boolean;
+    can_delete?: boolean;
   } | null;
 
   stats?: {
@@ -458,6 +459,10 @@ function mapNarrativePost(
       joined: Boolean(
         item.initiative?.viewer_state
           ?.joined,
+      ),
+
+      canDelete: Boolean(
+        item.viewer_state?.can_delete,
       ),
     },
 
@@ -897,12 +902,25 @@ export async function getProfileNarrativePage(
   const params = new URLSearchParams({ limit: "20" });
   if (cursor) params.set("cursor", cursor);
   const path = own ? "/me/narratives" : `/${type === "square" ? "squares" : "users"}/${id}/narratives`;
-  const page = await meydanApiPage<ApiNarrative[]>(`${path}?${params}`, own ? { headers: await accessTokenHeader() } : undefined);
+  const page = own
+    ? await meydanApiPage<ApiNarrative[]>(`${path}?${params}`, { headers: await accessTokenHeader() })
+    : await getPublicNarrativePage(`${path}?${params}`);
   return {
     posts: page.data.map((item) => mapNarrativePost(item, identity)),
     nextCursor: page.nextCursor,
     count: page.count,
   };
+}
+
+async function getPublicNarrativePage(path: string) {
+  const headers = await accessTokenHeader();
+  if (!headers.Authorization) return meydanApiPage<ApiNarrative[]>(path);
+  try {
+    return await meydanApiPage<ApiNarrative[]>(path, { headers });
+  } catch (reason) {
+    if (isAuthApiError(reason)) return meydanApiPage<ApiNarrative[]>(path);
+    throw reason;
+  }
 }
 
 async function authenticatedProfile(): Promise<ProfileDetails | null> {
@@ -1041,9 +1059,7 @@ export async function getPublicProfileDetails(
           `/squares/${id}`,
         ),
 
-        meydanApiPage<ApiNarrative[]>(
-          `/squares/${id}/narratives?limit=20`,
-        ),
+        getPublicNarrativePage(`/squares/${id}/narratives?limit=20`),
 
         meydanApi<ApiComment[]>(
           `/actors/square/${id}/replies`,
@@ -1074,9 +1090,7 @@ export async function getPublicProfileDetails(
         `/users/${id}`,
       ),
 
-      meydanApiPage<ApiNarrative[]>(
-        `/users/${id}/narratives?limit=20`,
-      ),
+      getPublicNarrativePage(`/users/${id}/narratives?limit=20`),
 
       meydanApi<ApiComment[]>(
         `/actors/user/${id}/replies`,

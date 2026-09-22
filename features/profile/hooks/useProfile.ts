@@ -41,10 +41,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [managementError, setManagementError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (canManage) {
-      setFollowStateReady(true);
-      return;
-    }
+    if (canManage) return;
     let active = true;
     void getViewerFollowing()
       .then((actors) => {
@@ -168,6 +165,18 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     await navigator.clipboard?.writeText(text);
   };
 
+  const deleteNarrative = async (postId: string) => {
+    if (!narrativePosts.some((post) => post.id === postId && post.viewerState?.canDelete)) return false;
+    await meydanApi(`/narratives/${postId}`, { method: "DELETE" });
+    setNarrativePosts((current) => current.filter((post) => post.id !== postId));
+    setLikedNarrativeIds((current) => {
+      const next = new Set(current);
+      next.delete(postId);
+      return next;
+    });
+    return true;
+  };
+
   const loadMore = useCallback(async () => {
     if (!nextNarrativeCursor || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
@@ -266,6 +275,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     closeManagement: () => setIsManagementOpen(false),
     toggleLike,
     shareNarrative,
+    deleteNarrative,
     saveSquareDetails,
     saveUserDetails,
   };
