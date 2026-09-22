@@ -40,11 +40,16 @@ export function useSpeakers(initial: SpeakerPage, categories: SpeakerCategory[] 
     setError("");
     const token = generation.current;
     try {
-      const page = await getSpeakerPage(result.page + 1, query, filter);
+      // Fetch a three-page window (150 speakers) per scroll step. The first
+      // request is page 1, so the first scroll advances through pages 2 and 3.
+      const nextPages = [result.page + 1, result.page + 2].filter((page) => page <= result.pages);
+      const pages = await Promise.all(nextPages.map((page) => getSpeakerPage(page, query, filter)));
       if (token !== generation.current) return;
       setResult((current) => {
         const ids = new Set(current.items.map((speaker) => speaker.id));
-        return { ...page, items: [...current.items, ...page.items.filter((speaker) => !ids.has(speaker.id))] };
+        const incoming = pages.flatMap((page) => page.items).filter((speaker) => !ids.has(speaker.id));
+        const last = pages[pages.length - 1];
+        return last ? { ...last, items: [...current.items, ...incoming] } : current;
       });
     } catch {
       if (token === generation.current) setError("دریافت سخنرانان بعدی ممکن نشد.");

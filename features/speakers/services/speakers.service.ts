@@ -44,7 +44,7 @@ export async function getSpeakerCategories(): Promise<SpeakerCategory[]> {
 export type SpeakerPage = { items: Speaker[]; page: number; total: number; pages: number };
 
 export async function getSpeakerPage(page = 1, q = "", category = "all"): Promise<SpeakerPage> {
-  const params = new URLSearchParams({ page: String(page), per_page: "20" });
+  const params = new URLSearchParams({ page: String(page), per_page: "50" });
   if (q.trim()) params.set("q", q.trim());
   if (category !== "all") params.set("speaker_category", category);
   const response = await meydanApiEnvelope<ApiSpeaker[]>(`/speakers?${params}`);
