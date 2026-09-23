@@ -8,6 +8,7 @@ import { setVideoFeedOwner, stopVideoAutoplay } from "@/lib/video-sound";
 import {
   nextVideoIndex,
   scanVideoPages,
+  videoFeedQuery,
   type VideoFeedEntry,
   type VideoPageState,
 } from "../video-feed-queue";
@@ -113,7 +114,7 @@ export function VideoFeedViewer({ session, onClose }: Props) {
         queueRef.current,
         (cursor) =>
           getFeedPage(
-            { mode: "for_you", filter: "all", limit: 12, cursor },
+            videoFeedQuery(cursor),
             { signal: controller.signal },
           ),
       );

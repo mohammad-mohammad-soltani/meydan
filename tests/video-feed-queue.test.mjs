@@ -5,6 +5,7 @@ import {
   videosFromPosts,
   scanVideoPages,
   nextVideoIndex,
+  videoFeedQuery,
 } from "../features/media/video-feed-queue.ts";
 
 const post = (id, author = id, video = true) => ({
@@ -131,6 +132,21 @@ test("one shared transition gate rejects duplicate ended/swipe and stale slide e
   assert.equal(nextVideoIndex(1, -1, 3, false), 0);
   assert.equal(nextVideoIndex(0, -1, 3, false), 0);
   assert.equal(nextVideoIndex(2, 1, 3, false), 2);
+});
+
+test("video pagination always requests the dedicated all-ages timeline", () => {
+  assert.deepEqual(videoFeedQuery(null), {
+    mode: "for_you",
+    filter: "video",
+    limit: 12,
+    cursor: null,
+  });
+  assert.deepEqual(videoFeedQuery("next-page"), {
+    mode: "for_you",
+    filter: "video",
+    limit: 12,
+    cursor: "next-page",
+  });
 });
 
 test("viewer keeps every visual attachment and queues a post only once", () => {

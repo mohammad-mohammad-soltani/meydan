@@ -1,3 +1,4 @@
+import type { FeedQuery } from "../feed/services/feed.service";
 import type { FeedPost } from "../feed/types";
 import type { MediaItem } from "./types";
 
@@ -76,6 +77,10 @@ export type VideoPageState = {
   exhausted: boolean;
   recovered: boolean;
 };
+
+export function videoFeedQuery(cursor: string | null): FeedQuery {
+  return { mode: "for_you", filter: "video", limit: 12, cursor };
+}
 
 /** Bounded scanning prevents an all-text timeline from becoming a request loop. */
 export async function scanVideoPages(
