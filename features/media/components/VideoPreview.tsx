@@ -7,9 +7,11 @@ import type { MediaItem } from "../types";
 import { mediaThumbnailSrc } from "../media-utils";
 
 /** Fetch a first frame only for visible clips that have no usable server poster. */
-export function VideoPreview({ item, onRatio }: {
+export function VideoPreview({ item, onRatio, eager = false }: {
   item: MediaItem;
   onRatio?: (ratio: number) => void;
+  /** Request the poster immediately for a visible single-video card. */
+  eager?: boolean;
 }) {
   const frameRef = useRef<HTMLSpanElement>(null);
   const [visible, setVisible] = useState(false);
@@ -40,7 +42,7 @@ export function VideoPreview({ item, onRatio }: {
         </span>
       ) : null}
       {poster ? (
-        <img src={poster} alt="" loading="lazy" decoding="async"
+        <img src={poster} alt="" loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} decoding="async"
           className="absolute inset-0 h-full w-full object-contain"
           onError={() => setPosterFailed(true)} />
       ) : visible && !failed && item.src ? (
