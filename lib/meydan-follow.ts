@@ -37,13 +37,20 @@ export function viewerActor(me: MeResponse): { type: ActorType; id?: number } {
   return { type: "user", id: me.profile?.id };
 }
 
-export async function getViewerFollowing(): Promise<FollowActor[]> {
-  const me = await meydanApi<MeResponse>("/me");
-  const { type, id } = viewerActor(me);
-  if (!id) return [];
-
-  const response = await meydanApi<FollowActor[]>(`/actors/${type}/${id}/following?limit=1000`);
-  return Array.isArray(response) ? response : [];
+export async function getFollowingStates(actors: Array<{ type: ActorType; id: number }>): Promise<{ keys: string[]; hasFollowing: boolean }> {
+  const unique = Array.from(new Map(actors.filter(({ id }) => id > 0).map((actor) => [actorKey(actor.type, actor.id), actor])).values());
+  const keys: string[] = [];
+  let hasFollowing = false;
+  for (let index = 0; index < unique.length || index === 0; index += 100) {
+    const result = await meydanApi<{ following_keys: string[]; has_following: boolean }>("/actors/follow-states", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ actors: unique.slice(index, index + 100) }),
+    });
+    keys.push(...(result.following_keys || []));
+    hasFollowing ||= Boolean(result.has_following);
+  }
+  return { keys, hasFollowing };
 }
 
 export async function getActorFollowing(type: ActorType, value: string | number): Promise<boolean> {

@@ -577,7 +577,7 @@ function mapSquare(
   square: ApiSquare,
   narratives: ApiNarrative[] = [],
   replies: ApiComment[] = [],
-  mediaReflectionCount = 0,
+  mediaReflectionCount?: number,
 ): ProfileDetails {
   const mappedNarratives =
     narratives.map(mapNarrative);
@@ -594,11 +594,11 @@ function mapSquare(
       value: compactFa(square.stats?.narratives ?? narratives.length),
       label: "روایت منتشرشده",
     },
-    {
+    ...(mediaReflectionCount === undefined ? [] : [{
       value: `${compactFa(mediaReflectionCount)} روایت`,
       label: "بازتاب رسانه‌ای",
-      tone: "success",
-    },
+      tone: "success" as const,
+    }]),
   ];
 
   const identity = {
@@ -1048,82 +1048,34 @@ export async function getPublicProfileDetails(
 ): Promise<ProfileDetails | null> {
   try {
     if (type === "square") {
-      const [
-        square,
-        narratives,
-        replies,
-        reflectionStats,
-      ] = await Promise.all([
-        meydanApi<ApiSquare>(
-          `/squares/${id}`,
-        ),
-
+      const [square, narratives] = await Promise.all([
+        meydanApi<ApiSquare>(`/squares/${id}`),
         getPublicNarrativePage(`/squares/${id}/narratives?limit=20`),
-
-        meydanApi<ApiComment[]>(
-          `/actors/square/${id}/replies`,
-        ),
-
-        meydanApi<ApiMediaReflectionCount>(
-          `/squares/${id}/media-reflections/count`,
-        ).catch(() => ({
-          square_id: id,
-          count: 0,
-        })),
       ]);
-
-      return { ...mapSquare(
-        square,
-        narratives.data,
-        replies,
-        reflectionStats.count,
-      ), nextNarrativeCursor: narratives.nextCursor, narrativeCount: narratives.count };
+      return {
+        ...mapSquare(square, narratives.data),
+        nextNarrativeCursor: narratives.nextCursor,
+        narrativeCount: narratives.count,
+      };
     }
 
-    const [
-      user,
-      narratives,
-      replies,
-    ] = await Promise.all([
-      meydanApi<ApiPublicUser>(
-        `/users/${id}`,
-      ),
-
+    const [user, narratives] = await Promise.all([
+      meydanApi<ApiPublicUser>(`/users/${id}`),
       getPublicNarrativePage(`/users/${id}/narratives?limit=20`),
-
-      meydanApi<ApiComment[]>(
-        `/actors/user/${id}/replies`,
-      ),
     ]);
-
-    return { ...mapUser(
-      {
+    return {
+      ...mapUser({
         id: user.id,
-
         ...user.profile,
-
-        full_name:
-          user.profile.full_name ||
-          user.actor.display_name ||
-          "کاربر میدان",
-
-        avatar_url:
-          user.actor.avatar_url,
-
-        verified:
-          user.actor.verified,
-
-        verified_speaker:
-          user.actor.verified_speaker,
-
-        verified_official:
-          user.actor.verified_official,
-      },
-
-      narratives.data,
-
-      replies,
-    ), nextNarrativeCursor: narratives.nextCursor, narrativeCount: narratives.count };
+        full_name: user.profile.full_name || user.actor.display_name || "کاربر میدان",
+        avatar_url: user.actor.avatar_url,
+        verified: user.actor.verified,
+        verified_speaker: user.actor.verified_speaker,
+        verified_official: user.actor.verified_official,
+      }, narratives.data),
+      nextNarrativeCursor: narratives.nextCursor,
+      narrativeCount: narratives.count,
+    };
   } catch {
     return null;
   }

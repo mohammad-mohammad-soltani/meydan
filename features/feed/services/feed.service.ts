@@ -6,6 +6,8 @@ type ApiActor = {
   type: "user" | "square";
   display_name: string;
   avatar_url?: string;
+  handle?: string;
+  location_address?: string;
   verified?: boolean;
   verified_speaker?: boolean;
   verified_official?: boolean;
@@ -114,7 +116,7 @@ function mediaReflectionSummary(outlets: string[]): string {
   return `بازنشر شده در ${outlets[0]}، ${outlets[1]}، ${outlets[2]} و ${(outlets.length - 3).toLocaleString("fa-IR")} رسانه دیگر`;
 }
 
-function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): FeedPost {
+function mapNarrative(item: ApiNarrative): FeedPost {
   const reflections = item.media_reflections || [];
   const reflection = reflections[0];
   const reflectionOutlets = mediaReflectionOutlets(reflections);
@@ -122,14 +124,13 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
   const visual = item.attachments?.some(
     (attachment) => attachment.type === "image" || attachment.type === "video",
   );
-  const square = squares.get(item.author?.id || "");
 
   return {
     id: String(item.id),
     author: {
       id: numericActorId(item.author?.id),
       type: item.author?.type || "square",
-      avatarUrl: square?.avatar_url || item.author?.avatar_url,
+      avatarUrl: item.author?.avatar_url,
       verified: Boolean(item.author?.verified),
       verifiedSpeaker: Boolean(item.author?.verified_speaker),
       verifiedOfficial: Boolean(item.author?.verified_official),
@@ -144,9 +145,9 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
     },
     kind: visual || reflection ? "media" : "ideas",
     squareName: item.author?.display_name || "میدان",
-    handle: square?.handle || item.author?.id || "meydan",
+    handle: item.author?.handle || item.author?.id || "meydan",
     timeAgo: relativeFa(item.published_at),
-    city: cityFromAddress(square?.location?.address),
+    city: cityFromAddress(item.author?.location_address),
     badge: item.tags?.[0] || "روایت میدان",
     title: item.author?.display_name || "روایت میدان",
     body: plainText(item.body || ""),
@@ -189,30 +190,8 @@ function mapNarrative(item: ApiNarrative, squares: Map<string, ApiSquare>): Feed
   };
 }
 
-async function getSquares(): Promise<ApiSquare[]> {
-  return meydanApi<ApiSquare[]>("/squares");
-}
-
-/**
- * A media-heavy timeline benefits from moderately sized pages: enough runway
- * for prefetching without forcing the browser to download too many cards at once.
- */
+/** Pages stay small enough for media prefetching without loading a large feed at once. */
 export const FEED_PAGE_SIZE = 12;
-
-const SQUARES_TTL_MS = 60_000;
-let squaresCache: { at: number; promise: Promise<ApiSquare[]> } | null = null;
-
-function getCachedSquares(): Promise<ApiSquare[]> {
-  const now = Date.now();
-  if (squaresCache && now - squaresCache.at < SQUARES_TTL_MS) return squaresCache.promise;
-
-  const promise = getSquares().catch((reason: unknown) => {
-    if (squaresCache?.promise === promise) squaresCache = null;
-    throw reason;
-  });
-  squaresCache = { at: now, promise };
-  return promise;
-}
 
 export type FeedQuery = {
   mode?: "for_you" | "following";
@@ -238,23 +217,16 @@ export async function getFeedPage(
   });
   if (query.cursor) params.set("cursor", query.cursor);
 
-  const [page, squares] = await Promise.all([
-    meydanApiPage<ApiNarrative[]>(`/timeline?${params}`, init),
-    getCachedSquares(),
-  ]);
-
-  const squareMap = new Map(
-    squares.map((square) => [`sq_${square.id}`, square] as const),
-  );
+  const page = await meydanApiPage<ApiNarrative[]>(`/timeline?${params}`, init);
 
   return {
-    posts: page.data.map((item) => mapNarrative(item, squareMap)),
+    posts: page.data.map(mapNarrative),
     nextCursor: page.nextCursor,
   };
 }
 
 export async function getFollowSuggestions(): Promise<FollowSuggestion[]> {
-  const squares = await meydanApi<ApiSquare[]>("/squares?verified=1");
+  const squares = await meydanApi<ApiSquare[]>("/squares?verified=1&limit=6");
   return squares.slice(0, 6).map((square) => ({
     id: String(square.id),
     actorType: "square",
