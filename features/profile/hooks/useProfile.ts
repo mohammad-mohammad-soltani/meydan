@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
-import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
+import { compactFa, isAuthApiError, meydanApi, plainText } from "@/lib/meydan-api";
 import { getActorFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
 import type { FeedPost } from "@/features/feed/types";
@@ -20,6 +20,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const { isAuthenticated, requireAuth } = useAuthGate();
   const selectedTab = profile.initialTab ?? "square";
   const targetActorType: ActorType = profile.accountType === "square" ? "square" : "user";
+  const [displayProfile, setDisplayProfile] = useState(profile);
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
@@ -38,6 +39,41 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [isLoading] = useState(false);
   const [isSavingManagement, setIsSavingManagement] = useState(false);
   const [managementError, setManagementError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (canManage) return;
+    let active = true;
+    const replies = meydanApi<Array<{ id: number; narrative_id: number; body: string; created_at?: string }>>(
+      `/actors/${targetActorType}/${profile.actorId}/replies`,
+    );
+    const reflections = targetActorType === "square"
+      ? meydanApi<{ count: number }>(`/squares/${profile.actorId}/media-reflections/count`)
+      : Promise.resolve(null);
+    void Promise.allSettled([replies, reflections]).then(([replyResult, countResult]) => {
+      if (!active) return;
+      setDisplayProfile((current) => ({
+        ...current,
+        replies: replyResult.status === "fulfilled"
+          ? replyResult.value.map((item) => ({
+              id: String(item.id),
+              narrativeId: String(item.narrative_id),
+              content: plainText(item.body || ""),
+              timeLabel: item.created_at
+                ? new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(item.created_at))
+                : "",
+            }))
+          : current.replies,
+        squareStats: countResult.status === "fulfilled" && countResult.value
+          ? [...current.squareStats.slice(0, 2), {
+              value: `${compactFa(countResult.value.count)} روایت`,
+              label: "بازتاب رسانه‌ای",
+              tone: "success" as const,
+            }]
+          : current.squareStats,
+      }));
+    });
+    return () => { active = false; };
+  }, [canManage, profile.actorId, targetActorType]);
 
   useEffect(() => {
     if (canManage || !isAuthenticated) {
@@ -251,7 +287,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   };
 
   return {
-    profile,
+    profile: displayProfile,
     narrativePosts,
     latestNarrativePageStart,
     nextNarrativeCursor,
