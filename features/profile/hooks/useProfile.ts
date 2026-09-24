@@ -33,6 +33,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [latestNarrativePageStart, setLatestNarrativePageStart] = useState(0);
   const [nextNarrativeCursor, setNextNarrativeCursor] = useState(profile.nextNarrativeCursor ?? null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [initialNarrativesLoaded, setInitialNarrativesLoaded] = useState(!profile.narrativesDeferred);
   const [loadMoreFailed, setLoadMoreFailed] = useState(false);
   const loadingMoreRef = useRef(false);
   const [likedNarrativeIds, setLikedNarrativeIds] = useState<Set<string>>(() => new Set(profile.narrativePosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
@@ -216,7 +217,8 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   };
 
   const loadMore = useCallback(async () => {
-    if (!nextNarrativeCursor || loadingMoreRef.current) return;
+    const firstPage = !initialNarrativesLoaded;
+    if ((!firstPage && !nextNarrativeCursor) || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
     setIsLoadingMore(true);
     setLoadMoreFailed(false);
@@ -224,7 +226,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       const response = await fetch("/api/profile/narratives", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ type: targetActorType, id: profile.actorId, identity: profile.identity, cursor: nextNarrativeCursor, own: canManage }),
+        body: JSON.stringify({ type: targetActorType, id: profile.actorId, identity: profile.identity, cursor: firstPage ? undefined : nextNarrativeCursor, own: canManage }),
       });
       if (!response.ok) throw new Error("Profile narratives request failed");
       const page = await response.json() as { posts: FeedPost[]; nextCursor: string | null };
@@ -241,13 +243,36 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         return next;
       });
       setNextNarrativeCursor(page.nextCursor);
+      if (firstPage) setInitialNarrativesLoaded(true);
     } catch {
       setLoadMoreFailed(true);
     } finally {
       loadingMoreRef.current = false;
       setIsLoadingMore(false);
     }
-  }, [canManage, narrativePosts, nextNarrativeCursor, profile.actorId, profile.identity, targetActorType]);
+  }, [canManage, initialNarrativesLoaded, narrativePosts, nextNarrativeCursor, profile.actorId, profile.identity, targetActorType]);
+
+  useEffect(() => {
+    if (initialNarrativesLoaded || loadMoreFailed) return;
+    void loadMore();
+  }, [initialNarrativesLoaded, loadMoreFailed, loadMore]);
+
+  useEffect(() => {
+    if (!profile.narrativesDeferred || !initialNarrativesLoaded) return;
+    let active = true;
+    void meydanApi<{ stats?: { narratives?: number } }>(`/squares/${profile.actorId}`)
+      .then((square) => {
+        if (!active || typeof square.stats?.narratives !== "number") return;
+        setDisplayProfile((current) => ({
+          ...current,
+          squareStats: current.squareStats.map((stat, index) => index === 1
+            ? { ...stat, value: compactFa(square.stats!.narratives!) }
+            : stat),
+        }));
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [initialNarrativesLoaded, profile.actorId, profile.narrativesDeferred]);
 
   const saveUserDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
     if (!requireAuth("/profile/edit")) return;
@@ -292,6 +317,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     latestNarrativePageStart,
     nextNarrativeCursor,
     isLoadingMore,
+    initialNarrativesLoaded,
     loadMoreFailed,
     loadMore,
     selectedTab,
