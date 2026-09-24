@@ -275,11 +275,74 @@ export async function broadcastNotification(input: NotificationInput, init?: Req
 
 /* --------------------------------------------------------------------- geo */
 
-/** Provinces/cities are public reference data; the admin filters reuse them. */
-export async function getProvinces(init?: RequestInit): Promise<GeoOption[]> {
-  return adminGetItem<GeoOption[]>("/geo/provinces", init);
+/**
+ * Keep the backend's active geo IDs on this device. The unfiltered cities
+ * endpoint includes province_id and returns the complete active catalog.
+ */
+const GEO_CACHE_TTL = 24 * 60 * 60 * 1000;
+const GEO_CACHE_PREFIX = "meydan:admin:geo:v1:";
+type CachedGeo<T> = { savedAt: number; items: T[] };
+type GeoCity = GeoOption & { province_id: number };
+let provinceRequest: Promise<GeoOption[]> | null = null;
+let cityRequest: Promise<GeoCity[]> | null = null;
+
+function readGeoCache<T>(key: string): CachedGeo<T> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = JSON.parse(window.localStorage.getItem(GEO_CACHE_PREFIX + key) || "null");
+    return value && typeof value.savedAt === "number" && Array.isArray(value.items)
+      ? value as CachedGeo<T>
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeGeoCache<T>(key: string, items: T[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(GEO_CACHE_PREFIX + key, JSON.stringify({
+      savedAt: Date.now(),
+      items,
+    }));
+  } catch {
+    // Storage can be unavailable or full; the network result is still usable.
+  }
+}
+
+async function geoCatalog<T>(
+  key: string,
+  path: string,
+  init?: RequestInit,
+): Promise<T[]> {
+  const cached = readGeoCache<T>(key);
+  if (cached && Date.now() - cached.savedAt < GEO_CACHE_TTL) return cached.items;
+  try {
+    const items = await adminGetItem<T[]>(path, init);
+    if (!Array.isArray(items)) throw new Error("Invalid geo catalog");
+    writeGeoCache(key, items);
+    return items;
+  } catch (error) {
+    if (cached) return cached.items;
+    throw error;
+  }
+}
+
+export function getProvinces(init?: RequestInit): Promise<GeoOption[]> {
+  if (init) return geoCatalog<GeoOption>("provinces", "/geo/provinces", init);
+  provinceRequest ??= geoCatalog<GeoOption>("provinces", "/geo/provinces")
+    .finally(() => { provinceRequest = null; });
+  return provinceRequest;
+}
+
+function getAllCities(init?: RequestInit): Promise<GeoCity[]> {
+  if (init) return geoCatalog<GeoCity>("cities", "/geo/cities", init);
+  cityRequest ??= geoCatalog<GeoCity>("cities", "/geo/cities")
+    .finally(() => { cityRequest = null; });
+  return cityRequest;
 }
 
 export async function getCities(provinceId: number, init?: RequestInit): Promise<GeoOption[]> {
-  return adminGetItem<GeoOption[]>(`/geo/cities?province_id=${provinceId}`, init);
+  const cities = await getAllCities(init);
+  return cities.filter((city) => Number(city.province_id) === provinceId);
 }
