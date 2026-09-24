@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, MeydanApiError, meydanApi } from "@/lib/meydan-api";
-import { actorKey, actorNumericId, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
+import { actorKey, actorNumericId, getFollowingStates, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { MEDIA_POST_UPDATE, type MediaPostUpdate } from "@/features/media/post-interactions";
 import { getFeedPage } from "../services/feed.service";
 import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
@@ -64,6 +64,7 @@ export function useFeed(
   const [followedActorKeys, setFollowedActorKeys] = useState<Set<string>>(() => new Set());
   const [pendingFollowKeys, setPendingFollowKeys] = useState<Set<string>>(() => new Set());
   const [followStateReady, setFollowStateReady] = useState(() => !isAuthenticated);
+  const [hasAnyFollowing, setHasAnyFollowing] = useState(false);
   const [followingRequiresAuth, setFollowingRequiresAuth] = useState(false);
   const [joinedPostIds, setJoinedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.joined).map((post) => post.id)));
   const [selectedMedia, setSelectedMedia] = useState<MediaReflection | null>(null);
@@ -162,14 +163,24 @@ export function useFeed(
     } : post));
   }, []);
 
+  const followTargetKey = Array.from(new Set([
+    ...remotePosts.map((post) => actorKey(post.author.type, post.author.id)),
+    ...initialSuggestions.map((actor) => actorKey(actor.actorType, actor.id)),
+  ])).sort().join(",");
+
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    const actors = followTargetKey.split(",").filter(Boolean).map((key) => {
+      const [type, id] = key.split(":");
+      return { type: type as ActorType, id: Number(id) };
+    });
     let active = true;
-    void getViewerFollowing()
-      .then((actors) => {
+    void getFollowingStates(actors)
+      .then(({ keys, hasFollowing }) => {
         if (!active) return;
-        setFollowedActorKeys(new Set(actors.map((actor) => actorKey(actor.type, actor.id))));
+        setFollowedActorKeys(new Set(keys));
+        setHasAnyFollowing(hasFollowing);
         setFollowingRequiresAuth(false);
       })
       .catch((reason) => {
@@ -183,7 +194,7 @@ export function useFeed(
         if (active) setFollowStateReady(true);
       });
     return () => { active = false; };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, followTargetKey]);
 
   useEffect(() => {
     const isInitialTimeline = activeTab === "for-you" && activeFilter === "all";
@@ -415,7 +426,7 @@ export function useFeed(
     repostedPostIds,
     followedActorKeys,
     pendingFollowKeys,
-    hasFollowing: followedActorKeys.size > 0,
+    hasFollowing: hasAnyFollowing || followedActorKeys.size > 0,
     isFollowingStateLoading: !followStateReady,
     followingRequiresAuth,
     joinedPostIds,
