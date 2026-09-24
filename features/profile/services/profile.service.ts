@@ -1048,14 +1048,14 @@ export async function getPublicProfileDetails(
 ): Promise<ProfileDetails | null> {
   try {
     if (type === "square") {
-      const [square, narratives] = await Promise.all([
-        meydanApi<ApiSquare>(`/squares/${id}`),
-        getPublicNarrativePage(`/squares/${id}/narratives?limit=20`),
-      ]);
+      const square = await meydanApi<ApiSquare>(`/squares/${id}?defer_counts=1`);
+      const summary = mapSquare(square);
       return {
-        ...mapSquare(square, narratives.data),
-        nextNarrativeCursor: narratives.nextCursor,
-        narrativeCount: narratives.count,
+        ...summary,
+        squareStats: summary.squareStats.map((stat, index) =>
+          index === 1 ? { ...stat, value: "…" } : stat,
+        ),
+        narrativesDeferred: true,
       };
     }
 
