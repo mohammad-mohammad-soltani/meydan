@@ -13,7 +13,7 @@ export function FeedTabs({ activeTab, onChange }: FeedTabsProps) {
   const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-4 text-xs font-black transition-colors duration-200 ${active ? "text-brand font-black" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`;
 
   return (
-    <div role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="relative flex w-full border-b border-border bg-surface-glass backdrop-blur">
+    <div role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="sticky top-0 z-30 flex w-full border-b border-border bg-surface-glass backdrop-blur">
       <button role="tab" type="button" onClick={() => onChange("for-you")} aria-selected={activeTab === "for-you"} className={tabClass(activeTab === "for-you")}>
         برای شما
       </button>
