@@ -346,3 +346,10 @@ export async function getCities(provinceId: number, init?: RequestInit): Promise
   const cities = await getAllCities(init);
   return cities.filter((city) => Number(city.province_id) === provinceId);
 }
+
+/** Warm the whole catalog when the square form opens, even before a province is chosen. */
+export function preloadAdminGeoCatalog(): void {
+  void getAllCities().catch(() => {
+    // getCities will retry on selection and the form can display its error.
+  });
+}
