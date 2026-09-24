@@ -150,12 +150,13 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
           className={`relative flex h-[100dvh] min-h-0 w-full flex-col border-x border-border bg-background transition-colors duration-150 ${isAdminRoute ? "max-w-none" : "max-w-xl pb-[var(--comment-composer-height)]"}`}
         >
           {!isAdminRoute && !isComposePage && !isPublicProfilePage ? (
-            <MobileHeader />
+            pathname === "/home" ? null : <MobileHeader />
           ) : null}
           <main
             ref={mainScrollRef}
             className={`relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isAdminRoute || isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}
           >
+            {pathname === "/home" ? <MobileHeader /> : null}
             {children}
           </main>
           {!isAdminRoute ? (
