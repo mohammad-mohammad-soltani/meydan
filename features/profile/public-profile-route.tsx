@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { ProfileView } from "@/features/profile/components/ProfileView";
 import { getPublicProfileDetails } from "@/features/profile/services/profile.service";
-import { hydrateSquareProfileMeta } from "@/features/profile/services/square-profile-meta.service";
 import { meydanApi } from "@/lib/meydan-api";
 import { accessTokenHeader } from "@/lib/meydan-session";
 
@@ -62,7 +61,5 @@ export async function PublicProfileRoute({
     notFound();
   }
 
-  const initialProfile = await hydrateSquareProfileMeta(profile);
-
-  return <ProfileView initialProfile={initialProfile} canManage={false} />;
+  return <ProfileView initialProfile={profile} canManage={false} />;
 }
