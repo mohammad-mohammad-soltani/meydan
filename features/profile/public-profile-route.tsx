@@ -52,11 +52,13 @@ export async function PublicProfileRoute({
     notFound();
   }
 
-  if (await isOwnProfile(type, numericId)) {
+  const [ownProfile, profile] = await Promise.all([
+    isOwnProfile(type, numericId),
+    getPublicProfileDetails(type, numericId),
+  ]);
+  if (ownProfile) {
     redirect("/profile");
   }
-
-  const profile = await getPublicProfileDetails(type, numericId);
   if (!profile) {
     notFound();
   }
