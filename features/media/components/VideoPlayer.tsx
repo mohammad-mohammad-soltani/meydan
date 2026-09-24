@@ -677,9 +677,9 @@ export function VideoPlayer({
         }}
       />
 
-      {!hasFrame && !isPlaying && !item.poster && !hasError ? (
+      {!hasFrame && !isPlaying && !hasError ? (
         <span className="pointer-events-none absolute inset-0">
-          <VideoPreview key={source} item={item} onRatio={(ratio) => setDecodedRatio({ source: source || "", ratio })} />
+          <VideoPreview key={source} item={item} eager={variant === "inline"} onRatio={(ratio) => setDecodedRatio({ source: source || "", ratio })} />
         </span>
       ) : null}
 
