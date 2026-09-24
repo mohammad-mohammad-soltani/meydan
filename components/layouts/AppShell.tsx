@@ -53,7 +53,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
   const isPublicProfilePage =
     pathname.startsWith("/users/") ||
     pathname.startsWith("/profile/") ||
-    /^\/\d+$/.test(pathname) || '/square/';
+    /^\/\d+$/.test(pathname) || pathname.startsWith("/square/");
     // Conversation routes own their internal scrolling (header + list + composer).
   const isChatRoute = pathname.startsWith("/chat/");
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
