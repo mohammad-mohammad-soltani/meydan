@@ -51,7 +51,7 @@ test("video feed viewer stays inside the auth gate provider", () => {
   assert.doesNotMatch(rootLayout, /VideoFeedProvider/);
   assert.match(
     appLayout,
-    /<AuthGateProvider[\\s\\S]*?<VideoFeedProvider[\\s\\S]*?<\\/VideoFeedProvider>[\\s\\S]*?<\\/AuthGateProvider>/,
+    /<AuthGateProvider[\s\S]*?<VideoFeedProvider[\s\S]*?<\/VideoFeedProvider>[\s\S]*?<\/AuthGateProvider>/,
   );
 });
 

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
-import { actorKey, getViewerFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
+import { getActorFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
 import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileSection } from "../types";
@@ -17,10 +17,9 @@ function redirectToLogin() {
 }
 
 export function useProfile(profile: ProfileDetails, canManage = false) {
-  const { requireAuth } = useAuthGate();
+  const { isAuthenticated, requireAuth } = useAuthGate();
   const selectedTab = profile.initialTab ?? "square";
   const targetActorType: ActorType = profile.accountType === "square" ? "square" : "user";
-  const targetActorKey = actorKey(targetActorType, profile.actorId);
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
@@ -41,12 +40,15 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [managementError, setManagementError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (canManage) return;
+    if (canManage || !isAuthenticated) {
+      setFollowStateReady(true);
+      return;
+    }
     let active = true;
-    void getViewerFollowing()
-      .then((actors) => {
+    void getActorFollowing(targetActorType, profile.actorId)
+      .then((following) => {
         if (!active) return;
-        setIsFollowing(actors.some((actor) => actorKey(actor.type, actor.id) === targetActorKey));
+        setIsFollowing(following);
         setFollowRequiresAuth(false);
       })
       .catch((reason) => {
@@ -57,7 +59,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         if (active) setFollowStateReady(true);
       });
     return () => { active = false; };
-  }, [canManage, targetActorKey]);
+  }, [canManage, isAuthenticated, profile.actorId, targetActorType]);
 
   const toggleSection = (section: ProfileSection) => setExpandedSections((current) => {
     const next = new Set(current);
