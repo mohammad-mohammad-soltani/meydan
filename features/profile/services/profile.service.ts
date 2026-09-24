@@ -44,6 +44,8 @@ type ApiSquare = {
   lng?: number;
   location?: ApiSquareLocation | null;
   schedule?: ApiSchedule[];
+  start_date?: string | null;
+  stats?: { active_nights?: number; narratives?: number };
 };
 
 type ApiUserProfile = {
@@ -583,19 +585,14 @@ function mapSquare(
   const mappedActivity =
     mappedNarratives[0];
 
-  /*
-   * TODO:
-   * دو آمار اول فعلاً Mock هستند.
-   * تعداد بازتاب رسانه‌ای از API واقعی میدان گرفته می‌شود.
-   */
   const squareStats: ProfileStat[] = [
     {
-      value: "۱۱ شب",
+      value: `${compactFa(square.stats?.active_nights ?? 0)} شب`,
       label: "تجمع مستمر",
     },
     {
-      value: "۴۵ هزار",
-      label: "جمعیت امید",
+      value: compactFa(square.stats?.narratives ?? narratives.length),
+      label: "روایت منتشرشده",
     },
     {
       value: `${compactFa(mediaReflectionCount)} روایت`,
@@ -636,6 +633,8 @@ function mapSquare(
 
   return {
     actorId: square.id,
+
+    startDate: square.start_date ?? undefined,
 
     accountType: "square",
 
