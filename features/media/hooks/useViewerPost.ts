@@ -5,7 +5,7 @@ import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { meydanApi } from "@/lib/meydan-api";
 import {
   actorKey,
-  getViewerFollowing,
+  getActorFollowing,
   setActorFollowing,
 } from "@/lib/meydan-follow";
 import type { FeedPost } from "@/features/feed/types";
@@ -31,16 +31,10 @@ export function useViewerPost(post: FeedPost | undefined) {
   useEffect(() => {
     if (!isAuthenticated || !authorType || !authorId) return;
     let live = true;
-    void getViewerFollowing()
-      .then((actors) => {
+    void getActorFollowing(authorType, authorId)
+      .then((isFollowing) => {
         if (live) {
-          setFollowing(
-            actors.some(
-              (actor) =>
-                actorKey(actor.type, actor.id) ===
-                actorKey(authorType, authorId),
-            ),
-          );
+          setFollowing(isFollowing);
           setFollowReady(true);
         }
       })
