@@ -14,7 +14,8 @@ export function MapSelector({ provinces, selectedProvinceId, query, onQueryChang
         </div>
         <div className="mt-2 flex items-center gap-1.5">
           <MapPinned className="h-4 w-4 text-brand" />
-          <select value={selectedProvinceId} onChange={(event) => onSelect(Number(event.target.value))} className="min-w-0 flex-1 bg-transparent text-xs font-bold text-foreground outline-none">
+          <select value={selectedProvinceId || ""} onChange={(event) => event.target.value && onSelect(Number(event.target.value))} className="min-w-0 flex-1 bg-transparent text-xs font-bold text-foreground outline-none">
+            <option value="" disabled>انتخاب استان</option>
             {provinces.map((province) => <option key={province.id} value={province.id}>{province.name}</option>)}
           </select>
         </div>

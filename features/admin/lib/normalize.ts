@@ -359,6 +359,7 @@ export type SquareFormState = {
     address: string;
     latitude: number | null;
     longitude: number | null;
+    locationSource: "map" | "manual";
   };
 };
 
@@ -395,6 +396,7 @@ export function buildSquareUpdate(input: SquareFormState): SquareUpdateInput {
         address: input.location.address,
         latitude: input.location.latitude as number,
         longitude: input.location.longitude as number,
+        locationSource: input.location.locationSource,
       };
     }
   }

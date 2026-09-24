@@ -35,6 +35,7 @@ export type SquareLocation = {
   address: string;
   latitude: number;
   longitude: number;
+  locationSource?: "map" | "manual";
 };
 
 export type Square = {
@@ -96,6 +97,7 @@ export type SquareCreateInput = {
   address: string;
   latitude: number | null;
   longitude: number | null;
+  locationSource: "map" | "manual";
   eitaaChannel: string;
   baleChannel: string;
   status: SquareCreateStatus;

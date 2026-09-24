@@ -14,8 +14,9 @@ export function CitySelector({ cities, selectedCityId, query, onQueryChange, onS
         </div>
         <div className="mt-2 flex items-center gap-1.5">
           <MapPin className="h-4 w-4 text-brand" />
-          <select value={selectedCityId} onChange={(event) => onSelect(Number(event.target.value))} className="min-w-0 flex-1 bg-transparent text-xs font-bold text-foreground outline-none">
-            {cities.length ? cities.map((city) => <option key={city.id} value={city.id}>{city.name}</option>) : <option value="">شهری پیدا نشد</option>}
+          <select value={selectedCityId || ""} onChange={(event) => event.target.value && onSelect(Number(event.target.value))} className="min-w-0 flex-1 bg-transparent text-xs font-bold text-foreground outline-none">
+            <option value="" disabled>{cities.length ? "انتخاب شهر" : "ابتدا استان را انتخاب کنید"}</option>
+            {cities.map((city) => <option key={city.id} value={city.id}>{city.name}</option>)}
           </select>
         </div>
       </div>

@@ -10,8 +10,8 @@ export const LIVE_MAP_THEME = {
     "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js",
   /** Self-hosted SDF ranges generated from app/fonts/IRANSansXV.woff2. */
   glyphsUrl: "/fonts/{fontstack}/{range}.pbf",
-  provincesGeoJsonUrl:
-    "https://cdn.jsdelivr.net/gh/hosseinhabibi2004/iran-geojson@master/data/provinces/provinces.min.geojson",
+  /** Versioned local copy; province grouping must work without a CDN. */
+  provincesGeoJsonUrl: "/maps/iran-provinces.geojson",
   attribution: "OpenFreeMap © OpenMapTiles · Data © OpenStreetMap",
   /**
    * Map labels render from SDF glyph ranges, not the app's woff2, so IRANSansXV

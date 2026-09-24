@@ -71,6 +71,7 @@ function toFormState(square: Square): SquareFormState {
       address: square.location?.address ?? "",
       latitude: square.location?.latitude ?? null,
       longitude: square.location?.longitude ?? null,
+      locationSource: "manual",
     },
   };
 }
@@ -90,6 +91,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [geoPending, setGeoPending] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [saved, setSaved] = useState<{ id: number; message: string } | null>(null);
 
@@ -105,7 +107,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
   const geo: GeoValue = form.location;
 
   const save = async () => {
-    if (saving || uploadBusy) return;
+    if (saving || uploadBusy || geoPending) return;
     setFieldErrors({});
     setFormError(null);
     setSaved(null);
@@ -313,6 +315,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
               value={geo}
               disabled={!form.geoMoved}
               onChange={(next) => setForm({ ...form, location: next })}
+              onPendingChange={setGeoPending}
               errors={{
                 province_id: fieldErrors.province_id,
                 city_id: fieldErrors.city_id,

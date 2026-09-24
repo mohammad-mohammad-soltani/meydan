@@ -51,21 +51,21 @@ export function MapView() {
   const handleSelectProvince = (provinceId: number) => {
     setLinkedFocus(null);
     map.selectProvince(provinceId);
-    const province = map.provinceAggregates.find((item) => item.id === provinceId);
+    const province = map.provinceAggregates.find((item) => item.provinceId === provinceId);
     if (province) setRequestedFocus({ latitude: province.latitude, longitude: province.longitude, zoom: 7.2 });
   };
 
   const handleSelectCity = (cityId: number) => {
     setLinkedFocus(null);
     map.selectCity(cityId);
-    const city = map.cityAggregates.find((item) => item.id === cityId);
+    const city = map.cityAggregates.find((item) => item.cityId === cityId);
     if (city) setRequestedFocus({ latitude: city.latitude, longitude: city.longitude, zoom: 10.2 });
   };
   const mapMarkers = map.level === "country"
-    ? { squares: [], aggregates: map.provinceAggregates, onSelect: map.selectProvince }
+    ? { squares: [], aggregates: map.provinceAggregates, onSelect: map.selectProvinceAggregate }
     : map.level === "province"
-      ? { squares: [], aggregates: map.cityAggregates, onSelect: map.selectCity }
-      : { squares: map.citySquares, aggregates: [], onSelect: map.selectCity };
+      ? { squares: [], aggregates: map.cityAggregates, onSelect: map.selectCityAggregate }
+      : { squares: map.citySquares, aggregates: [], onSelect: map.selectCityAggregate };
 
   return (
     <section
@@ -121,7 +121,7 @@ export function MapView() {
               center={linkedFocus ?? requestedFocus}
               level={map.level}
               onSelectAggregate={mapMarkers.onSelect}
-              onViewportLevel={map.setViewportLevel}
+              onViewportLevel={map.setViewport}
             />
           </div>
 

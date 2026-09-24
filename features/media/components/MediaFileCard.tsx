@@ -13,7 +13,7 @@ type MediaFileCardProps = {
 export function MediaFileCard({ item, tone = "surface" }: MediaFileCardProps) {
   const href = item.downloadHref || item.src;
 
-  const card = (
+  return (
     <div
       data-media-interactive
       className={
@@ -37,22 +37,20 @@ export function MediaFileCard({ item, tone = "surface" }: MediaFileCardProps) {
         ) : null}
       </span>
 
-      {href ? <Download aria-hidden="true" className="h-4 w-4 shrink-0 opacity-70" /> : null}
+      {href ? (
+        <a
+          href={href}
+          download={item.title}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`دانلود ${item.title}`}
+          onClick={(event) => event.stopPropagation()}
+          className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-muted px-2.5 text-xs font-black text-brand shadow-xs outline-none transition-[background-color,border-color,color,transform] hover:border-brand hover:bg-brand hover:text-brand-foreground active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring min-[420px]:px-3"
+        >
+          <Download aria-hidden="true" className="h-4 w-4" />
+          <span className="hidden min-[420px]:inline">دانلود</span>
+        </a>
+      ) : null}
     </div>
-  );
-
-  if (!href) return card;
-
-  return (
-    <a
-      href={href}
-      download={item.title}
-      target="_blank"
-      rel="noreferrer"
-      onClick={(event) => event.stopPropagation()}
-      className="block outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      {card}
-    </a>
   );
 }

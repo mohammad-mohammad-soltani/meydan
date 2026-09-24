@@ -131,6 +131,20 @@ test("every surface renders the shared players instead of its own", () => {
   assert.match(source("features/compose/components/ComposeMediaGrid.tsx"), /<MediaLightbox/);
 });
 
+test("file attachments expose a dedicated accessible download control", () => {
+  const card = source("features/media/components/MediaFileCard.tsx");
+
+  // A file row must not make the entire card an implicit download target.
+  assert.doesNotMatch(card, /return \(\s*<a[\s\S]*?\{card\}/);
+  // The download action remains explicit, names the attachment, and preserves
+  // the user's current surface by opening its target in a new tab.
+  assert.match(card, /href=\{href\}/);
+  assert.match(card, /download=\{item\.title\}/);
+  assert.match(card, /target="_blank"/);
+  assert.match(card, /aria-label=\{`دانلود \$\{item\.title\}`\}/);
+  assert.match(card, /دانلود<\/span>/);
+});
+
 test("no chrome renders a native-controls player any more", () => {
   // Chat used to open images in a new tab and use native <video controls>/<audio controls>.
   const bubble = source("features/chat/components/MessageBubble.tsx");

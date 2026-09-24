@@ -87,6 +87,7 @@ export function AdminSquareCreateForm() {
       address: geo.address,
       latitude: geo.latitude,
       longitude: geo.longitude,
+      locationSource: geo.locationSource,
       eitaaChannel: channels.eitaa,
       baleChannel: channels.bale,
       status,

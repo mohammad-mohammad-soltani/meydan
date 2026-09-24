@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SquareMarker } from "../services/map.service";
-import type { CountAggregate, MapLevel } from "../hooks/useMap";
+import type { CountAggregate, MapLevel, MapViewport } from "../hooks/useMap";
 import { addOpenFreeMapBasemap } from "../services/openfreemap-basemap";
 import {
   LIVE_MAP_THEME,
@@ -61,8 +61,8 @@ export function MapFrame({
   aggregates: CountAggregate[];
   center: { latitude: number; longitude: number; zoom?: number } | null;
   level: MapLevel;
-  onSelectAggregate: (id: number) => void;
-  onViewportLevel: (level: MapLevel, center: { latitude: number; longitude: number }) => void;
+  onSelectAggregate: (id: string) => void;
+  onViewportLevel: (viewport: MapViewport) => void;
 }) {
   const element = useRef<HTMLDivElement>(null);
   const map = useRef<import("leaflet").Map | null>(null);
@@ -107,14 +107,28 @@ export function MapFrame({
 
       map.current = instance;
 
-      const syncScale = () => { setScale(nextScale(instance)); const zoom = instance.getZoom(); const center = instance.getCenter(); onViewportLevelRef.current(zoom < 6.7 ? "country" : zoom < 9.2 ? "province" : "city", { latitude: center.lat, longitude: center.lng }); };
-      instance.on("zoomend moveend", syncScale);
+      const syncScale = () => {
+        setScale(nextScale(instance));
+        const center = instance.getCenter();
+        const bounds = instance.getBounds();
+        onViewportLevelRef.current({
+          latitude: center.lat, longitude: center.lng, zoom: instance.getZoom(),
+          bounds: { south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast() },
+        });
+      };
+      // The state machine advances only after the final map position is known.
+      instance.on("moveend", syncScale);
+      instance.on("movestart zoomstart", () => markersRef.current.forEach((layer) => (layer as import("leaflet").Marker).closeTooltip?.()));
       syncScale();
 
       try {
         await addOpenFreeMapBasemap(L, instance);
       } catch (error) {
         console.error("Unable to load OpenFreeMap basemap", error);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 18,
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(instance);
       }
 
       if (disposed || !map.current) return;
@@ -182,13 +196,14 @@ export function MapFrame({
             className: "",
             iconSize: [44, 44],
             iconAnchor: [22, 22],
+            tooltipAnchor: [0, -26],
           }),
           keyboard: true,
         })
           .addTo(instance)
           .bindTooltip(`${aggregate.name} · ${aggregate.count.toLocaleString("fa-IR")} میدان`, {
             direction: "top",
-            offset: [0, -24],
+            offset: [0, 0],
             opacity: 0.92,
           })
           .on("click", () => { instance.flyTo([aggregate.latitude, aggregate.longitude], level === "country" ? 7.2 : 10.2, { animate: true, duration: .7 }); onSelectAggregateRef.current(aggregate.id); });

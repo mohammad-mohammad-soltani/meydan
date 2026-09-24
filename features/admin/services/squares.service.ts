@@ -206,6 +206,7 @@ export function squareCreateBody(input: SquareCreateInput): Record<string, unkno
     address: input.address.trim(),
     latitude: input.latitude,
     longitude: input.longitude,
+    location_source: input.locationSource,
     eitaa_channel: input.eitaaChannel.trim(),
     bale_channel: input.baleChannel.trim(),
     status: input.status,
@@ -242,6 +243,7 @@ export function squareUpdateBody(input: SquareUpdateInput): Record<string, unkno
     body.address = input.location.address.trim();
     body.latitude = input.location.latitude;
     body.longitude = input.location.longitude;
+    body.location_source = input.location.locationSource ?? "manual";
   }
 
   return body;

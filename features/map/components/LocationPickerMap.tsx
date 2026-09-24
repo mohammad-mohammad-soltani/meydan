@@ -31,6 +31,7 @@ export function LocationPickerMap({
   fallbackCenter,
   focusRequest,
   onSelect,
+  onResolveError,
   onPendingChange,
   heightClassName = "h-72",
 }: {
@@ -38,6 +39,8 @@ export function LocationPickerMap({
   fallbackCenter?: { latitude: number; longitude: number } | null;
   focusRequest?: MapFocusRequest | null;
   onSelect: (location: SelectedLocation) => void;
+  /** Keeps the selected point available when reverse geocoding fails. */
+  onResolveError?: (point: { latitude: number; longitude: number }) => void;
   onPendingChange?: (pending: boolean) => void;
   heightClassName?: string;
 }) {
@@ -45,6 +48,7 @@ export function LocationPickerMap({
   const map = useRef<import("leaflet").Map | null>(null);
   const marker = useRef<import("leaflet").CircleMarker | null>(null);
   const onSelectRef = useRef(onSelect);
+  const onResolveErrorRef = useRef(onResolveError);
   const onPendingChangeRef = useRef(onPendingChange);
   const geocodeTimer = useRef<number | null>(null);
   const initialKey = isValidPoint(initialLocation)
@@ -61,6 +65,9 @@ export function LocationPickerMap({
   useEffect(() => {
     onSelectRef.current = onSelect;
   }, [onSelect]);
+  useEffect(() => {
+    onResolveErrorRef.current = onResolveError;
+  }, [onResolveError]);
 
   useEffect(() => {
     onPendingChangeRef.current = onPendingChange;
@@ -109,7 +116,8 @@ export function LocationPickerMap({
       setCustomNotice(data.address || "موقعیت انتخاب شد.");
       setStatus("idle");
     } catch {
-      setCustomNotice("آدرس این نقطه پیدا نشد؛ نقطه‌ی دیگری را انتخاب کنید.");
+      onResolveErrorRef.current?.({ latitude, longitude });
+      setCustomNotice("آدرس این نقطه پیدا نشد؛ استان و شهر را دستی وارد کنید.");
       setStatus("error");
     } finally {
       onPendingChangeRef.current?.(false);

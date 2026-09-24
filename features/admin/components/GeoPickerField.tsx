@@ -29,6 +29,7 @@ export type GeoValue = {
   address: string;
   latitude: number | null;
   longitude: number | null;
+  locationSource: "map" | "manual";
 };
 
 export const EMPTY_GEO: GeoValue = {
@@ -37,6 +38,7 @@ export const EMPTY_GEO: GeoValue = {
   address: "",
   latitude: null,
   longitude: null,
+  locationSource: "manual",
 };
 
 /**
@@ -76,7 +78,8 @@ export function GeoPickerField({
   const [loadError, setLoadError] = useState<string | null>(null);
   const provincesLoading = !provincesLoaded && !loadError;
   const citiesLoading = Boolean(value.provinceId) && citiesLoadedFor !== value.provinceId;
-  const [pendingPoint, setPendingPoint] = useState(false);
+  const [mode, setMode] = useState<"manual" | "resolving" | "map">(value.locationSource === "map" ? "map" : "manual");
+  const pendingPoint = mode === "resolving";
 
   useEffect(() => {
     let active = true;
@@ -133,19 +136,26 @@ export function GeoPickerField({
 
   /** A map click reverse-geocodes and fills province, city and address at once. */
   const setMapPending = (pending: boolean) => {
-    setPendingPoint(pending);
+    setMode(pending ? "resolving" : value.locationSource === "map" ? "map" : "manual");
     onPendingChange?.(pending);
   };
 
   const applyPicked = (picked: SelectedLocation) => {
     setMapPending(false);
     onChange({
-      provinceId: picked.provinceId ?? value.provinceId,
+      provinceId: picked.provinceId,
       cityId: picked.cityId ?? null,
       address: picked.address || value.address,
       latitude: picked.latitude,
       longitude: picked.longitude,
+      locationSource: "map",
     });
+    setMode("map");
+  };
+  const applyPickFailure = ({ latitude, longitude }: { latitude: number; longitude: number }) => {
+    setMapPending(false);
+    setMode("manual");
+    onChange({ ...value, latitude, longitude, provinceId: null, cityId: null, locationSource: "manual" });
   };
 
   return (
@@ -155,13 +165,13 @@ export function GeoPickerField({
           <select
             id={`${idPrefix}-province`}
             value={value.provinceId ?? ""}
-            disabled={disabled || provincesLoading}
+            disabled={disabled || provincesLoading || mode !== "manual"}
             aria-invalid={errors?.province_id ? true : undefined}
             onChange={(event) => {
               const next = event.target.value ? Number(event.target.value) : null;
               // Changing the province invalidates the city: the backend
               // rejects a city that does not belong to it.
-              onChange({ ...value, provinceId: next, cityId: null });
+              onChange({ ...value, provinceId: next, cityId: null, locationSource: "manual" });
             }}
             className={fieldClass}
           >
@@ -186,10 +196,10 @@ export function GeoPickerField({
           <select
             id={`${idPrefix}-city`}
             value={value.cityId ?? ""}
-            disabled={disabled || !value.provinceId || citiesLoading}
+            disabled={disabled || mode !== "manual" || !value.provinceId || citiesLoading}
             aria-invalid={errors?.city_id ? true : undefined}
             onChange={(event) =>
-              onChange({ ...value, cityId: event.target.value ? Number(event.target.value) : null })
+              onChange({ ...value, cityId: event.target.value ? Number(event.target.value) : null, locationSource: "manual" })
             }
             className={fieldClass}
           >
@@ -233,6 +243,7 @@ export function GeoPickerField({
           <LocationPickerMap
             initialLocation={initialLocation}
             onSelect={applyPicked}
+            onResolveError={applyPickFailure}
             onPendingChange={setMapPending}
             heightClassName="h-64"
           />
@@ -249,14 +260,14 @@ export function GeoPickerField({
           <input
             id={`${idPrefix}-lat`}
             value={value.latitude ?? ""}
-            disabled={disabled}
+            disabled={disabled || mode === "resolving"}
             inputMode="decimal"
             dir="ltr"
             aria-invalid={errors?.latitude ? true : undefined}
             onChange={(event) =>
               onChange({
                 ...value,
-                latitude: event.target.value === "" ? null : Number(event.target.value),
+                latitude: event.target.value === "" ? null : Number(event.target.value), locationSource: "manual",
               })
             }
             className={`${fieldClass} text-left`}
@@ -267,14 +278,14 @@ export function GeoPickerField({
           <input
             id={`${idPrefix}-lng`}
             value={value.longitude ?? ""}
-            disabled={disabled}
+            disabled={disabled || mode === "resolving"}
             inputMode="decimal"
             dir="ltr"
             aria-invalid={errors?.longitude ? true : undefined}
             onChange={(event) =>
               onChange({
                 ...value,
-                longitude: event.target.value === "" ? null : Number(event.target.value),
+                longitude: event.target.value === "" ? null : Number(event.target.value), locationSource: "manual",
               })
             }
             className={`${fieldClass} text-left`}

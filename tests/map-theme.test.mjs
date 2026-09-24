@@ -14,6 +14,7 @@ test("live map uses the keyless OpenFreeMap dark vector style", () => {
   assert.equal(LIVE_MAP_THEME.background, "#171a1b");
   assert.equal(LIVE_MAP_THEME.provinceStroke, "#e5483f");
   assert.equal(LIVE_MAP_THEME.provinceFill, "#272a2b");
+  assert.equal(LIVE_MAP_THEME.provincesGeoJsonUrl, "/maps/iran-provinces.geojson");
   assert.deepEqual(makeProvinceStyle(), {
     color: "#e5483f",
     weight: 1.35,
@@ -21,6 +22,15 @@ test("live map uses the keyless OpenFreeMap dark vector style", () => {
     fillColor: "#272a2b",
     fillOpacity: 0.34,
   });
+});
+
+test("map frame keeps counter tooltips attached and has a raster fallback", async () => {
+  const source = await import("node:fs/promises").then((fs) => fs.readFile("features/map/components/MapFrame.tsx", "utf8"));
+  assert.match(source, /tooltipAnchor: \[0, -26\]/);
+  assert.match(source, /offset: \[0, 0\]/);
+  assert.match(source, /movestart zoomstart/);
+  assert.match(source, /tileLayer\("https:\/\/\{s\}\.tile\.openstreetmap\.org/);
+  assert.match(source, /instance\.on\("moveend", syncScale\)/);
 });
 
 test("aggregate marker is a circular red counter", () => {

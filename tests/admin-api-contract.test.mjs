@@ -90,6 +90,7 @@ test("the square create body uses the API's own field names", () => {
     "bale_channel",
     "latitude",
     "longitude",
+    "location_source",
   ]) {
     assert.match(squares, new RegExp(`${key}:`), `square body must send ${key}`);
   }
@@ -98,8 +99,9 @@ test("the square create body uses the API's own field names", () => {
   // invent one either.
   const updateStart = squares.indexOf("export function squareUpdateBody");
   assert.ok(updateStart >= 0);
-  const updateBody = squares.slice(updateStart, updateStart + 900);
+  const updateBody = squares.slice(updateStart, updateStart + 1300);
   assert.match(updateBody, /square_name/);
+  assert.match(updateBody, /location_source/);
 });
 
 test("square status changes and deletes hit the documented routes", () => {

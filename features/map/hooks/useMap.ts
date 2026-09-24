@@ -1,74 +1,102 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getAllSquares, getCities, type SquareMarker } from "../services/map.service";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { PROVINCE_CENTERS } from "@/features/auth/data/province-centers";
+import { getAllSquares, getCities, reverseGeocodeCached, type SquareMarker } from "../services/map.service";
 import type { City, MapStatus, Province } from "../types";
+import {
+  aggregateByRegion, normalizePlace, provinceForPoint, resolveSquares,
+  type ProvinceBoundaries, type RegionAggregate, type ResolvedSquare,
+} from "../geo/aggregation";
 
 export type MapLevel = "country" | "province" | "city";
-export type CountAggregate = { id: number; name: string; count: number; latitude: number; longitude: number };
-type Point = { latitude: number; longitude: number };
+export type CountAggregate = RegionAggregate & { provinceId: number | null; cityId: number | null };
+export type MapViewport = {
+  latitude: number; longitude: number; zoom: number;
+  bounds: { south: number; west: number; north: number; east: number };
+};
 
-function distance(a: Point, b: Point): number {
-  // Longitude degrees shrink with latitude. This is enough to rank nearby map points.
-  const longitude = (a.longitude - b.longitude) * Math.cos((a.latitude * Math.PI) / 180);
-  return (a.latitude - b.latitude) ** 2 + longitude ** 2;
+const OTHER_CITY = "سایر نقاط استان";
+
+function inViewport(point: { latitude: number; longitude: number }, bounds: MapViewport["bounds"]): boolean {
+  return point.latitude >= bounds.south && point.latitude <= bounds.north
+    && point.longitude >= bounds.west && point.longitude <= bounds.east;
 }
 
-function closestTo<T extends Point>(items: T[], center: Point): T | undefined {
-  return items.reduce<T | undefined>((best, item) =>
-    !best || distance(item, center) < distance(best, center) ? item : best, undefined);
+function provinceAggregate(aggregate: RegionAggregate, squares: ResolvedSquare[]): CountAggregate {
+  const square = squares.find((item) => item.displayProvinceName === aggregate.name);
+  const center = PROVINCE_CENTERS[aggregate.name];
+  return { ...aggregate, latitude: center?.latitude ?? aggregate.latitude, longitude: center?.longitude ?? aggregate.longitude, provinceId: square?.displayProvinceId ?? null, cityId: null };
 }
 
-function aggregate(items: SquareMarker[], key: "provinceId" | "cityId", nameKey: "provinceName" | "cityName"): CountAggregate[] {
-  const grouped = new Map<number, CountAggregate>();
-  for (const square of items) {
-    const id = square[key];
-    if (!id) continue;
-    const item = grouped.get(id) ?? { id, name: square[nameKey] || "محدوده", count: 0, latitude: 0, longitude: 0 };
-    item.latitude = (item.latitude * item.count + square.latitude) / (item.count + 1);
-    item.longitude = (item.longitude * item.count + square.longitude) / (item.count + 1);
-    item.count++;
-    grouped.set(id, item);
-  }
-  return [...grouped.values()];
+function cityAggregate(aggregate: RegionAggregate, squares: ResolvedSquare[]): CountAggregate {
+  const square = squares.find((item) => item.id === aggregate.squareIds[0]);
+  return { ...aggregate, provinceId: square?.displayProvinceId ?? null, cityId: square?.displayCityId ?? null };
 }
 
 export function useMap() {
-  const [provinces, setProvinces] = useState<Province[]>([]);
   const [provinceCities, setProvinceCities] = useState<City[]>([]);
   const [allSquares, setAllSquares] = useState<SquareMarker[]>([]);
+  const [boundaries, setBoundaries] = useState<ProvinceBoundaries | null>(null);
+  const [resolvedSquares, setResolvedSquares] = useState<ResolvedSquare[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState(0);
+  const [selectedProvinceName, setSelectedProvinceName] = useState<string | null>(null);
   const [selectedCityId, setSelectedCityId] = useState(0);
+  const [selectedCityName, setSelectedCityName] = useState<string | null>(null);
   const [level, setLevel] = useState<MapLevel>("country");
   const [provinceQuery, setProvinceQuery] = useState("");
   const [cityQuery, setCityQuery] = useState("");
   const [status, setStatus] = useState<MapStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const viewportRef = useRef<{ level: MapLevel; center: Point } | null>(null);
-
-  const provinceAggregates = useMemo(() => aggregate(allSquares, "provinceId", "provinceName"), [allSquares]);
-  const allCityAggregates = useMemo(() => aggregate(allSquares, "cityId", "cityName"), [allSquares]);
-  const provinceSquares = useMemo(() => allSquares.filter((item) => item.provinceId === selectedProvinceId), [allSquares, selectedProvinceId]);
-  const cityAggregates = useMemo(() => aggregate(provinceSquares, "cityId", "cityName"), [provinceSquares]);
-  const citySquares = useMemo(() => provinceSquares.filter((item) => item.cityId === selectedCityId), [provinceSquares, selectedCityId]);
-  const selectedProvince = provinces.find((item) => item.id === selectedProvinceId);
-  const selectedCity = provinceCities.find((item) => item.id === selectedCityId);
 
   useEffect(() => {
     let active = true;
     queueMicrotask(() => active && setStatus("loading"));
-    void getAllSquares().then((items) => {
+    void Promise.all([
+      getAllSquares(),
+      fetch("/maps/iran-provinces.geojson").then(async (response) => {
+        if (!response.ok) throw new Error(`GeoJSON ${response.status}`);
+        return response.json() as Promise<ProvinceBoundaries>;
+      }),
+    ]).then(([squares, geoJson]) => {
       if (!active) return;
-      setAllSquares(items);
-      const names = new Map<number, string>();
-      for (const item of items) if (item.provinceId && item.provinceName) names.set(item.provinceId, item.provinceName);
-      setProvinces([...names].map(([id, name]) => ({ id, name })));
-      setStatus("ready");
+      setAllSquares(squares); setBoundaries(geoJson); setStatus("ready");
     }).catch(() => {
-      if (active) { setError("دریافت میدان‌ها با خطا مواجه شد."); setStatus("error"); }
+      if (active) { setError("دریافت میدان‌ها یا مرزهای نقشه با خطا مواجه شد."); setStatus("error"); }
     });
     return () => { active = false; };
   }, []);
+
+  // Legacy database rows are never modified. A reverse lookup only supplies
+  // display fields when their stored province contradicts the point boundary.
+  useEffect(() => {
+    if (!boundaries) return;
+    let active = true;
+    const initial = resolveSquares(allSquares, boundaries);
+    const mismatches = initial.filter((square) => square.needsCityResolution);
+    if (!mismatches.length) {
+      queueMicrotask(() => { if (active) setResolvedSquares(initial); });
+      return () => { active = false; };
+    }
+    void Promise.all(mismatches.map(async (square) => {
+      try {
+        const location = await reverseGeocodeCached(square.latitude, square.longitude);
+        return [square.id, {
+          displayProvinceId: location.province_id,
+          displayProvinceName: normalizePlace(location.province_name) || square.displayProvinceName,
+          displayCityId: location.city_id,
+          displayCityName: normalizePlace(location.city_name) || OTHER_CITY,
+        }] as const;
+      } catch {
+        return [square.id, { displayProvinceId: square.provinceId ?? null, displayProvinceName: square.displayProvinceName, displayCityId: null, displayCityName: OTHER_CITY }] as const;
+      }
+    })).then((patches) => {
+      if (!active) return;
+      const byId = new Map(patches);
+      setResolvedSquares(initial.map((square) => ({ ...square, ...byId.get(square.id), needsCityResolution: false })));
+    });
+    return () => { active = false; };
+  }, [allSquares, boundaries]);
 
   useEffect(() => {
     if (!selectedProvinceId) { queueMicrotask(() => setProvinceCities([])); return; }
@@ -77,29 +105,64 @@ export function useMap() {
     return () => { active = false; };
   }, [selectedProvinceId]);
 
-  const setViewportLevel = useCallback((next: MapLevel, center: Point) => {
-    viewportRef.current = { level: next, center };
-    if (next === "country") {
-      setSelectedProvinceId(0);
-      setSelectedCityId(0);
-    } else if (next === "province") {
-      setSelectedProvinceId(closestTo(provinceAggregates, center)?.id ?? 0);
-      setSelectedCityId(0);
-    } else {
-      const nearestCity = closestTo(allCityAggregates, center);
-      const citySquare = allSquares.find((square) => square.cityId === nearestCity?.id);
-      setSelectedProvinceId(citySquare?.provinceId ?? 0);
-      setSelectedCityId(nearestCity?.id ?? 0);
-    }
-    setLevel(next);
-  }, [allSquares, allCityAggregates, provinceAggregates]);
+  const provinceAggregates = useMemo(() => boundaries
+    ? aggregateByRegion(resolvedSquares, boundaries, "province").map((item) => provinceAggregate(item, resolvedSquares))
+    : [], [boundaries, resolvedSquares]);
+  const cityAggregates = useMemo(() => boundaries && selectedProvinceName
+    ? aggregateByRegion(resolvedSquares.filter((item) => item.displayProvinceName === selectedProvinceName), boundaries, "city").map((item) => cityAggregate(item, resolvedSquares))
+    : [], [boundaries, resolvedSquares, selectedProvinceName]);
+  const citySquares = useMemo(() => resolvedSquares.filter((item) => item.displayProvinceName === selectedProvinceName
+    && (selectedCityId ? item.displayCityId === selectedCityId : item.displayCityName === selectedCityName)),
+  [resolvedSquares, selectedProvinceName, selectedCityId, selectedCityName]);
+  const provinces = useMemo<Province[]>(() => provinceAggregates
+    .filter((item): item is CountAggregate & { provinceId: number } => item.provinceId !== null)
+    .map((item) => ({ id: item.provinceId, name: item.name })), [provinceAggregates]);
+  const selectedProvince = provinces.find((item) => item.id === selectedProvinceId);
+  const selectedCity = provinceCities.find((item) => item.id === selectedCityId)
+    ?? (selectedCityName ? { id: selectedCityId, provinceId: selectedProvinceId, name: selectedCityName } : undefined);
 
-  // The map can reach a linked coordinate before the squares request finishes.
-  useEffect(() => {
-    if (allSquares.length && viewportRef.current) {
-      setViewportLevel(viewportRef.current.level, viewportRef.current.center);
+  const selectProvince = useCallback((id: number) => {
+    const province = provinceAggregates.find((item) => item.provinceId === id);
+    setSelectedProvinceId(id); setSelectedProvinceName(province?.name ?? null);
+    setSelectedCityId(0); setSelectedCityName(null); setCityQuery(""); setLevel("province");
+  }, [provinceAggregates]);
+  const selectProvinceAggregate = useCallback((key: string) => {
+    const province = provinceAggregates.find((item) => item.id === key);
+    if (province?.provinceId) selectProvince(province.provinceId);
+  }, [provinceAggregates, selectProvince]);
+  const selectCityAggregate = useCallback((key: string) => {
+    const city = cityAggregates.find((item) => item.id === key);
+    if (!city) return;
+    if (city.provinceId && city.provinceId !== selectedProvinceId) selectProvince(city.provinceId);
+    setSelectedCityId(city.cityId ?? 0); setSelectedCityName(city.name); setLevel("city");
+  }, [cityAggregates, selectedProvinceId, selectProvince]);
+  const selectCity = useCallback((id: number) => {
+    const city = cityAggregates.find((item) => item.cityId === id);
+    setSelectedCityId(id); setSelectedCityName(city?.name ?? null); setLevel("city");
+  }, [cityAggregates]);
+
+  const setViewport = useCallback((viewport: MapViewport) => {
+    if (!boundaries) return;
+    const province = provinceForPoint(viewport, boundaries);
+    if (viewport.zoom < 6.5 || !province || (level === "country" && viewport.zoom < 7)) {
+      setLevel("country"); setSelectedProvinceId(0); setSelectedProvinceName(null); setSelectedCityId(0); setSelectedCityName(null); return;
     }
-  }, [allSquares, setViewportLevel]);
+    const selected = provinceAggregates.find((item) => item.name === province.name);
+    if (!selected?.provinceId) return;
+    if (viewport.zoom < 10 && !(level === "city" && viewport.zoom >= 9.5)) {
+      setLevel("province"); setSelectedProvinceId(selected.provinceId); setSelectedProvinceName(province.name); setSelectedCityId(0); setSelectedCityName(null); return;
+    }
+    const candidates = aggregateByRegion(
+      resolvedSquares.filter((item) => item.displayProvinceName === province.name),
+      boundaries,
+      "city",
+    ).map((item) => cityAggregate(item, resolvedSquares));
+    const candidate = candidates.find((city) => inViewport(city, viewport.bounds));
+    if (!candidate) {
+      setLevel("province"); setSelectedProvinceId(selected.provinceId); setSelectedProvinceName(province.name); setSelectedCityId(0); setSelectedCityName(null); return;
+    }
+    setLevel("city"); setSelectedProvinceId(selected.provinceId); setSelectedProvinceName(province.name); setSelectedCityId(candidate.cityId ?? 0); setSelectedCityName(candidate.name);
+  }, [boundaries, level, provinceAggregates, resolvedSquares]);
 
   return {
     selectedProvince, selectedCity, selectedProvinceId, selectedCityId, provinceCities,
@@ -107,8 +170,7 @@ export function useMap() {
     visibleCities: provinceCities.filter((item) => item.name.includes(cityQuery.trim())),
     provinceQuery, cityQuery, level, provinceAggregates, cityAggregates, citySquares,
     status, error, activeCount: allSquares.length,
-    selectProvince: (id: number) => { setSelectedProvinceId(id); setSelectedCityId(0); setCityQuery(""); setLevel("province"); },
-    selectCity: (id: number) => { setSelectedCityId(id); setLevel("city"); },
-    setViewportLevel, setProvinceQuery, setCityQuery,
+    selectProvince, selectCity, selectProvinceAggregate, selectCityAggregate,
+    setViewport, setProvinceQuery, setCityQuery,
   };
 }
