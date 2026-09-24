@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LoaderCircle, MapPin } from "lucide-react";
 import { LocationPickerMap } from "@/features/map/components/LocationPickerMap";
 import type { SelectedLocation } from "@/features/map/types";
-import { getCities, getProvinces } from "../services/programs.service";
+import { getCities, getProvinces, preloadAdminGeoCatalog } from "../services/programs.service";
 import type { GeoOption } from "../types";
 import { AdminField } from "./AdminField";
 import { fieldClass } from "./styles";
@@ -83,6 +83,7 @@ export function GeoPickerField({
 
   useEffect(() => {
     let active = true;
+    preloadAdminGeoCatalog();
     void getProvinces()
       .then((items) => {
         if (!active) return;
