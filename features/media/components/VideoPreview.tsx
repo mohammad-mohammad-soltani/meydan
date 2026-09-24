@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Film } from "lucide-react";
 import type { MediaItem } from "../types";
+import { mediaThumbnailSrc } from "../media-utils";
 
 /** Fetch a first frame only for visible clips that have no usable server poster. */
 export function VideoPreview({ item, onRatio }: {
@@ -15,7 +16,7 @@ export function VideoPreview({ item, onRatio }: {
   const [posterFailed, setPosterFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const poster = item.poster && !posterFailed ? item.poster : undefined;
+  const poster = item.poster && !posterFailed ? mediaThumbnailSrc(item.poster) : undefined;
 
   useEffect(() => {
     const frame = frameRef.current;

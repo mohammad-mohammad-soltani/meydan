@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { CalendarDays, Check, Clock, LoaderCircle, MapPin, Search, Send, X } from "lucide-react";
 import { PersianDatePicker, tehranTodayIso } from "@/components/shared/PersianDatePicker";
 import { PersianTimePicker } from "@/components/shared/PersianTimePicker";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { CreateInvitationInput, InvitableSpeaker, SpeakerCategory } from "../types";
 
 const fieldClass =
@@ -15,12 +15,11 @@ const fieldClass =
 function SpeakerAvatar({ speaker, className = "h-9 w-9" }: { speaker: InvitableSpeaker; className?: string }) {
   if (speaker.avatarUrl) {
     return (
-      <Image
+      <OptimizedAvatar
         src={speaker.avatarUrl}
         alt=""
         width={44}
         height={44}
-        unoptimized={speaker.avatarUrl.startsWith("http")}
         className={`${className} shrink-0 rounded-full object-cover ring-1 ring-border/70`}
       />
     );

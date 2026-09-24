@@ -6,6 +6,7 @@ import { ImagePlus, LoaderCircle, Trash2, Upload, FileCheck2 } from "lucide-reac
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 import { AdminField } from "./AdminField";
 import { adminErrorMessage } from "../services/admin-api";
+import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 
 export function MediaPickerField({ id, label, hint, error, purpose = "avatar", mediaId, currentUrl, onChange, onBusyChange, disabled = false }: {
   id: string;
@@ -60,7 +61,7 @@ export function MediaPickerField({ id, label, hint, error, purpose = "avatar", m
     <AdminField label={label} htmlFor={id} hint={hint} error={error ?? localError}>
       <div className="admin-media-drop" aria-busy={busy} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const file = event.dataTransfer.files[0]; if (file) void pick(file); }}>
         <span className="admin-media-preview">
-          {preview ? <Image src={preview} alt="پیش‌نمایش فایل انتخاب‌شده" width={72} height={72} unoptimized /> : mediaId ? <FileCheck2 size={27} aria-hidden="true" /> : <ImagePlus size={27} strokeWidth={1.5} aria-hidden="true" />}
+          {preview ? <Image src={preview} alt="پیش‌نمایش فایل انتخاب‌شده" width={72} height={72} quality={MEDIA_THUMB_QUALITY} unoptimized={/^(?:blob:|data:)/i.test(preview)} /> : mediaId ? <FileCheck2 size={27} aria-hidden="true" /> : <ImagePlus size={27} strokeWidth={1.5} aria-hidden="true" />}
         </span>
         <div className="admin-media-copy">
           <strong>{busy ? "در حال بارگذاری فایل…" : mediaId ? "فایل انتخاب شد" : preview ? "تصویر فعلی" : imageOnly ? "تصویر را اینجا رها کنید" : "فایل را اینجا رها کنید"}</strong>

@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { SquareMarker } from "../services/map.service";
 import type { CountAggregate, MapLevel, MapViewport } from "../hooks/useMap";
 import { addOpenFreeMapBasemap } from "../services/openfreemap-basemap";
+import { mediaThumbnailSrc } from "@/features/media/media-utils";
 import {
   LIVE_MAP_THEME,
   makePinHtml,
@@ -180,7 +181,7 @@ export function MapFrame({
         const point: [number, number] = [square.latitude, square.longitude];
         const initial = square.name.trim().slice(0, 1) || "م";
         const avatar = document.createElement("div"); avatar.style.cssText = `width:42px;height:42px;border:3px solid white;border-radius:50%;overflow:hidden;background:${LIVE_MAP_THEME.pin};box-shadow:0 4px 12px rgba(0,0,0,.45)`;
-        if (square.avatarUrl) { const image = document.createElement("img"); image.src = square.avatarUrl; image.alt = ""; image.style.cssText = "width:100%;height:100%;object-fit:cover"; avatar.append(image); } else { const fallback = document.createElement("span"); fallback.style.cssText = "display:grid;place-items:center;width:100%;height:100%;font-weight:900;color:white"; fallback.textContent = initial; avatar.append(fallback); }
+        if (square.avatarUrl) { const image = document.createElement("img"); image.src = mediaThumbnailSrc(square.avatarUrl, 84) ?? square.avatarUrl; image.alt = ""; image.style.cssText = "width:100%;height:100%;object-fit:cover"; avatar.append(image); } else { const fallback = document.createElement("span"); fallback.style.cssText = "display:grid;place-items:center;width:100%;height:100%;font-weight:900;color:white"; fallback.textContent = initial; avatar.append(fallback); }
         const marker = L.marker(point, { icon: L.divIcon({ html: avatar, className: "", iconSize: [42, 42], iconAnchor: [21, 21] }) }).addTo(instance);
         const popup = document.createElement("div"); popup.style.cssText = "font-family:inherit;text-align:center;padding:5px 4px;min-width:150px";
         const name = document.createElement("strong"); name.style.cssText = "display:block;font-size:13px;margin-bottom:10px"; name.textContent = square.name;

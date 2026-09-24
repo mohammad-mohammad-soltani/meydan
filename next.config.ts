@@ -83,10 +83,10 @@ const nextConfig: NextConfig = {
       },
     ],
     /**
-     * `65` is the timeline thumbnail quality (`MEDIA_THUMB_QUALITY`); `75` stays
+     * `60` is the timeline/avatar quality (`MEDIA_THUMB_QUALITY`); `75` stays
      * because it is the default every other `next/image` in the app uses.
      */
-    qualities: [65, 75],
+    qualities: [60, 75],
     /** One upload URL never changes content, so variants are worth keeping. */
     minimumCacheTTL: 60 * 60 * 24 * 7,
     /** Development API base is a local WordPress, which resolves to a private IP. */

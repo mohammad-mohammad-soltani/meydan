@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { Plus, RefreshCw, Sparkles } from "lucide-react";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { AdminCheckbox } from "./AdminField";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
@@ -79,8 +80,7 @@ export function AdminCreatorsView({ initial }: { initial: Creator[] }) {
         <div className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-muted text-[11px] font-black text-brand">
             {creator.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={creator.avatarUrl} alt="" className="h-9 w-9 object-cover" />
+              <OptimizedAvatar src={creator.avatarUrl} alt="" width={36} className="h-9 w-9 object-cover" />
             ) : (
               creator.name.trim().slice(0, 1) || "؟"
             )}

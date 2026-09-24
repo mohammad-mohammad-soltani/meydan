@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { CalendarDays, Check, LoaderCircle, MapPin, Phone, X } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { publicProfileHref } from "@/lib/profile-route";
 import type { InvitationActor, SpeakerInvitation } from "../types";
 
@@ -41,12 +41,11 @@ function ActorAvatar({ actor }: { actor: InvitationActor | null }) {
 
   if (actor?.avatarUrl) {
     return (
-      <Image
+      <OptimizedAvatar
         src={actor.avatarUrl}
         alt=""
         width={44}
         height={44}
-        unoptimized={actor.avatarUrl.startsWith("http")}
         className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-border/70"
       />
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LoaderCircle, LogIn, LogOut, UserRound } from "lucide-react";
@@ -140,12 +140,11 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
         className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-pill transition-colors hover:bg-hover"
       >
         {viewer?.avatarUrl ? (
-          <Image
+          <OptimizedAvatar
             src={viewer.avatarUrl}
             alt=""
             width={40}
             height={40}
-            unoptimized={viewer.avatarUrl.startsWith("http")}
             className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border"
           />
         ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { ChatUser } from "../types";
 
 const toneClasses: Record<ChatUser["avatarTone"], string> = {
@@ -34,12 +34,11 @@ export function ChatAvatar({
 }: ChatAvatarProps) {
   if (participant.avatarUrl) {
     return (
-      <Image
+      <OptimizedAvatar
         src={participant.avatarUrl}
         alt=""
         width={176}
         height={176}
-        unoptimized={participant.avatarUrl.startsWith("http")}
         className={`shrink-0 rounded-full object-cover ${className}`}
       />
     );

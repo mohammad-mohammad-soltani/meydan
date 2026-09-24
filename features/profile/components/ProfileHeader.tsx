@@ -7,6 +7,8 @@ import { useState } from "react";
 import { ArrowRight, BadgeCheck, Check, LoaderCircle, MessageCircle, UserRoundPlus } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { OfficialBadge } from "@/components/shared/OfficialBadge";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
+import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { ProfileActionsMenu } from "./ProfileActionsMenu";
@@ -49,10 +51,10 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
       </header>
 
       <div className="bg-surface">
-        <div className="relative h-36 overflow-hidden bg-gradient-to-l from-brand via-brand-hover to-solid-dark sm:h-48">{identity.cover ? <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority sizes="(max-width: 720px) 100vw, 640px" unoptimized={identity.cover.startsWith("http")} className="object-cover" /> : null}</div>
+        <div className="relative h-36 overflow-hidden bg-gradient-to-l from-brand via-brand-hover to-solid-dark sm:h-48">{identity.cover ? <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" className="object-cover" /> : null}</div>
         <div className="relative px-4 pb-5">
           <div className="flex min-h-16 items-start justify-between">
-            <div className="-mt-12 grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-surface bg-surface-muted text-3xl font-black text-foreground sm:-mt-14 sm:h-28 sm:w-28">{identity.avatar ? <Image src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} height={112} unoptimized={identity.avatar.startsWith("http")} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}</div>
+            <div className="-mt-12 grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-surface bg-surface-muted text-3xl font-black text-foreground sm:-mt-14 sm:h-28 sm:w-28">{identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}</div>
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
               {canEdit ? <><AdminNavLink isAuthenticated className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-brand-border bg-brand-muted px-3 text-xs font-black text-brand hover:bg-selected lg:hidden" /><Link href={"/profile/edit" as Route} className="inline-flex min-h-10 items-center rounded-pill border border-border px-4 text-xs font-black text-foreground hover:bg-hover">ویرایش پروفایل</Link></> : (
                 <>

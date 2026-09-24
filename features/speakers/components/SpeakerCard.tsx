@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { publicProfileHref } from "@/lib/profile-route";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
 import type { Speaker } from "../types";
@@ -26,12 +26,11 @@ export function SpeakerCard({
     "؟";
 
   const avatar = speaker.avatarUrl ? (
-    <Image
+    <OptimizedAvatar
       src={speaker.avatarUrl}
       alt=""
       width={52}
       height={52}
-      unoptimized={speaker.avatarUrl.startsWith("http")}
       className="h-12 w-12 rounded-full object-cover ring-2 ring-brand-muted"
     />
   ) : (

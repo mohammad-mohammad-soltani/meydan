@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import Link from "next/link";
 import type { Route } from "next";
 import { BadgeCheck } from "lucide-react";
@@ -36,12 +36,11 @@ export function CommentsList({
               : null;
 
             const avatar = comment.avatarUrl ? (
-              <Image
+              <OptimizedAvatar
                 src={comment.avatarUrl}
                 alt=""
                 width={42}
                 height={42}
-                unoptimized={comment.avatarUrl.startsWith("http")}
                 className="h-[42px] w-[42px] rounded-full object-cover ring-1 ring-border"
               />
             ) : (

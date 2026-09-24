@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { BookOpen, ChevronLeft, FileText, HandHeart, Headphones, Mic, PhoneCall, Printer } from "lucide-react";
 import { generatedMedia } from "@/components/shared/generated-media";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { ContentItem, ContentPoster } from "../types";
 import { MusicVideoStrip } from "./MusicVideoCards";
 import type { ReportDay } from "../services/report-days.service";
@@ -20,7 +21,7 @@ export function SpeechRows({ items }: { items: ContentItem[] }) {
     <div className="overflow-hidden rounded-2xl border border-border bg-surface" dir="rtl">
       {items.map((item) => (
         <Link key={item.apiId} href={`/content/${item.apiId}` as Route} className="flex min-h-20 items-center gap-3 border-b border-divider px-3 py-2.5 transition-colors last:border-b-0 hover:bg-hover">
-          {item.authorAvatar ? <img src={item.authorAvatar} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-black">{(item.author || item.title).slice(0, 1)}</span>}
+          {item.authorAvatar ? <OptimizedAvatar src={item.authorAvatar} alt="" width={40} className="h-10 w-10 shrink-0 rounded-full object-cover" /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-black">{(item.author || item.title).slice(0, 1)}</span>}
           <span className="min-w-0 flex-1">
             <strong className="block truncate text-xs font-black text-foreground">{item.author || item.title}</strong>
             <span className="mt-1 block truncate text-[10px] text-muted-foreground">{item.title}</span>

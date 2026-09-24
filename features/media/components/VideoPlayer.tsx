@@ -28,6 +28,7 @@ import {
   clamp,
   faDigits,
   formatClock,
+  mediaThumbnailSrc,
   videoAspectRatio,
   resolveBufferedEnd,
   resolveMediaDuration,
@@ -604,7 +605,7 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         src={source}
-        poster={item.poster}
+        poster={variant === "inline" ? mediaThumbnailSrc(item.poster) : item.poster}
         playsInline
         autoPlay={active === undefined && autoPlay}
         preload={preload}

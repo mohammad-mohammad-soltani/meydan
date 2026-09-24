@@ -10,6 +10,7 @@ import { meydanApi } from "@/lib/meydan-api";
 import { getCityMap } from "@/features/map/services/map.service";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 import { ImageCropDialog } from "./ImageCropDialog";
+import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import { LocationPickerMap } from "@/features/map/components/LocationPickerMap";
 import type { SelectedLocation } from "@/features/map/types";
 import { PersianDatePicker } from "@/components/shared/PersianDatePicker";
@@ -207,7 +208,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           </button>
         </header>
         <div className="relative h-40 bg-gradient-to-l from-brand via-brand-hover to-solid-dark">
-          {cover ? <Image src={cover} alt="" fill unoptimized className="object-cover" /> : null}
+          {cover ? <Image src={cover} alt="" fill quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" unoptimized={/^(?:blob:|data:)/i.test(cover)} className="object-cover" /> : null}
           <button
             type="button"
             onClick={() => coverInput.current?.click()}
@@ -238,7 +239,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
         <div className="relative px-4">
           <div className="-mt-12 relative grid h-24 w-24 overflow-hidden rounded-full border-4 border-surface bg-surface-muted">
             {avatar ? (
-              <Image src={avatar} alt="" fill unoptimized className="object-cover" />
+              <Image src={avatar} alt="" fill quality={MEDIA_THUMB_QUALITY} sizes="112px" unoptimized={/^(?:blob:|data:)/i.test(avatar)} className="object-cover" />
             ) : (
               name.slice(0, 1)
             )}

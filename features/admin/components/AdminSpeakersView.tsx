@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { Mic, Pencil, RefreshCw, Trash2, UserPlus, UserRoundPlus } from "lucide-react";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { AdminDialog } from "./AdminDialog";
 import { AdminSpeakerCategories } from "./AdminSpeakerCategories";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
@@ -197,10 +198,7 @@ export function AdminSpeakersView({ initial }: { initial: AdminPage<Speaker> }) 
         <div className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-muted text-[11px] font-black text-brand">
             {speaker.avatarUrl ? (
-              // Plain img keeps the admin list free of the image optimizer for
-              // the many avatar hosts the panel does not know about.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={speaker.avatarUrl} alt="" className="h-9 w-9 object-cover" />
+              <OptimizedAvatar src={speaker.avatarUrl} alt="" width={36} className="h-9 w-9 object-cover" />
             ) : (
               (speaker.name.trim().slice(0, 1) || "؟")
             )}

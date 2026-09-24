@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useAudio } from "@/features/audio/AudioProvider";
 import type { ContentItem } from "@/features/content/types";
 import { filterPodcastItems } from "../search";
+import { mediaThumbnailSrc } from "@/features/media/media-utils";
 
 export function PodcastsView({ items }: { items: ContentItem[] }) {
   const [query, setQuery] = useState("");
@@ -130,7 +131,7 @@ function PodcastPlayButton({ item }: { item: ContentItem }) {
         id: trackId,
         title: item.title,
         artist: item.author,
-        cover: item.media.coverImage,
+        cover: mediaThumbnailSrc(item.media.coverImage, 256),
         url,
         sourceHref: `/content/${item.id}`,
       });

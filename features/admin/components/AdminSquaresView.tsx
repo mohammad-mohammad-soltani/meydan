@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import Image from "next/image";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MapPin, MapPinned, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { AdminDialog } from "./AdminDialog";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
@@ -197,12 +197,11 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
         <div className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-icon-muted">
             {square.avatarUrl ? (
-              <Image
+              <OptimizedAvatar
                 src={square.avatarUrl}
                 alt=""
                 width={36}
                 height={36}
-                unoptimized={square.avatarUrl.startsWith("http")}
                 className="h-9 w-9 object-cover"
               />
             ) : (

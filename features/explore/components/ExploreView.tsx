@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -21,6 +20,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { getExploreLanding, searchExplore } from "../services/explore.service";
 import type {
   ExploreFilter,
@@ -67,12 +67,11 @@ function ResultAvatar({ item }: { item: ExploreResult }) {
 
   if (item.avatarUrl) {
     return (
-      <Image
+      <OptimizedAvatar
         src={item.avatarUrl}
         alt=""
         width={44}
         height={44}
-        unoptimized={item.avatarUrl.startsWith("http")}
         className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-border"
       />
     );
@@ -455,12 +454,10 @@ export function ExploreView() {
                       >
                         <span className="relative mx-auto block h-14 w-14">
                           {item.avatarUrl ? (
-                            <Image
+                            <OptimizedAvatar
                               src={item.avatarUrl}
                               alt=""
-                              fill
-                              unoptimized={item.avatarUrl.startsWith("http")}
-                              sizes="56px"
+                              width={56}
                               className="rounded-full object-cover ring-1 ring-border"
                             />
                           ) : (

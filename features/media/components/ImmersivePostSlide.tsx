@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element -- uploaded media and avatars */
 "use client";
 
 import Link from "next/link";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { Route } from "next";
 import {
   useEffect,
@@ -116,9 +116,10 @@ export function ImmersivePostSlide({
   const authorIdentity = (
     <>
       {entry.post?.author.avatarUrl ? (
-        <img
+        <OptimizedAvatar
           src={entry.post.author.avatarUrl}
           alt=""
+          width={42}
           className="viewer-avatar"
         />
       ) : (

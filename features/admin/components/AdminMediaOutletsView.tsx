@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Image as ImageIcon, Plus, RefreshCw } from "lucide-react";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { AdminDialog } from "./AdminDialog";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
@@ -130,8 +131,7 @@ export function AdminMediaOutletsView({ initial }: { initial: MediaOutlet[] }) {
         <div className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-icon-muted">
             {outlet.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={outlet.avatarUrl} alt="" className="h-9 w-9 object-cover" />
+              <OptimizedAvatar src={outlet.avatarUrl} alt="" width={36} className="h-9 w-9 object-cover" />
             ) : (
               <ImageIcon aria-hidden="true" className="h-4 w-4" />
             )}

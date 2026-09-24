@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import Link from "next/link";
-import Image from "next/image";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import {
   ExternalLink,
   LoaderCircle,
@@ -183,12 +183,11 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
           <div className="flex items-center gap-3">
             <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-icon-muted">
               {square.avatarUrl ? (
-                <Image
+                <OptimizedAvatar
                   src={square.avatarUrl}
                   alt=""
                   width={56}
                   height={56}
-                  unoptimized={square.avatarUrl.startsWith("http")}
                   className="h-14 w-14 object-cover"
                 />
               ) : (

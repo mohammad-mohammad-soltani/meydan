@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { BadgeCheck, Check, LoaderCircle, UserRoundPlus } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { actorKey, type ActorType } from "@/lib/meydan-follow";
 import { publicProfileHref } from "@/lib/profile-route";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { FollowSuggestion } from "../types";
 
 type FollowSuggestionsProps = {
@@ -45,7 +45,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
             <article key={key} className="group rounded-card border border-border bg-card p-4 text-card-foreground shadow-xs transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-brand-border hover:shadow-sm">
               <div className="flex items-start gap-3">
                 <Link href={profileHref} className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-muted text-sm font-black text-brand" aria-label={`پروفایل ${suggestion.name}`}>
-                  {suggestion.avatarUrl ? <Image src={suggestion.avatarUrl} alt={suggestion.name} width={48} height={48} unoptimized={suggestion.avatarUrl.startsWith("http")} className="h-full w-full object-cover" /> : suggestion.name.slice(0, 1)}
+                  {suggestion.avatarUrl ? <OptimizedAvatar src={suggestion.avatarUrl} alt={suggestion.name} width={48} className="h-full w-full object-cover" /> : suggestion.name.slice(0, 1)}
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link href={profileHref} className="inline-flex max-w-full items-center gap-1 font-black text-foreground hover:text-brand">

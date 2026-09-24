@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
@@ -8,6 +7,7 @@ import { ArrowRight, BadgeCheck, ChevronLeft, HandHeart } from "lucide-react";
 import type { InitiativeParticipant } from "../types";
 import { participantProfileHref } from "../services/initiatives.service";
 import { OfficialBadge } from "@/components/shared/OfficialBadge";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 
 const typeLabels: Record<InitiativeParticipant["type"], string> = {
   user: "کاربر میدان",
@@ -21,12 +21,11 @@ function ParticipantRow({ participant }: { participant: InitiativeParticipant })
       className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
     >
       {participant.avatarUrl ? (
-        <Image
+        <OptimizedAvatar
           src={participant.avatarUrl}
           alt=""
           width={44}
           height={44}
-          unoptimized={participant.avatarUrl.startsWith("http")}
           className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-border/70"
         />
       ) : (

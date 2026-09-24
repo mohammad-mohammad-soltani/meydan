@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { ContentDetailItem } from "../types";
 import { meydanApi } from "@/lib/meydan-api";
 import { MediaLightbox } from "@/features/media/components/MediaLightbox";
@@ -558,12 +559,11 @@ export function ContentDetailView({
 
         <div className="flex items-center gap-3">
           {item.creator.avatar ? (
-            <Image
+            <OptimizedAvatar
               src={item.creator.avatar}
               alt=""
               width={48}
               height={48}
-              unoptimized={item.creator.avatar.startsWith("http")}
               className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-border"
             />
           ) : (

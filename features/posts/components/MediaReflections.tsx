@@ -3,6 +3,7 @@
 import { ExternalLink, Newspaper, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 
 import type { MediaReflection } from "../types";
 
@@ -19,9 +20,10 @@ function OutletAvatar({ reflection }: { reflection: MediaReflection }) {
       {letter}
 
       {reflection.avatarUrl ? (
-        <img
+        <OptimizedAvatar
           src={reflection.avatarUrl}
           alt=""
+          width={40}
           className="absolute inset-0 h-full w-full object-cover"
           onError={(event) => {
             event.currentTarget.style.display = "none";

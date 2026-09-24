@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { Pencil, Trash2, UserPlus, UserRound } from "lucide-react";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
 import { AdminTable, type AdminColumn } from "./AdminTable";
@@ -77,7 +78,7 @@ export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FIL
     { kind: "select", key: "status", label: "وضعیت", value: filters.status, options: [{ value: "", label: "همه" }, { value: "active", label: "فعال" }, { value: "disabled", label: "غیرفعال" }], onChange: (status) => setFilters((f) => ({ ...f, status })) },
   ];
   const columns: AdminColumn<AdminUser>[] = [
-    { key: "name", header: "کاربر", primary: true, render: (user) => <span className="flex items-center gap-2"><span className={`grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-surface-muted ${user.disabled ? "grayscale opacity-60" : ""}`}>{user.avatar_url ? <img src={user.avatar_url} alt="" className="h-full w-full object-cover" /> : <UserRound size={18} />}</span><span className="min-w-0"><strong className="block truncate">{user.full_name}</strong><small className="text-muted-foreground">#{user.id.toLocaleString("fa-IR")}</small></span></span> },
+    { key: "name", header: "کاربر", primary: true, render: (user) => <span className="flex items-center gap-2"><span className={`grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-surface-muted ${user.disabled ? "grayscale opacity-60" : ""}`}>{user.avatar_url ? <OptimizedAvatar src={user.avatar_url} alt="" width={36} className="h-full w-full object-cover" /> : <UserRound size={18} />}</span><span className="min-w-0"><strong className="block truncate">{user.full_name}</strong><small className="text-muted-foreground">#{user.id.toLocaleString("fa-IR")}</small></span></span> },
     { key: "phone", header: "شماره", render: (user) => <span dir="ltr">{user.phone || "—"}</span> },
     { key: "role", header: "نقش", render: (user) => roles.find((r) => r.value === user.role)?.label ?? user.role },
     { key: "status", header: "وضعیت", render: (user) => <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${user.disabled ? "border border-danger-border bg-danger-surface text-danger-foreground" : "bg-success-surface text-success"}`}>{user.disabled ? "غیرفعال" : "فعال"}</span> },

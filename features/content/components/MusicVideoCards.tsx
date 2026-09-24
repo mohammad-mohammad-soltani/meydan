@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Route } from "next";
 import { Headphones } from "lucide-react";
 import type { ContentItem } from "../types";
+import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 
 export function MusicVideoCard({ item, layout = "strip" }: { item: ContentItem; layout?: "strip" | "grid" }) {
   const artwork = item.coverUrl || item.authorAvatar;
@@ -10,7 +12,7 @@ export function MusicVideoCard({ item, layout = "strip" }: { item: ContentItem; 
     <Link href={`/content/${item.apiId}` as Route} className={`group block snap-start text-center ${layout === "grid" ? "w-full" : "w-[140px] shrink-0 sm:w-[156px]"}`} aria-label={`مشاهده ${item.title}`}>
       <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-xl bg-surface-muted text-icon-muted">
         {artwork ? (
-          <img src={artwork} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+          <Image src={artwork} alt="" fill quality={MEDIA_THUMB_QUALITY} sizes={layout === "grid" ? "(max-width: 640px) 50vw, 240px" : "156px"} className="object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
           <Headphones aria-hidden="true" className="h-12 w-12" strokeWidth={1.5} />
         )}

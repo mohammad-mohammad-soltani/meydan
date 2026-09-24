@@ -5,6 +5,7 @@ import { useEffect, useMemo } from "react";
 import { AudioProgressBar, formatAudioTime } from "@/features/audio/AudioProgressBar";
 import { useAudio } from "@/features/audio/AudioProvider";
 import type { ContentDetailItem } from "../types";
+import { mediaThumbnailSrc } from "@/features/media/media-utils";
 
 type AudioMediaStageProps = {
   item: ContentDetailItem;
@@ -65,7 +66,7 @@ export function AudioMediaStage({
             id: `content:${item.apiId}`,
             title: item.title,
             artist: item.creator.name || item.author,
-            cover: item.media.coverImage,
+            cover: mediaThumbnailSrc(item.media.coverImage, 256),
             url: audioSrc,
             duration: durationHint,
             sourceHref: `/content/${item.id}`,

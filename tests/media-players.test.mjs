@@ -12,6 +12,7 @@ import {
   mediaAspectRatio,
   mediaItemFromNamedAttachment,
   mediaItemsFromAttachments,
+  mediaThumbnailSrc,
   visualItems,
 } from "../features/media/media-utils.ts";
 
@@ -104,6 +105,22 @@ test("time, size and ratio formatting stay Persian and bounded", () => {
   // Ultra-tall uploads stay in a usable frame.
   assert.equal(mediaAspectRatio(300, 1200), 4 / 5);
   assert.equal(clamp(12, 0, 4), 4);
+});
+
+test("persisted images use the Next optimizer at timeline quality", () => {
+  assert.equal(
+    mediaThumbnailSrc("https://cdn.example/media/a b.jpg", 320),
+    "/_next/image?url=https%3A%2F%2Fcdn.example%2Fmedia%2Fa%20b.jpg&w=320&q=60",
+  );
+  assert.equal(
+    mediaThumbnailSrc("/images/avatar.jpg", 96),
+    "/_next/image?url=%2Fimages%2Favatar.jpg&w=96&q=60",
+  );
+});
+
+test("temporary browser image URLs bypass the server optimizer", () => {
+  assert.equal(mediaThumbnailSrc("blob:https://meydan.test/preview", 96), "blob:https://meydan.test/preview");
+  assert.equal(mediaThumbnailSrc("data:image/png;base64,abc", 96), "data:image/png;base64,abc");
 });
 
 test("every surface renders the shared players instead of its own", () => {

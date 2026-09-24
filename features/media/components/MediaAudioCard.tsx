@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Headphones, LoaderCircle, Pause, Play } from "lucide-react";
 import { useAudio } from "@/features/audio/AudioProvider";
-import { formatClock } from "../media-utils";
+import { formatClock, mediaThumbnailSrc } from "../media-utils";
 import type { MediaItem } from "../types";
 
 const fallbackBars = [30, 55, 40, 78, 48, 88, 60, 34, 70, 45, 82, 52];
@@ -40,7 +40,7 @@ export function MediaAudioCard({
             id: `${scope}:${item.id}`,
             title: item.title,
             artist,
-            cover,
+            cover: mediaThumbnailSrc(cover, 128),
             url: item.src,
           }
         : null,

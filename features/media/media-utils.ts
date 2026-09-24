@@ -156,10 +156,12 @@ export function visualItems(items: MediaItem[]): MediaItem[] {
 }
 
 export const MEDIA_THUMB_WIDTH = 640;
-export const MEDIA_THUMB_QUALITY = 65;
+export const MEDIA_THUMB_QUALITY = 60;
 
 export function mediaThumbnailSrc(src?: string, width = MEDIA_THUMB_WIDTH): string | undefined {
-  if (!src || !/^https?:\/\//i.test(src)) return undefined;
+  if (!src) return undefined;
+  if (/^(?:blob:|data:)/i.test(src)) return src;
+  if (!/^https?:\/\//i.test(src) && !src.startsWith("/")) return src;
   return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${MEDIA_THUMB_QUALITY}`;
 }
 

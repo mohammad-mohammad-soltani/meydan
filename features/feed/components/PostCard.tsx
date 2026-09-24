@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { publicProfileHref } from "@/lib/profile-route";
 import { BadgeCheck, Trash2 } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { OfficialBadge } from "@/components/shared/OfficialBadge";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
 import { PostActions } from "./PostActions";
@@ -122,12 +122,11 @@ export function PostCard({
             className="pointer-events-auto shrink-0"
           >
             {post.author.avatarUrl ? (
-              <Image
+              <OptimizedAvatar
                 src={post.author.avatarUrl}
                 alt=""
                 width={44}
                 height={44}
-                unoptimized={post.author.avatarUrl.startsWith("http")}
                 className="h-11 w-11 rounded-full object-cover ring-1 ring-border/70 transition-opacity hover:opacity-90"
               />
             ) : (
@@ -293,12 +292,11 @@ export function PostCard({
           className="pointer-events-auto relative z-10 shrink-0"
         >
           {post.author.avatarUrl ? (
-            <Image
+            <OptimizedAvatar
               src={post.author.avatarUrl}
               alt=""
               width={40}
               height={40}
-              unoptimized={post.author.avatarUrl.startsWith("http")}
               className="h-10 w-10 rounded-full object-cover ring-1 ring-border/70 transition-opacity hover:opacity-90"
             />
           ) : (
