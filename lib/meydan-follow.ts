@@ -46,6 +46,14 @@ export async function getViewerFollowing(): Promise<FollowActor[]> {
   return Array.isArray(response) ? response : [];
 }
 
+export async function getActorFollowing(type: ActorType, value: string | number): Promise<boolean> {
+  const id = actorNumericId(value);
+  if (!id) throw new Error("Invalid actor id");
+
+  const result = await meydanApi<{ following: boolean }>(`/actors/${type}/${id}/follow-state`);
+  return result.following === true;
+}
+
 export async function setActorFollowing(type: ActorType, value: string | number, following: boolean): Promise<void> {
   const id = actorNumericId(value);
   if (!id) throw new Error("Invalid actor id");
