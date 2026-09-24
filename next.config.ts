@@ -73,6 +73,8 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    /** Leaflet renders 42px pins; 84px keeps them sharp on 2x displays. */
+    imageSizes: [16, 32, 48, 64, 84, 96, 128, 256, 384],
     remotePatterns: [
       ...KNOWN_UPLOAD_PATTERNS,
       ...configuredUploadPatterns(),
