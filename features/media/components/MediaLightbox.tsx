@@ -19,6 +19,7 @@ import type { MediaItem } from "../types";
 import { clamp, faDigits, mediaThumbnailSrc } from "../media-utils";
 import { setVideoFeedOwner, stopVideoAutoplay } from "@/lib/video-sound";
 import { VideoPlayer } from "./VideoPlayer";
+import { NativeMediaContextMenu } from "./NativeMediaContextMenu";
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
@@ -533,29 +534,31 @@ export function MediaStage({
           />
         ) : null}
 
-        <img
-          key={attempt}
-          src={item.src}
-          alt={item.title}
-          draggable={false}
-          onLoad={(event) => {
-            setImageState("ready");
-            const width = event.currentTarget.naturalWidth;
-            const height = event.currentTarget.naturalHeight;
-            if (width > 0 && height > 0) setImageRatio(width / height);
-          }}
-          onError={() => setImageState("error")}
-          className={`${immersive ? "" : "max-h-full min-w-[25vw]"} max-w-full object-contain ${
-            isGesturing ? "" : "transition-transform duration-200 ease-out motion-reduce:transition-none"
-          } ${zoom > MIN_ZOOM ? "cursor-grab" : "cursor-zoom-in"} ${
-            imageState === "ready" ? "opacity-100" : "opacity-0"
-          }`}
-          style={{
-            width: immersiveImageWidth,
-            height: immersive ? "auto" : undefined,
-            transform: `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${zoom})`,
-          }}
-        />
+        <NativeMediaContextMenu url={item.src} title={item.title}>
+          <img
+            key={attempt}
+            src={item.src}
+            alt={item.title}
+            draggable={false}
+            onLoad={(event) => {
+              setImageState("ready");
+              const width = event.currentTarget.naturalWidth;
+              const height = event.currentTarget.naturalHeight;
+              if (width > 0 && height > 0) setImageRatio(width / height);
+            }}
+            onError={() => setImageState("error")}
+            className={`${immersive ? "" : "max-h-full min-w-[25vw]"} max-w-full object-contain ${
+              isGesturing ? "" : "transition-transform duration-200 ease-out motion-reduce:transition-none"
+            } ${zoom > MIN_ZOOM ? "cursor-grab" : "cursor-zoom-in"} ${
+              imageState === "ready" ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              width: immersiveImageWidth,
+              height: immersive ? "auto" : undefined,
+              transform: `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${zoom})`,
+            }}
+          />
+        </NativeMediaContextMenu>
 
         {imageState === "loading" && !showPreview ? (
           <span className="pointer-events-none absolute inset-0 grid place-items-center">

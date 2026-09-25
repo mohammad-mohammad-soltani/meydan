@@ -4,16 +4,18 @@ import {
   ACCESS_EXPIRY_COOKIE,
   REFRESH_COOKIE,
   accessExpiry,
-  SESSION_COOKIE_MAX_AGE,
   sessionCookieOptions,
+  sessionCookieMaxAge,
 } from "@/lib/meydan-session";
 import { getMeydanApiBaseUrl } from "@/lib/meydan-api";
+import { isNaghshmanNativeClient } from "@/lib/native-client";
 
 const routes: Record<string, string> = {
   "otp-request": "/auth/otp/request",
   "otp-verify": "/auth/otp/verify",
   "register-user": "/auth/register/user",
   "register-square": "/auth/register/square",
+  "native-restore": "/auth/refresh",
   logout: "/auth/logout",
 };
 
@@ -43,6 +45,11 @@ export async function POST(request: NextRequest, context: RouteContext<"/api/aut
   }
 
   const headers: HeadersInit = { accept: "application/json" };
+  const isNativeClient = isNaghshmanNativeClient(request.headers.get("user-agent"));
+  if (action === "native-restore" && !isNativeClient) {
+    return jsonError("native_client_required", "این مسیر فقط برای اپلیکیشن نقش من است.", 403);
+  }
+  if (isNativeClient) headers["x-meydan-client"] = "naghshman-native";
   const access = request.cookies.get(ACCESS_COOKIE)?.value;
   if (access) headers.Authorization = `Bearer ${access}`;
   if (action !== "logout") headers["content-type"] = "application/json";
@@ -93,17 +100,17 @@ export async function POST(request: NextRequest, context: RouteContext<"/api/aut
   if (parsed.data?.access_token) {
     result.cookies.set(ACCESS_COOKIE, parsed.data.access_token, {
       ...sessionCookieOptions,
-      maxAge: SESSION_COOKIE_MAX_AGE,
+      maxAge: sessionCookieMaxAge(isNativeClient),
     });
     result.cookies.set(ACCESS_EXPIRY_COOKIE, accessExpiry(parsed.data.expires_in), {
       ...sessionCookieOptions,
-      maxAge: SESSION_COOKIE_MAX_AGE,
+      maxAge: sessionCookieMaxAge(isNativeClient),
     });
   }
   if (refresh) {
     result.cookies.set(REFRESH_COOKIE, refresh, {
       ...sessionCookieOptions,
-      maxAge: SESSION_COOKIE_MAX_AGE,
+      maxAge: sessionCookieMaxAge(isNativeClient),
     });
   }
   if (action === "logout" && response.ok) {

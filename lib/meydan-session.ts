@@ -8,6 +8,12 @@ export const ACCESS_EXPIRY_COOKIE = "meydan_access_expires_at";
  * it so a valid refresh token can renew the session on the next navigation.
  */
 export const SESSION_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
+/** Long-lived only for the installed Android WebView, never for browsers. */
+export const NATIVE_SESSION_COOKIE_MAX_AGE = 20 * 365 * 24 * 60 * 60;
+
+export function sessionCookieMaxAge(isNativeClient: boolean): number {
+  return isNativeClient ? NATIVE_SESSION_COOKIE_MAX_AGE : SESSION_COOKIE_MAX_AGE;
+}
 
 export const sessionCookieOptions = {
   httpOnly: true,

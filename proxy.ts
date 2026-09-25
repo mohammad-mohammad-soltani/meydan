@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { loginHref } from "@/lib/auth-navigation";
 import { getMeydanApiBaseUrl } from "@/lib/meydan-api";
+import { isNaghshmanNativeClient } from "@/lib/native-client";
 import {
   ACCESS_COOKIE,
   ACCESS_EXPIRY_COOKIE,
   REFRESH_COOKIE,
   accessExpiry,
-  SESSION_COOKIE_MAX_AGE,
   sessionCookieOptions,
+  sessionCookieMaxAge,
 } from "@/lib/meydan-session";
 import { isProtectedPath, returnToFrom } from "@/lib/protected-routes";
 
@@ -46,6 +47,20 @@ function requestWithAccessToken(request: NextRequest, accessToken: string): Head
   return headers;
 }
 
+async function hasValidNativeSession(accessToken: string | undefined): Promise<boolean> {
+  if (!accessToken) return false;
+
+  try {
+    const response = await fetch(`${getMeydanApiBaseUrl()}/me`, {
+      headers: { accept: "application/json", authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Route guard for the signed-in areas of the app.
  *
@@ -62,13 +77,18 @@ function requestWithAccessToken(request: NextRequest, accessToken: string): Head
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const isProtected = isProtectedPath(pathname);
+  const isNativeClient = isNaghshmanNativeClient(request.headers.get("user-agent"));
+  const isNativeLogin = pathname === "/auth" || pathname.startsWith("/auth/");
 
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   const accessExpiryAt = Number(request.cookies.get(ACCESS_EXPIRY_COOKIE)?.value || 0);
   const needsRefresh = !accessToken || !Number.isFinite(accessExpiryAt) || accessExpiryAt <= Date.now() / 1000 + 60;
 
-  if (!needsRefresh) return NextResponse.next();
+  if (!needsRefresh) {
+    if (!isNativeClient || isNativeLogin) return NextResponse.next();
+    if (await hasValidNativeSession(accessToken)) return NextResponse.next();
+  }
 
   const refreshed = await refreshSession(refreshToken);
   if (refreshed) {
@@ -78,20 +98,26 @@ export async function proxy(request: NextRequest) {
     });
     response.cookies.set(ACCESS_COOKIE, refreshed.accessToken, {
       ...sessionCookieOptions,
-      maxAge: SESSION_COOKIE_MAX_AGE,
+      maxAge: sessionCookieMaxAge(isNativeClient),
     });
     response.cookies.set(ACCESS_EXPIRY_COOKIE, accessExpiry(refreshed.expiresIn), {
       ...sessionCookieOptions,
-      maxAge: SESSION_COOKIE_MAX_AGE,
+      maxAge: sessionCookieMaxAge(isNativeClient),
     });
-    return response;
+    if (!isNativeClient || isNativeLogin || await hasValidNativeSession(refreshed.accessToken)) {
+      return response;
+    }
+  }
+
+  if (isNativeClient && !isNativeLogin && await hasValidNativeSession(accessToken)) {
+    return NextResponse.next();
   }
 
   // An older access cookie may still be valid if the expiry marker was absent
   // (for example, immediately after deploying this change). Let the backend
   // decide rather than treating the cookie migration as a logout. Public
   // pages must also remain available to guests when no session exists.
-  if (accessToken || !isProtected) return NextResponse.next();
+  if (!isNativeClient && (accessToken || !isProtected)) return NextResponse.next();
 
   const loginUrl = new URL(
     loginHref(returnToFrom(pathname, search)),

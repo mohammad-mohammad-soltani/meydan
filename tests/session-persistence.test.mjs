@@ -28,8 +28,10 @@ test("permission failures do not turn into a client logout", () => {
 
 test("API refresh writes a persistent access cookie and its expiry marker", () => {
   const route = source("app/api/meydan/[...path]/route.ts");
+  const session = source("lib/meydan-session.ts");
 
-  assert.match(route, /SESSION_COOKIE_MAX_AGE/);
+  assert.match(session, /NATIVE_SESSION_COOKIE_MAX_AGE/);
+  assert.match(route, /sessionCookieMaxAge\(isNativeClient\)/);
   assert.match(route, /ACCESS_EXPIRY_COOKIE/);
   assert.doesNotMatch(route, /maxAge: 15 \* 60/);
   assert.doesNotMatch(route, /result\.cookies\.delete\(ACCESS_COOKIE\)/);

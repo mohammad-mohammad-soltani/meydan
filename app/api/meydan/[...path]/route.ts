@@ -4,9 +4,10 @@ import {
   ACCESS_EXPIRY_COOKIE,
   REFRESH_COOKIE,
   accessExpiry,
-  SESSION_COOKIE_MAX_AGE,
   sessionCookieOptions,
+  sessionCookieMaxAge,
 } from "@/lib/meydan-session";
+import { isNaghshmanNativeClient } from "@/lib/native-client";
 
 const GUEST_COOKIE = "meydan_guest";
 const DEFAULT_API_BASE = "https://meydanbackend.naghshman.ir/wp-json/meydan/v1";
@@ -71,6 +72,7 @@ async function refresh(refreshToken: string) {
 
 async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[...path]">) {
   const { path } = await context.params;
+  const isNativeClient = isNaghshmanNativeClient(request.headers.get("user-agent"));
   // The request stream can be read only once. Preserve it so a refreshed
   // authenticated request can be retried without losing its payload.
   const body = ["GET", "HEAD"].includes(request.method)
@@ -114,16 +116,16 @@ async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[
   if (refreshed && accessToken) {
     result.cookies.set(ACCESS_COOKIE, accessToken, {
       ...sessionCookieOptions,
-      maxAge: SESSION_COOKIE_MAX_AGE,
+      maxAge: sessionCookieMaxAge(isNativeClient),
     });
     result.cookies.set(ACCESS_EXPIRY_COOKIE, accessExpiry(refreshedExpiresIn), {
       ...sessionCookieOptions,
-      maxAge: SESSION_COOKIE_MAX_AGE,
+      maxAge: sessionCookieMaxAge(isNativeClient),
     });
     if (refreshedRefreshToken) {
       result.cookies.set(REFRESH_COOKIE, refreshedRefreshToken, {
         ...sessionCookieOptions,
-        maxAge: SESSION_COOKIE_MAX_AGE,
+        maxAge: sessionCookieMaxAge(isNativeClient),
       });
     }
   }

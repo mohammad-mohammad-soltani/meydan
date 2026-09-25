@@ -12,7 +12,9 @@ test("proxy refreshes a stale session on public pages without redirecting guests
 
   assert.match(proxy, /const isProtected = isProtectedPath\(pathname\)/);
   assert.match(proxy, /if \(refreshed\)/);
-  assert.match(proxy, /if \(accessToken \|\| !isProtected\) return NextResponse\.next\(\)/);
+  assert.match(proxy, /const isNativeClient = isNaghshmanNativeClient/);
+  assert.match(proxy, /if \(!isNativeClient && \(accessToken \|\| !isProtected\)\) return NextResponse\.next\(\)/);
+  assert.match(proxy, /hasValidNativeSession/);
   assert.doesNotMatch(proxy, /if \(!isProtectedPath\(pathname\)\) return NextResponse\.next\(\)/);
 
   // Proxy must run for document requests such as / and /home, while avoiding
