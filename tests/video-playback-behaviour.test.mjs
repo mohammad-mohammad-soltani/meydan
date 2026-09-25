@@ -264,3 +264,12 @@ test("the picture-in-picture and fullscreen exemptions survive the handoff", () 
     /const video = videoRef\.current;\s*\n\s*if \(!video \|\| isDetachedFromPage\(\)\) continue;/,
   );
 });
+
+
+test("browser Back closes the immersive video feed before leaving the page", () => {
+  const provider = source("features/media/components/VideoFeedProvider.tsx");
+
+  assert.match(provider, /history\.pushState\(/);
+  assert.match(provider, /window\.addEventListener\("popstate"/);
+  assert.match(provider, /history\.back\(\)/);
+});
