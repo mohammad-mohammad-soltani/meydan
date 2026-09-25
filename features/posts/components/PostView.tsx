@@ -324,6 +324,7 @@ export function PostView({
             state.post.contentId ?? null
           }
           media={state.post.media}
+          body={state.post.body}
         />
 
         <PostCard
