@@ -62,7 +62,7 @@ test("the proxy redirects a visitor without a session to the login page", () => 
   // Public requests also pass through after an opportunistic refresh; stale
   // protected sessions renew before downstream server components read cookies.
   assert.match(proxy, /const isProtected = isProtectedPath\(pathname\)/);
-  assert.match(proxy, /if \(accessToken \|\| !isProtected\) return NextResponse\.next\(\)/);
+  assert.match(proxy, /if \(!isNativeClient && \(accessToken \|\| !isProtected\)\) return NextResponse\.next\(\)/);
   assert.match(proxy, /refreshSession\(refreshToken\)/);
 
   // The redirect must be built from the request origin, not a hardcoded host.
