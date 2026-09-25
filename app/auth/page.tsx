@@ -175,6 +175,7 @@ export default function AuthPage() {
   const [registrationToken, setRegistrationToken] = useState("");
   const [accountType, setAccountType] = useState<AccountType>("user");
   const [name, setName] = useState("");
+  const [isStudentOrSeminarian, setIsStudentOrSeminarian] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(false);
@@ -319,7 +320,7 @@ export default function AuthPage() {
       };
 
       if (accountType === "user") {
-        await api("register-user", { ...base, full_name: name });
+        await api("register-user", { ...base, full_name: name, is_student_or_seminarian: isStudentOrSeminarian });
       } else if (location) {
         await api("register-square", {
           ...base,
@@ -572,6 +573,14 @@ export default function AuthPage() {
                           required
                         />
                       </Field>
+
+                      {accountType === "user" ? (
+                        <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface p-3.5 text-sm font-black text-foreground transition-colors hover:bg-hover has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring">
+                          <input type="checkbox" checked={isStudentOrSeminarian} onChange={(event) => setIsStudentOrSeminarian(event.target.checked)} className="peer sr-only" />
+                          <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-input-border bg-input text-brand-foreground transition-colors peer-checked:border-brand peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-ring">{isStudentOrSeminarian ? <Check className="h-3.5 w-3.5" /> : null}</span>
+                          طلبه یا دانشجو هستم
+                        </label>
+                      ) : null}
 
                       {accountType === "square" ? (
                         <SquareLocationField
