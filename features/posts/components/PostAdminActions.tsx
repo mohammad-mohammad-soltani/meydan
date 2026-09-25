@@ -18,6 +18,7 @@ import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { useViewerRole } from "@/features/auth/hooks/useViewerRole";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import type { PostMedia } from "../types";
+import { suggestedContentTitle } from "../services/content-title";
 
 type AdminAction =
   | "markEditorial"
@@ -134,6 +135,24 @@ function ContentFormatPicker({
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+function ContentTitleInput({ value, disabled, onChange }: { value: string; disabled: boolean; onChange: (value: string) => void }) {
+  return (
+    <div className="mt-4 w-full text-right">
+      <label htmlFor="post-admin-content-title" className="mb-1.5 block text-[11px] font-bold text-foreground-subtle">
+        عنوان محتوا
+      </label>
+      <input
+        id="post-admin-content-title"
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        maxLength={120}
+        className="min-h-11 w-full rounded-control border border-border bg-background px-3 text-xs font-black text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+      />
     </div>
   );
 }
@@ -303,12 +322,14 @@ export function PostAdminActions({
   isContent,
   contentId,
   media,
+  body,
 }: {
   postId: string;
   editorial: boolean;
   isContent: boolean;
   contentId?: number | null;
   media: PostMedia[];
+  body: string;
 }) {
   const { isAuthenticated } = useAuthGate();
   const { isAdministrator, isLoading } = useViewerRole(isAuthenticated);
@@ -322,6 +343,7 @@ export function PostAdminActions({
   );
   const [currentContentType, setCurrentContentType] = useState<string | null>(null);
   const [primaryAttachmentId, setPrimaryAttachmentId] = useState<string | null>(null);
+  const [contentTitle, setContentTitle] = useState("");
   const [pendingAction, setPendingAction] = useState<AdminAction | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -386,6 +408,10 @@ export function PostAdminActions({
         );
       } else {
         const publish = action === "publishContent";
+        if (publish && !contentTitle.trim()) {
+          setError("عنوان محتوا را وارد کنید.");
+          return;
+        }
         if (publish && media.length > 0 && !primaryAttachmentId) {
           setError("فایل اصلی محتوا را انتخاب کنید.");
           return;
@@ -401,7 +427,7 @@ export function PostAdminActions({
             ? {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: JSON.stringify({ content_type: selectedContentType, ...(primaryAttachmentId ? { primary_attachment_id: Number(primaryAttachmentId) } : {}) }),
+                body: JSON.stringify({ title: contentTitle.trim(), content_type: selectedContentType, ...(primaryAttachmentId ? { primary_attachment_id: Number(primaryAttachmentId) } : {}) }),
               }
             : { method: "DELETE" },
         );
@@ -464,7 +490,10 @@ export function PostAdminActions({
           type="button"
           onClick={() => {
             setError("");
-            if (!isPublished) setPrimaryAttachmentId(null);
+            if (!isPublished) {
+              setPrimaryAttachmentId(null);
+              setContentTitle(suggestedContentTitle(body, Number(postId)));
+            }
             setPendingAction(isPublished ? "removeContent" : "publishContent");
           }}
           aria-haspopup="dialog"
@@ -502,6 +531,7 @@ export function PostAdminActions({
         >
           {pendingAction === "publishContent" ? (
             <>
+              <ContentTitleInput value={contentTitle} disabled={isSaving} onChange={setContentTitle} />
               <ContentFormatPicker
                 value={selectedContentType}
                 disabled={isSaving}
