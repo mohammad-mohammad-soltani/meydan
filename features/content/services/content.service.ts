@@ -17,6 +17,7 @@ import {
 } from "./content-producer";
 import { contentCover, type ContentCoverAttachment } from "./content-cover";
 import { contentVideo, type ContentVideoAttachment } from "./content-video";
+import { contentAudioSource } from "./content-audio";
 
 type ApiCreator = LegacyContentCreator & {
   id: number;
@@ -102,16 +103,7 @@ function mediaDescription(format?: string): string {
 }
 
 function audioOf(item: ApiContent): string | undefined {
-  const primary = item.attachments?.find(
-    (attachment) => attachment.id === item.primary_attachment_id,
-  );
-  const audioAttachment = primary
-    ? primary.type === "audio" ? primary : undefined
-    : item.attachments?.find((attachment) => attachment.type === "audio");
-
-  return audioAttachment
-    ? `/api/content/${item.id}/media/${audioAttachment.id}`
-    : undefined;
+  return contentAudioSource(item.primary_attachment_id, item.attachments);
 }
 
 function toItem(item: ApiContent): ContentItem {
