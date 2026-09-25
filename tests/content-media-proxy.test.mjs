@@ -10,6 +10,7 @@ const source = (relative) => readFileSync(path.join(root, relative), "utf8");
 test("content media proxy accepts only trusted legacy and object-storage hosts", () => {
   const route = source("app/api/content/[contentId]/media/[attachmentId]/route.ts");
 
+  assert.match(route, /DEFAULT_API_BASE = "https:\\/\\/meydanbackend\\.naghshman\\.ir\\/wp-json\\/meydan\\/v1"/);
   assert.match(route, /TRUSTED_MEDIA_DOMAIN_SUFFIXES = \["naghshman\.ir", "nabzjahan\.ir"\]/);
   assert.match(route, /ARVAN_MEDIA_HOST = "naghshman-media\.s3\.ir-thr-at1\.arvanstorage\.ir"/);
   assert.match(route, /MEYDAN_MEDIA_ALLOWED_ORIGINS/);
