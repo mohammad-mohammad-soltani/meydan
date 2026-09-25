@@ -22,6 +22,7 @@ export type AdminUser = {
   bale_channel: string;
   square_id: number | null;
   registered_at: string;
+  is_student_or_seminarian: boolean;
 };
 
 export type AdminUserRole = { value: string; label: string };
@@ -42,7 +43,7 @@ export function getUserRoles(init?: RequestInit) {
   return adminGetItem<AdminUserRole[]>("/admin/users/roles", init);
 }
 
-export type UserInput = Partial<Pick<AdminUser, "full_name" | "phone" | "email" | "role" | "headline" | "about" | "location_label" | "province_id" | "city_id" | "avatar_media_id" | "cover_media_id" | "eitaa_channel" | "bale_channel">> & {
+export type UserInput = Partial<Pick<AdminUser, "full_name" | "phone" | "email" | "role" | "headline" | "about" | "location_label" | "province_id" | "city_id" | "avatar_media_id" | "cover_media_id" | "eitaa_channel" | "bale_channel" | "is_student_or_seminarian">> & {
   square?: { name: string; address: string; province_id: number; city_id: number; latitude: number; longitude: number };
 };
 
