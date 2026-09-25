@@ -297,7 +297,7 @@ test("the shared envelope is read once and never trusted blindly", () => {
 
 
 test("student or seminarian status is sent, returned, and editable in the admin panel", () => {
-  const users = source(SERVICE.users);
+  const users = source("features/admin/services/users.service.ts");
   const form = source("features/admin/components/AdminUserForm.tsx");
   const list = source("features/admin/components/AdminUsersView.tsx");
 
