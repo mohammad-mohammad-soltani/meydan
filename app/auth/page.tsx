@@ -24,6 +24,7 @@ import { SquareLocationField } from "@/features/auth/components/SquareLocationFi
 import { useLocationSelection } from "@/features/auth/hooks/useLocationSelection";
 import { useProvinceCity } from "@/features/auth/hooks/useProvinceCity";
 import { AppLogo } from "@/components/shared/AppLogo";
+import { sanitizeReturnTo } from "@/lib/auth-navigation";
 
 type AuthStep = "phone" | "code" | "register";
 type AccountType = "user" | "square";
@@ -62,6 +63,15 @@ async function api<T>(path: string, body: unknown): Promise<T> {
     throw new Error((payload.error?.message || "انجام درخواست ممکن نشد.") + suffix);
   }
   return payload.data;
+}
+
+function completeLogin(): void {
+  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+  const target = sanitizeReturnTo(returnTo);
+  // The signed-in shell receives isAuthenticated from a server component. A
+  // client-only transition can reuse the guest shell that was rendered before
+  // the auth cookie existed; a document navigation reads the new cookie first.
+  window.location.replace(target);
 }
 
 function toLatinDigits(value: string): string {
@@ -276,7 +286,7 @@ export default function AuthPage() {
       }>("otp-verify", { challenge_id: challengeId, code });
 
       if (result.authenticated) {
-        router.replace("/profile");
+        completeLogin();
       } else if (result.registration_required && result.registration_token) {
         setRegistrationToken(result.registration_token);
         setStep("register");
@@ -344,7 +354,7 @@ export default function AuthPage() {
           longitude: location.longitude,
         });
       }
-      router.replace("/profile");
+      completeLogin();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "ثبت‌نام انجام نشد.");
     } finally {

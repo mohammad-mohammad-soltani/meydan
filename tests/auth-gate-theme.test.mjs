@@ -136,3 +136,19 @@ test("theme supports light, dark and pure-black modes", () => {
   assert.match(layout, /black/);
   assert.match(layout, /meydan-theme/);
 });
+
+
+test("successful login reloads the app shell with the new session cookie", () => {
+  const authPage = source("app/auth/page.tsx");
+  assert.match(
+    authPage,
+    /function completeLogin\([\s\S]*?window\.location\.replace\(target\);[\s\S]*?\}/,
+    "login must perform a document navigation after the auth cookie is set",
+  );
+  assert.match(authPage, /completeLogin\(\);/);
+  assert.doesNotMatch(
+    authPage,
+    /if \(result\.authenticated\)\s*\{\s*router\.replace\("\/profile"\);/,
+    "a cached client-side route transition leaves AuthGateProvider stale",
+  );
+});
