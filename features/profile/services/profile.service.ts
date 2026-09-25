@@ -587,10 +587,6 @@ function mapSquare(
 
   const squareStats: ProfileStat[] = [
     {
-      value: `${compactFa(square.stats?.active_nights ?? 0)} شب`,
-      label: "تجمع مستمر",
-    },
-    {
       value: compactFa(square.stats?.narratives ?? narratives.length),
       label: "روایت منتشرشده",
     },
@@ -1053,7 +1049,7 @@ export async function getPublicProfileDetails(
       return {
         ...summary,
         squareStats: summary.squareStats.map((stat, index) =>
-          index === 1 ? { ...stat, value: "…" } : stat,
+          index === 0 ? { ...stat, value: "…" } : stat,
         ),
         narrativesDeferred: true,
       };

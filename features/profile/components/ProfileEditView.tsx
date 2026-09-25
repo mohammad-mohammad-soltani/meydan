@@ -13,7 +13,6 @@ import { ImageCropDialog } from "./ImageCropDialog";
 import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import { LocationPickerMap } from "@/features/map/components/LocationPickerMap";
 import type { SelectedLocation } from "@/features/map/types";
-import { PersianDatePicker } from "@/components/shared/PersianDatePicker";
 import type { ProfileDetails } from "../types";
 
 export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
@@ -24,7 +23,6 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
   const [bio, setBio] = useState(profile.about);
   const [headline, setHeadline] = useState(profile.identity.subtitle);
   const [skills, setSkills] = useState(profile.skills.join("، "));
-  const [startDate, setStartDate] = useState(profile.startDate ?? "");
   const initialLocation = useMemo<SelectedLocation | null>(() => {
     if (
       !isSquare ||
@@ -132,7 +130,6 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
             subtitle: headline,
             profile_about: bio,
             profile_skills: skillList,
-            start_date: startDate,
             ...(avatarId !== undefined ? { avatar_media_id: avatarId } : {}),
             ...(coverId !== undefined ? { cover_media_id: coverId } : {}),
           }),
@@ -270,15 +267,6 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
             <textarea rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
           </Field>
           {isSquare ? (
-            <FieldGroup label="تاریخ شروع فعالیت میدان">
-              <PersianDatePicker
-                value={startDate}
-                onChange={setStartDate}
-                ariaLabel="انتخاب تاریخ شروع فعالیت میدان"
-              />
-            </FieldGroup>
-          ) : null}
-          {isSquare ? (
             <div>
               <span className="mb-1.5 block px-1 text-xs text-foreground-subtle">
                 موقعیت میدان
@@ -346,18 +334,5 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
         {children}
       </span>
     </label>
-  );
-}
-
-/**
- * Same look as `Field`, but for controls that are themselves interactive
- * (like the date picker): a `<label>` must not wrap other buttons.
- */
-function FieldGroup({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="text-xs text-foreground-subtle">
-      <span className="mb-1.5 block px-1">{label}</span>
-      <div className="block">{children}</div>
-    </div>
   );
 }

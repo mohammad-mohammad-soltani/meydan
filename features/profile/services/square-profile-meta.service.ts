@@ -4,7 +4,6 @@ import type { ProfileDetails, ProfileStat } from "../types";
 type ApiSquareMeta = {
   start_date?: string | null;
   stats?: {
-    active_nights?: number;
     narratives?: number;
   };
 };
@@ -28,10 +27,6 @@ export async function hydrateSquareProfileMeta(
     ]);
 
     const stats: ProfileStat[] = [
-      {
-        value: `${compactFa(square.stats?.active_nights ?? 0)} شب`,
-        label: "تجمع مستمر",
-      },
       {
         value: compactFa(square.stats?.narratives ?? 0),
         label: "روایت منتشرشده",

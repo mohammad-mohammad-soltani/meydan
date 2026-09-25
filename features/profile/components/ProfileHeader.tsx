@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { useState } from "react";
-import { ArrowRight, BadgeCheck, Check, LoaderCircle, MessageCircle, UserRoundPlus } from "lucide-react";
+import { ArrowRight, Check, LoaderCircle, MessageCircle, UserRoundPlus } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { OfficialBadge } from "@/components/shared/OfficialBadge";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
@@ -34,20 +34,15 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
   const { requireAuth } = useAuthGate();
   const [notice, setNotice] = useState("");
   const { identity, accountType, narratives } = profile;
-  const postLabel = profile.narrativeCount != null ? new Intl.NumberFormat("fa-IR").format(profile.narrativeCount) : accountType === "square" ? new Intl.NumberFormat("fa-IR").format(narratives.length) : profile.resumeStats[0]?.value || "۰";
+  const postLabel = new Intl.NumberFormat("fa-IR").format(
+    profile.narrativeCount ?? narratives.length,
+  );
   const canBeInvited = !canEdit && accountType !== "square" && Boolean(identity.verifiedSpeaker);
-  
-
-  const stats = accountType === "square" ? 
-      profile.squareStats
-    : profile.resumeStats;
-
-  const postCounts = stats[0].value;
   return (
     <>
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-divider bg-surface/95 px-3 backdrop-blur">
         <button type="button" aria-label="بازگشت" onClick={() => history.back()} className="grid h-11 w-11 place-items-center rounded-full text-icon hover:bg-hover"><ArrowRight className="h-5 w-5" /></button>
-        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} /><OfficialBadge official={identity.verifiedOfficial} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postCounts} روایت</p></div>
+        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} /><OfficialBadge official={identity.verifiedOfficial} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postLabel} روایت منتشر شده</p></div>
       </header>
 
       <div className="bg-surface">

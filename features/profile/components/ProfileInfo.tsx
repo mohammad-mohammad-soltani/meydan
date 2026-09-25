@@ -26,7 +26,7 @@ function Stats({
   return (
     <div
       dir="rtl"
-      className="mt-2 mb-3 grid grid-cols-3  border-divider"
+      className={`mt-2 mb-3 grid border-divider ${items.length >= 3 ? "grid-cols-3" : "grid-cols-2"}`}
     >
       {items.slice(0, 3).map((item, index) => (
         <div

@@ -65,7 +65,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
             }))
           : current.replies,
         squareStats: countResult.status === "fulfilled" && countResult.value
-          ? [...current.squareStats.slice(0, 2), {
+          ? [...current.squareStats.slice(0, 1), {
               value: `${compactFa(countResult.value.count)} روایت`,
               label: "بازتاب رسانه‌ای",
               tone: "success" as const,
@@ -265,7 +265,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         if (!active || typeof square.stats?.narratives !== "number") return;
         setDisplayProfile((current) => ({
           ...current,
-          squareStats: current.squareStats.map((stat, index) => index === 1
+          squareStats: current.squareStats.map((stat, index) => index === 0
             ? { ...stat, value: compactFa(square.stats!.narratives!) }
             : stat),
         }));
