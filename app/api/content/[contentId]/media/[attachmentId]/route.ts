@@ -6,6 +6,8 @@ type ContentResponse = { data?: { attachments?: Attachment[] } };
 
 const DEFAULT_API_BASE = "https://meydan-api.nabzjahan.ir/wp-json/meydan/v1";
 const GUEST_COOKIE = "meydan_guest";
+const ARVAN_MEDIA_HOST = "naghshman-media.s3.ir-thr-at1.arvanstorage.ir";
+const TRUSTED_MEDIA_DOMAIN_SUFFIXES = ["naghshman.ir", "nabzjahan.ir"];
 
 function apiBase() {
   return (
@@ -13,6 +15,66 @@ function apiBase() {
     process.env.NEXT_PUBLIC_MEYDAN_API_BASE_URL ||
     DEFAULT_API_BASE
   ).replace(/\/$/, "");
+}
+
+function configuredMediaOrigins(): Set<string> {
+  const origins = new Set<string>();
+
+  for (const value of (process.env.MEYDAN_MEDIA_ALLOWED_ORIGINS || "").split(",")) {
+    try {
+      const url = new URL(value.trim());
+      if (url.protocol === "https:" || url.protocol === "http:") origins.add(url.origin);
+    } catch {
+      // Ignore malformed optional configuration instead of trusting it.
+    }
+  }
+
+  return origins;
+}
+
+function isTrustedMediaUrl(mediaUrl: URL, apiOrigin: string): boolean {
+  if (mediaUrl.protocol !== "https:" && mediaUrl.protocol !== "http:") return false;
+  if (mediaUrl.origin === apiOrigin || configuredMediaOrigins().has(mediaUrl.origin)) return true;
+  if (mediaUrl.hostname === ARVAN_MEDIA_HOST) return true;
+
+  return TRUSTED_MEDIA_DOMAIN_SUFFIXES.some(
+    (domain) => mediaUrl.hostname === domain || mediaUrl.hostname.endsWith(`.${domain}`),
+  );
+}
+
+async function fetchTrustedMedia(url: URL, headers: Headers, apiOrigin: string): Promise<Response> {
+  let current = url;
+
+  // Storage/CDN URLs may redirect to a signed object URL. Follow only redirects
+  // that remain on a configured Meydan media host; never turn this endpoint into
+  // an open proxy.
+  for (let redirects = 0; redirects < 4; redirects += 1) {
+    const response = await fetch(current, {
+      headers,
+      cache: "no-store",
+      redirect: "manual",
+    });
+
+    if (response.status < 300 || response.status >= 400) return response;
+
+    const location = response.headers.get("location");
+    if (!location) return response;
+
+    let next: URL;
+    try {
+      next = new URL(location, current);
+    } catch {
+      return new Response("Media redirect URL is invalid.", { status: 502 });
+    }
+
+    if (!isTrustedMediaUrl(next, apiOrigin)) {
+      return new Response("Media redirect host is not allowed.", { status: 502 });
+    }
+
+    current = next;
+  }
+
+  return new Response("Too many media redirects.", { status: 508 });
 }
 
 function cookieFromSetCookie(response: Response, name: string): string | undefined {
@@ -72,9 +134,11 @@ export async function GET(
     return new Response("Media attachment URL is invalid.", { status: 502 });
   }
 
-  // Only proxy media hosted by the configured Meydan backend. This keeps the
-  // route from becoming an open proxy if malformed content data is returned.
-  if (mediaUrl.origin !== apiOrigin) {
+  // The attachment is verified against its content record first. Its origin is
+  // then limited to our API, known deployment domains, the object-storage host,
+  // or explicit deployment configuration. This covers legacy narrative uploads
+  // that were published under a different Meydan hostname.
+  if (!isTrustedMediaUrl(mediaUrl, apiOrigin)) {
     return new Response("Media host is not allowed.", { status: 502 });
   }
 
@@ -96,11 +160,7 @@ export async function GET(
   const guest = existingGuest || cookieFromSetCookie(detail, GUEST_COOKIE);
   if (guest) upstreamHeaders.set("cookie", `${GUEST_COOKIE}=${guest}`);
 
-  const upstream = await fetch(mediaUrl, {
-    headers: upstreamHeaders,
-    cache: "no-store",
-    redirect: "follow",
-  });
+  const upstream = await fetchTrustedMedia(mediaUrl, upstreamHeaders, apiOrigin);
 
   return new Response(upstream.body, {
     status: upstream.status,
