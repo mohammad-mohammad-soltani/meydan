@@ -40,12 +40,24 @@ async function api<T>(path: string, body: unknown): Promise<T> {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
-  const payload = (await response.json()) as {
+  const raw = await response.text();
+  let payload: {
     data?: T;
-    error?: { message?: string };
-  };
+    error?: { message?: string; code?: string };
+    meta?: { request_id?: string };
+  } | null = null;
+  try {
+    payload = raw ? JSON.parse(raw) as typeof payload : null;
+  } catch {
+    payload = null;
+  }
+  if (!payload) {
+    throw new Error("سرور ورود پاسخ قابل‌خواندن برنگرداند. دوباره تلاش کنید.");
+  }
   if (!response.ok || !payload.data) {
-    throw new Error(payload.error?.message || "انجام درخواست ممکن نشد.");
+    const requestId = payload.meta?.request_id;
+    const suffix = requestId ? " (کد پیگیری: " + requestId + ")" : "";
+    throw new Error((payload.error?.message || "انجام درخواست ممکن نشد.") + suffix);
   }
   return payload.data;
 }
@@ -238,10 +250,10 @@ export default function AuthPage() {
     setPending(true);
     resetMessages();
     try {
-      const result = await api<{ challenge_id: string; dev_code?: string }>("otp-request", { phone });
+      const result = await api<{ challenge_id: string; dev_code?: string; delivery_status?: "sent" | "uncertain" }>("otp-request", { phone });
       setChallengeId(result.challenge_id);
       setCode(result.dev_code ?? "");
-      setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : "");
+      setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : result.delivery_status === "uncertain" ? "ارسال کد در حال بررسی است؛ اگر پیامک را دریافت کرده‌اید همان کد را وارد کنید، در غیر این صورت کمی صبر کنید و دوباره ارسال کنید." : "");
       setStep("code");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "خطا در ورود");
@@ -280,10 +292,10 @@ export default function AuthPage() {
     setPending(true);
     resetMessages();
     try {
-      const result = await api<{ challenge_id: string; dev_code?: string }>("otp-request", { phone });
+      const result = await api<{ challenge_id: string; dev_code?: string; delivery_status?: "sent" | "uncertain" }>("otp-request", { phone });
       setChallengeId(result.challenge_id);
       setCode(result.dev_code ?? "");
-      setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : "کد تأیید تازه ارسال شد.");
+      setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : result.delivery_status === "uncertain" ? "وضعیت ارسال کد نامشخص است؛ اگر پیامک را دریافت کرده‌اید همان کد را وارد کنید." : "کد تأیید تازه ارسال شد.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "ارسال دوباره کد انجام نشد.");
     } finally {
@@ -484,7 +496,7 @@ export default function AuthPage() {
                         <OtpInputs value={code} onChange={(nextCode) => setCode(nextCode.slice(0, 6))} />
                       </Field>
 
-                      <button disabled={!isHydrated || pending || code.length < 4} className={primaryButtonClass}>
+                      <button disabled={!isHydrated || pending || code.length < 6} className={primaryButtonClass}>
                         {pending ? <LoaderCircle aria-hidden="true" className="h-4.5 w-4.5 animate-spin" /> : <Check aria-hidden="true" className="h-4.5 w-4.5" />}
                         {pending ? "در حال بررسی…" : "تأیید و ورود"}
                       </button>
