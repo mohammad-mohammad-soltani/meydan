@@ -91,3 +91,11 @@ test("reaching the end of the list loads the next timeline page", () => {
   assert.match(view, /بارگذاری بیشتر/);
   assert.match(view, /تلاش دوباره/);
 });
+
+test("feed keeps its full content height so timeline tabs can remain sticky", () => {
+  const view = source("features/feed/components/FeedView.tsx");
+
+  // AppShell is a column flex container. The feed must not shrink to the
+  // viewport height, otherwise sticky tabs stop at the short flex item.
+  assert.match(view, /id="view-feed" className="relative min-h-full shrink-0 bg-background text-foreground"/);
+});

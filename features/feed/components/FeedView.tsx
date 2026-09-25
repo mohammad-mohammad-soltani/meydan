@@ -90,7 +90,7 @@ export function FeedView({
   );
 
   return (
-    <div id="view-feed" className="relative min-h-full bg-background text-foreground">
+    <div id="view-feed" className="relative min-h-full shrink-0 bg-background text-foreground">
       <FeedTabs activeTab={feed.activeTab} onChange={feed.setActiveTab} />
 
       {feed.activeTab === "for-you" ? (
