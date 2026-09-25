@@ -314,7 +314,7 @@ test("portrait video back button sits beside the author avatar", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
   const css = source("app/globals.css");
 
-  assert.match(slide, /\{!portrait && \([\s\S]*?className=\{chrome\("viewer-topbar"\)\}/);
+  assert.match(slide, /className=\{chrome\("viewer-topbar"\)\}[\s\S]*?ref=\{!portrait \? closeRef : undefined\}/);
   assert.match(
     slide,
     /\{portrait && \([\s\S]*?viewer-portrait-author-row[\s\S]*?viewer-portrait-back[\s\S]*?\{author\}/,
