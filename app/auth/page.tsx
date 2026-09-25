@@ -34,6 +34,12 @@ type FieldProps = {
   children: ReactNode;
 };
 
+type AuthApiPayload<T> = {
+  data?: T;
+  error?: { message?: string; code?: string };
+  meta?: { request_id?: string };
+};
+
 async function api<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`/api/auth/${path}`, {
     method: "POST",
@@ -41,13 +47,9 @@ async function api<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   const raw = await response.text();
-  let payload: {
-    data?: T;
-    error?: { message?: string; code?: string };
-    meta?: { request_id?: string };
-  } | null = null;
+  let payload: AuthApiPayload<T> | null = null;
   try {
-    payload = raw ? JSON.parse(raw) as typeof payload : null;
+    payload = raw ? JSON.parse(raw) as AuthApiPayload<T> : null;
   } catch {
     payload = null;
   }
