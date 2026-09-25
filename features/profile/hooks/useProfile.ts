@@ -265,6 +265,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         if (!active || typeof square.stats?.narratives !== "number") return;
         setDisplayProfile((current) => ({
           ...current,
+          narrativeCount: square.stats!.narratives!,
           squareStats: current.squareStats.map((stat, index) => index === 0
             ? { ...stat, value: compactFa(square.stats!.narratives!) }
             : stat),

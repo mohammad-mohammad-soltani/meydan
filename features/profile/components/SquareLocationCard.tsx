@@ -81,18 +81,20 @@ export function SquareLocationCard({ profile }: { profile: ProfileDetails }) {
         موقعیت میدان
       </h2>
 
-      <p className="mt-2 text-[13px] leading-7 text-foreground-secondary">
-        {locationText}
-      </p>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="min-w-0 text-[13px] leading-7 text-foreground-secondary">
+          {locationText}
+        </p>
 
-      <button
-        type="button"
-        onClick={openDirections}
-        className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-brand px-4 text-xs font-black text-brand-foreground outline-none transition-[background-color,transform] hover:bg-brand-hover active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <Navigation aria-hidden="true" className="h-4 w-4" />
-        مسیریابی
-      </button>
+        <button
+          type="button"
+          onClick={openDirections}
+          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-4 text-xs font-black text-brand-foreground outline-none transition-[background-color,transform] hover:bg-brand-hover active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Navigation aria-hidden="true" className="h-4 w-4" />
+          مسیریابی
+        </button>
+      </div>
     </section>
   );
 }

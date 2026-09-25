@@ -31,3 +31,21 @@ test("square profile editing no longer exposes or submits a start date", () => {
   assert.doesNotMatch(editor, /start_date:/);
   assert.doesNotMatch(editor, /PersianDatePicker/);
 });
+
+test("deferred square totals update the narrative count used by the header", () => {
+  const profileHook = source("features/profile/hooks/useProfile.ts");
+
+  assert.match(
+    profileHook,
+    /narrativeCount:\s*square\.stats!\.narratives!/,
+  );
+});
+
+test("the directions button shares a row with the address and stays on the left", () => {
+  const locationCard = source(
+    "features/profile/components/SquareLocationCard.tsx",
+  );
+
+  assert.match(locationCard, /flex items-center justify-between gap-3/);
+  assert.match(locationCard, /shrink-0[^\n]*bg-brand/);
+});
