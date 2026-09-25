@@ -587,11 +587,7 @@ function mapSquare(
 
   const squareStats: ProfileStat[] = [
     {
-      value: `${compactFa(square.stats?.active_nights ?? 0)} شب`,
-      label: "تجمع مستمر",
-    },
-    {
-      value: compactFa(square.stats?.narratives ?? narratives.length),
+      value: square.stats?.narratives == null ? "…" : compactFa(square.stats.narratives),
       label: "روایت منتشرشده",
     },
     ...(mediaReflectionCount === undefined ? [] : [{
@@ -633,6 +629,7 @@ function mapSquare(
 
   return {
     actorId: square.id,
+    narrativeCount: square.stats?.narratives ?? null,
 
     startDate: square.start_date ?? undefined,
 
@@ -1023,7 +1020,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
       narrativePage.data,
       replies,
       mediaReflectionCount,
-    ), nextNarrativeCursor: narrativePage.nextCursor, narrativeCount: narrativePage.count };
+    ), nextNarrativeCursor: narrativePage.nextCursor, narrativeCount: me.square.stats?.narratives ?? null };
   } catch {
     return null;
   }
@@ -1052,9 +1049,6 @@ export async function getPublicProfileDetails(
       const summary = mapSquare(square);
       return {
         ...summary,
-        squareStats: summary.squareStats.map((stat, index) =>
-          index === 1 ? { ...stat, value: "…" } : stat,
-        ),
         narrativesDeferred: true,
       };
     }
