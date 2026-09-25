@@ -9,6 +9,10 @@ import {
 } from "@/lib/meydan-session";
 import { getMeydanApiBaseUrl } from "@/lib/meydan-api";
 import { isNaghshmanNativeClient } from "@/lib/native-client";
+import {
+  parseAuthUpstreamPayload,
+  type AuthUpstreamPayload,
+} from "@/lib/auth-upstream";
 
 const routes: Record<string, string> = {
   "otp-request": "/auth/otp/request",
@@ -17,16 +21,6 @@ const routes: Record<string, string> = {
   "register-square": "/auth/register/square",
   "native-restore": "/auth/refresh",
   logout: "/auth/logout",
-};
-
-type AuthUpstreamPayload = {
-  data?: {
-    access_token?: string;
-    expires_in?: number;
-  };
-  error?: {
-    message?: string;
-  };
 };
 
 function refreshFromSetCookie(value: string | null): string | undefined {
@@ -72,12 +66,7 @@ export async function POST(request: NextRequest, context: RouteContext<"/api/aut
   }
 
   const raw = await response.text();
-  let parsed: AuthUpstreamPayload | null = null;
-  try {
-    parsed = raw ? (JSON.parse(raw) as AuthUpstreamPayload) : null;
-  } catch {
-    parsed = null;
-  }
+  const parsed: AuthUpstreamPayload | null = parseAuthUpstreamPayload(raw);
 
   if (!parsed) {
     console.error("[auth-proxy] upstream returned non-JSON response", {
