@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { LoaderCircle, Save } from "lucide-react";
+import { Check, LoaderCircle, Save } from "lucide-react";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminField, fieldClass } from "./AdminField";
 import { MediaPickerField } from "./MediaPickerField";
@@ -29,6 +29,7 @@ export function AdminUserForm({ user, roles, created = false, initialRole }: { u
     city_id: user?.city_id ?? null, avatar_media_id: user?.avatar_media_id ?? null,
     cover_media_id: user?.cover_media_id ?? null,
     eitaa_channel: user?.eitaa_channel ?? "", bale_channel: user?.bale_channel ?? "",
+    is_student_or_seminarian: user?.is_student_or_seminarian ?? false,
   });
   const [square, setSquare] = useState<SquareFields>(emptySquare);
   const [provinces, setProvinces] = useState<GeoOption[]>([]);
@@ -90,6 +91,11 @@ export function AdminUserForm({ user, roles, created = false, initialRole }: { u
           {geoSelect("user", "province_id", "استان", provinces, form.province_id ?? null, (id) => { setCities([]); setForm((f) => ({ ...f, province_id: id || null, city_id: null })); })}
           {geoSelect("user", "city_id", "شهر", cities, form.city_id ?? null, (id) => set("city_id", id || null))}
         </div>
+        <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-black text-foreground transition-colors hover:bg-hover has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring">
+          <input type="checkbox" checked={form.is_student_or_seminarian ?? false} onChange={(event) => set("is_student_or_seminarian", event.target.checked)} className="peer sr-only" />
+          <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-input-border bg-input text-brand-foreground transition-colors peer-checked:border-brand peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-ring">{form.is_student_or_seminarian ? <Check className="h-3.5 w-3.5" /> : null}</span>
+          طلبه یا دانشجو هستم
+        </label>
         <AdminField label="معرفی" htmlFor="user-about" error={fieldErrors.about} className="mt-4"><textarea id="user-about" rows={4} className={fieldClass} value={form.about ?? ""} onChange={(event) => set("about", event.target.value)} /></AdminField>
       </section>
       <section className="grid gap-4 rounded-2xl border border-border bg-surface p-5 shadow-card md:grid-cols-2">

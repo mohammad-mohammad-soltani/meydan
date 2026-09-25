@@ -294,3 +294,16 @@ test("the shared envelope is read once and never trusted blindly", () => {
     assert.match(lib, new RegExp(`\\b${reason}:`), `${reason} needs a Persian message`);
   }
 });
+
+
+test("student or seminarian status is sent, returned, and editable in the admin panel", () => {
+  const users = source("features/admin/services/users.service.ts");
+  const form = source("features/admin/components/AdminUserForm.tsx");
+  const list = source("features/admin/components/AdminUsersView.tsx");
+
+  assert.match(users, /is_student_or_seminarian: boolean/);
+  assert.match(users, /is_student_or_seminarian/);
+  assert.match(form, /is_student_or_seminarian/);
+  assert.match(form, /طلبه یا دانشجو هستم/);
+  assert.match(list, /طلبه\/دانشجو/);
+});
