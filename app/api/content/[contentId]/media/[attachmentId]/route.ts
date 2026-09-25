@@ -4,7 +4,7 @@ import { ACCESS_COOKIE } from "@/lib/meydan-session";
 type Attachment = { id?: number; url?: string; type?: string };
 type ContentResponse = { data?: { attachments?: Attachment[] } };
 
-const DEFAULT_API_BASE = "https://meydan-api.nabzjahan.ir/wp-json/meydan/v1";
+const DEFAULT_API_BASE = "https://meydanbackend.naghshman.ir/wp-json/meydan/v1";
 const GUEST_COOKIE = "meydan_guest";
 const ARVAN_MEDIA_HOST = "naghshman-media.s3.ir-thr-at1.arvanstorage.ir";
 const TRUSTED_MEDIA_DOMAIN_SUFFIXES = ["naghshman.ir", "nabzjahan.ir"];
