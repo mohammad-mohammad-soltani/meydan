@@ -3,7 +3,6 @@ import { isNaghshmanNativeWindow } from './native-bridge';
 type NativeAuthHost = {
   NaghshmanNative?: { platform?: unknown; version?: unknown };
   ReactNativeWebView?: { postMessage?: (payload: string) => void };
-  __naghshmanNativeAuthenticated?: boolean;
   addEventListener: (type: string, listener: EventListener) => void;
   removeEventListener: (type: string, listener: EventListener) => void;
 };
@@ -24,7 +23,6 @@ export function persistNativeLogin(
   if (!refreshToken || !VALID_REFRESH_TOKEN.test(refreshToken)) {
     return Promise.reject(new Error('توکن نشست اپ از سرور دریافت نشد. دوباره تلاش کنید.'));
   }
-  if (host.__naghshmanNativeAuthenticated) return Promise.resolve();
 
   return new Promise<void>((resolve, reject) => {
     let settled = false;
