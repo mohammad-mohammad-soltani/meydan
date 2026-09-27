@@ -19,6 +19,22 @@ test("Meydan owns the root worker and receives push while the page is closed", (
   assert.match(worker, /clients\.openWindow/);
 });
 
+test("pushes are collected in one نقش من notification box", () => {
+  const worker = source("public/meydan-sw.js");
+  assert.match(worker, /function notificationContent\(payload\)/);
+  assert.match(worker, /showNotification\("نقش من"/);
+  assert.match(worker, /const SUMMARY_TAG = "role-notifications"/);
+  assert.match(worker, /registration\.getNotifications\(\{ tag: SUMMARY_TAG \}\)/);
+  assert.match(worker, /MAX_SUMMARY_ENTRIES = 3/);
+  assert.match(worker, /entries\.map\(\(item\) => item\.content\)\.join\("\\n\\n"\)/);
+  assert.match(worker, /\[type, message\]\.filter\(Boolean\)\.join\("\\n"\)/);
+
+  const transport = source("../meydan-backend/wp-content/plugins/meydan-core/src/Notifications/NativeWebPush.php");
+  assert.match(transport, /'type' => mb_substr\(sanitize_text_field\(\$title\), 0, 160\)/);
+  assert.match(transport, /'message' => mb_substr\(sanitize_textarea_field\(\$body\), 0, 700\)/);
+  assert.match(transport, /'title' => 'نقش من'/);
+});
+
 test("browser enrollment uses PushManager and the WordPress push API", () => {
   const client = source("lib/web-push.ts");
   assert.match(client, /pushManager\.getSubscription\(\)/);

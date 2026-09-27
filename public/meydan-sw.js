@@ -2,6 +2,10 @@
 // The cache/offline worker and Web Push worker share one root registration.
 importScripts("/sw.js");
 
+const SUMMARY_TAG = "role-notifications";
+const MAX_SUMMARY_ENTRIES = 3;
+let pushQueue = Promise.resolve();
+
 function pushPayload(event) {
   if (!event.data) return {};
   try {
@@ -24,27 +28,60 @@ function safeTarget(value) {
   }
 }
 
-self.addEventListener("push", (event) => {
-  const payload = pushPayload(event);
-  const title = typeof payload.title === "string" && payload.title ? payload.title : "میدان";
-  const body = typeof payload.body === "string" ? payload.body : "اعلان جدیدی دارید.";
+// The transport supplies a human-readable `type` and `message` for every
+// notification. Older queued payloads only have title/body, so keep them
+// readable during the rollout as well.
+function notificationContent(payload) {
+  const type = typeof payload.type === "string" && payload.type
+    ? payload.type
+    : typeof payload.title === "string" && payload.title
+      ? payload.title
+      : "اعلان جدید";
+  const message = typeof payload.message === "string"
+    ? payload.message
+    : typeof payload.body === "string"
+      ? payload.body
+      : "";
+  return [type, message].filter(Boolean).join("\n");
+}
+
+function summaryEntry(payload) {
+  return {
+    content: notificationContent(payload),
+    url: safeTarget(payload.url),
+  };
+}
+
+async function recentEntries() {
+  const notifications = await self.registration.getNotifications({ tag: SUMMARY_TAG });
+  const entries = notifications[0]?.data?.entries;
+  return Array.isArray(entries)
+    ? entries.filter((entry) => entry && typeof entry.content === "string" && entry.content).slice(0, MAX_SUMMARY_ENTRIES)
+    : [];
+}
+
+async function showPushSummary(payload) {
+  const entry = summaryEntry(payload);
+  const entries = [entry, ...(await recentEntries())].slice(0, MAX_SUMMARY_ENTRIES);
   const icon = typeof payload.icon === "string" && payload.icon ? payload.icon : "/icon.svg";
-  const tag = typeof payload.tag === "string" && payload.tag ? payload.tag : undefined;
-  const url = safeTarget(payload.url);
   const data = payload.data && typeof payload.data === "object" ? payload.data : {};
 
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon,
-      badge: "/icon.svg",
-      tag,
-      renotify: Boolean(tag),
-      dir: "rtl",
-      lang: "fa",
-      data: { ...data, url },
-    }),
-  );
+  await self.registration.showNotification("نقش من", {
+    body: entries.map((item) => item.content).join("\n\n"),
+    icon,
+    badge: "/icon.svg",
+    tag: SUMMARY_TAG,
+    renotify: true,
+    dir: "rtl",
+    lang: "fa",
+    data: { ...data, url: entry.url, entries },
+  });
+}
+
+self.addEventListener("push", (event) => {
+  const payload = pushPayload(event);
+  pushQueue = pushQueue.then(() => showPushSummary(payload), () => showPushSummary(payload));
+  event.waitUntil(pushQueue);
 });
 
 self.addEventListener("notificationclick", (event) => {
