@@ -16,7 +16,8 @@ type NativeWindow = {
 export function isNaghshmanNativeWindow(value: unknown): value is NativeWindow {
   if (!value || typeof value !== 'object') return false;
   const windowLike = value as NativeWindow;
-  return windowLike.NaghshmanNative?.platform === 'android'
+  return (windowLike.NaghshmanNative?.platform === 'android'
+      || windowLike.NaghshmanNative?.platform === 'ios')
     && windowLike.NaghshmanNative.version === NATIVE_BRIDGE_VERSION
     && typeof windowLike.ReactNativeWebView?.postMessage === 'function';
 }

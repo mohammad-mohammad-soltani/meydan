@@ -17,6 +17,7 @@ on:
       - "tests/notification-icons.test.mjs"
       - "tests/podcasts-search.test.mjs"
       - "tests/auth-gate-theme.test.mjs"
+      - "tests/native-auth-login.test.mjs"
       - "tests/protected-routes.test.mjs"
       - "tests/video-playback-behaviour.test.mjs"
       - "tests/video-autoplay-chain.test.mjs"
@@ -52,6 +53,7 @@ on:
       - "tests/notification-icons.test.mjs"
       - "tests/podcasts-search.test.mjs"
       - "tests/auth-gate-theme.test.mjs"
+      - "tests/native-auth-login.test.mjs"
       - "tests/protected-routes.test.mjs"
       - "tests/video-playback-behaviour.test.mjs"
       - "tests/video-autoplay-chain.test.mjs"
@@ -91,6 +93,8 @@ jobs:
         run: node --experimental-strip-types --test tests/podcasts-search.test.mjs
       - name: Run auth gate and theme tests
         run: node --experimental-strip-types --test tests/auth-gate-theme.test.mjs
+      - name: Run native login regression tests
+        run: node --test tests/native-auth-login.test.mjs
       - name: Run protected route tests
         run: node --experimental-strip-types --test tests/protected-routes.test.mjs
       - name: Run video playback behavior tests
