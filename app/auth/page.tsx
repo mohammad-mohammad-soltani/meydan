@@ -25,6 +25,7 @@ import { useLocationSelection } from "@/features/auth/hooks/useLocationSelection
 import { useProvinceCity } from "@/features/auth/hooks/useProvinceCity";
 import { AppLogo } from "@/components/shared/AppLogo";
 import { sanitizeReturnTo } from "@/lib/auth-navigation";
+import { persistNativeLogin } from "@/lib/native-auth-session";
 
 type AuthStep = "phone" | "code" | "register";
 type AccountType = "user" | "square";
@@ -65,9 +66,12 @@ async function api<T>(path: string, body: unknown): Promise<T> {
   return payload.data;
 }
 
-function completeLogin(): void {
+async function completeLogin(refreshToken?: string): Promise<void> {
   const returnTo = new URLSearchParams(window.location.search).get("returnTo");
   const target = sanitizeReturnTo(returnTo);
+  // On native, wait for SecureStore to acknowledge the credential before
+  // the native guest-navigation guard can permit leaving /auth.
+  await persistNativeLogin(window, refreshToken);
   // The signed-in shell receives isAuthenticated from a server component. A
   // client-only transition can reuse the guest shell that was rendered before
   // the auth cookie existed; a document navigation reads the new cookie first.
@@ -283,10 +287,11 @@ export default function AuthPage() {
         authenticated?: boolean;
         registration_required?: boolean;
         registration_token?: string;
+        refresh_token?: string;
       }>("otp-verify", { challenge_id: challengeId, code });
 
       if (result.authenticated) {
-        completeLogin();
+        await completeLogin(result.refresh_token);
       } else if (result.registration_required && result.registration_token) {
         setRegistrationToken(result.registration_token);
         setStep("register");
@@ -343,18 +348,21 @@ export default function AuthPage() {
         city_id: cityId,
       };
 
+      let refreshToken: string | undefined;
       if (accountType === "user") {
-        await api("register-user", { ...base, full_name: name, is_student_or_seminarian: isStudentOrSeminarian });
+        const result = await api<{ refresh_token?: string }>("register-user", { ...base, full_name: name, is_student_or_seminarian: isStudentOrSeminarian });
+        refreshToken = result.refresh_token;
       } else if (location) {
-        await api("register-square", {
+        const result = await api<{ refresh_token?: string }>("register-square", {
           ...base,
           square_name: name,
           address: location.address,
           latitude: location.latitude,
           longitude: location.longitude,
         });
+        refreshToken = result.refresh_token;
       }
-      completeLogin();
+      await completeLogin(refreshToken);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "ثبت‌نام انجام نشد.");
     } finally {
