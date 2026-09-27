@@ -30,7 +30,11 @@ import { SidebarUserCard } from "./SidebarUserCard";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { usePathname } from "next/navigation";
 
-type AppShellProps = { children: ReactNode; isAuthenticated?: boolean };
+type AppShellProps = {
+  children: ReactNode;
+  isAuthenticated?: boolean;
+  isNativeClient?: boolean;
+};
 
 const desktopLinkClass =
   "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground";
@@ -45,7 +49,11 @@ function desktopLink(pathname: string, href: string) {
   };
 }
 
-export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
+export function AppShell({
+  children,
+  isAuthenticated = false,
+  isNativeClient = false,
+}: AppShellProps) {
   const pathname = usePathname();
   const mainScrollRef = useRef<HTMLElement>(null);
   const isPostPage = pathname.startsWith("/posts/");
@@ -167,7 +175,7 @@ export function AppShell({ children, isAuthenticated = false }: AppShellProps) {
               </SilentBoundary>
             </>
           ) : null}
-          {!isPostPage && !isAdminRoute ? (
+          {!isPostPage && !isAdminRoute && (!isNativeClient || isAuthenticated) ? (
             <BottomNavigation isAuthenticated={isAuthenticated} />
           ) : null}
         </div>

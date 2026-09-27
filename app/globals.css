@@ -321,7 +321,7 @@ html.black .admin-shell {
      audio player docks above the composer instead of behind it. */
   --comment-composer-height: 0px;
 
-  --background: white;
+  --background: #ffffff;
   --foreground: #171717;
   --foreground-secondary: #404040;
   --foreground-subtle: #737373;
