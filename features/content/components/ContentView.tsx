@@ -18,13 +18,13 @@ const actions: Array<{ label: string; href?: string; icon: typeof Mic; color: st
 export function SpeechRows({ items }: { items: ContentItem[] }) {
   if (!items.length) return <p className="rounded-2xl border border-dashed border-border p-5 text-center text-xs text-muted-foreground">هنوز سخنرانی‌ای منتشر نشده است.</p>;
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface" dir="rtl">
+    <div className="overflow-hidden flex flex-col gap-2   bg-surface" dir="rtl">
       {items.map((item) => (
-        <Link key={item.apiId} href={`/content/${item.apiId}` as Route} className="flex min-h-20 items-center gap-3 border-b border-divider px-3 py-2.5 transition-colors last:border-b-0 hover:bg-hover">
+        <Link key={item.apiId} href={`/content/${item.apiId}` as Route} className="flex min-h-20 items-center gap-3 border border-divider px-3 py-2.5 transition-colors rounded-xl hover:bg-hover">
           {item.authorAvatar ? <OptimizedAvatar src={item.authorAvatar} alt="" width={40} className="h-10 w-10 shrink-0 rounded-full object-cover" /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-black">{(item.author || item.title).slice(0, 1)}</span>}
           <span className="min-w-0 flex-1">
-            <strong className="block truncate text-xs font-black text-foreground">{item.author || item.title}</strong>
-            <span className="mt-1 block truncate text-[10px] text-muted-foreground">{item.title}</span>
+            <strong className="block truncate text-xs font-black text-foreground">{item.title}</strong>
+            <span className="mt-1 block truncate text-[10px] text-muted-foreground">{item.author || item.title}</span>
           </span>
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-[10px] font-bold text-foreground-secondary"><FileText className="h-3.5 w-3.5" />فیش</span>
         </Link>

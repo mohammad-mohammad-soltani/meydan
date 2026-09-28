@@ -46,7 +46,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
       </header>
 
       <div className="bg-surface">
-        <div className="relative h-36 overflow-hidden bg-gradient-to-l from-brand via-brand-hover to-solid-dark sm:h-48">{identity.cover ? <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" className="object-cover" /> : null}</div>
+        <div className="relative h-36 overflow-hidden  sm:h-48">{identity.cover ? <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" className="object-cover" /> :  <Image src="/images/header.jpg" alt={`کاور ${identity.name}`} fill className="object-cover" />}</div>
         <div className="relative px-4 pb-5">
           <div className="flex min-h-16 items-start justify-between">
             <div className="-mt-12 grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-surface bg-surface-muted text-3xl font-black text-foreground sm:-mt-14 sm:h-28 sm:w-28">{identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}</div>

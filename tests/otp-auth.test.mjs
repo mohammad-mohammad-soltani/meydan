@@ -13,3 +13,12 @@ test("OTP login requires all six digits and safely reports malformed proxy respo
   assert.match(source, /سرور ورود پاسخ قابل‌خواندن برنگرداند/);
   assert.match(source, /requestId/);
 });
+
+test("OTP autofill accepts a full SMS code in the first digit field", () => {
+  assert.match(source, /const normalized = toLatinDigits\(nextValue\)\.replace\(\/\\D\/g, ""\)\.slice\(0, 6\)/);
+  assert.match(source, /if \(normalized\.length > 1\) \{[\s\S]*onChange\(normalized\)/);
+  assert.match(source, /autoComplete=\{index === 0 \? "one-time-code" : "off"\}/);
+  assert.match(source, /maxLength=\{index === 0 \? 6 : 1\}/);
+  assert.match(source, /onAutofill\?\.\(normalized\)/);
+  assert.match(source, /onAutofill=\{\(autoFilledCode\) => void verifyCode\(autoFilledCode\)\}/);
+});
