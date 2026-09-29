@@ -54,6 +54,56 @@ type AudioContextValue = AudioState & {
 
 const GlobalAudioContext = createContext<AudioContextValue | null>(null);
 
+type NativeAudioStateDetail = {
+  trackId?: unknown;
+  isPlaying?: unknown;
+  isReady?: unknown;
+  isBuffering?: unknown;
+  currentTime?: unknown;
+  duration?: unknown;
+  didJustFinish?: unknown;
+  error?: unknown;
+};
+
+type NaghshmanNativeWindow = Window & {
+  NaghshmanNative?: {
+    platform?: string;
+    version?: number;
+    capabilities?: {
+      nativeAudioV1?: boolean;
+    };
+  };
+  ReactNativeWebView?: {
+    postMessage: (value: string) => void;
+  };
+};
+
+function nativeAudioBridgeAvailable(): boolean {
+  if (typeof window === "undefined") return false;
+  const nativeWindow = window as NaghshmanNativeWindow;
+  return Boolean(
+    nativeWindow.NaghshmanNative?.capabilities?.nativeAudioV1 &&
+      nativeWindow.ReactNativeWebView?.postMessage,
+  );
+}
+
+function postNativeAudio(payload: Record<string, unknown>): boolean {
+  if (!nativeAudioBridgeAvailable()) return false;
+  const nativeWindow = window as NaghshmanNativeWindow;
+  try {
+    nativeWindow.ReactNativeWebView?.postMessage(
+      JSON.stringify({
+        source: "naghshman-web",
+        version: 1,
+        ...payload,
+      }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function readStoredPositions(): StoredPositions {
   if (typeof window === "undefined") return {};
   try {
@@ -116,7 +166,12 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   >(null);
   const pendingRestoreRef = useRef(false);
   const lastPositionWriteRef = useRef(0);
+  const nativePlaybackRef = useRef(false);
+  const nativePlayingRef = useRef(false);
+  const nativeFinishHandledRef = useRef<string | null>(null);
   const [state, setState] = useState<AudioState>(initialState);
+  const stateRef = useRef<AudioState>(initialState);
+  stateRef.current = state;
 
   const stopLevels = useCallback(() => {
     if (levelsFrameRef.current !== null) {
@@ -142,7 +197,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
     const tick = (now: number) => {
       const audio = audioRef.current;
-      if (!audio || audio.paused || audio.ended) {
+      if (
+        nativePlaybackRef.current
+          ? !nativePlayingRef.current
+          : !audio || audio.paused || audio.ended
+      ) {
         levelsFrameRef.current = null;
         return;
       }
@@ -167,10 +226,19 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const play = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio || !trackRef.current) return;
+    if (!trackRef.current) return;
 
     setState((current) => ({ ...current, error: null }));
+
+    if (
+      nativePlaybackRef.current &&
+      postNativeAudio({ type: "native-audio-play" })
+    ) {
+      return;
+    }
+
+    const audio = audioRef.current;
+    if (!audio) return;
 
     try {
       await audio.play();
@@ -185,6 +253,12 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [startLevels]);
 
   const pause = useCallback(() => {
+    if (
+      nativePlaybackRef.current &&
+      postNativeAudio({ type: "native-audio-pause" })
+    ) {
+      return;
+    }
     audioRef.current?.pause();
   }, []);
 
@@ -195,9 +269,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   const playTrack = useCallback(
     async (track: AudioTrack, options: PlayTrackOptions = {}) => {
-      const audio = audioRef.current;
-      if (!audio || !track.url) return;
+      if (!track.url) return;
 
+      const audio = audioRef.current;
       const isDifferentTrack =
         trackRef.current?.id !== track.id || trackRef.current?.url !== track.url;
 
@@ -206,6 +280,77 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       } else if (!queueRef.current.some((candidate) => candidate.id === track.id)) {
         queueRef.current = [track];
       }
+
+      const useNativeAudio = nativeAudioBridgeAvailable();
+
+      if (useNativeAudio) {
+        nativePlaybackRef.current = true;
+        nativeFinishHandledRef.current = null;
+
+        if (isDifferentTrack) {
+          audio?.pause();
+          trackRef.current = track;
+          pendingRestoreRef.current = false;
+          lastPositionWriteRef.current = 0;
+          nativePlayingRef.current = false;
+
+          const saved = options.restart
+            ? undefined
+            : readStoredPositions()[track.id];
+          const resumePosition =
+            saved && saved.url === track.url && saved.time > 0 ? saved.time : 0;
+
+          setState((current) => ({
+            ...current,
+            currentTrack: track,
+            currentTime: resumePosition,
+            duration: track.duration ?? 0,
+            buffered: 0,
+            isReady: false,
+            isPlaying: false,
+            error: null,
+            levels: [],
+            queue: queueRef.current,
+          }));
+
+          const loaded = postNativeAudio({
+            type: "native-audio-load",
+            track: {
+              id: track.id,
+              title: track.title,
+              artist: track.artist,
+              url: track.url,
+              cover: track.cover,
+              sourceHref: track.sourceHref,
+            },
+            position: resumePosition,
+            autoplay: options.autoplay !== false,
+          });
+
+          if (loaded) return;
+          nativePlaybackRef.current = false;
+        } else {
+          setState((current) => ({
+            ...current,
+            currentTrack: track,
+            queue: queueRef.current,
+            error: null,
+          }));
+
+          if (options.restart) {
+            postNativeAudio({ type: "native-audio-seek", seconds: 0 });
+            setState((current) => ({ ...current, currentTime: 0 }));
+          }
+          if (options.autoplay !== false) {
+            postNativeAudio({ type: "native-audio-play" });
+          }
+          return;
+        }
+      }
+
+      if (!audio) return;
+      nativePlaybackRef.current = false;
+      nativePlayingRef.current = false;
 
       if (isDifferentTrack) {
         audio.pause();
@@ -249,8 +394,22 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   playTrackRef.current = playTrack;
 
   const seek = useCallback((seconds: number) => {
+    if (!Number.isFinite(seconds)) return;
+
+    if (nativePlaybackRef.current) {
+      const duration = stateRef.current.duration;
+      const nextTime = Math.max(
+        0,
+        duration > 0 ? Math.min(duration, seconds) : seconds,
+      );
+      if (postNativeAudio({ type: "native-audio-seek", seconds: nextTime })) {
+        setState((current) => ({ ...current, currentTime: nextTime }));
+        return;
+      }
+    }
+
     const audio = audioRef.current;
-    if (!audio || !Number.isFinite(seconds)) return;
+    if (!audio) return;
 
     const duration = effectiveDuration(audio, trackRef.current?.duration);
     const nextTime = Math.max(0, duration > 0 ? Math.min(duration, seconds) : seconds);
@@ -266,6 +425,10 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   const seekBy = useCallback(
     (seconds: number) => {
+      if (nativePlaybackRef.current) {
+        seek(stateRef.current.currentTime + seconds);
+        return;
+      }
       const audio = audioRef.current;
       if (!audio) return;
       seek((Number.isFinite(audio.currentTime) ? audio.currentTime : 0) + seconds);
@@ -283,11 +446,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [playTrack]);
 
   const previous = useCallback(async () => {
-    const audio = audioRef.current;
     const currentTrack = trackRef.current;
-    if (!audio || !currentTrack) return;
+    if (!currentTrack) return;
 
-    if (audio.currentTime > 3) {
+    const currentTime = nativePlaybackRef.current
+      ? stateRef.current.currentTime
+      : (audioRef.current?.currentTime ?? 0);
+
+    if (currentTime > 3) {
       seek(0);
       return;
     }
@@ -300,13 +466,24 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [playTrack, seek]);
 
   const toggle = useCallback(async () => {
+    if (!trackRef.current) return;
+    if (nativePlaybackRef.current) {
+      if (stateRef.current.isPlaying) pause();
+      else await play();
+      return;
+    }
+
     const audio = audioRef.current;
-    if (!audio || !trackRef.current) return;
+    if (!audio) return;
     if (audio.paused || audio.ended) await play();
     else pause();
   }, [pause, play]);
 
   const clear = useCallback(() => {
+    if (nativePlaybackRef.current) {
+      postNativeAudio({ type: "native-audio-clear" });
+    }
+
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
@@ -316,9 +493,88 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     trackRef.current = null;
     queueRef.current = [];
     pendingRestoreRef.current = false;
+    nativePlaybackRef.current = false;
+    nativePlayingRef.current = false;
+    nativeFinishHandledRef.current = null;
     stopLevels();
     setState(initialState);
   }, [stopLevels]);
+
+  useEffect(() => {
+    const handleNativeAudioState = (event: Event) => {
+      const detail = (event as CustomEvent<NativeAudioStateDetail>).detail;
+      const track = trackRef.current;
+      if (!detail || !track || detail.trackId !== track.id) return;
+
+      const currentTime =
+        typeof detail.currentTime === "number" && Number.isFinite(detail.currentTime)
+          ? Math.max(0, detail.currentTime)
+          : stateRef.current.currentTime;
+      const duration =
+        typeof detail.duration === "number" && Number.isFinite(detail.duration)
+          ? Math.max(0, detail.duration)
+          : stateRef.current.duration;
+      const isPlaying = detail.isPlaying === true;
+      const isReady = detail.isReady === true;
+      const didJustFinish = detail.didJustFinish === true;
+
+      nativePlaybackRef.current = true;
+      nativePlayingRef.current = isPlaying;
+
+      setState((current) => ({
+        ...current,
+        isPlaying,
+        isReady,
+        currentTime,
+        duration,
+        buffered: isReady ? Math.max(current.buffered, duration) : current.buffered,
+        error:
+          typeof detail.error === "string" && detail.error
+            ? "پخش صوت در اپ با خطا روبه‌رو شد. دوباره تلاش کنید."
+            : null,
+        levels: isPlaying ? current.levels : [],
+      }));
+
+      const now = Date.now();
+      if (
+        !didJustFinish &&
+        now - lastPositionWriteRef.current >= POSITION_WRITE_INTERVAL_MS
+      ) {
+        lastPositionWriteRef.current = now;
+        writeStoredPosition(track, currentTime);
+      }
+
+      if (isPlaying) startLevels();
+      else stopLevels();
+
+      if (
+        didJustFinish &&
+        nativeFinishHandledRef.current !== track.id
+      ) {
+        nativeFinishHandledRef.current = track.id;
+        writeStoredPosition(track, 0);
+
+        const queue = queueRef.current;
+        const index = queue.findIndex((candidate) => candidate.id === track.id);
+        const nextTrack = index >= 0 ? queue[index + 1] : undefined;
+        if (nextTrack) {
+          void playTrackRef.current?.(nextTrack, { queue });
+        }
+      } else if (!didJustFinish) {
+        nativeFinishHandledRef.current = null;
+      }
+    };
+
+    window.addEventListener(
+      "naghshman:native-audio-state",
+      handleNativeAudioState as EventListener,
+    );
+    return () =>
+      window.removeEventListener(
+        "naghshman:native-audio-state",
+        handleNativeAudioState as EventListener,
+      );
+  }, [startLevels, stopLevels]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -449,9 +705,16 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const persistPosition = () => {
-      const audio = audioRef.current;
       const track = trackRef.current;
-      if (audio && track) writeStoredPosition(track, audio.currentTime || 0);
+      if (!track) return;
+
+      if (nativePlaybackRef.current) {
+        writeStoredPosition(track, stateRef.current.currentTime);
+        return;
+      }
+
+      const audio = audioRef.current;
+      if (audio) writeStoredPosition(track, audio.currentTime || 0);
     };
     window.addEventListener("pagehide", persistPosition);
     return () => window.removeEventListener("pagehide", persistPosition);
@@ -459,6 +722,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (nativeAudioBridgeAvailable()) {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = "none";
+      return;
+    }
 
     const currentTrack = state.currentTrack;
     if (currentTrack) {
@@ -480,6 +748,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (nativeAudioBridgeAvailable()) return;
 
     const handlers: Array<[MediaSessionAction, MediaSessionActionHandler | null]> = [
       ["play", () => void play()],

@@ -61,3 +61,20 @@ test("the mini player stays legible on a phone", () => {
   assert.match(mini, /shrink-0 whitespace-nowrap tabular-nums/);
   assert.match(mini, /min-w-0 truncate" dir="rtl"/);
 });
+
+
+test("delegates playback to the native app audio session without changing browser playback", () => {
+  const provider = source("features/audio/AudioProvider.tsx");
+
+  assert.match(provider, /nativeAudioV1/);
+  assert.match(provider, /type: "native-audio-load"/);
+  assert.match(provider, /type: "native-audio-play"/);
+  assert.match(provider, /type: "native-audio-pause"/);
+  assert.match(provider, /type: "native-audio-seek"/);
+  assert.match(provider, /naghshman:native-audio-state/);
+  assert.match(provider, /nativeAudioBridgeAvailable\(\)[\s\S]*navigator\.mediaSession\.metadata = null/);
+
+  // The browser fallback remains intact for normal web visitors and old APKs.
+  assert.match(provider, /<audio ref=\{audioRef\}/);
+  assert.match(provider, /await audio\.play\(\)/);
+});
