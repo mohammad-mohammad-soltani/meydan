@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AdminContentView } from "@/features/admin/components/AdminContentView";
-import { getContentList, getContentPoster } from "@/features/admin/services/admin-server";
+import { getContentList } from "@/features/admin/services/admin-server";
 import { isAdministrator } from "@/features/admin/server/require-administrator";
 
 export const metadata: Metadata = { title: "بسته محتوا | پنل مدیریت میدان" };
@@ -11,9 +11,6 @@ export default async function AdminContentPage() {
   // rendering, so no query runs and nothing is shown without the role.
   if (!(await isAdministrator())) return null;
 
-  const [initial, poster] = await Promise.all([
-    getContentList({ format: "", featured: false, category: "", tag: "" }, null),
-    getContentPoster(),
-  ]);
-  return <AdminContentView initial={initial} poster={poster} />;
+  const initial = await getContentList({ format: "", featured: false, category: "", tag: "" }, null);
+  return <AdminContentView initial={initial} />;
 }

@@ -57,6 +57,7 @@ const SECTIONS: Section[] = [
   { href: "/admin/notifications", label: "اعلان گروهی", icon: Bell },
   { href: "/admin/officials", label: "رسمی‌ها", icon: BadgeCheck },
   { href: "/admin/feed", label: "فید", icon: ListFilter },
+  { href: "/admin/content/banners", label: "بنرها", icon: Image },
 ];
 
 const GROUPS = [
@@ -65,7 +66,8 @@ const GROUPS = [
     label: "افراد و میادین",
     items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[4], SECTIONS[8], SECTIONS[14], SECTIONS[15]],
   },
-  { label: "محتوا و رسانه", items: [SECTIONS[7], SECTIONS[8], SECTIONS[10], SECTIONS[11]] },
+  { label: "محتوا", items: [SECTIONS[7], SECTIONS[17]] },
+  { label: "محتوا و رسانه", items: [SECTIONS[8], SECTIONS[10], SECTIONS[11]] },
   {
     label: "برنامه‌ها و ارتباطات",
     items: [SECTIONS[11], SECTIONS[12], SECTIONS[13]],

@@ -7,8 +7,6 @@ import { FolderKanban, Plus, RefreshCw } from "lucide-react";
 import { AdminErrorState, AdminTableSkeleton } from "./AdminStateViews";
 import { AdminFilters, type AdminFilter } from "./AdminFilters";
 import { AdminPageHeader } from "./AdminPageHeader";
-import { AdminContentPoster } from "./AdminContentPoster";
-import type { ContentPoster } from "../services/content.service";
 import { AdminTable, type AdminColumn } from "./AdminTable";
 import { PostStatusBadge } from "./AdminStatusBadge";
 import { fa, secondaryButtonClass } from "./styles";
@@ -32,7 +30,7 @@ import {
  *
  * The admin list reads the content API without incrementing view counts.
  */
-export function AdminContentView({ initial, poster }: { initial: { items: ContentItem[]; nextCursor: string | null }; poster: ContentPoster }) {
+export function AdminContentView({ initial }: { initial: { items: ContentItem[]; nextCursor: string | null } }) {
   const [filters, setFilters] = useState({ format: "", featured: false });
   const [applied, setApplied] = useState({ format: "", featured: false });
   const [items, setItems] = useState(initial.items);
@@ -200,7 +198,6 @@ export function AdminContentView({ initial, poster }: { initial: { items: Conten
         }
       />
 
-      <AdminContentPoster initial={poster} />
 
       <AdminFilters
         filters={descriptors}
