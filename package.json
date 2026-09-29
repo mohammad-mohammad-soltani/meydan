@@ -8,7 +8,8 @@
     "build": "next build --webpack",
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint",
-    "test:map": "node --experimental-strip-types --test tests/map-theme.test.mjs tests/map-geometry.test.mjs",
+    "test:map": "node --experimental-strip-types --test tests/map-theme.test.mjs tests/map-geometry.test.mjs tests/map-viewport.test.mjs",
+    "test:map:browser": "playwright test",
     "test:admin": "node --experimental-strip-types --test tests/admin-normalize.test.mjs tests/admin-api-contract.test.mjs tests/admin-panel-gate.test.mjs tests/admin-user-deletion.test.mjs"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

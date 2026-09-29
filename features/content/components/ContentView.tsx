@@ -53,7 +53,7 @@ export function ContentView({ poster, speeches, musicVideos, reportDays, todayNi
         </section>
 
         <section aria-labelledby="speech-title">
-          <div className="mb-3 flex items-center justify-between gap-2"><div><div className="flex items-center gap-2"><span className="grid h-7 w-7 place-items-center rounded-full bg-surface-muted text-amber-700"><BookOpen className="h-4 w-4" /></span><h2 id="speech-title" className="text-sm font-black">سخنرانی‌ها و یادداشت‌ها</h2></div><p className="mt-1 pr-9 text-[10px] text-muted-foreground">فیش‌های کوتاه و آماده استفاده برای منبر</p></div><Link href={"/content/speeches" as Route} className="inline-flex shrink-0 items-center text-[11px] font-bold text-brand hover:underline">مشاهده بیشتر <ChevronLeft className="h-3.5 w-3.5" /></Link></div>
+          <div className="mb-3 flex items-center justify-between gap-2"><div><div className="flex items-center gap-2"><span className="grid h-7 w-7 place-items-center rounded-full bg-surface-muted text-amber-700"><BookOpen className="h-4 w-4" /></span><h2 id="speech-title" className="text-sm font-black">کلام و یادداشت</h2></div><p className="mt-1 pr-9 text-[10px] text-muted-foreground">فیش‌های کوتاه و آماده استفاده برای منبر</p></div><Link href={"/content/speeches" as Route} className="inline-flex shrink-0 items-center text-[11px] font-bold text-brand hover:underline">مشاهده بیشتر <ChevronLeft className="h-3.5 w-3.5" /></Link></div>
           <SpeechRows items={speeches.slice(0, 5)} />
         </section>
 

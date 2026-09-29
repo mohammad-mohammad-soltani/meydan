@@ -2,10 +2,10 @@
 
 import {
   Layers3,
+  MapPinned,
   LoaderCircle,
   LocateFixed,
   Minus,
-  Navigation,
   Plus,
   Search,
 } from "lucide-react";
@@ -13,12 +13,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { SquareMarker } from "../services/map.service";
 import type { CountAggregate, MapLevel, MapViewport } from "../hooks/useMap";
 import { addOpenFreeMapBasemap } from "../services/openfreemap-basemap";
-import { mediaThumbnailSrc } from "@/features/media/media-utils";
-import {
-  LIVE_MAP_THEME,
-  makePinHtml,
-  makeProvinceStyle,
-} from "../map-theme";
+import { squareAvatar, squarePopup } from "./marker-content";
+import { normalizePlace } from "../geo/aggregation";
+import "./live-map.css";
+import { LIVE_MAP_THEME, makePinHtml, makeProvinceStyle } from "../map-theme";
 
 const iranCenter: [number, number] = [32.4279, 53.688];
 const initialZoom = 5;
@@ -46,7 +44,8 @@ function nextScale(map: import("leaflet").Map): ScaleState {
 }
 
 function formatScale(value: number): string {
-  if (value >= 1) return value.toLocaleString("fa-IR", { maximumFractionDigits: 0 });
+  if (value >= 1)
+    return value.toLocaleString("fa-IR", { maximumFractionDigits: 0 });
   return (value * 1000).toLocaleString("fa-IR", { maximumFractionDigits: 0 });
 }
 
@@ -54,12 +53,18 @@ export function MapFrame({
   squares,
   aggregates,
   center,
+  searchProvinces,
+  searchCities,
+  searchSquares,
   level,
   onSelectAggregate,
   onViewportLevel,
 }: {
   squares: SquareMarker[];
   aggregates: CountAggregate[];
+  searchProvinces: CountAggregate[];
+  searchCities: CountAggregate[];
+  searchSquares: SquareMarker[];
   center: { latitude: number; longitude: number; zoom?: number } | null;
   level: MapLevel;
   onSelectAggregate: (id: string) => void;
@@ -67,33 +72,69 @@ export function MapFrame({
 }) {
   const element = useRef<HTMLDivElement>(null);
   const map = useRef<import("leaflet").Map | null>(null);
-  const markersRef = useRef<import("leaflet").Layer[]>([]);
+  const markersRef = useRef(
+    new Map<string, { marker: import("leaflet").Marker; signature: string }>(),
+  );
+  const syncViewportRef = useRef<(() => void) | null>(null);
+  const provincesVisibleRef = useRef(true);
   const provinceLayerRef = useRef<import("leaflet").GeoJSON | null>(null);
   const userLocationRef = useRef<import("leaflet").CircleMarker | null>(null);
   const onSelectAggregateRef = useRef(onSelectAggregate);
   const onViewportLevelRef = useRef(onViewportLevel);
   const [ready, setReady] = useState(false);
   const [provincesVisible, setProvincesVisible] = useState(true);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(initialZoom);
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [scale, setScale] = useState<ScaleState>({ distanceKm: 500, width: 120 });
+  const [scale, setScale] = useState<ScaleState>({
+    distanceKm: 500,
+    width: 120,
+  });
 
   useEffect(() => {
     onSelectAggregateRef.current = onSelectAggregate;
+  }, [onSelectAggregate]);
+
+  useEffect(() => {
     onViewportLevelRef.current = onViewportLevel;
-  }, [onSelectAggregate, onViewportLevel]);
+    syncViewportRef.current?.();
+  }, [onViewportLevel]);
 
   const searchResults = useMemo(() => {
-    const normalized = query.trim();
+    const normalized = normalizePlace(query);
     if (!normalized) return [];
-    return aggregates
-      .filter((item) => item.name.includes(normalized))
-      .slice(0, 6);
-  }, [aggregates, query]);
+    return [
+      ...searchProvinces.map((item) => ({
+        ...item,
+        key: `province:${item.id}`,
+        label: "استان",
+        zoom: 7,
+      })),
+      ...searchCities.map((item) => ({
+        ...item,
+        key: `city:${item.id}`,
+        label: "شهر",
+        zoom: 10,
+      })),
+      ...searchSquares.map((item) => ({
+        ...item,
+        key: `square:${item.id}`,
+        label: "میدان",
+        zoom: 15,
+      })),
+    ]
+      .filter((item) => normalizePlace(item.name).includes(normalized))
+      .slice(0, 8);
+  }, [searchProvinces, searchCities, searchSquares, query]);
 
   useEffect(() => {
     let disposed = false;
     const controller = new AbortController();
+    let resizeObserver: ResizeObserver | undefined;
+    let resizeFrame = 0;
+    const markerEntries = markersRef.current;
 
     void import("leaflet").then(async (L) => {
       if (disposed || !element.current) return;
@@ -110,21 +151,46 @@ export function MapFrame({
 
       const syncScale = () => {
         setScale(nextScale(instance));
+        setZoom(instance.getZoom());
         const center = instance.getCenter();
         const bounds = instance.getBounds();
         onViewportLevelRef.current({
-          latitude: center.lat, longitude: center.lng, zoom: instance.getZoom(),
-          bounds: { south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast() },
+          latitude: center.lat,
+          longitude: center.lng,
+          zoom: instance.getZoom(),
+          bounds: {
+            south: bounds.getSouth(),
+            west: bounds.getWest(),
+            north: bounds.getNorth(),
+            east: bounds.getEast(),
+          },
         });
       };
       // The state machine advances only after the final map position is known.
+      syncViewportRef.current = syncScale;
       instance.on("moveend", syncScale);
-      instance.on("movestart zoomstart", () => markersRef.current.forEach((layer) => (layer as import("leaflet").Marker).closeTooltip?.()));
+      const keepPopupVisible = () =>
+        markerEntries.forEach(({ marker }) => {
+          if (marker.isPopupOpen()) marker.getPopup()?.update();
+        });
+      instance.on("zoomend", keepPopupVisible);
       syncScale();
+      setReady(true);
+      resizeObserver = new ResizeObserver(() => {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+          if (!disposed) {
+            instance.invalidateSize({ pan: false });
+            keepPopupVisible();
+          }
+        });
+      });
+      resizeObserver.observe(element.current);
 
       try {
-        await addOpenFreeMapBasemap(L, instance);
+        await addOpenFreeMapBasemap(L, instance, controller.signal);
       } catch (error) {
+        if (disposed) return;
         console.error("Unable to load OpenFreeMap basemap", error);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 18,
@@ -133,8 +199,6 @@ export function MapFrame({
       }
 
       if (disposed || !map.current) return;
-      setReady(true);
-
       try {
         const response = await fetch(LIVE_MAP_THEME.provincesGeoJsonUrl, {
           signal: controller.signal,
@@ -146,7 +210,8 @@ export function MapFrame({
         const provinceLayer = L.geoJSON(data, {
           style: makeProvinceStyle,
           interactive: false,
-        }).addTo(instance);
+        });
+        if (provincesVisibleRef.current) provinceLayer.addTo(instance);
         provinceLayerRef.current = provinceLayer;
       } catch (error) {
         if (!controller.signal.aborted) {
@@ -158,9 +223,12 @@ export function MapFrame({
     return () => {
       disposed = true;
       controller.abort();
+      resizeObserver?.disconnect();
+      cancelAnimationFrame(resizeFrame);
+      syncViewportRef.current = null;
       map.current?.remove();
       map.current = null;
-      markersRef.current = [];
+      markerEntries.clear();
       provinceLayerRef.current = null;
       userLocationRef.current = null;
     };
@@ -174,43 +242,85 @@ export function MapFrame({
       const instance = map.current;
       if (cancelled || !instance) return;
 
-      for (const layer of markersRef.current) layer.remove();
-      markersRef.current = [];
+      const wanted = new Set([
+        ...squares.map((item) => `square:${item.id}`),
+        ...aggregates.map((item) => `aggregate:${item.id}`),
+      ]);
+      for (const [key, entry] of markersRef.current) {
+        if (!wanted.has(key)) {
+          entry.marker.remove();
+          markersRef.current.delete(key);
+        }
+      }
 
       for (const square of squares) {
-        const point: [number, number] = [square.latitude, square.longitude];
-        const initial = square.name.trim().slice(0, 1) || "م";
-        const avatar = document.createElement("div"); avatar.style.cssText = `width:42px;height:42px;border:3px solid white;border-radius:50%;overflow:hidden;background:${LIVE_MAP_THEME.pin};box-shadow:0 4px 12px rgba(0,0,0,.45)`;
-        if (square.avatarUrl) { const image = document.createElement("img"); image.src = mediaThumbnailSrc(square.avatarUrl, 84) ?? square.avatarUrl; image.alt = ""; image.style.cssText = "width:100%;height:100%;object-fit:cover"; avatar.append(image); } else { const fallback = document.createElement("span"); fallback.style.cssText = "display:grid;place-items:center;width:100%;height:100%;font-weight:900;color:white"; fallback.textContent = initial; avatar.append(fallback); }
-        const marker = L.marker(point, { icon: L.divIcon({ html: avatar, className: "", iconSize: [42, 42], iconAnchor: [21, 21] }) }).addTo(instance);
-        const popup = document.createElement("div"); popup.style.cssText = "font-family:inherit;text-align:center;padding:5px 4px;min-width:150px";
-        const name = document.createElement("strong"); name.style.cssText = "display:block;font-size:13px;margin-bottom:10px"; name.textContent = square.name;
-        const link = document.createElement("a"); link.href = `/square/${encodeURIComponent(square.id)}`; link.textContent = "مشاهده میدان"; link.style.cssText = "display:inline-block;border-radius:10px;background:#e5544b;color:white;padding:7px 12px;font-size:11px;font-weight:800;text-decoration:none";
-        popup.append(name, link); marker.bindPopup(popup, { closeButton: false });
-        markersRef.current.push(marker);
+        const key = `square:${square.id}`;
+        const signature = JSON.stringify(square);
+        const existing = markersRef.current.get(key);
+        if (existing?.signature === signature) continue;
+        const wasOpen = existing?.marker.isPopupOpen();
+        existing?.marker.remove();
+        const marker = L.marker([square.latitude, square.longitude], {
+          alt: square.name,
+          riseOnHover: true,
+          icon: L.divIcon({
+            html: squareAvatar(square),
+            className: "map-marker",
+            iconSize: [42, 42],
+            iconAnchor: [21, 21],
+            popupAnchor: [0, -23],
+          }),
+        }).addTo(instance);
+        marker.bindPopup(squarePopup(square), {
+          className: "map-square-popup",
+          closeButton: true,
+          minWidth: 230,
+          maxWidth: 270,
+          autoPanPaddingTopLeft: [16, 82],
+          autoPanPaddingBottomRight: [64, 40],
+        });
+        marker.on("popupopen", () => {
+          marker
+            .getPopup()
+            ?.getElement()
+            ?.querySelector(".leaflet-popup-close-button")
+            ?.setAttribute("aria-label", "بستن جزئیات میدان");
+        });
+        const markerElement = marker.getElement();
+        markerElement?.setAttribute("aria-label", `مشاهده ${square.name}`);
+        if (markerElement) markerElement.dataset.markerId = square.id;
+        markersRef.current.set(key, { marker, signature });
+        if (wasOpen) marker.openPopup();
       }
 
       for (const aggregate of aggregates) {
+        const key = `aggregate:${aggregate.id}`;
+        const signature = JSON.stringify([aggregate, level]);
+        const existing = markersRef.current.get(key);
+        if (existing?.signature === signature) continue;
+        existing?.marker.remove();
+        const label = `${aggregate.name} · ${aggregate.count.toLocaleString("fa-IR")} میدان`;
         const marker = L.marker([aggregate.latitude, aggregate.longitude], {
           icon: L.divIcon({
             html: makePinHtml(aggregate.count.toLocaleString("fa-IR")),
-            className: "",
+            className: "map-marker",
             iconSize: [44, 44],
             iconAnchor: [22, 22],
-            tooltipAnchor: [0, -26],
           }),
           keyboard: true,
         })
           .addTo(instance)
-          .bindTooltip(`${aggregate.name} · ${aggregate.count.toLocaleString("fa-IR")} میدان`, {
-            direction: "top",
-            offset: [0, 0],
-            opacity: 0.92,
-          })
-          .on("click", () => { instance.flyTo([aggregate.latitude, aggregate.longitude], level === "country" ? 7.2 : 10.2, { animate: true, duration: .7 }); onSelectAggregateRef.current(aggregate.id); });
-        markersRef.current.push(marker);
+          .on("click", () => {
+            onSelectAggregateRef.current(aggregate.id);
+            instance.flyTo(
+              [aggregate.latitude, aggregate.longitude],
+              level === "country" ? 7 : 10,
+              { animate: true, duration: 0.7 },
+            );
+          });
+        marker.getElement()?.setAttribute("aria-label", label);
+        markersRef.current.set(key, { marker, signature });
       }
-
     });
 
     return () => {
@@ -220,7 +330,7 @@ export function MapFrame({
 
   useEffect(() => {
     if (!ready || !map.current || !center) return;
-    map.current.flyTo([center.latitude, center.longitude], center.zoom ?? 10.5, {
+    map.current.flyTo([center.latitude, center.longitude], center.zoom ?? 15, {
       animate: true,
       duration: 0.75,
     });
@@ -232,35 +342,46 @@ export function MapFrame({
   }
 
   function toggleProvinceLayer() {
+    const visible = !provincesVisibleRef.current;
+    provincesVisibleRef.current = visible;
+    setProvincesVisible(visible);
     const instance = map.current;
     const layer = provinceLayerRef.current;
     if (!instance || !layer) return;
-
-    if (instance.hasLayer(layer)) {
-      layer.removeFrom(instance);
-      setProvincesVisible(false);
-      return;
-    }
-
-    layer.addTo(instance);
-    setProvincesVisible(true);
+    if (visible) layer.addTo(instance);
+    else layer.removeFrom(instance);
   }
 
-  function selectSearchResult(aggregate: CountAggregate) {
+  function selectSearchResult(aggregate: {
+    latitude: number;
+    longitude: number;
+    zoom: number;
+  }) {
     setQuery("");
     setSearchFocused(false);
-    map.current?.flyTo([aggregate.latitude, aggregate.longitude], 7, {
-      animate: true,
-      duration: 0.7,
-    });
-    onSelectAggregateRef.current(aggregate.id);
+    map.current?.flyTo(
+      [aggregate.latitude, aggregate.longitude],
+      aggregate.zoom,
+      {
+        animate: true,
+        duration: 0.7,
+      },
+    );
   }
 
   function locateUser() {
-    if (!navigator.geolocation || !map.current) return;
+    if (!map.current || locating) return;
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      setLocationError("مرورگر شما از موقعیت‌یابی پشتیبانی نمی‌کند.");
+      return;
+    }
+    setLocating(true);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (!map.current) return;
+        setLocating(false);
         const point: [number, number] = [
           position.coords.latitude,
           position.coords.longitude,
@@ -279,7 +400,15 @@ export function MapFrame({
           }).addTo(map.current);
         });
       },
-      () => undefined,
+      (error) => {
+        if (!map.current) return;
+        setLocating(false);
+        setLocationError(
+          error.code === 1
+            ? "اجازهٔ دسترسی به موقعیت داده نشده است."
+            : "موقعیت شما پیدا نشد؛ دوباره تلاش کنید.",
+        );
+      },
       { enableHighAccuracy: true, timeout: 8000 },
     );
   }
@@ -287,21 +416,29 @@ export function MapFrame({
   const scaleUnit = scale.distanceKm >= 1 ? "km" : "m";
 
   return (
-    <div className="relative h-full min-h-[430px] w-full overflow-hidden bg-[#171a1b] sm:min-h-[500px]">
-      <div ref={element} className="absolute inset-0 h-full w-full bg-[#171a1b]" />
+    <div className="live-map relative h-full min-h-[430px] w-full overflow-hidden bg-[#171a1b] sm:min-h-[500px]">
+      <div
+        ref={element}
+        dir="ltr"
+        aria-label="نقشه میدان‌های ایران"
+        className="absolute inset-0 h-full w-full bg-[#171a1b]"
+      />
 
       <div className="absolute left-3 top-3 z-[500] w-[min(58vw,230px)] sm:left-4 sm:top-4">
         <div className="flex h-12 items-center gap-2 rounded-[16px] border border-white/10 bg-[#2a2b2c]/90 px-3.5 text-white shadow-[0_8px_24px_rgba(0,0,0,.28)] backdrop-blur-xl">
-          <Search className="h-5 w-5 shrink-0 text-white/95" strokeWidth={2.1} />
+          <Search
+            className="h-5 w-5 shrink-0 text-white/95"
+            strokeWidth={2.1}
+          />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
-            placeholder="جست‌وجوی استان"
+            placeholder="استان، شهر یا میدان…"
             className="min-w-0 flex-1 border-0 bg-transparent text-xs font-bold text-white outline-none placeholder:text-white/35"
             dir="rtl"
-            aria-label="جست‌وجوی استان روی نقشه"
+            aria-label="جست‌وجوی استان، شهر یا میدان روی نقشه"
           />
         </div>
 
@@ -310,7 +447,7 @@ export function MapFrame({
             {searchResults.length ? (
               searchResults.map((aggregate) => (
                 <button
-                  key={aggregate.id}
+                  key={aggregate.key}
                   type="button"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectSearchResult(aggregate)}
@@ -319,7 +456,7 @@ export function MapFrame({
                 >
                   <span className="truncate">{aggregate.name}</span>
                   <span className="shrink-0 text-[10px] tabular-nums text-white/45">
-                    {aggregate.count.toLocaleString("fa-IR")}
+                    {aggregate.label}
                   </span>
                 </button>
               ))
@@ -348,39 +485,50 @@ export function MapFrame({
 
       <button
         type="button"
-        onClick={locateUser}
-        aria-label="نمایش موقعیت من"
-        className="absolute bottom-[70px] left-3 z-[500] grid h-12 w-12 place-items-center rounded-[16px] border border-white/10 bg-[#2a2b2c]/90 text-white shadow-[0_8px_24px_rgba(0,0,0,.28)] backdrop-blur-xl transition hover:bg-[#343536]/95 sm:left-4"
+        onClick={() => {
+          map.current?.closePopup();
+          map.current?.flyTo(iranCenter, initialZoom, { duration: 0.7 });
+        }}
+        aria-label="نمایش کل ایران"
+        title="نمایش کل ایران"
+        className="absolute right-3 top-[72px] z-[500] grid h-10 w-12 place-items-center rounded-[14px] border border-white/10 bg-[#2a2b2c]/90 text-white shadow-lg transition hover:bg-[#343536] sm:right-4 sm:top-[76px]"
       >
-        <Navigation className="h-[22px] w-[22px] -rotate-12" strokeWidth={2} />
+        <MapPinned className="h-5 w-5" />
       </button>
 
       <div className="absolute bottom-3 right-3 z-[500] flex w-12 flex-col items-center gap-1 rounded-[18px] border border-white/10 bg-[#242627]/92 p-1.5 text-white shadow-[0_10px_30px_rgba(0,0,0,.36)] backdrop-blur-xl sm:bottom-4 sm:right-4">
         <button
           type="button"
+          disabled={!ready || zoom >= 18}
           onClick={() => changeZoom(1)}
           aria-label="بزرگ‌نمایی نقشه"
-          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14]"
+          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14] disabled:opacity-35"
         >
           <Plus className="h-5 w-5" strokeWidth={2.2} />
         </button>
         <span className="h-px w-7 bg-white/[0.08]" />
         <button
           type="button"
+          disabled={!ready || zoom <= 4}
           onClick={() => changeZoom(-1)}
           aria-label="کوچک‌نمایی نقشه"
-          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14]"
+          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14] disabled:opacity-35"
         >
           <Minus className="h-5 w-5" strokeWidth={2.2} />
         </button>
         <span className="h-px w-7 bg-white/[0.08]" />
         <button
           type="button"
+          disabled={!ready || locating}
           onClick={locateUser}
           aria-label="تمرکز روی موقعیت من"
-          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14]"
+          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14] disabled:opacity-35"
         >
-          <LocateFixed className="h-[19px] w-[19px]" strokeWidth={2} />
+          {locating ? (
+            <LoaderCircle className="h-[19px] w-[19px] animate-spin" />
+          ) : (
+            <LocateFixed className="h-[19px] w-[19px]" strokeWidth={2} />
+          )}
         </button>
       </div>
 
@@ -403,25 +551,16 @@ export function MapFrame({
         </div>
       </div>
 
-      <div className="absolute bottom-1 left-1/2 z-[450] flex -translate-x-1/2 items-center gap-1 whitespace-nowrap text-[8px] text-white/30">
-        <a
-          href="https://openfreemap.org"
-          target="_blank"
-          rel="noreferrer"
-          className="transition hover:text-white/55"
+      {locationError ? (
+        <button
+          type="button"
+          role="status"
+          onClick={() => setLocationError(null)}
+          className="absolute bottom-16 left-3 right-20 z-[700] rounded-xl border border-white/15 bg-[#282b2d] p-3 text-right text-[11px] leading-6 text-white shadow-lg"
         >
-          OpenFreeMap © OpenMapTiles
-        </a>
-        <span>·</span>
-        <a
-          href="https://www.openstreetmap.org/copyright"
-          target="_blank"
-          rel="noreferrer"
-          className="transition hover:text-white/55"
-        >
-          Data © OpenStreetMap
-        </a>
-      </div>
+          {locationError}
+        </button>
+      ) : null}
 
       {!ready ? (
         <div className="absolute inset-0 z-[600] grid place-items-center bg-[#171a1b]">

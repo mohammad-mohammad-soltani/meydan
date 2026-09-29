@@ -45,8 +45,52 @@ export function makeProvinceStyle() {
 
 export function makePinHtml(count: string): string {
   return `
-    <div class="map-live-pin" style="width:44px;height:44px;box-sizing:border-box;border:3px solid #fff;border-radius:50%;background:#e5544b;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.45);cursor:pointer">
-      <span style="color:#fff;font-size:14px;font-weight:900;line-height:1">${count}</span>
+    <div class="group relative flex cursor-pointer items-center justify-center">
+      
+      <div
+        class="
+          absolute
+          h-11 w-11
+          rounded-full
+          bg-red-500/20
+          transition-all duration-300
+          group-hover:scale-110
+          group-hover:bg-red-500/25
+        "
+      ></div>
+
+      <div
+        class="
+          map-live-pin
+          relative z-10
+          flex h-9 min-w-9 items-center justify-center
+          rounded-full
+          border-[3px] border-white
+          bg-gradient-to-br from-red-400 to-red-600
+          px-1.5
+          shadow-[0_5px_16px_rgba(0,0,0,0.35)]
+          transition-all duration-200 ease-out
+          group-hover:-translate-y-0.5
+          group-hover:scale-110
+          group-hover:shadow-[0_8px_22px_rgba(0,0,0,0.4)]
+          group-active:scale-95
+        "
+      >
+        <span
+          class="
+            select-none
+            text-[13px]
+            font-black
+            leading-none
+            tracking-tight
+            text-white
+            drop-shadow-sm
+          "
+        >
+          ${count}
+        </span>
+      </div>
+
     </div>
   `;
 }

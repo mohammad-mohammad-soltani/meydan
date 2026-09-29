@@ -43,14 +43,20 @@ const PLACE_LABEL_LAYER_IDS = new Set([
 ]);
 
 /** Street and water labels, which are legible and wanted at close zoom. */
-const ROAD_LABEL_LAYER_IDS = new Set(["highway_name_other", "highway_name_motorway"]);
+const ROAD_LABEL_LAYER_IDS = new Set([
+  "highway_name_other",
+  "highway_name_motorway",
+]);
 const WATER_LABEL_LAYER_IDS = new Set(["water_name"]);
 
 /**
  * Symbol layers that stay hidden: one-way arrows are drawn by the style as
  * icons and add noise over the province boundaries.
  */
-const HIDDEN_SYMBOL_LAYER_IDS = new Set(["road_oneway", "road_oneway_opposite"]);
+const HIDDEN_SYMBOL_LAYER_IDS = new Set([
+  "road_oneway",
+  "road_oneway_opposite",
+]);
 
 /**
  * Place and water features carry `name:fa`, so requiring it both guarantees
@@ -66,7 +72,11 @@ const HAS_PLACE_TEXT = ["has", "name:fa"];
  * Iranian roads; falling back no further than `name:nonlatin` keeps latin names
  * off the map.
  */
-const ROAD_TEXT_FIELDS = ["coalesce", ["get", "name:fa"], ["get", "name:nonlatin"]];
+const ROAD_TEXT_FIELDS = [
+  "coalesce",
+  ["get", "name:fa"],
+  ["get", "name:nonlatin"],
+];
 const HAS_ROAD_TEXT = ["any", ["has", "name:fa"], ["has", "name:nonlatin"]];
 
 type StyleLayer = {
@@ -87,22 +97,33 @@ function ensureStylesheet() {
   document.head.appendChild(link);
 }
 
+const scriptRequests = new Map<string, Promise<void>>();
+
 function loadScriptOnce(id: string, src: string): Promise<void> {
+  if (scriptRequests.has(id)) return scriptRequests.get(id)!;
   const existing = document.getElementById(id) as HTMLScriptElement | null;
   if (existing?.dataset.loaded === "true") return Promise.resolve();
 
-  return new Promise((resolve, reject) => {
+  const request = new Promise<void>((resolve, reject) => {
     const script = existing ?? document.createElement("script");
-
+    const cleanup = () => {
+      clearTimeout(timeout);
+      script.removeEventListener("load", handleLoad);
+      script.removeEventListener("error", handleError);
+    };
     const handleLoad = () => {
+      cleanup();
       script.dataset.loaded = "true";
       resolve();
     };
-    const handleError = () => reject(new Error(`Unable to load ${src}`));
-
+    const handleError = () => {
+      cleanup();
+      script.remove();
+      reject(new Error(`Unable to load ${src}`));
+    };
+    const timeout = setTimeout(handleError, 12000);
     script.addEventListener("load", handleLoad, { once: true });
     script.addEventListener("error", handleError, { once: true });
-
     if (!existing) {
       script.id = id;
       script.src = src;
@@ -110,6 +131,9 @@ function loadScriptOnce(id: string, src: string): Promise<void> {
       document.head.appendChild(script);
     }
   });
+  scriptRequests.set(id, request);
+  void request.catch(() => scriptRequests.delete(id));
+  return request;
 }
 
 /**
@@ -137,10 +161,16 @@ function registerRtlTextPlugin(mapLibre: MapLibreGlobal) {
  */
 async function loadLocalizedStyle(): Promise<string | Record<string, unknown>> {
   try {
-    const response = await fetch(LIVE_MAP_THEME.styleUrl, { cache: "force-cache" });
+    const response = await fetch(LIVE_MAP_THEME.styleUrl, {
+      cache: "force-cache",
+      signal: AbortSignal.timeout(10000),
+    });
     if (!response.ok) return LIVE_MAP_THEME.styleUrl;
 
-    const style = (await response.json()) as { glyphs?: string; layers?: StyleLayer[] };
+    const style = (await response.json()) as {
+      glyphs?: string;
+      layers?: StyleLayer[];
+    };
 
     return {
       ...style,
@@ -148,7 +178,10 @@ async function loadLocalizedStyle(): Promise<string | Record<string, unknown>> {
       layers: (style.layers ?? []).map((layer): StyleLayer => {
         if (layer.type !== "symbol") return layer;
 
-        const layout = { ...layer.layout, "text-font": [...LIVE_MAP_THEME.labelFontStack] };
+        const layout = {
+          ...layer.layout,
+          "text-font": [...LIVE_MAP_THEME.labelFontStack],
+        };
 
         if (HIDDEN_SYMBOL_LAYER_IDS.has(layer.id)) {
           return { ...layer, layout: { ...layout, visibility: "none" } };
@@ -209,7 +242,9 @@ async function loadLocalizedStyle(): Promise<string | Record<string, unknown>> {
  * worked after a full reload. Reusing the existing object unconditionally also
  * covers a remount that races ahead of the still-loading bridge script.
  */
-function ensureLeafletGlobal(leaflet: typeof import("leaflet")): LeafletWithMapLibre {
+function ensureLeafletGlobal(
+  leaflet: typeof import("leaflet"),
+): LeafletWithMapLibre {
   const browserWindow = window as MapWindow;
   if (browserWindow.L) return browserWindow.L;
 
@@ -221,6 +256,7 @@ function ensureLeafletGlobal(leaflet: typeof import("leaflet")): LeafletWithMapL
 export async function addOpenFreeMapBasemap(
   leaflet: typeof import("leaflet"),
   map: Leaflet.Map,
+  signal?: AbortSignal,
 ): Promise<Leaflet.Layer> {
   ensureStylesheet();
 
@@ -240,6 +276,7 @@ export async function addOpenFreeMapBasemap(
   }
 
   const style = await loadLocalizedStyle();
+  signal?.throwIfAborted();
   const layer = bridge({
     style,
     interactive: false,

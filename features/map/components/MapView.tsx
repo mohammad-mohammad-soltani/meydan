@@ -6,6 +6,7 @@ import {
   LoaderCircle,
   MapPinned,
   MapPin,
+  RefreshCw,
 } from "lucide-react";
 import { MapSelector } from "./MapSelector";
 import { CitySelector } from "./CitySelector";
@@ -51,21 +52,46 @@ export function MapView() {
   const handleSelectProvince = (provinceId: number) => {
     setLinkedFocus(null);
     map.selectProvince(provinceId);
-    const province = map.provinceAggregates.find((item) => item.provinceId === provinceId);
-    if (province) setRequestedFocus({ latitude: province.latitude, longitude: province.longitude, zoom: 7.2 });
+    const province = map.provinceAggregates.find(
+      (item) => item.provinceId === provinceId,
+    );
+    if (province)
+      setRequestedFocus({
+        latitude: province.latitude,
+        longitude: province.longitude,
+        zoom: 7.2,
+      });
   };
 
   const handleSelectCity = (cityId: number) => {
     setLinkedFocus(null);
     map.selectCity(cityId);
     const city = map.cityAggregates.find((item) => item.cityId === cityId);
-    if (city) setRequestedFocus({ latitude: city.latitude, longitude: city.longitude, zoom: 10.2 });
+    if (city)
+      setRequestedFocus({
+        latitude: city.latitude,
+        longitude: city.longitude,
+        zoom: 10.2,
+      });
   };
-  const mapMarkers = map.level === "country"
-    ? { squares: [], aggregates: map.provinceAggregates, onSelect: map.selectProvinceAggregate }
-    : map.level === "province"
-      ? { squares: [], aggregates: map.cityAggregates, onSelect: map.selectCityAggregate }
-      : { squares: map.citySquares, aggregates: [], onSelect: map.selectCityAggregate };
+  const mapMarkers =
+    map.level === "country"
+      ? {
+          squares: [],
+          aggregates: map.provinceAggregates,
+          onSelect: map.selectProvinceAggregate,
+        }
+      : map.level === "province"
+        ? {
+            squares: [],
+            aggregates: map.allCityAggregates,
+            onSelect: map.selectCityAggregate,
+          }
+        : {
+            squares: map.resolvedSquares,
+            aggregates: [],
+            onSelect: map.selectCityAggregate,
+          };
 
   return (
     <section
@@ -80,17 +106,32 @@ export function MapView() {
               نقشه میدان‌ها
             </h1>
             <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-              استان و شهر را انتخاب کنید تا میدان‌های فعال همان محدوده را ببینید.
+              استان و شهر را انتخاب کنید تا میدان‌های فعال همان محدوده را
+              ببینید.
             </p>
           </div>
 
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-danger-surface px-2.5 py-1 text-[10px] font-black text-danger">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger opacity-40" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-danger" />
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={map.refresh}
+              disabled={map.status === "loading"}
+              aria-label="به‌روزرسانی میدان‌ها"
+              title="به‌روزرسانی میدان‌ها"
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-hover disabled:opacity-40"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${map.status === "loading" ? "animate-spin" : ""}`}
+              />
+            </button>
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-danger-surface px-2.5 py-1 text-[10px] font-black text-danger">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger opacity-40" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-danger" />
+              </span>
+              لایو
             </span>
-            لایو
-          </span>
+          </div>
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-2">
@@ -118,6 +159,9 @@ export function MapView() {
             <MapFrame
               squares={mapMarkers.squares}
               aggregates={mapMarkers.aggregates}
+              searchProvinces={map.provinceAggregates}
+              searchCities={map.allCityAggregates}
+              searchSquares={map.resolvedSquares}
               center={linkedFocus ?? requestedFocus}
               level={map.level}
               onSelectAggregate={mapMarkers.onSelect}
@@ -125,7 +169,7 @@ export function MapView() {
             />
           </div>
 
-          {map.status === "loading" ? (
+          {map.status === "loading" && map.activeCount === 0 ? (
             <div className="absolute inset-0 z-[700] grid place-items-center bg-black/30 backdrop-blur-[1px]">
               <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#2a2b2c]/90 px-4 py-2 text-xs font-bold text-white shadow-card backdrop-blur-md">
                 <LoaderCircle className="h-4 w-4 animate-spin text-[#e5544b]" />
@@ -134,9 +178,17 @@ export function MapView() {
             </div>
           ) : null}
 
-          {map.status === "error" ? (
+          {map.error ? (
             <div className="absolute inset-x-3 bottom-3 z-[700] rounded-[14px] border border-danger-border bg-danger-surface px-3 py-2.5 text-[11px] leading-5 text-danger shadow-sm">
               {map.error}
+              <button
+                type="button"
+                onClick={map.refresh}
+                disabled={map.status === "loading"}
+                className="ms-2 underline underline-offset-4 disabled:opacity-50"
+              >
+                تلاش دوباره
+              </button>
             </div>
           ) : null}
         </div>
@@ -167,7 +219,13 @@ export function MapView() {
 
               <div className="shrink-0 text-left">
                 <strong className="block text-base font-black text-foreground">
-                  {(map.level === "city" ? map.citySquares.length : map.cityAggregates.reduce((sum, city) => sum + city.count, 0)).toLocaleString("fa-IR")}
+                  {(map.level === "city"
+                    ? map.citySquares.length
+                    : map.cityAggregates.reduce(
+                        (sum, city) => sum + city.count,
+                        0,
+                      )
+                  ).toLocaleString("fa-IR")}
                 </strong>
                 <span className="text-[10px] text-muted-foreground">
                   میدان فعال
@@ -199,9 +257,27 @@ export function MapView() {
                     <span className="relative m-auto h-2 w-2 rounded-full bg-danger" />
                   </span>
 
-                  <span className="min-w-0 flex-1 truncate text-[12px] font-black text-foreground">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLinkedFocus(null);
+                      setRequestedFocus({
+                        latitude: square.latitude,
+                        longitude: square.longitude,
+                        zoom: 15,
+                      });
+                      document
+                        .getElementById("view-map")
+                        ?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                    }}
+                    className="min-w-0 flex-1 truncate text-right text-[12px] font-black text-foreground hover:text-brand"
+                    aria-label={`نمایش ${square.name} روی نقشه`}
+                  >
                     {square.name}
-                  </span>
+                  </button>
 
                   <span
                     className="shrink-0 text-[9px] tabular-nums text-foreground-subtle"
@@ -212,7 +288,7 @@ export function MapView() {
                 </li>
               ))}
             </ul>
-          ) : map.status === "ready" ? (
+          ) : map.status === "ready" && map.level === "city" ? (
             <div className="border-t border-divider px-4 py-8 text-center">
               <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-surface-muted text-icon-muted">
                 <MapPin className="h-[18px] w-[18px]" />
