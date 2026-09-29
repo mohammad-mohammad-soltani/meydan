@@ -80,6 +80,10 @@ export async function proxy(request: NextRequest) {
   const isNativeClient = isNaghshmanNativeClient(request.headers.get("user-agent"));
   const isNativeLogin = pathname === "/auth" || pathname.startsWith("/auth/");
 
+  // Guests must be able to reach the login form without a session. Otherwise
+  // the native guard redirects /auth to /auth?returnTo=/auth indefinitely.
+  if (isNativeClient && isNativeLogin) return NextResponse.next();
+
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   const accessExpiryAt = Number(request.cookies.get(ACCESS_EXPIRY_COOKIE)?.value || 0);

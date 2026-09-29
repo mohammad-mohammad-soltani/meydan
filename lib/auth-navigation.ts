@@ -13,6 +13,8 @@ export function sanitizeReturnTo(
     const base = new URL("https://meydan.local");
     const target = new URL(value, base);
     if (target.origin !== base.origin) return fallback;
+    const pathname = decodeURIComponent(target.pathname);
+    if (pathname === "/auth" || pathname.startsWith("/auth/")) return fallback;
     return `${target.pathname}${target.search}${target.hash}`;
   } catch {
     return fallback;
