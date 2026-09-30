@@ -24,7 +24,6 @@ import {
 import type { VideoFeedEntry } from "../video-feed-queue";
 import { VideoPlayer } from "./VideoPlayer";
 import { MediaStage } from "./MediaLightbox";
-import { readStoredVideoMuted, setVideoMuted } from "@/lib/video-sound";
 import { publicProfileHref } from "@/lib/profile-route";
 import { useViewerPost } from "../hooks/useViewerPost";
 
@@ -62,7 +61,6 @@ export function ImmersivePostSlide({
   );
   const item = media[mediaIndex];
   const [visible, setVisible] = useState(true);
-  const [menu, setMenu] = useState(false);
   const [ratio, setRatio] = useState(
     item.width && item.height ? item.width / item.height : 9 / 16,
   );
@@ -94,7 +92,6 @@ export function ImmersivePostSlide({
     onMediaChange();
     setMediaIndex(next);
     setVisible(true);
-    setMenu(false);
     const nextItem = media[next];
     setRatio(
       nextItem.width && nextItem.height
@@ -104,7 +101,6 @@ export function ImmersivePostSlide({
   };
   const toggleChrome = () => {
     setVisible((value) => !value);
-    setMenu(false);
   };
   const count = (value: number) =>
     new Intl.NumberFormat("en", {

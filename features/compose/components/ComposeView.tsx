@@ -36,34 +36,41 @@ export function ComposeView() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState("");
   const [viewer, setViewer] = useState<ViewerState>({ accountType: "" });
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   const { media, notice, addFiles, remove, retry, reset, isUploading, hasUploadError, readyAttachments, isReady } =
     useComposeMedia();
 
   useEffect(() => {
+    let active = true;
     const stored = window.localStorage.getItem(DRAFT_KEY);
-    if (stored) {
-      try {
-        const draft = JSON.parse(stored) as Partial<ComposeDraft>;
-        if (typeof draft.title === "string") setTitle(draft.title);
-        if (typeof draft.text === "string") setText(draft.text);
-        if (typeof draft.isEcho === "boolean") setIsEcho(draft.isEcho);
-      } catch {
-        setText(stored);
+    queueMicrotask(() => {
+      if (!active) return;
+      if (stored) {
+        try {
+          const draft = JSON.parse(stored) as Partial<ComposeDraft>;
+          if (typeof draft.title === "string") setTitle(draft.title);
+          if (typeof draft.text === "string") setText(draft.text);
+          if (typeof draft.isEcho === "boolean") setIsEcho(draft.isEcho);
+        } catch {
+          setText(stored);
+        }
       }
-    }
+      setDraftLoaded(true);
+    });
     const frame = window.requestAnimationFrame(() => titleRef.current?.focus());
-    return () => window.cancelAnimationFrame(frame);
+    return () => { active = false; window.cancelAnimationFrame(frame); };
   }, []);
 
   useEffect(() => {
+    if (!draftLoaded) return;
     const hasDraft = title.trim().length > 0 || text.trim().length > 0 || isEcho;
     if (hasDraft) {
       window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, text, isEcho } satisfies ComposeDraft));
     } else {
       window.localStorage.removeItem(DRAFT_KEY);
     }
-  }, [title, text, isEcho]);
+  }, [draftLoaded, title, text, isEcho]);
 
   useEffect(() => {
     void meydanApi<{ account_type: "user" | "square" | "speaker" }>("/me")

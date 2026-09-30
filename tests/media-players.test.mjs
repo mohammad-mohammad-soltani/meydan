@@ -219,7 +219,7 @@ test("view counts use the same chart icon across feed and content", () => {
 });
 
 test("immersive image metadata fades over the photo instead of masking it with solid black", () => {
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   assert.match(
     css,
@@ -229,7 +229,7 @@ test("immersive image metadata fades over the photo instead of masking it with s
 });
 
 test("immersive image stage uses the full viewport so photos are never clipped by chrome", () => {
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   assert.match(css, /\.is-landscape \.viewer-media-stage\s*\{\s*bottom:\s*300px;\s*\}/);
   assert.match(css, /\.is-image-viewer \.viewer-media-stage\s*\{\s*inset:\s*0;\s*\}/);
@@ -255,7 +255,7 @@ test("immersive images fill width unless their aspect would exceed the viewport 
 
 test("immersive images always keep the landscape chrome while swiping mixed aspect ratios", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   assert.match(slide, /const portrait = item\.kind === "video" && ratio < 1;/);
   assert.match(slide, /const imageViewer = item\.kind === "image";/);
@@ -268,7 +268,7 @@ test("immersive images always keep the landscape chrome while swiping mixed aspe
 });
 
 test("desktop immersive controls override portrait mobile grid styles", () => {
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   assert.match(
     css,
@@ -284,8 +284,8 @@ test("desktop immersive controls override portrait mobile grid styles", () => {
 });
 
 test("desktop immersive controls form compact left and right groups", () => {
-  const player = source("features/media/components/VideoPlayer.tsx");
-  const css = source("app/globals.css");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   for (const control of ["play", "time", "spacer", "rate", "volume", "fullscreen"]) {
     assert.match(player, new RegExp(`data-control="${control}"`));
@@ -300,7 +300,7 @@ test("desktop immersive controls form compact left and right groups", () => {
 });
 
 test("desktop immersive video uses an X-style full-viewport player", () => {
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
 
   assert.match(slide, /className=\{chrome\("viewer-topbar"\)\}/);
@@ -312,7 +312,7 @@ test("desktop immersive video uses an X-style full-viewport player", () => {
 
 test("portrait video back button sits beside the author avatar", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   assert.match(slide, /className=\{chrome\("viewer-topbar"\)\}[\s\S]*?ref=\{!portrait \? closeRef : undefined\}/);
   assert.match(
@@ -346,7 +346,7 @@ test("immersive viewer author identity links to the public profile in both layou
 
 test("immersive viewer actions stay balanced and comments open the post detail", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   assert.match(slide, /href=\{\(`\/posts\/\$\{entry\.post\.id\}#comment-composer`\) as Route\}/);
   assert.match(slide, /aria-label="مشاهده نظرها"/);
@@ -361,7 +361,7 @@ test("immersive viewer actions stay balanced and comments open the post detail",
 
 test("mobile inline video play opens the immersive viewer and viewer omits repost", () => {
   const gallery = source("features/media/components/MediaGallery.tsx");
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
 
   assert.match(player, /onRequestPlay\?: \(video: HTMLVideoElement\) => boolean/);
@@ -374,7 +374,7 @@ test("mobile inline video play opens the immersive viewer and viewer omits repos
 });
 
 test("the video player keeps the shared playback controls", () => {
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
   for (const capability of [
     /SKIP_SECONDS/,
     /RATES/,
@@ -403,7 +403,7 @@ test("timeline video cards fetch nothing until the reader presses play", () => {
   assert.match(gallery, /<VideoPlayer\s+item=\{single\}[\s\S]*?variant="inline"[\s\S]*?preload="none"/);
   assert.doesNotMatch(galleryCode, /<video[\s>]/, "gallery tiles must not mount a video element");
 
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
   assert.match(player, /preload\?: "none" \| "metadata" \| "auto"/);
   assert.match(player, /preload=\{preload\}/);
 });

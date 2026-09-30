@@ -19,7 +19,7 @@ export function ChatContactView({ conversationId }: { conversationId: string }) 
   useEffect(() => {
     router.prefetch(`/chat/${conversationId}` as Route);
     let active = true;
-    setIsLoading(true);
+    queueMicrotask(() => { if (active) setIsLoading(true); });
     void Promise.all([getConversationById(conversationId), getConversationHistory(conversationId, 300)])
       .then(([nextConversation, nextMessages]) => {
         if (!active) return;

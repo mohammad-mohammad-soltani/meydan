@@ -64,7 +64,7 @@ test("the mini player stays legible on a phone", () => {
 
 
 test("delegates playback to the native app audio session without changing browser playback", () => {
-  const provider = source("features/audio/AudioProvider.tsx");
+  const provider = source("features/audio/audio-runtime.ts") + source("features/audio/AudioProvider.tsx");
 
   assert.match(provider, /nativeAudioV1/);
   assert.match(provider, /type: "native-audio-load"/);

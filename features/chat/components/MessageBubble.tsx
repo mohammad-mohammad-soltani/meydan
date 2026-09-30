@@ -53,11 +53,15 @@ function MessageAttachment({ attachment, scope, transfer }: { attachment: ChatAt
     if (!transfer || !isVideo) return;
 
     if (attachment.posterSrc) {
-      setPendingPoster({
-        src: attachment.posterSrc,
-        ratio: attachment.width && attachment.height ? attachment.width / attachment.height : 16 / 9,
+      let active = true;
+      const posterSrc = attachment.posterSrc;
+      queueMicrotask(() => {
+        if (active) setPendingPoster({
+          src: posterSrc,
+          ratio: attachment.width && attachment.height ? attachment.width / attachment.height : 16 / 9,
+        });
       });
-      return;
+      return () => { active = false; };
     }
 
     const source = attachment.previewUrl || attachment.url;
@@ -269,17 +273,19 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
 
   useEffect(() => {
     const attachment = message.attachment;
+    let active = true;
     if (message.status !== "sending" || !attachment) {
-      setTransfer(null);
-      return;
+      queueMicrotask(() => { if (active) setTransfer(null); });
+      return () => { active = false; };
     }
 
     const key = chatUploadKey(attachment.name, attachment.size);
-    setTransfer((current) => current?.key === key ? current : { key, progress: 0, phase: "uploading" });
+    queueMicrotask(() => { if (active) setTransfer((current) => current?.key === key ? current : { key, progress: 0, phase: "uploading" }); });
 
-    return subscribeToChatUploadProgress((detail) => {
+    const unsubscribe = subscribeToChatUploadProgress((detail) => {
       if (detail.key === key) setTransfer(detail);
     });
+    return () => { active = false; unsubscribe(); };
   }, [message.attachment, message.status]);
 
   const clearLongPress = () => {

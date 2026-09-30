@@ -14,7 +14,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { MiniPlayer } from "@/features/audio/MiniPlayer";
-import { AdminNavLink } from "@/features/admin/components/AdminNavLink";
+import { AdminNavLink } from "@/components/layouts/AdminNavLink";
 import { AppLogo } from "@/components/shared/AppLogo";
 import { SilentBoundary } from "@/components/shared/SilentBoundary";
 import { PushEnrollment } from "@/components/pwa/PushEnrollment";

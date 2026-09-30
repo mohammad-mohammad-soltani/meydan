@@ -94,7 +94,7 @@ test("the read more control reveals the rest in place", () => {
 });
 
 test("the reveal animation respects reduced motion", () => {
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   assert.match(css, /@keyframes read-more-reveal-keyframes/);
   assert.match(css, /@utility read-more-reveal-open/);

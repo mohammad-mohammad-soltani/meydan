@@ -8,11 +8,11 @@ import { NextRequest } from 'next/server.js';
 
 const require = createRequire(import.meta.url);
 function load(path) {
-  const module = { exports: {} };
+  const loadedModule = { exports: {} };
   const source = readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
   const output = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
   vm.runInNewContext(output, {
-    module, exports: module.exports, URL, Headers, process,
+    module: loadedModule, exports: loadedModule.exports, URL, Headers, process,
     fetch: async () => new Response('{}', { status: 503 }),
     require(name) {
       if (name === '@/lib/meydan-api') return { getMeydanApiBaseUrl: () => 'https://backend.example' };
@@ -20,7 +20,7 @@ function load(path) {
       return require(name);
     },
   });
-  return module.exports;
+  return loadedModule.exports;
 }
 const { proxy } = load('proxy.ts');
 const { sanitizeReturnTo } = load('lib/auth-navigation.ts');

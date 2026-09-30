@@ -13,7 +13,7 @@ function redirectToLogin() {
   if (typeof window === "undefined") return;
   const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
   rememberReturnTo(returnTo);
-  window.location.assign(loginHref(returnTo));
+  window.location.href = loginHref(returnTo);
 }
 
 export function useProfile(profile: ProfileDetails, canManage = false) {
@@ -78,8 +78,9 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
 
   useEffect(() => {
     if (canManage || !isAuthenticated) {
-      setFollowStateReady(true);
-      return;
+      let active = true;
+      queueMicrotask(() => { if (active) setFollowStateReady(true); });
+      return () => { active = false; };
     }
     let active = true;
     void getActorFollowing(targetActorType, profile.actorId)
@@ -137,7 +138,9 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         if (!chatUserId) throw new Error("Square chat target is unavailable");
       }
       const conversation = await createDirectConversation(chatUserId);
-      window.location.assign(`/chat/${conversation.id}`);
+      // Preserve the full navigation used to refresh the authenticated shell.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = `/chat/${conversation.id}`;
     } catch (reason) {
       if (isAuthApiError(reason)) {
         redirectToLogin();
@@ -254,7 +257,9 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
 
   useEffect(() => {
     if (initialNarrativesLoaded || loadMoreFailed) return;
-    void loadMore();
+    let active = true;
+    queueMicrotask(() => { if (active) void loadMore(); });
+    return () => { active = false; };
   }, [initialNarrativesLoaded, loadMoreFailed, loadMore]);
 
   useEffect(() => {

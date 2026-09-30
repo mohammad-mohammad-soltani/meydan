@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PROVINCE_CENTERS } from "@/features/auth/data/province-centers";
+import { PROVINCE_CENTERS } from "@/features/map/data/province-centers";
 import {
   getAllSquares,
   clearAllSquaresCache,

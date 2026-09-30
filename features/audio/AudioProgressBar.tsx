@@ -32,7 +32,6 @@ export function AudioProgressBar({
   const { currentTime, duration, buffered, seek } = useAudio();
   const sliderRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
-  const [dragging, setDragging] = useState(false);
   const [previewTime, setPreviewTime] = useState<number | null>(null);
 
   const value = previewTime ?? currentTime;
@@ -60,7 +59,6 @@ export function AudioProgressBar({
     if (duration <= 0) return;
     event.preventDefault();
     draggingRef.current = true;
-    setDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
     updateFromPointer(event);
   };
@@ -76,7 +74,6 @@ export function AudioProgressBar({
     event.preventDefault();
     updateFromPointer(event);
     draggingRef.current = false;
-    setDragging(false);
     setPreviewTime(null);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -85,7 +82,6 @@ export function AudioProgressBar({
 
   const cancelPointer = (event: PointerEvent<HTMLDivElement>) => {
     draggingRef.current = false;
-    setDragging(false);
     setPreviewTime(null);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);

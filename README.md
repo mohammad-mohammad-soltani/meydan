@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# میدان
 
-## Getting Started
+رابط وب میدان با Next.js 16 و React 19 ساخته شده است. این مخزن شامل صفحه‌های عمومی، احراز هویت، فید، گفتگو، رسانه و پنل مدیریت است.
 
-First, run the development server:
+## شروع کار
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+برای بررسی تغییرات:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npx tsc --noEmit
+npm run lint
+node --experimental-strip-types --test tests/*.test.mjs
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+آزمون مرورگر نقشه با `npm run test:map:browser` اجرا می‌شود. متغیرهای محیطی و آدرس سرویس پشتیبان در فایل‌های تنظیمات محلی و `lib/meydan-api.ts` خوانده می‌شوند؛ اطلاعات محرمانه را در مخزن ثبت نکنید.
 
-## Learn More
+## نقشهٔ کد
 
-To learn more about Next.js, take a look at the following resources:
+| مسیر | مسئولیت | برای تغییر چه چیزی؟ |
+| --- | --- | --- |
+| `app/` | مسیرها، layoutها، metadata و route handlerهای Next.js | نشانی صفحه، اتصال صفحه به feature، endpoint داخلی |
+| `features/<name>/components/` | نمای یک قابلیت | ظاهر و تعامل همان قابلیت |
+| `features/<name>/hooks/` | وضعیت و رفتار سمت کاربر | بارگذاری، صفحه‌بندی، تعامل و subscription |
+| `features/<name>/services/` | درخواست داده و تبدیل پاسخ | ارتباط با API و مدل‌های ورودی/خروجی |
+| `features/<name>/types.ts` | نوع‌های عمومی یک قابلیت | قرارداد دادهٔ همان feature |
+| `components/` | پوسته، provider و اجزای مشترک چند قابلیت | ناوبری، چیدمان و UI مشترک |
+| `lib/` | زیرساخت مستقل از قابلیت | نشست، درخواست عمومی، مسیریابی و realtime |
+| `data/` | دادهٔ ایستای مشترک | داده‌هایی که بخشی از اجرای یک feature نیستند |
+| `tests/` | آزمون‌های رفتار و قرارداد | بررسی تغییرات و جلوگیری از رگرسیون |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- Trigger Vercel deployment.
-- Frontend deployment refresh.
+از `app/` برای منطق مفصل UI یا تبدیل داده استفاده نکنید؛ صفحه باید ورودی‌ها را آماده کند و نمای feature را فراخوانی کند. کدی را به `components/` یا `lib/` منتقل کنید که دست‌کم دو مصرف‌کنندهٔ مستقل دارد. داده و منطق مخصوص یک feature کنار همان feature می‌ماند. وارد کردن نوع از feature دیگر مجاز است؛ برای منطق اجرایی مشترک، ابتدا مالکیت آن را مشخص کنید تا وابستگی چرخشی شکل نگیرد.
 
-## Deploy on Vercel
+## مسیرهای پرتکرار
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- ورود و ثبت‌نام: `features/auth/` و مسیر اتصال `app/auth/page.tsx`
+- فید و پست: `features/feed/`، `features/posts/` و `features/compose/`
+- پروفایل: `features/profile/`؛ نوع پاسخ، نگاشت داده و دریافت پروفایل در فایل‌های جداگانهٔ `services/`
+- پخش رسانه: `features/media/` و `features/audio/`
+- گفتگو و اعلان: `features/chat/` و `lib/realtime/`
+- نقشه و مختصات: `features/map/`
+- مدیریت: `features/admin/` و مسیرهای `app/(app)/admin/`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+استایل‌های پایه و رنگ‌های معنایی در `app/globals.css` قرار دارند. استایل فضای مدیریت در `features/admin/`، استایل نمایشگر رسانه در `features/media/viewer.css` و استایل‌های حالت مشکی و اعداد فارسی در `app/` هستند. کامپوننت‌ها باید تا حد امکان از رنگ‌های معنایی موجود استفاده کنند.
+
+## قراردادهای Next.js
+
+این پروژه از نسخهٔ 16.3.4 استفاده می‌کند. پیش از تغییر ساختار مسیر، مرز Client/Server یا CSS، راهنمای همان نسخه را در `node_modules/next/dist/docs/01-app/` بخوانید. فایل `AGENTS.md` نیز این الزام را ثبت کرده است.

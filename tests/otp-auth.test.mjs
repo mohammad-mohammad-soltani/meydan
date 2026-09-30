@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const source = readFileSync(path.join(root, "app/auth/page.tsx"), "utf8");
+const source = readFileSync(path.join(root, "features/auth/components/AuthPage.tsx"), "utf8");
 
 test("OTP login requires all six digits and safely reports malformed proxy responses", () => {
   assert.match(source, /code\.length < 6/);

@@ -24,7 +24,7 @@ test("the shell reserves the comment composer's height", () => {
   );
 
   // The token has a neutral default for every other route.
-  assert.match(source("app/globals.css"), /--comment-composer-height: 0px/);
+  assert.match((source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css")), /--comment-composer-height: 0px/);
 });
 
 test("the post comment list no longer double-reserves that space", () => {

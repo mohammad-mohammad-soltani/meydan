@@ -29,16 +29,26 @@ export function ConversationView({ conversationId, conversation, messages }: { c
   useEffect(() => {
     router.prefetch(chatContactHref(conversationId) as Route);
   }, [conversationId, router]);
-  useEffect(() => { if (chat.conversation) setMuted(Boolean(chat.conversation.notificationsMuted)); }, [chat.conversation?.id, chat.conversation?.notificationsMuted]);
+  useEffect(() => {
+    const nextMuted = chat.conversation?.notificationsMuted;
+    if (nextMuted === undefined) return;
+    let active = true;
+    queueMicrotask(() => { if (active) setMuted(Boolean(nextMuted)); });
+    return () => { active = false; };
+  }, [chat.conversation]);
 
   useEffect(() => {
     if (!isSearchOpen || !searchQuery.trim()) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
+      let active = true;
+      queueMicrotask(() => {
+        if (!active) return;
+        setSearchResults([]);
+        setIsSearching(false);
+      });
+      return () => { active = false; };
     }
     let active = true;
-    setIsSearching(true);
+    queueMicrotask(() => { if (active) setIsSearching(true); });
     const timer = window.setTimeout(() => {
       void searchConversationMessages(conversationId, searchQuery.trim())
         .then((items) => { if (active) setSearchResults(items); })

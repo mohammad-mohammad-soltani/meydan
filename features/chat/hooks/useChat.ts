@@ -94,7 +94,9 @@ export function useChat(initialConversations: Conversation[] = [], initialNotifi
   useEffect(() => {
     let active = true;
     let unbind: (() => void) | null = null;
-    void Promise.allSettled([refreshConversations(), refreshNotifications()]);
+    queueMicrotask(() => {
+      if (active) void Promise.allSettled([refreshConversations(), refreshNotifications()]);
+    });
 
     const onConversationUpdated = () => void refreshConversations();
     const onPresence = (payload: unknown) => {

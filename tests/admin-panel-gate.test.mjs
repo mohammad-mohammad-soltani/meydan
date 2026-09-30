@@ -41,7 +41,7 @@ test("speaker promotion searches accounts and never overwrites their identity", 
   assert.doesNotMatch(form, /هویت و معرفی سخنران/);
   assert.doesNotMatch(profileBody, /\b(name|bio|role|handle|expertise|initials):/);
   assert.match(form, /admin-speaker-form/);
-  assert.match(source("app\/globals.css"), /admin-speaker-city/);
+  assert.match((source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css")), /admin-speaker-city/);
 });
 
 test("editor feedback keeps one grid column and success appears as an animated toast", () => {
@@ -192,7 +192,7 @@ test("every admin page re-checks the role before running its own queries", () =>
 });
 
 test("the admin link is only rendered for an administrator", () => {
-  const nav = source("features/admin/components/AdminNavLink.tsx");
+  const nav = source("components/layouts/AdminNavLink.tsx");
 
   // Fail-closed: while the role is unknown, the link does not exist.
   assert.match(nav, /isAdministrator/);

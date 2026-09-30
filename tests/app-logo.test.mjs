@@ -11,7 +11,7 @@ const binary = (relative) => readFileSync(path.join(root, relative));
 const LOGO_CONSUMERS = [
   "components/layouts/AppShell.tsx",
   "components/layouts/MobileHeader.tsx",
-  "app/auth/page.tsx",
+  "features/auth/components/AuthPage.tsx",
 ];
 
 test("the brand mark is the app logo in every chrome surface", () => {

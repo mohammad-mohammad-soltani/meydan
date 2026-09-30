@@ -84,7 +84,7 @@ test("login flow preserves and consumes a sanitized return target", () => {
 });
 
 test("speaker accounts are mapped instead of bounced back to login", () => {
-  const service = source("features/profile/services/profile.service.ts");
+  const service = source("features/profile/services/profile.service.ts") + source("features/profile/services/profile-api-types.ts");
   // `/me` answers `account_type: "speaker"` for the `meydan_speaker` role; an
   // unhandled type used to fall through to `null` and redirect to /auth.
   assert.match(service, /account_type:\s*"speaker"/);
@@ -139,7 +139,7 @@ test("theme supports light, dark and pure-black modes", () => {
 
 
 test("successful login reloads the app shell with the new session cookie", () => {
-  const authPage = source("app/auth/page.tsx");
+  const authPage = source("features/auth/components/AuthPage.tsx");
   assert.match(
     authPage,
     /function completeLogin\([\s\S]*?window\.location\.replace\(target\);[\s\S]*?\}/,

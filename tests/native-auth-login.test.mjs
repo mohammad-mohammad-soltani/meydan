@@ -94,7 +94,7 @@ test('web browsers do not require a native refresh credential', async () => {
 });
 
 test('OTP and registration await native persistence before navigation', () => {
-  const page = source('app/auth/page.tsx');
+  const page = source('features/auth/components/AuthPage.tsx');
   assert.match(page, /await persistNativeLogin\(window, refreshToken\)/);
   assert.match(page, /await completeLogin\(result\.refresh_token\)/);
   assert.match(page, /await completeLogin\(refreshToken\)/);

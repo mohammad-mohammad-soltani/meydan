@@ -71,10 +71,7 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      setState("hidden");
-      return;
-    }
+    if (!isAuthenticated) return;
 
     let cancelled = false;
     meydanApi<WebPushConfig>("/push/config", { suppressAuthRedirect: true })
@@ -97,6 +94,7 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
   }, [isAuthenticated, syncSubscription]);
 
   if (
+    !isAuthenticated ||
     !config ||
     state === "loading" ||
     state === "hidden" ||

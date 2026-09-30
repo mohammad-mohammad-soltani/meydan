@@ -32,7 +32,7 @@ test("a solid warning fill always carries a readable label", () => {
   assert.match(card, /bg-warning text-warning-solid-foreground/);
   assert.doesNotMatch(card, /bg-warning text-on-solid/);
 
-  const light = source("app/globals.css");
+  const light = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
   assert.match(light, /--color-warning-solid-foreground: var\(--warning-solid-foreground\)/);
   // Light theme warning is dark amber -> white text; dark/black are bright -> near-black.
   assert.match(light, /--warning: #b45309;[\s\S]{0,200}--warning-solid-foreground: #ffffff;/);

@@ -35,7 +35,9 @@ export const useVideoFeed = () => useContext(VideoFeedContext);
 export function VideoFeedProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const sessionRef = useRef<Session | null>(null);
-  sessionRef.current = session;
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   useEffect(() => {
     const closeFromHistory = () => {

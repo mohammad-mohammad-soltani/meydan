@@ -46,12 +46,12 @@ export function AdminGateError({ message }: { message: string }) {
         <p className="mt-3 text-[11px] leading-6 text-foreground-subtle">
           تا زمانی که نقش شما تأیید نشود، محتوای پنل نمایش داده نمی‌شود.
         </p>
-        <a
+        <Link
           href="/admin"
           className="mt-5 inline-flex rounded-control bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground transition-colors hover:bg-brand-hover"
         >
           تلاش دوباره
-        </a>
+        </Link>
       </div>
     </section>
   );

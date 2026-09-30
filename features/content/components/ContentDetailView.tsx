@@ -643,8 +643,6 @@ export function ContentDetailView({
 
           <div className="mt-2 divide-y divide-divider">
             {relatedItems.map((related) => {
-              const RelatedIcon = kindIcons[related.media.kind];
-
               return (
                 <Link
                   key={related.id}

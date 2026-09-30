@@ -163,7 +163,7 @@ export function ExploreView() {
 
   useEffect(() => {
     let cancelled = false;
-    setLandingStatus("loading");
+    queueMicrotask(() => { if (!cancelled) setLandingStatus("loading"); });
 
     void getExploreLanding()
       .then((data) => {
@@ -185,15 +185,23 @@ export function ExploreView() {
     const needle = query.trim();
 
     if (!needle) {
-      setResults([]);
-      setSearchStatus("idle");
-      setSearchError("");
-      return;
+      let active = true;
+      queueMicrotask(() => {
+        if (!active) return;
+        setResults([]);
+        setSearchStatus("idle");
+        setSearchError("");
+      });
+      return () => { active = false; };
     }
 
     const controller = new AbortController();
-    setSearchStatus("loading");
-    setSearchError("");
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) {
+        setSearchStatus("loading");
+        setSearchError("");
+      }
+    });
 
     const timer = window.setTimeout(() => {
       void searchExplore(needle, activeFilter, controller.signal)

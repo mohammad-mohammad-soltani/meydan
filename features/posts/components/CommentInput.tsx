@@ -36,7 +36,9 @@ export function CommentInput({
   const [position, setPosition] = useState<Position | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    let active = true;
+    queueMicrotask(() => { if (active) setMounted(true); });
+    return () => { active = false; };
   }, []);
 
   /*

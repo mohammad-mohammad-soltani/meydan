@@ -1,891 +1,18 @@
-import { compactFa, isAuthApiError, meydanApi, meydanApiPage, plainText } from "@/lib/meydan-api";
+import { isAuthApiError, meydanApi, meydanApiPage } from "@/lib/meydan-api";
 import { accessTokenHeader } from "@/lib/meydan-session";
-import type { FeedAttachment, FeedPost } from "@/features/feed/types";
+import type { FeedPost } from "@/features/feed/types";
+import type { ProfileDetails } from "../types";
 import type {
-  ProfileDetails,
-  ProfileNarrative,
-  ProfileReply,
-  ProfileStat,
-} from "../types";
-
-type ApiSchedule = {
-  id: number;
-  title: string;
-  starts_at: string;
-  position?: number;
-};
-
-type ApiSquareLocation = {
-  address?: string;
-  province_id?: number;
-  city_id?: number;
-  latitude?: number;
-  longitude?: number;
-  lat?: number;
-  lng?: number;
-};
-
-type ApiSquare = {
-  id: number;
-  name: string;
-  description?: string;
-  verified?: boolean;
-  avatar_url?: string;
-  cover_url?: string;
-  handle?: string;
-  subtitle?: string;
-  profile_about?: string;
-  profile_skills?: string[];
-  square_stats?: ProfileStat[];
-  resume_stats?: ProfileStat[];
-  latitude?: number;
-  longitude?: number;
-  lat?: number;
-  lng?: number;
-  location?: ApiSquareLocation | null;
-  schedule?: ApiSchedule[];
-  start_date?: string | null;
-  stats?: { active_nights?: number; narratives?: number };
-};
-
-type ApiUserProfile = {
-  id: number;
-  full_name: string;
-  avatar_url?: string;
-  cover_url?: string;
-  headline?: string;
-  verified?: boolean;
-  verified_speaker?: boolean;
-  verified_official?: boolean;
-  location_label?: string;
-  province_id?: number;
-  city_id?: number;
-  about?: string;
-  skills?: string[];
-  resume_stats?: ProfileStat[];
-  stats?: {
-    narratives?: number;
-  };
-};
-
-/**
- * Speaker extra carried by `/me` for accounts holding the `meydan_speaker`
- * role. The speaker *is* the user account, so this only decorates `profile`.
- */
-type ApiSpeaker = {
-  id: number;
-  user_id?: number;
-  name?: string;
-  role?: string;
-  bio?: string;
-  handle?: string;
-  avatar_url?: string;
-  cover_url?: string;
-  verified?: boolean;
-  cities?: number[];
-  social_links?: Array<{ platform?: string; url?: string; label?: string }>;
-  categories?: Array<{ slug?: string; name?: string }>;
-};
-
-type ApiMe =
-  | {
-      account_type: "square";
-      square: ApiSquare | null;
-    }
-  | {
-      account_type: "speaker";
-      profile: ApiUserProfile;
-      speaker?: ApiSpeaker | null;
-    }
-  | {
-      account_type: "official";
-      profile: ApiUserProfile;
-    }
-  | {
-      account_type: "user";
-      profile: ApiUserProfile;
-    };
-
-type ApiPublicUser = {
-  id: number;
-  actor: {
-    avatar_url?: string;
-    display_name?: string;
-    verified?: boolean;
-    verified_speaker?: boolean;
-    verified_official?: boolean;
-  };
-  profile: Omit<
-    ApiUserProfile,
-    "id" | "avatar_url" | "verified"
-  >;
-};
-
-type ApiNarrative = {
-  id: number;
-
-  author?: {
-    id?: string;
-    type?: "user" | "square";
-    display_name?: string;
-    avatar_url?: string;
-    verified?: boolean;
-  };
-
-  body: string;
-  published_at?: string | null;
-  tags?: string[];
-
-  attachments?: Array<{
-    id: number;
-    type?: string;
-    label?: string;
-    filename?: string;
-    url?: string;
-    width?: number;
-    height?: number;
-  }>;
-
-  media_reflections?: Array<{
-    outlet: string;
-    title: string;
-    url?: string;
-  }>;
-
-  initiative?: {
-    id?: number;
-    cta_label?: string;
-    viewer_state?: {
-      joined?: boolean;
-    };
-  } | null;
-
-  viewer_state?: {
-    liked?: boolean;
-    reposted?: boolean;
-    can_delete?: boolean;
-  } | null;
-
-  stats?: {
-    likes?: number;
-    reposts?: number;
-    comments?: number;
-    views?: number;
-  };
-};
-
-type ApiComment = {
-  id: number;
-  narrative_id: number;
-  body: string;
-  created_at?: string | null;
-};
-
-type ApiMediaReflectionCount = {
-  square_id: number;
-  count: number;
-};
-
-function timeFa(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("fa-IR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
-}
-
-function relativeFa(
-  value?: string | null,
-): string {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const diffMinutes = Math.max(
-    1,
-    Math.round(
-      (Date.now() - date.getTime()) /
-        60000,
-    ),
-  );
-
-  const number =
-    new Intl.NumberFormat("fa-IR");
-
-  if (diffMinutes < 60) {
-    return `${number.format(
-      diffMinutes,
-    )} دقیقه پیش`;
-  }
-
-  const hours = Math.round(
-    diffMinutes / 60,
-  );
-
-  if (hours < 24) {
-    return `${number.format(
-      hours,
-    )} ساعت پیش`;
-  }
-
-  return `${number.format(
-    Math.round(hours / 24),
-  )} روز پیش`;
-}
-
-function emptyActivity(): ProfileDetails["activity"] {
-  return {
-    id: "none",
-    authorLabel:
-      "ثبت‌شده توسط مسئول موکب",
-    timeLabel: "",
-    content:
-      "هنوز روایتی برای این میدان ثبت نشده است.",
-    tags: [],
-    likes: 0,
-    reposts: 0,
-    comments: 0,
-  };
-}
-
-function mapNarrative(
-  activity: ApiNarrative,
-): ProfileNarrative {
-  return {
-    id: String(activity.id),
-
-    authorLabel:
-      "ثبت‌شده توسط مسئول میدان",
-
-    timeLabel: relativeFa(
-      activity.published_at,
-    ),
-
-    content: plainText(
-      activity.body || "",
-    ),
-
-    tags: activity.tags || [],
-
-    likes:
-      activity.stats?.likes || 0,
-
-    reposts:
-      activity.stats?.reposts || 0,
-
-    comments:
-      activity.stats?.comments || 0,
-  };
-}
-
-function mapReply(
-  item: ApiComment,
-): ProfileReply {
-  return {
-    id: String(item.id),
-
-    narrativeId: String(
-      item.narrative_id,
-    ),
-
-    content: plainText(
-      item.body || "",
-    ),
-
-    timeLabel: relativeFa(
-      item.created_at,
-    ),
-  };
-}
-
-function attachmentIcon(
-  type?: string,
-): FeedAttachment["icon"] {
-  if (type === "image") {
-    return "image";
-  }
-
-  if (type === "video") {
-    return "video";
-  }
-
-  if (type === "audio") {
-    return "microphone";
-  }
-
-  return "article";
-}
-
-function mediaReflectionOutlets(
-  reflections: NonNullable<ApiNarrative["media_reflections"]>,
-): string[] {
-  return Array.from(
-    new Set(
-      reflections
-        .map((reflection) => reflection.outlet?.trim())
-        .filter((outlet): outlet is string => Boolean(outlet)),
-    ),
-  );
-}
-
-function mediaReflectionSummary(
-  outlets: string[],
-): string {
-  if (!outlets.length) return "";
-
-  if (outlets.length === 1) {
-    return `بازنشر شده در ${outlets[0]}`;
-  }
-
-  if (outlets.length === 2) {
-    return `بازنشر شده در ${outlets[0]} و ${outlets[1]}`;
-  }
-
-  if (outlets.length === 3) {
-    return `بازنشر شده در ${outlets[0]}، ${outlets[1]} و ${outlets[2]}`;
-  }
-
-  return `بازنشر شده در ${outlets[0]}، ${outlets[1]}، ${outlets[2]} و ${(outlets.length - 3).toLocaleString("fa-IR")} رسانه دیگر`;
-}
-
-function mapNarrativePost(
-  item: ApiNarrative,
-  identity: ProfileDetails["identity"],
-): FeedPost {
-  const id =
-    item.author?.id || "";
-
-  const actorId = Number(
-    id.match(
-      /(?:sq_|u_)?(\d+)$/,
-    )?.[1] || 0,
-  );
-
-  const attachments = (
-    item.attachments || []
-  ).map((attachment) => ({
-    id: String(attachment.id),
-
-    label:
-      attachment.label ||
-      attachment.filename ||
-      "پیوست",
-
-    detail:
-      attachment.type || "فایل",
-
-    icon: attachmentIcon(
-      attachment.type,
-    ),
-
-    previewSrc:
-      attachment.type === "image" ||
-      attachment.type === "video"
-        ? attachment.url
-        : undefined,
-
-    audioSrc:
-      attachment.type === "audio"
-        ? attachment.url
-        : undefined,
-
-    previewAlt:
-      attachment.label ||
-      identity.name,
-
-    width:
-      attachment.width,
-
-    height:
-      attachment.height,
-  }));
-
-  const reflections =
-    item.media_reflections || [];
-
-  const reflection =
-    reflections[0];
-
-  const reflectionOutlets =
-    mediaReflectionOutlets(reflections);
-
-  const reflectionSummary =
-    mediaReflectionSummary(reflectionOutlets);
-
-  return {
-    id: String(item.id),
-
-    author: {
-      id: actorId,
-
-      type:
-        item.author?.type ||
-        "square",
-
-      avatarUrl:
-        item.author?.avatar_url ||
-        identity.avatar,
-
-      verified: Boolean(
-        item.author?.verified ??
-          identity.verified,
-      ),
-      verifiedSpeaker: Boolean(identity.verifiedSpeaker),
-      verifiedOfficial: Boolean(identity.verifiedOfficial),
-    },
-
-    initiativeId:
-      item.initiative?.id,
-
-    viewerState: {
-      liked: Boolean(
-        item.viewer_state?.liked,
-      ),
-
-      reposted: Boolean(
-        item.viewer_state?.reposted,
-      ),
-
-      joined: Boolean(
-        item.initiative?.viewer_state
-          ?.joined,
-      ),
-
-      canDelete: Boolean(
-        item.viewer_state?.can_delete,
-      ),
-    },
-
-    kind:
-      attachments.some(
-        (attachment) =>
-          attachment.icon === "image" ||
-          attachment.icon === "video",
-      ) || reflection
-        ? "media"
-        : "ideas",
-
-    squareName:
-      item.author?.display_name ||
-      identity.name,
-
-    handle:
-      identity.handle,
-
-    timeAgo: relativeFa(
-      item.published_at,
-    ),
-
-    city:
-      identity.location,
-
-    badge:
-      item.tags?.[0] ||
-      "روایت میدان",
-
-    title:
-      item.author?.display_name ||
-      identity.name,
-
-    body: plainText(
-      item.body || "",
-    ),
-
-    attachments,
-
-    mediaReflection: reflection
-      ? {
-          outlet: reflection.outlet,
-          outlets: reflectionOutlets,
-          headline: reflectionSummary || reflection.title,
-          url:
-            reflections.length === 1
-              ? reflection.url
-              : undefined,
-        }
-      : undefined,
-
-    stats: {
-      likes:
-        item.stats?.likes || 0,
-
-      comments:
-        item.stats?.comments || 0,
-
-      reposts:
-        item.stats?.reposts || 0,
-
-      views:
-        item.stats?.views || 0,
-    },
-
-    callToAction:
-      item.initiative?.cta_label ||
-      undefined,
-  };
-}
-
-function toFiniteNumber(
-  value: unknown,
-): number | undefined {
-  const number = Number(value);
-
-  return Number.isFinite(number)
-    ? number
-    : undefined;
-}
-
-function squareCoordinates(
-  square: ApiSquare,
-): {
-  latitude?: number;
-  longitude?: number;
-} {
-  const latitude = toFiniteNumber(
-    square.location?.latitude ??
-      square.location?.lat ??
-      square.latitude ??
-      square.lat,
-  );
-
-  const longitude = toFiniteNumber(
-    square.location?.longitude ??
-      square.location?.lng ??
-      square.longitude ??
-      square.lng,
-  );
-
-  return {
-    latitude,
-    longitude,
-  };
-}
-
-function mapSquare(
-  square: ApiSquare,
-  narratives: ApiNarrative[] = [],
-  replies: ApiComment[] = [],
-  mediaReflectionCount?: number,
-): ProfileDetails {
-  const mappedNarratives =
-    narratives.map(mapNarrative);
-
-  const mappedActivity =
-    mappedNarratives[0];
-
-  const squareStats: ProfileStat[] = [
-    {
-      value: compactFa(square.stats?.narratives ?? narratives.length),
-      label: "روایت منتشرشده",
-    },
-    ...(mediaReflectionCount === undefined ? [] : [{
-      value: `${compactFa(mediaReflectionCount)} روایت`,
-      label: "بازتاب رسانه‌ای",
-      tone: "success" as const,
-    }]),
-  ];
-
-  const identity = {
-    name: square.name,
-
-    handle:
-      square.handle ||
-      `square_${square.id}`,
-
-    subtitle:
-      square.subtitle ||
-      "پایگاه فعال میدان",
-
-    location:
-      square.location?.address || "",
-
-    avatar:
-      square.avatar_url ||
-      undefined,
-
-    cover:
-      square.cover_url ||
-      undefined,
-
-    verified: Boolean(
-      square.verified,
-    ),
-  };
-
-  const coordinates =
-    squareCoordinates(square);
-
-  return {
-    actorId: square.id,
-
-    startDate: square.start_date ?? undefined,
-
-    accountType: "square",
-
-    provinceId:
-      square.location?.province_id,
-
-    cityId:
-      square.location?.city_id,
-
-    latitude:
-      coordinates.latitude,
-
-    longitude:
-      coordinates.longitude,
-
-    initialTab: "square",
-
-    identity,
-
-    squareStats,
-
-    resumeStats:
-      square.resume_stats || [],
-
-    schedule: (
-      square.schedule || []
-    )
-      .slice()
-      .sort(
-        (a, b) =>
-          (a.position || 0) -
-          (b.position || 0),
-      )
-      .map((item, index) => ({
-        id: String(item.id),
-
-        title:
-          item.title,
-
-        time: timeFa(
-          item.starts_at,
-        ),
-
-        startsAt:
-          item.starts_at,
-
-        highlighted:
-          index === 1,
-      })),
-
-    activity:
-      mappedActivity ||
-      emptyActivity(),
-
-    narratives:
-      mappedNarratives,
-
-    narrativePosts:
-      narratives.map((item) =>
-        mapNarrativePost(
-          item,
-          identity,
-        ),
-      ),
-
-    replies:
-      replies.map(mapReply),
-
-    about: plainText(
-      square.profile_about ||
-        square.description ||
-        "",
-    ),
-
-    skills:
-      square.profile_skills || [],
-  };
-}
-
-function cleanStrings(
-  values: unknown,
-): string[] {
-  return (Array.isArray(values) ? values : [])
-    .map((value) =>
-      typeof value === "string"
-        ? value.trim()
-        : "",
-    )
-    .filter(Boolean);
-}
-
-/**
- * A speaker account is a user account that also carries a curated speaker
- * record. `speaker` is only present on `/me`; public profiles keep deriving the
- * badge from the actor fields.
- */
-function mapUser(
-  profile: ApiUserProfile,
-  narrativeItems: ApiNarrative[] = [],
-  replies: ApiComment[] = [],
-  speaker: ApiSpeaker | null = null,
-): ProfileDetails {
-  const narratives =
-    profile.stats?.narratives ||
-    narrativeItems.length ||
-    0;
-
-  const identity = {
-    name:
-      speaker?.name ||
-      profile.full_name ||
-      "کاربر میدان",
-
-    handle:
-      speaker?.handle ||
-      `user_${profile.id}`,
-
-    subtitle:
-      speaker?.role ||
-      profile.headline ||
-      "عضو میدان",
-
-    location:
-      profile.location_label || "",
-
-    avatar:
-      speaker?.avatar_url ||
-      profile.avatar_url ||
-      undefined,
-
-    cover:
-      speaker?.cover_url ||
-      profile.cover_url ||
-      undefined,
-
-    verified: Boolean(
-      profile.verified,
-    ),
-
-    verifiedSpeaker: Boolean(
-      speaker?.verified ??
-        profile.verified_speaker,
-    ),
-
-    verifiedOfficial: Boolean(
-      profile.verified_official,
-    ),
-  };
-
-  // The API can answer an unset list meta as `[""]`; treating that as a real
-  // entry would render an empty stat row and a bare `#` skill tag.
-  const resumeStats =
-    (profile.resume_stats || []).filter(
-      (stat) =>
-        Boolean(
-          stat &&
-            (stat.label || stat.value),
-        ),
-    );
-
-  const skills = cleanStrings(
-    profile.skills,
-  );
-
-  return {
-    actorId: profile.id,
-
-    accountType: "resume",
-
-    provinceId:
-      profile.province_id,
-
-    cityId:
-      profile.city_id,
-
-    initialTab: "resume",
-
-    identity,
-
-    squareStats: [],
-
-    resumeStats:
-      resumeStats.length
-        ? resumeStats.map((stat) =>
-            stat.label === "اعتبار هویت"
-              ? { ...stat, value: profile.verified_speaker ? "سخنران" : "غیر رسمی" }
-              : stat,
-          )
-        : [
-            {
-              value:
-                compactFa(narratives),
-
-              label:
-                "روایت منتشرشده",
-            },
-            {
-              value: "فعال",
-
-              label:
-                "وضعیت عضویت",
-
-              tone: "success",
-            },
-            {
-              value: profile.verified_speaker
-                ? "سخنران"
-                : "غیر رسمی",
-
-              label:
-                "اعتبار هویت",
-            },
-          ],
-
-    schedule: [],
-
-    activity:
-      narrativeItems[0]
-        ? mapNarrative(
-            narrativeItems[0],
-          )
-        : emptyActivity(),
-
-    narratives:
-      narrativeItems.map(
-        mapNarrative,
-      ),
-
-    narrativePosts:
-      narrativeItems.map(
-        (item) =>
-          mapNarrativePost(
-            item,
-            identity,
-          ),
-      ),
-
-    replies:
-      replies.map(mapReply),
-
-    about: plainText(
-      speaker?.bio ||
-        profile.about ||
-        "",
-    ),
-
-    skills: skills.length
-      ? skills
-      : cleanStrings(
-          (speaker?.categories || []).map(
-            (category) => category.name,
-          ),
-        ),
-  };
-}
+  ApiComment,
+  ApiMe,
+  ApiMediaReflectionCount,
+  ApiNarrative,
+  ApiPublicUser,
+  ApiSquare,
+} from "./profile-api-types";
+import { mapNarrativePost } from "./profile-narrative-mappers";
+import { mapSquare } from "./profile-square-mapper";
+import { mapUser } from "./profile-user-mapper";
 
 export async function getProfileNarrativePage(
   type: "user" | "square",
@@ -893,12 +20,20 @@ export async function getProfileNarrativePage(
   identity: ProfileDetails["identity"],
   cursor?: string | null,
   own = false,
-): Promise<{ posts: FeedPost[]; nextCursor: string | null; count: number | null }> {
+): Promise<{
+  posts: FeedPost[];
+  nextCursor: string | null;
+  count: number | null;
+}> {
   const params = new URLSearchParams({ limit: "20" });
   if (cursor) params.set("cursor", cursor);
-  const path = own ? "/me/narratives" : `/${type === "square" ? "squares" : "users"}/${id}/narratives`;
+  const path = own
+    ? "/me/narratives"
+    : `/${type === "square" ? "squares" : "users"}/${id}/narratives`;
   const page = own
-    ? await meydanApiPage<ApiNarrative[]>(`${path}?${params}`, { headers: await accessTokenHeader() })
+    ? await meydanApiPage<ApiNarrative[]>(`${path}?${params}`, {
+        headers: await accessTokenHeader(),
+      })
     : await getPublicNarrativePage(`${path}?${params}`);
   return {
     posts: page.data.map((item) => mapNarrativePost(item, identity)),
@@ -919,81 +54,68 @@ async function getPublicNarrativePage(path: string) {
 }
 
 async function authenticatedProfile(): Promise<ProfileDetails | null> {
-  const headers =
-    await accessTokenHeader();
+  const headers = await accessTokenHeader();
 
   if (!headers.Authorization) {
     return null;
   }
 
   try {
-    const me =
-      await meydanApi<ApiMe>(
-        "/me",
-        {
-          headers,
-        },
-      );
+    const me = await meydanApi<ApiMe>("/me", {
+      headers,
+    });
 
-    let narrativePage = { data: [] as ApiNarrative[], nextCursor: null as string | null, count: null as number | null };
+    let narrativePage = {
+      data: [] as ApiNarrative[],
+      nextCursor: null as string | null,
+      count: null as number | null,
+    };
 
-    let replies:
-      ApiComment[] = [];
+    let replies: ApiComment[] = [];
 
     try {
-      narrativePage = await meydanApiPage<ApiNarrative[]>("/me/narratives?limit=20", { headers });
+      narrativePage = await meydanApiPage<ApiNarrative[]>(
+        "/me/narratives?limit=20",
+        { headers },
+      );
     } catch {
       narrativePage = { data: [], nextCursor: null, count: null };
     }
 
     const actorId =
-      me.account_type === "square"
-        ? me.square?.id
-        : me.profile.id;
+      me.account_type === "square" ? me.square?.id : me.profile.id;
 
     // Speakers are `user` actors everywhere interactions and replies are keyed:
     // `/actors/{type}` only accepts `user|square`, never `speaker`.
-    const actorType =
-      me.account_type === "square"
-        ? "square"
-        : "user";
+    const actorType = me.account_type === "square" ? "square" : "user";
 
     if (actorId) {
       try {
-        replies =
-          await meydanApi<
-            ApiComment[]
-          >(
-            `/actors/${actorType}/${actorId}/replies`,
-            {
-              headers,
-            },
-          );
+        replies = await meydanApi<ApiComment[]>(
+          `/actors/${actorType}/${actorId}/replies`,
+          {
+            headers,
+          },
+        );
       } catch {
         replies = [];
       }
     }
 
-    if (
-      me.account_type === "user" ||
-      me.account_type === "official"
-    ) {
-      return { ...mapUser(
-        me.profile,
-        narrativePage.data,
-        replies,
-      ), nextNarrativeCursor: narrativePage.nextCursor, narrativeCount: narrativePage.count };
+    if (me.account_type === "user" || me.account_type === "official") {
+      return {
+        ...mapUser(me.profile, narrativePage.data, replies),
+        nextNarrativeCursor: narrativePage.nextCursor,
+        narrativeCount: narrativePage.count,
+      };
     }
 
-    if (
-      me.account_type === "speaker"
-    ) {
-      return { ...mapUser(
-        me.profile,
-        narrativePage.data,
-        replies,
-        me.speaker || null,
-      ), nextNarrativeCursor: narrativePage.nextCursor, narrativeCount: narrativePage.count };
+    if (me.account_type === "speaker") {
+      return {
+        ...mapUser(me.profile, narrativePage.data, replies, me.speaker || null),
+        nextNarrativeCursor: narrativePage.nextCursor,
+        narrativeCount: narrativePage.count,
+      };
     }
 
     if (!me.square) {
@@ -1003,36 +125,35 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
     let mediaReflectionCount = 0;
 
     try {
-      const reflectionStats =
-        await meydanApi<ApiMediaReflectionCount>(
-          `/squares/${me.square.id}/media-reflections/count`,
-        );
+      const reflectionStats = await meydanApi<ApiMediaReflectionCount>(
+        `/squares/${me.square.id}/media-reflections/count`,
+      );
 
-      mediaReflectionCount =
-        reflectionStats.count ?? 0;
+      mediaReflectionCount = reflectionStats.count ?? 0;
     } catch {
       mediaReflectionCount = 0;
     }
 
-    return { ...mapSquare(
-      me.square,
-      narrativePage.data,
-      replies,
-      mediaReflectionCount,
-    ), nextNarrativeCursor: narrativePage.nextCursor, narrativeCount: narrativePage.count };
+    return {
+      ...mapSquare(
+        me.square,
+        narrativePage.data,
+        replies,
+        mediaReflectionCount,
+      ),
+      nextNarrativeCursor: narrativePage.nextCursor,
+      narrativeCount: narrativePage.count,
+    };
   } catch {
     return null;
   }
 }
 
 export async function getProfileDetails(): Promise<ProfileDetails> {
-  const profile =
-    await authenticatedProfile();
+  const profile = await authenticatedProfile();
 
   if (!profile) {
-    throw new Error(
-      "برای مشاهده پروفایل وارد شوید.",
-    );
+    throw new Error("برای مشاهده پروفایل وارد شوید.");
   }
 
   return profile;
@@ -1044,7 +165,9 @@ export async function getPublicProfileDetails(
 ): Promise<ProfileDetails | null> {
   try {
     if (type === "square") {
-      const square = await meydanApi<ApiSquare>(`/squares/${id}?defer_counts=1`);
+      const square = await meydanApi<ApiSquare>(
+        `/squares/${id}?defer_counts=1`,
+      );
       const summary = mapSquare(square);
       return {
         ...summary,
@@ -1060,15 +183,19 @@ export async function getPublicProfileDetails(
       getPublicNarrativePage(`/users/${id}/narratives?limit=20`),
     ]);
     return {
-      ...mapUser({
-        id: user.id,
-        ...user.profile,
-        full_name: user.profile.full_name || user.actor.display_name || "کاربر میدان",
-        avatar_url: user.actor.avatar_url,
-        verified: user.actor.verified,
-        verified_speaker: user.actor.verified_speaker,
-        verified_official: user.actor.verified_official,
-      }, narratives.data),
+      ...mapUser(
+        {
+          id: user.id,
+          ...user.profile,
+          full_name:
+            user.profile.full_name || user.actor.display_name || "کاربر میدان",
+          avatar_url: user.actor.avatar_url,
+          verified: user.actor.verified,
+          verified_speaker: user.actor.verified_speaker,
+          verified_official: user.actor.verified_official,
+        },
+        narratives.data,
+      ),
       nextNarrativeCursor: narratives.nextCursor,
       narrativeCount: narratives.count,
     };

@@ -129,7 +129,7 @@ test("toggling flips the persisted preference rather than a local flag", async (
 });
 
 test("the video player pauses itself when it leaves the viewport", () => {
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
 
   // The guard is an IntersectionObserver on the player frame.
   assert.match(player, /new IntersectionObserver\(/);
@@ -157,7 +157,7 @@ test("the video player pauses itself when it leaves the viewport", () => {
 });
 
 test("picture-in-picture and fullscreen playback survive leaving the viewport", () => {
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
 
   assert.match(player, /document\.pictureInPictureElement === video/);
   assert.match(player, /document\.fullscreenElement === wrapper/);
@@ -165,7 +165,7 @@ test("picture-in-picture and fullscreen playback survive leaving the viewport", 
 });
 
 test("every player shares one mute preference", () => {
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
 
   // Mute reads and writes the shared store instead of local component state.
   assert.match(player, /subscribeToVideoMuted/);
@@ -183,7 +183,7 @@ test("every player shares one mute preference", () => {
 });
 
 test("portrait mobile immersive video fills the viewport from the top", () => {
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   assert.match(
     css,
@@ -198,7 +198,7 @@ test("portrait mobile immersive video fills the viewport from the top", () => {
 
 test("immersive video feed moves each viewport slide, not the shared track", () => {
   const viewer = source("features/media/components/VideoFeedViewer.tsx");
-  const css = source("app/globals.css");
+  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
   // Each slide is pinned to the viewport and translated relative to the active
   // index. This keeps the visual slide in sync with the active player's audio.
@@ -219,7 +219,7 @@ test("the video player remains the single player for every surface", () => {
 });
 
 test("a video entering the viewport claims the handoff and passes it on", () => {
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
 
   // Its own play() is the gesture that starts a session.
   assert.match(player, /beginVideoAutoplay\(\)/);
@@ -235,7 +235,7 @@ test("a video entering the viewport claims the handoff and passes it on", () => 
 });
 
 test("only one video is ever audible at a time", () => {
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
   const sound = source("lib/video-sound.ts");
 
   // Players register themselves so they can see their siblings.
@@ -254,7 +254,7 @@ test("only one video is ever audible at a time", () => {
 });
 
 test("the picture-in-picture and fullscreen exemptions survive the handoff", () => {
-  const player = source("features/media/components/VideoPlayer.tsx");
+  const player = (source("features/media/components/VideoPlayer.tsx") + source("features/media/components/VideoPlaybackControls.tsx"));
   const observer = player.slice(player.indexOf("new IntersectionObserver"));
 
   // The detached check runs before both the pause and the claim, so a floating

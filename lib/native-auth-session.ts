@@ -26,7 +26,6 @@ export function persistNativeLogin(
 
   return new Promise<void>((resolve, reject) => {
     let settled = false;
-    let timer: ReturnType<typeof setTimeout>;
     const finish = (error?: Error) => {
       if (settled) return;
       settled = true;
@@ -45,7 +44,7 @@ export function persistNativeLogin(
     };
     host.addEventListener('naghshman:native-auth-state', onState);
     host.addEventListener('naghshman:native-auth-error', onError);
-    timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       finish(new Error('پاسخ ذخیره‌سازی نشست از اپ دریافت نشد. دوباره تلاش کنید.'));
     }, timeoutMs);
 

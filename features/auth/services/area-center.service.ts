@@ -1,6 +1,6 @@
 import { geocodeLocation } from "@/features/map/services/geocoding.service";
 import type { City, Province } from "@/features/map/types";
-import { IRAN_CENTER, PROVINCE_CENTERS } from "../data/province-centers";
+import { IRAN_CENTER, PROVINCE_CENTERS } from "@/features/map/data/province-centers";
 
 export function getIranCenter(): { latitude: number; longitude: number } {
   return IRAN_CENTER;

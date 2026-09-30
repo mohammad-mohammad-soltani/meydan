@@ -12,7 +12,7 @@ import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { ProfileActionsMenu } from "./ProfileActionsMenu";
-import { AdminNavLink } from "@/features/admin/components/AdminNavLink";
+import { AdminNavLink } from "@/components/layouts/AdminNavLink";
 import type { ProfileDetails } from "../types";
 
 type ProfileHeaderProps = {
