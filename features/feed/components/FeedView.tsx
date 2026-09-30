@@ -1,16 +1,21 @@
 "use client";
 
 import { BellRing, LoaderCircle, X } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { DeletePostDialog } from "./DeletePostDialog";
 import { FeedFilters } from "./FeedFilters";
 import { FeedSkeleton } from "./FeedSkeleton";
+import { FeedSwipePager } from "./FeedSwipePager";
 import { FeedTabs } from "./FeedTabs";
 import { FollowingEmptyState } from "./FollowingEmptyState";
 import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
-import type { FeedPost, FollowSuggestion } from "../types";
+import type { FeedPost, FeedTab, FollowSuggestion } from "../types";
+
+/** Right-to-left pane order: "برای شما" sits to the right of "دنبال‌شده‌ها". */
+const TAB_ORDER: FeedTab[] = ["for-you", "following"];
 
 type FeedViewProps = {
   posts: FeedPost[];
@@ -28,9 +33,15 @@ export function FeedView({
   suggestionsUnavailable = false,
 }: FeedViewProps) {
   const feed = useFeed(posts, suggestions, nextCursor, !postsUnavailable);
+  const { requireAuth } = useAuthGate();
   const [deleteTarget, setDeleteTarget] = useState<FeedPost | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [dragPosition, setDragPosition] = useState<number | null>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  // Last rendered pane per tab, so a swipe drags in something real instead of
+  // an empty page while the committed tab refetches.
+  const paneCacheRef = useRef<Partial<Record<FeedTab, ReactNode>>>({});
   const sentinelRef = useInfiniteScroll({
     enabled: feed.hasMore && !feed.isLoading && !feed.isLoadingMore && !feed.loadMoreFailed,
     onLoadMore: feed.loadMore,
@@ -89,38 +100,68 @@ export function FeedView({
     </div>
   );
 
+  const forYouPane = (
+    <>
+      <section className="mt-2 hidden flex w-full items-center justify-between border-y border-warning-border bg-warning-surface px-4 py-3 text-xs font-black text-warning-foreground" aria-label="روایت‌های برگزیده میادین">
+        <span className="inline-flex min-w-0 items-center gap-2"><BellRing className="h-5 w-5 shrink-0" aria-hidden="true" /><span>پژواک‌ها و روایت‌های برگزیده میادین</span></span>
+        <span className="shrink-0 rounded-md bg-warning px-2 py-1 text-[10px] text-warning-solid-foreground">زنده</span>
+      </section>
+      <FeedFilters activeFilter={feed.activeFilter} onChange={feed.setActiveFilter} />
+      <div key={feed.activeFilter} className="ui-enter">{postList}</div>
+    </>
+  );
+
+  const followingPane = feed.isLoading ? (
+    <FeedSkeleton />
+  ) : feed.posts.length ? (
+    postList
+  ) : (
+    <FollowingEmptyState
+      isLoading={feed.isFollowingStateLoading || suggestionsUnavailable}
+      requiresAuth={feed.followingRequiresAuth}
+      hasFollowing={feed.hasFollowing}
+      suggestions={feed.suggestions}
+      followedActorKeys={feed.followedActorKeys}
+      pendingFollowKeys={feed.pendingFollowKeys}
+      onToggleFollow={(type, id) => void feed.toggleFollow(type, id)}
+    />
+  );
+
+  const activePane = feed.activeTab === "for-you" ? forYouPane : followingPane;
+  const activeTab = feed.activeTab;
+  useEffect(() => {
+    paneCacheRef.current[activeTab] = activePane;
+  }, [activePane, activeTab]);
+
+  const renderIncoming = useCallback((paneIndex: number) => {
+    const tab = TAB_ORDER[paneIndex];
+    return paneCacheRef.current[tab] ?? <FeedSkeleton />;
+  }, []);
+
   return (
     <div id="view-feed" className="relative min-h-full shrink-0 bg-background text-foreground">
-      <FeedTabs activeTab={feed.activeTab} onChange={feed.setActiveTab} />
+      <FeedTabs
+        ref={tabsRef}
+        activeTab={feed.activeTab}
+        onChange={feed.setActiveTab}
+        dragPosition={dragPosition}
+      />
 
-      {feed.activeTab === "for-you" ? (
-        <>
-          <section className="mt-2 hidden flex w-full items-center justify-between border-y border-warning-border bg-warning-surface px-4 py-3 text-xs font-black text-warning-foreground" aria-label="روایت‌های برگزیده میادین">
-            <span className="inline-flex min-w-0 items-center gap-2"><BellRing className="h-5 w-5 shrink-0" aria-hidden="true" /><span>پژواک‌ها و روایت‌های برگزیده میادین</span></span>
-            <span className="shrink-0 rounded-md bg-warning px-2 py-1 text-[10px] text-warning-solid-foreground">زنده</span>
-          </section>
-          <FeedFilters activeFilter={feed.activeFilter} onChange={feed.setActiveFilter} />
-          <div key={feed.activeFilter} className="ui-enter">{postList}</div>
-        </>
-      ) : (
-        <div key={feed.activeTab} className="ui-enter">
-          {feed.isLoading ? (
-            <FeedSkeleton />
-          ) : feed.posts.length ? (
-            postList
-          ) : (
-            <FollowingEmptyState
-              isLoading={feed.isFollowingStateLoading || suggestionsUnavailable}
-              requiresAuth={feed.followingRequiresAuth}
-              hasFollowing={feed.hasFollowing}
-              suggestions={feed.suggestions}
-              followedActorKeys={feed.followedActorKeys}
-              pendingFollowKeys={feed.pendingFollowKeys}
-              onToggleFollow={(type, id) => void feed.toggleFollow(type, id)}
-            />
-          )}
-        </div>
-      )}
+      <FeedSwipePager
+        index={TAB_ORDER.indexOf(feed.activeTab)}
+        count={TAB_ORDER.length}
+        onIndexChange={(next) => {
+          const tab = TAB_ORDER[next];
+          // The followed timeline is gated exactly like its tab button.
+          if (tab === "following" && !requireAuth("/home")) return;
+          feed.setActiveTab(tab);
+        }}
+        renderIncoming={renderIncoming}
+        topBoundaryRef={tabsRef}
+        onDragPosition={setDragPosition}
+      >
+        {activePane}
+      </FeedSwipePager>
 
       {feed.selectedMedia ? (
         <div role="dialog" aria-modal="true" aria-label="انعکاس رسانه‌ای" className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-sm">

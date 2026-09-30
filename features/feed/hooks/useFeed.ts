@@ -98,6 +98,9 @@ export function useFeed(
   const isLoadingMore = activePaging.loading;
   const loadMoreFailed = activePaging.failed;
 
+  // First page per timeline, so flipping tabs paints instantly and revalidates
+  // in the background instead of falling back to a skeleton every time.
+  const timelineCacheRef = useRef(new Map<string, { posts: FeedPost[]; cursor: string | null }>());
   const initialPageConsumedRef = useRef(false);
   const generationRef = useRef(0);
   const knownPostIdsRef = useRef<Set<string>>(new Set(initialPosts.map((post) => post.id)));
@@ -202,8 +205,11 @@ export function useFeed(
     initialPageConsumedRef.current = true;
 
     if (canUseServerPage) {
+      timelineCacheRef.current.set(timelineKey, { posts: initialPosts, cursor: initialNextCursor });
       return;
     }
+
+    const cached = timelineCacheRef.current.get(timelineKey);
 
     let active = true;
     const controller = new AbortController();
@@ -213,7 +219,12 @@ export function useFeed(
     loadMoreAbortRef.current = null;
     loadMoreInFlightRef.current = false;
 
-    queueMicrotask(() => active && setIsLoading(true));
+    if (cached) {
+      replacePosts(cached.posts);
+      setPaging({ key: timelineKey, cursor: cached.cursor, loading: false, failed: false });
+    } else {
+      queueMicrotask(() => active && setIsLoading(true));
+    }
 
     void getFeedPage(
       { mode: modeFor(activeTab), filter: filterFor(activeTab, activeFilter) },
@@ -221,6 +232,7 @@ export function useFeed(
     )
       .then((page) => {
         if (!active || generationRef.current !== generation) return;
+        timelineCacheRef.current.set(timelineKey, { posts: page.posts, cursor: page.nextCursor });
         replacePosts(page.posts);
         setPaging({ key: timelineKey, cursor: page.nextCursor, loading: false, failed: false });
         if (activeTab === "following") setFollowingRequiresAuth(false);
@@ -228,6 +240,7 @@ export function useFeed(
       .catch((reason) => {
         if (isAbortError(reason) || !active || generationRef.current !== generation) return;
         if (activeTab === "following") {
+          timelineCacheRef.current.delete(timelineKey);
           replacePosts([]);
           if (isAuthApiError(reason)) setFollowingRequiresAuth(true);
         }
@@ -240,7 +253,7 @@ export function useFeed(
       active = false;
       controller.abort();
     };
-  }, [activeFilter, activeTab, initialPageReady, replacePosts, timelineKey]);
+  }, [activeFilter, activeTab, initialNextCursor, initialPageReady, initialPosts, replacePosts, timelineKey]);
 
   const loadMore = useCallback(() => {
     if (isLoading || isLoadingMore || !nextCursor || loadMoreInFlightRef.current) return;
@@ -364,8 +377,10 @@ export function useFeed(
     try {
       await setActorFollowing(actorType, id, isOn);
       setFollowingRequiresAuth(false);
+      timelineCacheRef.current.delete("following:all");
       if (activeTab === "following") {
         const page = await getFeedPage({ mode: "following", filter: "all" });
+        timelineCacheRef.current.set("following:all", { posts: page.posts, cursor: page.nextCursor });
         replacePosts(page.posts);
         setPaging({ key: timelineKey, cursor: page.nextCursor, loading: false, failed: false });
       }

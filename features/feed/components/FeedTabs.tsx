@@ -1,26 +1,43 @@
 "use client";
 
+import { forwardRef } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import type { FeedTab } from "../types";
 
 type FeedTabsProps = {
   activeTab: FeedTab;
   onChange: (tab: FeedTab) => void;
+  /**
+   * Live pager position (0 = "برای شما", 1 = "دنبال‌شده‌ها") while a swipe is in
+   * flight, so the underline tracks the finger instead of jumping on commit.
+   */
+  dragPosition?: number | null;
 };
 
-export function FeedTabs({ activeTab, onChange }: FeedTabsProps) {
+export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedTabs(
+  { activeTab, onChange, dragPosition = null },
+  ref,
+) {
   const { requireAuth } = useAuthGate();
+  const position = dragPosition ?? (activeTab === "following" ? 1 : 0);
   const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-4 text-xs font-black transition-colors duration-200 ${active ? "text-brand font-black" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`;
 
   return (
-    <div role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="sticky top-0 z-30 flex w-full border-b border-border bg-surface-glass backdrop-blur">
+    <div ref={ref} role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="sticky top-0 z-30 flex w-full border-b border-border bg-surface-glass backdrop-blur">
       <button role="tab" type="button" onClick={() => onChange("for-you")} aria-selected={activeTab === "for-you"} className={tabClass(activeTab === "for-you")}>
         برای شما
       </button>
       <button role="tab" type="button" onClick={() => { if (requireAuth("/home")) onChange("following"); }} aria-selected={activeTab === "following"} className={tabClass(activeTab === "following")}>
         دنبال‌شده‌ها
       </button>
-      <span aria-hidden="true" className={`pointer-events-none absolute bottom-0 right-0 h-0.5 w-1/2 bg-brand transition-transform duration-300 ease-out ${activeTab === "following" ? "-translate-x-full" : "translate-x-0"}`} />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 right-0 h-0.5 w-1/2 bg-brand"
+        style={{
+          transform: `translateX(${-position * 100}%)`,
+          transition: dragPosition === null ? "transform 300ms var(--motion-ease-standard)" : "none",
+        }}
+      />
     </div>
   );
-}
+});

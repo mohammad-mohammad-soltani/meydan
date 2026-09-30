@@ -22,6 +22,7 @@ import { HotTrendsPanel } from "@/features/trends/components/HotTrendsPanel";
 import { PostLoginReturn } from "@/components/providers/AuthReturnToBridge";
 import { UnreadProvider } from "@/features/chat/providers/UnreadProvider";
 import { BottomNavigation } from "./BottomNavigation";
+import { DesktopNavIndicator } from "./DesktopNavIndicator";
 import { FloatingComposeButton } from "./FloatingComposeButton";
 import { MobileHeader } from "./MobileHeader";
 import { NavBadge } from "./NavBadge";
@@ -37,8 +38,8 @@ type AppShellProps = {
 };
 
 const desktopLinkClass =
-  "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground";
-const activeDesktopLinkClass = "bg-brand-muted text-brand hover:bg-brand-muted hover:text-brand";
+  "relative z-10 flex items-center gap-3 rounded-2xl px-3.5 py-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground";
+const activeDesktopLinkClass = "text-brand hover:text-brand";
 
 function desktopLink(pathname: string, href: string) {
   const active = pathname === href || pathname.startsWith(`${href}/`) ||
@@ -56,6 +57,7 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const mainScrollRef = useRef<HTMLElement>(null);
+  const desktopNavRef = useRef<HTMLElement>(null);
   const isPostPage = pathname.startsWith("/posts/");
   const isComposePage = pathname === "/compose";
   const isPublicProfilePage =
@@ -99,9 +101,11 @@ export function AppShell({
             </Link>
             <div className="space-y-5">
               <nav
+                ref={desktopNavRef}
                 aria-label="ناوبری دسکتاپ"
-                className="space-y-3 text-sm font-bold"
+                className="relative space-y-3 text-sm font-bold"
               >
+                <DesktopNavIndicator containerRef={desktopNavRef} />
                 <Link href="/home" {...desktopLink(pathname, "/home")}>
                   <Home className="h-5 w-5" />
                   خانه و روایت‌ها

@@ -553,9 +553,22 @@ html.dark {
 }
 
 [aria-selected="true"],
-[aria-pressed="true"] {
+[aria-pressed="true"],
+[aria-current="page"] {
   animation: ui-state-settle-keyframes var(--motion-normal)
     var(--motion-ease-emphasized) both;
+}
+
+/*
+ * The bottom-nav and desktop-sidebar active pill trails the selected tab
+ * across the strip/column instead of popping straight into place.
+ */
+.nav-indicator-pill {
+  transition:
+    inset-inline-start var(--motion-page) var(--motion-ease-emphasized),
+    inset-block-start var(--motion-page) var(--motion-ease-emphasized),
+    height var(--motion-page) var(--motion-ease-emphasized),
+    opacity var(--motion-normal) var(--motion-ease-standard);
 }
 
 @utility ui-enter {

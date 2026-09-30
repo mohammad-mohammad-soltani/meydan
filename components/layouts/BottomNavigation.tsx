@@ -49,12 +49,26 @@ export function BottomNavigation({ isAuthenticated = false }: BottomNavigationPr
         },
       ];
 
+  const activeIndex = links.findIndex(({ match }) => match(pathname));
+
   return (
     <nav
       id="bottomNavBar"
       aria-label="ناوبری اصلی"
       className="relative z-50 grid w-full shrink-0 grid-cols-5 items-center gap-1.5 border-t border-border bg-surface-glass px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-icon-muted backdrop-blur lg:hidden"
     >
+      <span
+        aria-hidden
+        className="nav-indicator-pill pointer-events-none absolute inset-y-1.5 z-0 rounded-xl bg-brand-muted"
+        style={{
+          // Nav padding is px-3 (0.75rem/side) and columns are separated by
+          // gap-1.5 (0.375rem) × 4 gaps — both must come out of 100% before
+          // dividing into five equal tracks, or the pill drifts off-column.
+          width: "calc((100% - 3rem) / 5)",
+          insetInlineStart: `calc(0.75rem + ${Math.max(activeIndex, 0)} * ((100% - 3rem) / 5 + 0.375rem))`,
+          opacity: activeIndex === -1 ? 0 : 1,
+        }}
+      />
       {links.map(({ href, label, icon: Icon, match, badge }) => {
         const active = match(pathname);
         return (
@@ -62,7 +76,7 @@ export function BottomNavigation({ isAuthenticated = false }: BottomNavigationPr
             key={href}
             href={href as Route}
             aria-current={active ? "page" : undefined}
-            className={`flex min-h-11 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 font-bold transition-colors ${active ? "bg-brand-muted text-brand" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`}
+            className={`relative z-10 flex min-h-11 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 font-bold transition-colors ${active ? "text-brand" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`}
           >
             <span className="relative">
               <Icon className="h-5 w-5 shrink-0" />
