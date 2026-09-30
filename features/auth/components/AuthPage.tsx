@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ClipboardEvent, FormEvent, KeyboardEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -29,6 +29,12 @@ import { persistNativeLogin } from "@/lib/native-auth-session";
 
 type AuthStep = "phone" | "code" | "register";
 type AccountType = "user" | "square";
+
+// Mirrors OtpService::RESEND_AFTER on the backend. The server enforces the
+// real limit (and a daily cap) regardless of this value — this only keeps the
+// client from firing requests that the server would reject anyway, and gives
+// the user a visible countdown instead of a confusing error.
+const RESEND_COOLDOWN_SECONDS = 60;
 
 type FieldProps = {
   label: string;
@@ -207,6 +213,8 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(false);
+  const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
+  const [resendCountdown, setResendCountdown] = useState(0);
   const isHydrated = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -261,6 +269,24 @@ export default function AuthPage() {
     setNotice("");
   };
 
+  // Ticks the visible "ارسال دوباره" countdown from resendAvailableAt. Runs
+  // only while a cooldown is armed, so idle screens don't carry a timer.
+  useEffect(() => {
+    if (resendAvailableAt === null) return;
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((resendAvailableAt - Date.now()) / 1000));
+      setResendCountdown(remaining);
+      if (remaining === 0) setResendAvailableAt(null);
+    };
+    tick();
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [resendAvailableAt]);
+
+  const armResendCooldown = () => {
+    setResendAvailableAt(Date.now() + RESEND_COOLDOWN_SECONDS * 1000);
+  };
+
   const submitPhone = async (event: FormEvent) => {
     event.preventDefault();
     setPending(true);
@@ -270,6 +296,7 @@ export default function AuthPage() {
       setChallengeId(result.challenge_id);
       setCode(result.dev_code ?? "");
       setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : result.delivery_status === "uncertain" ? "ارسال کد در حال بررسی است؛ اگر پیامک را دریافت کرده‌اید همان کد را وارد کنید، در غیر این صورت کمی صبر کنید و دوباره ارسال کنید." : "");
+      armResendCooldown();
       setStep("code");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "خطا در ورود");
@@ -306,6 +333,7 @@ export default function AuthPage() {
   };
 
   const resendCode = async () => {
+    if (resendCountdown > 0) return;
     setPending(true);
     resetMessages();
     try {
@@ -313,8 +341,13 @@ export default function AuthPage() {
       setChallengeId(result.challenge_id);
       setCode(result.dev_code ?? "");
       setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : result.delivery_status === "uncertain" ? "وضعیت ارسال کد نامشخص است؛ اگر پیامک را دریافت کرده‌اید همان کد را وارد کنید." : "کد تأیید تازه ارسال شد.");
+      armResendCooldown();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "ارسال دوباره کد انجام نشد.");
+      // A rate-limit rejection means the server's window is still open even
+      // though ours expired (clock drift, or the user hit /otp-request some
+      // other way) — re-arm so the button doesn't just invite another 429.
+      armResendCooldown();
     } finally {
       setPending(false);
     }
@@ -374,6 +407,7 @@ export default function AuthPage() {
     resetMessages();
     setCode("");
     setChallengeId("");
+    setResendAvailableAt(null);
     setStep("phone");
   };
 
@@ -534,11 +568,11 @@ export default function AuthPage() {
                         <button
                           type="button"
                           onClick={() => void resendCode()}
-                          disabled={pending}
-                          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground-secondary outline-none transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                          disabled={pending || resendCountdown > 0}
+                          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-black tabular-nums text-foreground-secondary outline-none transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                         >
                           <RefreshCw aria-hidden="true" className="h-4 w-4" />
-                          ارسال دوباره
+                          {resendCountdown > 0 ? `ارسال دوباره (${resendCountdown})` : "ارسال دوباره"}
                         </button>
                       </div>
                     </form>
