@@ -19,6 +19,8 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
 const AXIS_LOCK_PX = 10;
 /** Share of the pane width that has to be dragged for a lazy release to commit. */
 const COMMIT_RATIO = 0.3;
+/** Samples closer together than this carry too much noise to time a flick by. */
+const VELOCITY_SAMPLE_MS = 8;
 /** px/ms past which a short flick commits anyway. */
 const COMMIT_VELOCITY = 0.45;
 /** Pull felt when dragging past the first/last pane. */
@@ -140,11 +142,10 @@ export function FeedSwipePager({
       if (!node) continue;
       node.style.transition = `transform ${duration}ms ${SETTLE_EASING}`;
     }
-    // Commit to the transition start value before flipping to the destination.
-    requestAnimationFrame(() => {
-      paint(destination, target, width);
-      settle();
-    });
+    // The drag already painted the start value in an earlier frame, so the
+    // destination can be applied straight away and still animate.
+    paint(destination, target, width);
+    settle();
   }, [alignToPaneTop, clearTransition, onIndexChange, paint, reportPosition]);
 
   const placeLayer = useCallback(() => {
@@ -206,10 +207,14 @@ export function FeedSwipePager({
       } catch {
         // Capture is a nicety; the gesture still tracks without it.
       }
+      // Velocity is measured from the lock point, so the slack spent deciding
+      // the axis cannot be mistaken for a flick.
+      gesture.lastX = event.clientX;
+      gesture.lastTime = event.timeStamp;
     }
 
     const elapsed = event.timeStamp - gesture.lastTime;
-    if (elapsed > 0) {
+    if (elapsed >= VELOCITY_SAMPLE_MS) {
       const instant = (event.clientX - gesture.lastX) / elapsed;
       gesture.velocity = gesture.velocity * 0.7 + instant * 0.3;
       gesture.lastX = event.clientX;
