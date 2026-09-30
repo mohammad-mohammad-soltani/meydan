@@ -131,6 +131,8 @@ export type ApiNarrative = {
     label?: string;
     filename?: string;
     url?: string;
+    poster_url?: string | null;
+    thumbnail_url?: string | null;
     width?: number;
     height?: number;
   }>;

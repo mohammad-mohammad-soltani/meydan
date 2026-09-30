@@ -161,6 +161,11 @@ export function mapNarrativePost(
         ? attachment.url
         : undefined,
 
+    posterSrc:
+      attachment.type === "video"
+        ? attachment.poster_url || attachment.thumbnail_url || undefined
+        : undefined,
+
     audioSrc: attachment.type === "audio" ? attachment.url : undefined,
 
     previewAlt: attachment.label || identity.name,
