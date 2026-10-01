@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject } from "react";
+import { useCallback, useRef, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject } from "react";
 
 /**
  * Finger-tracked pager for the timeline tabs.
@@ -9,10 +9,15 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
  * neighbour at index + 1 sits to its left: dragging the content to the right
  * pulls the next pane in, exactly like the RTL tab strip reads.
  *
- * Only the active pane lives in the document flow — it owns the page height and
- * the scroll position. The incoming pane is drawn in a viewport-sized fixed
- * layer for the length of the gesture, which keeps both the page height and the
- * scroll offset untouched when the drag is released without a commit.
+ * Nothing in the gesture goes through React. Neighbour panes stay mounted and
+ * hidden, and every frame of the drag is a direct style write on three nodes —
+ * the moving track, the incoming pane and the tab underline — so the feed list
+ * is never re-rendered mid-swipe. State only changes once, after the pane has
+ * settled, when the committed tab is handed back to the caller.
+ *
+ * Only the active pane lives in the document flow, owning the page height and
+ * the scroll position. Neighbours are drawn in viewport-sized fixed layers, so
+ * releasing a drag without committing leaves both completely untouched.
  */
 
 /** Ignore jitter before deciding the gesture belongs to us. */
@@ -37,6 +42,35 @@ function scrollParent(node: HTMLElement | null): HTMLElement | null {
   return null;
 }
 
+/** Pins a sliding layer over the pane area and parks it just off-screen. */
+function parkLayer(layer: HTMLElement | null, pane: HTMLElement | null, box: { left: number; width: number; top: number }, rest: number) {
+  if (layer) {
+    layer.style.left = `${box.left}px`;
+    layer.style.width = `${box.width}px`;
+    layer.style.top = `${box.top}px`;
+    layer.style.height = `${Math.max(0, window.innerHeight - box.top)}px`;
+    layer.style.visibility = "hidden";
+  }
+  if (pane) {
+    pane.style.transition = "";
+    pane.style.transform = `translate3d(${rest}px, 0, 0)`;
+    pane.style.willChange = "transform";
+  }
+}
+
+function moveLayer(layer: HTMLElement | null, pane: HTMLElement | null, visible: boolean, offset: number) {
+  if (layer) layer.style.visibility = visible ? "visible" : "hidden";
+  if (visible && pane) pane.style.transform = `translate3d(${offset}px, 0, 0)`;
+}
+
+function resetLayer(layer: HTMLElement | null, pane: HTMLElement | null) {
+  if (layer) layer.style.visibility = "hidden";
+  if (pane) {
+    pane.style.transition = "";
+    pane.style.willChange = "";
+  }
+}
+
 type Gesture = {
   pointerId: number;
   startX: number;
@@ -46,24 +80,20 @@ type Gesture = {
   velocity: number;
   axis: "unknown" | "x" | "y";
   width: number;
-};
-
-type Incoming = {
-  index: number;
-  /** -1 when the incoming pane rests to the left of the active one, 1 to the right. */
-  side: -1 | 1;
+  /** Pane being pulled in, resolved on the first horizontal move. */
+  target: number | null;
 };
 
 type FeedSwipePagerProps = {
   index: number;
   count: number;
   onIndexChange: (index: number) => void;
-  /** Pane shown while it slides in; it is replaced by the real pane on commit. */
-  renderIncoming: (index: number) => ReactNode;
-  /** Sticky element the incoming layer must stay below (the tab strip). */
+  /** Pane for a neighbouring index; mounted hidden until a drag reveals it. */
+  renderPane: (index: number) => ReactNode;
+  /** Sticky element the sliding layers must stay below (the tab strip). */
   topBoundaryRef: RefObject<HTMLElement | null>;
-  /** Live 0…count-1 position of the drag, for the tab underline. */
-  onDragPosition?: (position: number | null) => void;
+  /** Resolves the tab underline, which is moved in step with the finger. */
+  getIndicator?: () => HTMLElement | null;
   children: ReactNode;
 };
 
@@ -71,40 +101,23 @@ export function FeedSwipePager({
   index,
   count,
   onIndexChange,
-  renderIncoming,
+  renderPane,
   topBoundaryRef,
-  onDragPosition,
+  getIndicator,
   children,
 }: FeedSwipePagerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const layerRef = useRef<HTMLDivElement>(null);
-  const incomingRef = useRef<HTMLDivElement>(null);
+  // One layer per side the active pane can be pulled away from: -1 rests to
+  // its left (the next index in RTL order), 1 rests to its right.
+  const leftLayerRef = useRef<HTMLDivElement>(null);
+  const leftPaneRef = useRef<HTMLDivElement>(null);
+  const rightLayerRef = useRef<HTMLDivElement>(null);
+  const rightPaneRef = useRef<HTMLDivElement>(null);
   const gestureRef = useRef<Gesture | null>(null);
   const settleTimerRef = useRef<number | null>(null);
-  const [incoming, setIncoming] = useState<Incoming | null>(null);
 
-  const reportPosition = useCallback((position: number | null) => {
-    onDragPosition?.(position);
-  }, [onDragPosition]);
-
-  const paint = useCallback((offset: number, target: Incoming | null, width: number) => {
-    const track = trackRef.current;
-    if (track) track.style.transform = `translate3d(${offset}px, 0, 0)`;
-    const pane = incomingRef.current;
-    if (pane && target) pane.style.transform = `translate3d(${offset + target.side * width}px, 0, 0)`;
-  }, []);
-
-  const clearTransition = useCallback(() => {
-    if (trackRef.current) {
-      trackRef.current.style.transition = "";
-      trackRef.current.style.transform = "";
-    }
-    if (incomingRef.current) {
-      incomingRef.current.style.transition = "";
-      incomingRef.current.style.transform = "";
-    }
-  }, []);
+  const sideOf = (target: number) => (target > index ? -1 : 1);
 
   /**
    * The incoming pane is previewed from its own top, so the committed pane has
@@ -120,55 +133,82 @@ export function FeedSwipePager({
     if (delta < -0.5) scroller.scrollTop = Math.max(0, scroller.scrollTop + delta);
   }, [topBoundaryRef]);
 
-  const finish = useCallback((offset: number, target: Incoming | null, commit: boolean, velocity: number, width: number) => {
-    const destination = commit && target ? -target.side * width : 0;
-    const distance = Math.abs(destination - offset);
-    const speed = Math.max(Math.abs(velocity), 0.6);
-    const duration = Math.min(SETTLE_MAX_MS, Math.max(SETTLE_MIN_MS, distance / speed));
-
-    const settle = () => {
-      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
-      settleTimerRef.current = window.setTimeout(() => {
-        settleTimerRef.current = null;
-        if (commit && target) alignToPaneTop();
-        clearTransition();
-        setIncoming(null);
-        reportPosition(null);
-        if (commit && target) onIndexChange(target.index);
-      }, duration + 20);
-    };
-
-    for (const node of [trackRef.current, incomingRef.current]) {
-      if (!node) continue;
-      node.style.transition = `transform ${duration}ms ${SETTLE_EASING}`;
-    }
-    // The drag already painted the start value in an earlier frame, so the
-    // destination can be applied straight away and still animate.
-    paint(destination, target, width);
-    settle();
-  }, [alignToPaneTop, clearTransition, onIndexChange, paint, reportPosition]);
-
-  const placeLayer = useCallback(() => {
-    const layer = layerRef.current;
+  /**
+   * Geometry and layer promotion are resolved once per gesture, before the
+   * finger has moved, so no frame of the drag pays for a measurement.
+   */
+  const prepare = useCallback((width: number) => {
     const root = rootRef.current;
-    if (!layer || !root) return;
+    if (!root) return;
     const rect = root.getBoundingClientRect();
     const boundary = topBoundaryRef.current?.getBoundingClientRect();
     const top = Math.max(rect.top, boundary?.bottom ?? 0);
-    layer.style.left = `${rect.left}px`;
-    layer.style.width = `${rect.width}px`;
-    layer.style.top = `${top}px`;
-    layer.style.height = `${Math.max(0, window.innerHeight - top)}px`;
+
+    const box = { left: rect.left, width: rect.width, top };
+    parkLayer(leftLayerRef.current, leftPaneRef.current, box, -width);
+    parkLayer(rightLayerRef.current, rightPaneRef.current, box, width);
+    if (trackRef.current) trackRef.current.style.willChange = "transform";
   }, [topBoundaryRef]);
 
-  useEffect(() => {
-    if (!incoming) return;
-    placeLayer();
-  }, [incoming, placeLayer]);
+  const paint = useCallback((offset: number, target: number | null, width: number) => {
+    const track = trackRef.current;
+    if (track) track.style.transform = `translate3d(${offset}px, 0, 0)`;
 
-  useEffect(() => () => {
+    const side = target === null ? 0 : sideOf(target);
+    moveLayer(leftLayerRef.current, leftPaneRef.current, side === -1, offset - width);
+    moveLayer(rightLayerRef.current, rightPaneRef.current, side === 1, offset + width);
+
+    const indicator = getIndicator?.() ?? null;
+    if (indicator) {
+      const progress = target === null ? 0 : (Math.abs(offset) / width) * (target - index);
+      indicator.style.transform = `translateX(${-(index + progress) * 100}%)`;
+    }
+    // `sideOf` only reads the render-scoped `index`, which paint already depends on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getIndicator, index]);
+
+  const release = useCallback(() => {
+    if (trackRef.current) {
+      trackRef.current.style.transition = "";
+      trackRef.current.style.transform = "";
+      trackRef.current.style.willChange = "";
+    }
+    resetLayer(leftLayerRef.current, leftPaneRef.current);
+    resetLayer(rightLayerRef.current, rightPaneRef.current);
+    // The transform stays: paint() already left the underline on the pane that
+    // won, and clearing it would snap the underline back to the first tab when
+    // a drag is released without committing.
+    const indicator = getIndicator?.() ?? null;
+    if (indicator) indicator.style.transition = "";
+  }, [getIndicator]);
+
+  const settle = useCallback((offset: number, target: number | null, commit: boolean, velocity: number, width: number) => {
+    const side = target === null ? 0 : sideOf(target);
+    const destination = commit && target !== null ? -side * width : 0;
+    const distance = Math.abs(destination - offset);
+    const duration = Math.min(SETTLE_MAX_MS, Math.max(SETTLE_MIN_MS, distance / Math.max(Math.abs(velocity), 0.6)));
+    const easing = `transform ${duration}ms ${SETTLE_EASING}`;
+
+    if (trackRef.current) trackRef.current.style.transition = easing;
+    if (target !== null && side === -1 && leftPaneRef.current) leftPaneRef.current.style.transition = easing;
+    if (target !== null && side === 1 && rightPaneRef.current) rightPaneRef.current.style.transition = easing;
+    const indicator = getIndicator?.() ?? null;
+    if (indicator) indicator.style.transition = easing;
+
+    // The drag already painted the start value in an earlier frame, so the
+    // destination can be applied straight away and still animate.
+    paint(destination, target, width);
+
     if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
-  }, []);
+    settleTimerRef.current = window.setTimeout(() => {
+      settleTimerRef.current = null;
+      if (commit && target !== null) alignToPaneTop();
+      release();
+      if (commit && target !== null) onIndexChange(target);
+    }, duration + 20);
+    // `sideOf` only reads the render-scoped `index`, which settle already depends on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alignToPaneTop, getIndicator, index, onIndexChange, paint, release]);
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" || !event.isPrimary) return;
@@ -184,7 +224,9 @@ export function FeedSwipePager({
       velocity: 0,
       axis: "unknown",
       width,
+      target: null,
     };
+    prepare(width);
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -198,6 +240,7 @@ export function FeedSwipePager({
       if (Math.abs(dy) > AXIS_LOCK_PX && Math.abs(dy) >= Math.abs(dx)) {
         // A vertical scroll owns the pointer from here on.
         gestureRef.current = null;
+        release();
         return;
       }
       if (Math.abs(dx) <= AXIS_LOCK_PX || Math.abs(dx) <= Math.abs(dy)) return;
@@ -211,6 +254,8 @@ export function FeedSwipePager({
       // the axis cannot be mistaken for a flick.
       gesture.lastX = event.clientX;
       gesture.lastTime = event.timeStamp;
+      const indicator = getIndicator?.() ?? null;
+      if (indicator) indicator.style.transition = "none";
     }
 
     const elapsed = event.timeStamp - gesture.lastTime;
@@ -223,42 +268,32 @@ export function FeedSwipePager({
 
     // Dragging right reveals the pane to the left, which is the next index.
     const wanted = dx > 0 ? index + 1 : index - 1;
-    const withinBounds = wanted >= 0 && wanted < count;
-    const side: -1 | 1 = dx > 0 ? -1 : 1;
-    const offset = withinBounds
-      ? Math.max(-gesture.width, Math.min(gesture.width, dx))
-      : dx * OVERSCROLL_FACTOR;
+    gesture.target = wanted >= 0 && wanted < count ? wanted : null;
+    const offset = gesture.target === null
+      ? dx * OVERSCROLL_FACTOR
+      : Math.max(-gesture.width, Math.min(gesture.width, dx));
 
-    if (withinBounds && (!incoming || incoming.index !== wanted)) {
-      setIncoming({ index: wanted, side });
-    } else if (!withinBounds && incoming) {
-      setIncoming(null);
-    }
-
-    paint(offset, withinBounds ? { index: wanted, side } : null, gesture.width);
-    reportPosition(withinBounds ? index + (wanted - index) * (Math.abs(offset) / gesture.width) : index);
+    paint(offset, gesture.target, gesture.width);
   };
 
   const endGesture = (event: ReactPointerEvent<HTMLDivElement>, cancelled: boolean) => {
     const gesture = gestureRef.current;
     if (!gesture || gesture.pointerId !== event.pointerId) return;
+    gestureRef.current = null;
     if (gesture.axis !== "x") {
-      gestureRef.current = null;
+      release();
       return;
     }
 
     const dx = event.clientX - gesture.startX;
-    const wanted = dx > 0 ? index + 1 : index - 1;
-    const withinBounds = wanted >= 0 && wanted < count;
-    const side: -1 | 1 = dx > 0 ? -1 : 1;
-    const offset = withinBounds
-      ? Math.max(-gesture.width, Math.min(gesture.width, dx))
-      : dx * OVERSCROLL_FACTOR;
+    const target = gesture.target;
+    const offset = target === null
+      ? dx * OVERSCROLL_FACTOR
+      : Math.max(-gesture.width, Math.min(gesture.width, dx));
     const flicked = Math.abs(gesture.velocity) > COMMIT_VELOCITY && Math.sign(gesture.velocity) === Math.sign(dx);
-    const commit = !cancelled && withinBounds && (Math.abs(offset) > gesture.width * COMMIT_RATIO || flicked);
+    const commit = !cancelled && target !== null && (Math.abs(offset) > gesture.width * COMMIT_RATIO || flicked);
 
-    finish(offset, withinBounds ? { index: wanted, side } : null, commit, gesture.velocity, gesture.width);
-    gestureRef.current = null;
+    settle(offset, target, commit, gesture.velocity, gesture.width);
   };
 
   return (
@@ -268,23 +303,40 @@ export function FeedSwipePager({
       onPointerUp={(event) => endGesture(event, false)}
       onPointerCancel={(event) => endGesture(event, true)}
     >
-      <div ref={trackRef} className="w-full will-change-transform">
+      <div ref={trackRef} className="w-full">
         {children}
       </div>
-      {incoming ? (
-        <div
-          ref={layerRef}
-          aria-hidden="true"
-          className="pointer-events-none fixed z-20 overflow-hidden"
-          style={{ contain: "paint" }}
-        >
-          {/* Only the sliding pane is opaque — the layer itself must stay
-              transparent so the outgoing timeline is visible sliding away. */}
-          <div ref={incomingRef} className="h-full w-full overflow-hidden bg-background will-change-transform">
-            {renderIncoming(incoming.index)}
-          </div>
-        </div>
+      {index + 1 < count ? (
+        <SlidingLayer layerRef={leftLayerRef} paneRef={leftPaneRef}>{renderPane(index + 1)}</SlidingLayer>
       ) : null}
+      {index - 1 >= 0 ? (
+        <SlidingLayer layerRef={rightLayerRef} paneRef={rightPaneRef}>{renderPane(index - 1)}</SlidingLayer>
+      ) : null}
+    </div>
+  );
+}
+
+function SlidingLayer({
+  layerRef,
+  paneRef,
+  children,
+}: {
+  layerRef: RefObject<HTMLDivElement | null>;
+  paneRef: RefObject<HTMLDivElement | null>;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      ref={layerRef}
+      aria-hidden="true"
+      className="pointer-events-none fixed z-20 overflow-hidden"
+      style={{ visibility: "hidden", contain: "paint" }}
+    >
+      {/* Only the sliding pane is opaque — the layer itself stays transparent
+          so the outgoing timeline shows sliding away underneath it. */}
+      <div ref={paneRef} className="h-full w-full overflow-hidden bg-background">
+        {children}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, type RefObject } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import type { FeedTab } from "../types";
 
@@ -8,18 +8,17 @@ type FeedTabsProps = {
   activeTab: FeedTab;
   onChange: (tab: FeedTab) => void;
   /**
-   * Live pager position (0 = "برای شما", 1 = "دنبال‌شده‌ها") while a swipe is in
-   * flight, so the underline tracks the finger instead of jumping on commit.
+   * Handed to the pager, which moves the underline with the finger through a
+   * direct style write rather than a render per frame.
    */
-  dragPosition?: number | null;
+  indicatorRef?: RefObject<HTMLSpanElement | null>;
 };
 
 export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedTabs(
-  { activeTab, onChange, dragPosition = null },
+  { activeTab, onChange, indicatorRef },
   ref,
 ) {
   const { requireAuth } = useAuthGate();
-  const position = dragPosition ?? (activeTab === "following" ? 1 : 0);
   const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-4 text-xs font-black transition-colors duration-200 ${active ? "text-brand font-black" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`;
 
   return (
@@ -31,12 +30,10 @@ export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedT
         دنبال‌شده‌ها
       </button>
       <span
+        ref={indicatorRef}
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 h-0.5 w-1/2 bg-brand"
-        style={{
-          transform: `translateX(${-position * 100}%)`,
-          transition: dragPosition === null ? "transform 300ms var(--motion-ease-standard)" : "none",
-        }}
+        className="pointer-events-none absolute bottom-0 right-0 h-0.5 w-1/2 bg-brand transition-transform duration-300 ease-out"
+        style={{ transform: `translateX(${activeTab === "following" ? -100 : 0}%)` }}
       />
     </div>
   );

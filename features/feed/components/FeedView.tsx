@@ -37,8 +37,8 @@ export function FeedView({
   const [deleteTarget, setDeleteTarget] = useState<FeedPost | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [dragPosition, setDragPosition] = useState<number | null>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const indicatorRef = useRef<HTMLSpanElement>(null);
   // Last rendered pane per tab, so a swipe drags in something real instead of
   // an empty page while the committed tab refetches.
   const paneCacheRef = useRef<Partial<Record<FeedTab, ReactNode>>>({});
@@ -133,7 +133,7 @@ export function FeedView({
     paneCacheRef.current[activeTab] = activePane;
   }, [activePane, activeTab]);
 
-  const renderIncoming = useCallback((paneIndex: number) => {
+  const renderPane = useCallback((paneIndex: number) => {
     const tab = TAB_ORDER[paneIndex];
     return paneCacheRef.current[tab] ?? <FeedSkeleton />;
   }, []);
@@ -142,9 +142,9 @@ export function FeedView({
     <div id="view-feed" className="relative min-h-full shrink-0 bg-background text-foreground">
       <FeedTabs
         ref={tabsRef}
+        indicatorRef={indicatorRef}
         activeTab={feed.activeTab}
         onChange={feed.setActiveTab}
-        dragPosition={dragPosition}
       />
 
       <FeedSwipePager
@@ -156,9 +156,9 @@ export function FeedView({
           if (tab === "following" && !requireAuth("/home")) return;
           feed.setActiveTab(tab);
         }}
-        renderIncoming={renderIncoming}
+        renderPane={renderPane}
         topBoundaryRef={tabsRef}
-        onDragPosition={setDragPosition}
+        getIndicator={() => indicatorRef.current}
       >
         {activePane}
       </FeedSwipePager>
