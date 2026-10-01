@@ -5,6 +5,9 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import type { Route } from "next";
+import { ChevronLeft } from "lucide-react";
 
 import { CommentsList } from "./CommentsList";
 import { CommentInput } from "./CommentInput";
@@ -145,9 +148,12 @@ function toFeedPost(
     stats: {
       likes: post.likes,
       reposts: post.reposts,
+      quotes: post.quotes,
       comments: commentCount,
       views: post.views,
     },
+
+    quote: post.quote,
 
     callToAction:
       initiative?.label,
@@ -269,6 +275,9 @@ export function PostView({
         reposts:
           state.counts.reposts,
 
+        quotes:
+          state.counts.quotes,
+
         commentsCount:
           state.counts.comments,
 
@@ -383,6 +392,22 @@ export function PostView({
               state.post.reflections
             }
           />
+
+          {state.counts.quotes > 0 ? (
+            <Link
+              href={`/posts/${state.post.id}/quotes` as Route}
+              className="flex items-center justify-between gap-3 rounded-[14px] bg-surface  transition-colors hover:bg-hover"
+            >
+              <span className="text-sm text-foreground">
+                <strong className="font-black">{state.counts.quotes.toLocaleString("fa-IR")}</strong>{" "}
+                <span className="text-foreground-secondary">نقل‌قول</span>
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-link">
+                مشاهده نقل‌قول‌ها
+                <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+              </span>
+            </Link>
+          ) : null}
 
           <CommentsList
             comments={

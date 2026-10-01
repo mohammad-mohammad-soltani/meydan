@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Heart,
   MessageCircle,
+  Repeat2,
   Share2,
   ChartNoAxesColumn,
   Send,
@@ -26,6 +27,9 @@ import { VideoPlayer } from "./VideoPlayer";
 import { MediaStage } from "./MediaLightbox";
 import { publicProfileHref } from "@/lib/profile-route";
 import { useViewerPost } from "../hooks/useViewerPost";
+import { RepostMenu } from "@/features/feed/components/RepostMenu";
+import { quoteComposeHref, repostTotal } from "@/features/feed/post-counts";
+import { useRouter } from "next/navigation";
 import { useDragPager } from "../use-drag-pager";
 
 /**
@@ -87,6 +91,7 @@ export function ImmersivePostSlide({
   const slideRef = useRef<HTMLDivElement>(null);
   const replyRef = useRef<HTMLInputElement>(null);
   const state = useViewerPost(entry.post);
+  const router = useRouter();
   // Images always use the stable landscape viewer layout. Their intrinsic
   // ratio only changes how the image is fitted inside the media stage; it must
   // never move the author/meta/actions between the top and bottom chrome.
@@ -201,6 +206,19 @@ export function ImmersivePostSlide({
       )}
     </div>
   );
+  const shareButton = (extraClass = "") => entry.post ? (
+    <button
+      type="button"
+      className={`video-feed-button ${extraClass}`}
+      aria-label="اشتراک‌گذاری"
+      onClick={(event) => {
+        event.stopPropagation();
+        void state.share();
+      }}
+    >
+      <Share2 aria-hidden="true" />
+    </button>
+  ) : null;
   return (
     <div
       ref={slideRef}
@@ -236,6 +254,7 @@ export function ImmersivePostSlide({
         >
           <ArrowLeft aria-hidden="true" />
         </button>
+        {shareButton()}
       </div>
       <div className="viewer-media-stage">
         <div
@@ -309,6 +328,7 @@ export function ImmersivePostSlide({
               <ArrowLeft aria-hidden="true" />
             </button>
             {author}
+            {shareButton("viewer-portrait-back")}
           </div>
         </div>
       )}
@@ -372,13 +392,20 @@ export function ImmersivePostSlide({
               <ChartNoAxesColumn />
               <span>{count(state.stats.views)}</span>
             </span>
-            <button
-              type="button"
-              aria-label="اشتراک‌گذاری"
-              onClick={() => void state.share()}
+            <RepostMenu
+              reposted={state.viewerState.reposted}
+              onRepost={() => void state.toggle("repost")}
+              onQuote={() => {
+                if (!entry.post) return;
+                onClose();
+                router.push(quoteComposeHref(entry.post.id) as Route);
+              }}
+              disabled={state.busy}
+              className={state.viewerState.reposted ? "text-green-500" : ""}
             >
-              <Share2 />
-            </button>
+              <Repeat2 />
+              <span>{count(repostTotal(state.stats))}</span>
+            </RepostMenu>
           </div>
         )}
         {entry.post && portrait && (

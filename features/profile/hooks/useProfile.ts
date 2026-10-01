@@ -37,6 +37,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [loadMoreFailed, setLoadMoreFailed] = useState(false);
   const loadingMoreRef = useRef(false);
   const [likedNarrativeIds, setLikedNarrativeIds] = useState<Set<string>>(() => new Set(profile.narrativePosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
+  const [repostedNarrativeIds, setRepostedNarrativeIds] = useState<Set<string>>(() => new Set(profile.narrativePosts.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
   const [isLoading] = useState(false);
   const [isSavingManagement, setIsSavingManagement] = useState(false);
   const [managementError, setManagementError] = useState<string | null>(null);
@@ -161,13 +162,24 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     } : post));
   };
 
-  const applyStats = (narrativeId: string, stats?: { likes?: number; reposts?: number; comments?: number; views?: number }) => {
+  const adjustRepostCount = (narrativeId: string, delta: number) => {
+    setNarrativePosts((current) => current.map((post) => post.id === narrativeId ? {
+      ...post,
+      stats: {
+        ...post.stats,
+        reposts: Math.max(0, post.stats.reposts + delta),
+      },
+    } : post));
+  };
+
+  const applyStats = (narrativeId: string, stats?: { likes?: number; reposts?: number; quotes?: number; comments?: number; views?: number }) => {
     if (!stats) return;
     setNarrativePosts((current) => current.map((post) => post.id === narrativeId ? {
       ...post,
       stats: {
         likes: stats.likes ?? post.stats.likes,
         reposts: stats.reposts ?? post.stats.reposts,
+        quotes: stats.quotes ?? post.stats.quotes,
         comments: stats.comments ?? post.stats.comments,
         views: stats.views ?? post.stats.views,
       },
@@ -187,7 +199,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     adjustLikeCount(narrativeId, delta);
 
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${narrativeId}/like`, { method: next ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; quotes?: number; comments?: number; views?: number } }>(`/narratives/${narrativeId}/like`, { method: next ? "PUT" : "DELETE" });
       applyStats(narrativeId, result.stats);
     } catch (reason) {
       setLikedNarrativeIds((current) => {
@@ -196,6 +208,32 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         return updated;
       });
       adjustLikeCount(narrativeId, -delta);
+      if (isAuthApiError(reason)) redirectToLogin();
+    }
+  };
+
+  const toggleRepost = async (narrativeId: string) => {
+    if (!requireAuth()) return;
+    const next = !repostedNarrativeIds.has(narrativeId);
+    const delta = next ? 1 : -1;
+
+    setRepostedNarrativeIds((current) => {
+      const updated = new Set(current);
+      if (next) updated.add(narrativeId); else updated.delete(narrativeId);
+      return updated;
+    });
+    adjustRepostCount(narrativeId, delta);
+
+    try {
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; quotes?: number; comments?: number; views?: number } }>(`/narratives/${narrativeId}/repost`, { method: next ? "PUT" : "DELETE" });
+      applyStats(narrativeId, result.stats);
+    } catch (reason) {
+      setRepostedNarrativeIds((current) => {
+        const updated = new Set(current);
+        if (next) updated.delete(narrativeId); else updated.add(narrativeId);
+        return updated;
+      });
+      adjustRepostCount(narrativeId, -delta);
       if (isAuthApiError(reason)) redirectToLogin();
     }
   };
@@ -212,6 +250,11 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     await meydanApi(`/narratives/${postId}`, { method: "DELETE" });
     setNarrativePosts((current) => current.filter((post) => post.id !== postId));
     setLikedNarrativeIds((current) => {
+      const next = new Set(current);
+      next.delete(postId);
+      return next;
+    });
+    setRepostedNarrativeIds((current) => {
       const next = new Set(current);
       next.delete(postId);
       return next;
@@ -243,6 +286,11 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       setLikedNarrativeIds((current) => {
         const next = new Set(current);
         for (const post of page.posts) if (post.viewerState?.liked) next.add(post.id);
+        return next;
+      });
+      setRepostedNarrativeIds((current) => {
+        const next = new Set(current);
+        for (const post of page.posts) if (post.viewerState?.reposted) next.add(post.id);
         return next;
       });
       setNextNarrativeCursor(page.nextCursor);
@@ -335,6 +383,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     isChatOpening,
     chatError,
     likedNarrativeIds,
+    repostedNarrativeIds,
     isLoading,
     isSavingManagement,
     managementError,
@@ -344,6 +393,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     openManagement: () => setIsManagementOpen(true),
     closeManagement: () => setIsManagementOpen(false),
     toggleLike,
+    toggleRepost,
     shareNarrative,
     deleteNarrative,
     saveSquareDetails,

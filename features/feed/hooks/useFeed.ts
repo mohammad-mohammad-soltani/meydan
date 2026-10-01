@@ -143,13 +143,14 @@ export function useFeed(
     return fresh.length;
   }, [rememberViewerState]);
 
-  const applyStats = useCallback((postId: string, stats?: { likes?: number; reposts?: number; comments?: number; views?: number }) => {
+  const applyStats = useCallback((postId: string, stats?: { likes?: number; reposts?: number; quotes?: number; comments?: number; views?: number }) => {
     if (!stats) return;
     setRemotePosts((current) => current.map((post) => post.id === postId ? {
       ...post,
       stats: {
         likes: stats.likes ?? post.stats.likes,
         reposts: stats.reposts ?? post.stats.reposts,
+        quotes: stats.quotes ?? post.stats.quotes,
         comments: stats.comments ?? post.stats.comments,
         views: stats.views ?? post.stats.views,
       },
@@ -162,6 +163,16 @@ export function useFeed(
       stats: {
         ...post.stats,
         likes: Math.max(0, post.stats.likes + delta),
+      },
+    } : post));
+  }, []);
+
+  const adjustRepostCount = useCallback((postId: string, delta: number) => {
+    setRemotePosts((current) => current.map((post) => post.id === postId ? {
+      ...post,
+      stats: {
+        ...post.stats,
+        reposts: Math.max(0, post.stats.reposts + delta),
       },
     } : post));
   }, []);
@@ -333,7 +344,7 @@ export function useFeed(
     adjustLikeCount(postId, delta);
 
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${postId}/like`, { method: isOn ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; quotes?: number; comments?: number; views?: number } }>(`/narratives/${postId}/like`, { method: isOn ? "PUT" : "DELETE" });
       applyStats(postId, result.stats);
     } catch (reason) {
       setLikedPostIds((current) => { const next = new Set(current); if (isOn) next.delete(postId); else next.add(postId); return next; });
@@ -345,19 +356,22 @@ export function useFeed(
   const toggleRepost = useCallback(async (postId: string) => {
     if (!requireAuth()) return;
     const isOn = !repostedPostIds.has(postId);
+    const delta = isOn ? 1 : -1;
     setRepostedPostIds((current) => {
       const next = new Set(current);
       if (next.has(postId)) next.delete(postId); else next.add(postId);
       return next;
     });
+    adjustRepostCount(postId, delta);
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number; views?: number } }>(`/narratives/${postId}/repost`, { method: isOn ? "PUT" : "DELETE" });
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; quotes?: number; comments?: number; views?: number } }>(`/narratives/${postId}/repost`, { method: isOn ? "PUT" : "DELETE" });
       applyStats(postId, result.stats);
     } catch (reason) {
       setRepostedPostIds((current) => { const next = new Set(current); if (isOn) next.delete(postId); else next.add(postId); return next; });
+      adjustRepostCount(postId, -delta);
       if (isAuthApiError(reason)) redirectToLogin();
     }
-  }, [applyStats, repostedPostIds, requireAuth]);
+  }, [adjustRepostCount, applyStats, repostedPostIds, requireAuth]);
 
   const toggleFollow = useCallback(async (actorType: ActorType, actorId: string | number) => {
     if (!requireAuth()) return;

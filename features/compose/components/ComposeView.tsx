@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ImagePlus, LoaderCircle, Save, Trash2, UploadCloud } from "lucide-react";
+import { ChevronRight, ImagePlus, LoaderCircle, Save, Trash2, UploadCloud, X } from "lucide-react";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
+import { QuotedPostCard } from "@/features/feed/components/QuotedPostCard";
+import { mapQuotedNarrative, type ApiQuotedNarrative } from "@/features/feed/services/quote-mapper";
+import type { QuotedPost } from "@/features/feed/types";
 import { ComposeMediaGrid } from "./ComposeMediaGrid";
 import { MAX_COMPOSE_MEDIA, useComposeMedia } from "../hooks/useComposeMedia";
 
 const MAX_CHARACTERS = 280;
-const DRAFT_KEY = "meydan-compose-draft";
+const BASE_DRAFT_KEY = "meydan-compose-draft";
 /** One picker for everything; the composer sorts the files by type. */
 const MEDIA_ACCEPT = "image/*,video/*,audio/*";
 
@@ -23,9 +26,20 @@ type ComposeDraft = {
   isEcho: boolean;
 };
 
-export function ComposeView() {
+type QuoteState =
+  | { status: "none" }
+  | { status: "loading" }
+  | { status: "ready"; post: QuotedPost }
+  | { status: "failed" };
+
+/** `quoteId` is the narrative being quoted (`/compose?quote=ID`). */
+export function ComposeView({ quoteId }: { quoteId?: string }) {
   const router = useRouter();
+  // A quote keeps its own draft so it never overwrites the plain-narrative one.
+  const DRAFT_KEY = quoteId ? `${BASE_DRAFT_KEY}:quote:${quoteId}` : BASE_DRAFT_KEY;
+  const [quote, setQuote] = useState<QuoteState>(quoteId ? { status: "loading" } : { status: "none" });
   const titleRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
@@ -58,19 +72,33 @@ export function ComposeView() {
       }
       setDraftLoaded(true);
     });
-    const frame = window.requestAnimationFrame(() => titleRef.current?.focus());
+    const frame = window.requestAnimationFrame(() => (quoteId ? textRef.current : titleRef.current)?.focus());
     return () => { active = false; window.cancelAnimationFrame(frame); };
-  }, []);
+  }, [DRAFT_KEY, quoteId]);
 
   useEffect(() => {
     if (!draftLoaded) return;
-    const hasDraft = title.trim().length > 0 || text.trim().length > 0 || isEcho;
+    const hasDraft = (!quoteId && title.trim().length > 0) || text.trim().length > 0 || isEcho;
     if (hasDraft) {
       window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, text, isEcho } satisfies ComposeDraft));
     } else {
       window.localStorage.removeItem(DRAFT_KEY);
     }
-  }, [draftLoaded, title, text, isEcho]);
+  }, [DRAFT_KEY, draftLoaded, quoteId, title, text, isEcho]);
+
+  useEffect(() => {
+    if (!quoteId) return;
+    let active = true;
+    void meydanApi<ApiQuotedNarrative>(`/narratives/${quoteId}`)
+      .then((item) => {
+        const post = mapQuotedNarrative(item);
+        if (active) setQuote(post && !post.unavailable ? { status: "ready", post } : { status: "failed" });
+      })
+      .catch(() => {
+        if (active) setQuote({ status: "failed" });
+      });
+    return () => { active = false; };
+  }, [quoteId]);
 
   useEffect(() => {
     void meydanApi<{ account_type: "user" | "square" | "speaker" }>("/me")
@@ -80,11 +108,12 @@ export function ComposeView() {
       .catch(() => undefined);
   }, []);
 
-  const body = [title.trim(), text.trim()].filter(Boolean).join("\n\n");
+  const body = quoteId ? text.trim() : [title.trim(), text.trim()].filter(Boolean).join("\n\n");
   const hasContent = body.length > 0 || media.length > 0;
   const atCapacity = media.length >= MAX_COMPOSE_MEDIA;
+  const quoteReady = !quoteId || quote.status === "ready";
   const canPublish =
-    hasContent && text.length <= MAX_CHARACTERS && !isPublishing && !isUploading && !hasUploadError && isReady;
+    quoteReady && hasContent && text.length <= MAX_CHARACTERS && !isPublishing && !isUploading && !hasUploadError && isReady;
 
   const goBack = () => {
     if (window.history.length > 1) router.back();
@@ -117,13 +146,14 @@ export function ComposeView() {
     setIsPublishing(true);
     setPublishError("");
     try {
-      await meydanApi("/narratives", {
+      const created = await meydanApi<{ id?: number }>("/narratives", {
         method: "POST",
         headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
         body: JSON.stringify({
           body,
           is_echo: isEcho,
           attachments: readyAttachments,
+          ...(quoteId ? { quoted_narrative_id: Number(quoteId) } : {}),
         }),
       });
       window.localStorage.removeItem(DRAFT_KEY);
@@ -131,7 +161,7 @@ export function ComposeView() {
       setText("");
       setIsEcho(false);
       reset();
-      router.push("/home");
+      router.push(quoteId && created?.id ? `/posts/${created.id}` : "/home");
       router.refresh();
     } catch (error) {
       const message =
@@ -149,7 +179,7 @@ export function ComposeView() {
   return (
     <section
       dir="rtl"
-      aria-label="ثبت روایت یا ایده جدید"
+      aria-label={quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}
       className="relative flex min-h-full flex-1 flex-col bg-background text-foreground"
       onDragEnter={(event) => {
         if (event.dataTransfer?.types?.includes("Files")) setDragging(true);
@@ -169,7 +199,7 @@ export function ComposeView() {
           <button type="button" onClick={requestClose} aria-label="بازگشت" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand">
             <ChevronRight className="h-5 w-5" />
           </button>
-          <h1 className="truncate text-sm font-black text-foreground sm:text-base">ثبت روایت یا ایده جدید</h1>
+          <h1 className="truncate text-sm font-black text-foreground sm:text-base">{quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}</h1>
         </div>
         <button
           type="button"
@@ -177,23 +207,24 @@ export function ComposeView() {
           disabled={!canPublish}
           className="shrink-0 rounded-full bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground sm:px-5"
         >
-          {isPublishing ? "در حال انتشار…" : isUploading ? "در حال بارگذاری…" : viewer.accountType === "square" ? "انتشار به نام میدان" : "انتشار"}
+          {isPublishing ? "در حال انتشار…" : isUploading ? "در حال بارگذاری…" : viewer.accountType === "square" ? "انتشار به نام میدان" : quoteId ? "انتشار نقل‌قول" : "انتشار"}
         </button>
       </div>
 
       <div className="flex flex-1 flex-col px-4 pb-24 pt-4">
-        <div className="flex gap-2 border-b border-divider pb-4">
+        {!quoteId ? <div className="flex gap-2 border-b border-divider pb-4">
           <button type="button" onClick={() => setIsEcho(false)} className={`rounded-xl px-4 py-2 text-xs font-black transition-colors ${!isEcho ? "bg-brand text-brand-foreground" : "bg-surface-muted text-muted-foreground hover:bg-hover hover:text-foreground"}`}>
             روایت میدانی
           </button>
           <button type="button" onClick={() => setIsEcho(true)} className={`rounded-xl px-4 py-2 text-xs font-black transition-colors ${isEcho ? "bg-brand text-brand-foreground" : "bg-surface-muted text-muted-foreground hover:bg-hover hover:text-foreground"}`}>
             پژواک (ایده و کار خوب)
           </button>
-        </div>
+        </div> : null}
 
         <div className="space-y-3 pt-5">
-          <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="تیتر یا موضوع اصلی روایت..." aria-label="تیتر روایت" className="min-h-14 w-full rounded-2xl border border-input-border bg-input px-4 text-sm font-bold text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand" />
+          {!quoteId ? <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="تیتر یا موضوع اصلی روایت..." aria-label="تیتر روایت" className="min-h-14 w-full rounded-2xl border border-input-border bg-input px-4 text-sm font-bold text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand" /> : null}
           <textarea
+            ref={textRef}
             value={text}
             onChange={(event) => setText(event.target.value)}
             onPaste={(event) => {
@@ -203,12 +234,39 @@ export function ComposeView() {
               addFiles(files);
             }}
             maxLength={MAX_CHARACTERS}
-            placeholder="شرح ماجرا، حال‌وهوای امشب میدان، نیازها یا دستاوردها..."
+            placeholder={quoteId ? "نظر خودت را دربارهٔ این روایت بنویس..." : "شرح ماجرا، حال‌وهوای امشب میدان، نیازها یا دستاوردها..."}
             rows={7}
             aria-label="شرح روایت"
             className="min-h-44 w-full resize-none rounded-2xl border border-input-border bg-input p-4 text-sm leading-7 text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand"
           />
         </div>
+
+        {quoteId ? (
+          <div className="mt-4">
+            {quote.status === "loading" ? (
+              <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface p-4 text-xs text-muted-foreground">
+                <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
+                در حال دریافت روایت…
+              </div>
+            ) : quote.status === "ready" ? (
+              <div className="relative">
+                <QuotedPostCard quote={quote.post} preview />
+                <button
+                  type="button"
+                  onClick={() => router.replace("/compose")}
+                  aria-label="حذف نقل‌قول"
+                  className="absolute left-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-muted text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
+                >
+                  <X aria-hidden="true" className="h-4 w-4" />
+                </button>
+              </div>
+            ) : quote.status === "failed" ? (
+              <p role="alert" className="rounded-2xl border border-danger-border bg-danger-surface p-4 text-xs font-bold leading-6 text-danger">
+                روایت موردنظر در دسترس نیست و نقل‌قول آن ممکن نیست.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="mt-4 rounded-2xl border border-border bg-surface p-3.5">
           <div className="flex items-center justify-between gap-3">

@@ -2,6 +2,7 @@ import { plainText } from "@/lib/meydan-api";
 import type { FeedAttachment, FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileNarrative, ProfileReply } from "../types";
 import type { ApiComment, ApiNarrative } from "./profile-api-types";
+import { mapQuotedNarrative } from "@/features/feed/services/quote-mapper";
 
 export function timeFa(value: string): string {
   const date = new Date(value);
@@ -250,8 +251,12 @@ export function mapNarrativePost(
 
       reposts: item.stats?.reposts || 0,
 
+      quotes: item.stats?.quotes || 0,
+
       views: item.stats?.views || 0,
     },
+
+    quote: mapQuotedNarrative(item.quoted_narrative),
 
     callToAction: item.initiative?.cta_label || undefined,
   };

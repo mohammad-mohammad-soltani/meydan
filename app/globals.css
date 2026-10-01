@@ -552,6 +552,26 @@ html.dark {
   transform-origin: top center;
 }
 
+/* X-style repost sheet: the backdrop fades while the sheet rises from the bottom edge. */
+.repost-sheet-backdrop {
+  animation: ui-fade-in-keyframes var(--motion-normal)
+    var(--motion-ease-standard) both;
+}
+
+[role="menu"].repost-sheet {
+  animation: repost-sheet-in-keyframes var(--motion-slow)
+    var(--motion-ease-emphasized) both;
+}
+
+@keyframes repost-sheet-in-keyframes {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 [aria-selected="true"],
 [aria-pressed="true"],
 [aria-current="page"] {

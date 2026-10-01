@@ -117,6 +117,8 @@ export function notificationKind(type?: string | null): ChatNotificationKind {
       return "like";
     case "repost":
       return "repost";
+    case "quote":
+      return "quote";
     case "comment":
     case "comment_reply":
       return "comment";
@@ -199,6 +201,7 @@ export function notificationVisualUrl(notification: Pick<ChatNotification, "acto
 const NOTIFICATION_PHRASES: Record<string, string> = {
   like: "{actor} روایت شما را پسندید",
   repost: "{actor} روایت شما را بازنشر کرد",
+  quote: "{actor} روایت شما را نقل‌قول کرد",
   follow: "{actor} شما را دنبال کرد",
   comment: "{actor} روی روایت شما نظر گذاشت",
   comment_reply: "{actor} به نظر شما پاسخ داد",

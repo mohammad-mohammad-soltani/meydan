@@ -25,6 +25,16 @@ export type MediaReflection = {
   url?: string;
 };
 
+/** The narrative a quote embeds. `unavailable` when it was deleted or hidden. */
+export type QuotedPost = {
+  id: string;
+  unavailable: boolean;
+  author?: { id: number; type: "user" | "square"; name: string; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
+  timeAgo?: string;
+  body?: string;
+  attachments?: FeedAttachment[];
+};
+
 export type FeedPost = {
   id: string;
   author: { id: number; type: "user" | "square"; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
@@ -45,8 +55,12 @@ export type FeedPost = {
     likes: number;
     comments: number;
     reposts: number;
+    /** Quotes of this post; shown together with reposts on the repost button. */
+    quotes?: number;
     views: number;
   };
+  /** Set when this post quotes another narrative. */
+  quote?: QuotedPost;
   callToAction?: string;
 };
 

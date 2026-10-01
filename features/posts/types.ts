@@ -1,3 +1,5 @@
+import type { QuotedPost } from "@/features/feed/types";
+
 export type PostMediaKind = "image" | "video" | "microphone" | "article";
 export type ReactionKind = "like" | "repost";
 
@@ -64,6 +66,10 @@ export type PostDetail = {
   reflections: MediaReflection[];
   likes: number;
   reposts: number;
+  /** Quotes of this post; counted with reposts on the repost button. */
+  quotes: number;
+  /** The narrative this post quotes, when it is a quote. */
+  quote?: QuotedPost;
   views: number;
   commentsCount: number;
   comments: PostComment[];

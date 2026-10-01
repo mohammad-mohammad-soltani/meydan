@@ -1,13 +1,14 @@
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import Link from "next/link";
 import type { Route } from "next";
-import { AtSign, Bell, Heart, MessageCircle, Newspaper, Repeat2, UserPlus, Users } from "lucide-react";
+import { AtSign, Bell, Heart, MessageCircle, Newspaper, Quote, Repeat2, UserPlus, Users } from "lucide-react";
 import { getNotificationPresentation } from "../chat-utils";
 import type { ChatNotification, ChatNotificationKind } from "../types";
 
 const icons: Record<ChatNotificationKind, typeof Heart> = {
   like: Heart,
   repost: Repeat2,
+  quote: Quote,
   media: Newspaper,
   mention: AtSign,
   follow: UserPlus,
@@ -19,6 +20,7 @@ const icons: Record<ChatNotificationKind, typeof Heart> = {
 const tones: Record<ChatNotificationKind, string> = {
   like: "bg-danger-surface text-danger",
   repost: "bg-success-surface text-success",
+  quote: "bg-success-surface text-success",
   media: "bg-info-surface text-info",
   mention: "bg-warning-surface text-warning",
   follow: "bg-accent-surface text-accent",

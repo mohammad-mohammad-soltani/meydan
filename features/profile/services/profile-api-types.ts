@@ -1,3 +1,4 @@
+import type { ApiQuotedNarrative } from "@/features/feed/services/quote-mapper";
 import type { ProfileStat } from "../types";
 
 type ApiSchedule = {
@@ -160,9 +161,12 @@ export type ApiNarrative = {
   stats?: {
     likes?: number;
     reposts?: number;
+    quotes?: number;
     comments?: number;
     views?: number;
   };
+
+  quoted_narrative?: ApiQuotedNarrative;
 };
 
 export type ApiComment = {

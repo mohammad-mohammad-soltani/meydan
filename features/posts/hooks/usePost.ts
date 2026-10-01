@@ -22,14 +22,14 @@ export function usePost(post: PostDetail) {
   const [commentDraft, setCommentDraft] = useState("");
   const [isLiveJoined, setIsLiveJoined] = useState(false);
   const [isLoading] = useState(false);
-  const [counts, setCounts] = useState({ likes: post.likes, reposts: post.reposts, comments: post.commentsCount });
+  const [counts, setCounts] = useState({ likes: post.likes, reposts: post.reposts, quotes: post.quotes, comments: post.commentsCount });
 
   useEffect(() => {
     const update = (event: Event) => {
       const detail = (event as CustomEvent<MediaPostUpdate>).detail;
       if (detail.id !== post.id) return;
       setLiked(detail.viewerState.liked); setReposted(detail.viewerState.reposted);
-      setCounts({ likes: detail.stats.likes, reposts: detail.stats.reposts, comments: detail.stats.comments });
+      setCounts((current) => ({ likes: detail.stats.likes, reposts: detail.stats.reposts, quotes: detail.stats.quotes ?? current.quotes, comments: detail.stats.comments }));
     };
     window.addEventListener(MEDIA_POST_UPDATE, update);
     return () => window.removeEventListener(MEDIA_POST_UPDATE, update);
@@ -82,8 +82,8 @@ export function usePost(post: PostDetail) {
     setCounts((current) => ({ ...current, likes: Math.max(0, current.likes + delta) }));
 
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${post.id}/like`, { method: next ? "PUT" : "DELETE" });
-      if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, comments: result.stats?.comments ?? current.comments }));
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; quotes?: number; comments?: number } }>(`/narratives/${post.id}/like`, { method: next ? "PUT" : "DELETE" });
+      if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, quotes: result.stats?.quotes ?? current.quotes, comments: result.stats?.comments ?? current.comments }));
     } catch (reason) {
       setLiked(!next);
       setCounts((current) => ({ ...current, likes: Math.max(0, current.likes - delta) }));
@@ -94,12 +94,15 @@ export function usePost(post: PostDetail) {
   const toggleRepost = async () => {
     if (!requireAuth(`/posts/${post.id}`)) return;
     const next = !reposted;
+    const delta = next ? 1 : -1;
     setReposted(next);
+    setCounts((current) => ({ ...current, reposts: Math.max(0, current.reposts + delta) }));
     try {
-      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; comments?: number } }>(`/narratives/${post.id}/repost`, { method: next ? "PUT" : "DELETE" });
-      if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, comments: result.stats?.comments ?? current.comments }));
+      const result = await meydanApi<{ stats?: { likes?: number; reposts?: number; quotes?: number; comments?: number } }>(`/narratives/${post.id}/repost`, { method: next ? "PUT" : "DELETE" });
+      if (result.stats) setCounts((current) => ({ likes: result.stats?.likes ?? current.likes, reposts: result.stats?.reposts ?? current.reposts, quotes: result.stats?.quotes ?? current.quotes, comments: result.stats?.comments ?? current.comments }));
     } catch (reason) {
       setReposted(!next);
+      setCounts((current) => ({ ...current, reposts: Math.max(0, current.reposts - delta) }));
       if (isAuthApiError(reason)) redirectToLogin();
     }
   };

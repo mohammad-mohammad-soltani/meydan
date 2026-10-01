@@ -10,6 +10,9 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
 import { PostActions } from "./PostActions";
+import { PostShareButton } from "./PostShareButton";
+import { QuotedPostCard } from "./QuotedPostCard";
+import { repostTotal } from "../post-counts";
 import { ReadMoreText } from "./ReadMoreText";
 import { MediaGallery } from "@/features/media/components/MediaGallery";
 import { mediaItemsFromAttachments } from "@/features/media/media-utils";
@@ -95,8 +98,6 @@ export function PostCard({
   onDelete,
   hideActions = false,
 }: PostCardProps) {
-  void reposted;
-  void onRepost;
   void onJoin;
 
   const isDetail = variant === "detail";
@@ -170,7 +171,11 @@ export function PostCard({
               </span>
             </div>
           </div>
-          {post.viewerState?.canDelete ? <button type="button" onClick={onDelete} className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full text-danger-foreground hover:bg-danger-surface" aria-label="حذف روایت"><Trash2 className="h-4 w-4" /></button> : null}
+          {/* In RTL the last item sits in the top-left corner, so share ends up there. */}
+          <div className="flex shrink-0 items-center gap-0.5">
+            {post.viewerState?.canDelete ? <button type="button" onClick={onDelete} className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full text-danger-foreground hover:bg-danger-surface" aria-label="حذف روایت"><Trash2 className="h-4 w-4" /></button> : null}
+            {!hideActions ? <PostShareButton onShare={onShare} size="md" /> : null}
+          </div>
         </div>
 
         {/* Text */}
@@ -197,6 +202,8 @@ export function PostCard({
             className="mt-3"
           />
         ) : null}
+
+        {post.quote ? <QuotedPostCard quote={post.quote} className="mt-3" /> : null}
 
         {/* Related media */}
         {post.mediaReflection ? (
@@ -263,11 +270,13 @@ export function PostCard({
         {!hideActions ? <PostActions
           postId={post.id}
           likes={post.stats.likes}
+          reposts={repostTotal(post.stats)}
           comments={post.stats.comments}
           views={post.stats.views}
           liked={liked}
+          reposted={reposted}
           onLike={onLike}
-          onShare={onShare}
+          onRepost={onRepost}
           className="mt-3"
         /> : null}
       </article>
@@ -356,7 +365,11 @@ export function PostCard({
             <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">
               {post.timeAgo}
             </span>
-            {post.viewerState?.canDelete ? <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete?.(); }} className="pointer-events-auto relative z-10 mr-auto grid h-7 w-7 place-items-center rounded-full text-danger-foreground hover:bg-danger-surface" aria-label="حذف روایت"><Trash2 className="h-3.5 w-3.5" /></button> : null}
+            {/* mr-auto pushes the controls to the top-left in RTL; share is the outermost one. */}
+            <span className="mr-auto flex shrink-0 items-center gap-0.5">
+              {post.viewerState?.canDelete ? <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete?.(); }} className="pointer-events-auto relative z-10 grid h-7 w-7 place-items-center rounded-full text-danger-foreground hover:bg-danger-surface" aria-label="حذف روایت"><Trash2 className="h-3.5 w-3.5" /></button> : null}
+              {!hideActions ? <PostShareButton onShare={onShare} /> : null}
+            </span>
           </div>
 
           <div className="mt-0.5">
@@ -386,6 +399,8 @@ export function PostCard({
               className="mt-2.5"
             />
           ) : null}
+
+          {post.quote ? <QuotedPostCard quote={post.quote} className="mt-2.5" /> : null}
 
           {post.mediaReflection ? (
             post.mediaReflection.url ? (
@@ -420,11 +435,13 @@ export function PostCard({
           {!hideActions ? <PostActions
             postId={post.id}
             likes={post.stats.likes}
+            reposts={repostTotal(post.stats)}
             comments={post.stats.comments}
             views={post.stats.views}
             liked={liked}
+            reposted={reposted}
             onLike={onLike}
-            onShare={onShare}
+            onRepost={onRepost}
             className="mt-3"
           /> : null}
         </div>

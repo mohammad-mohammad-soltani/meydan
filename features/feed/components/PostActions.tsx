@@ -2,29 +2,43 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { ChartNoAxesColumn, Heart, MessageCircle, Share2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChartNoAxesColumn, Heart, MessageCircle, Repeat2 } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
+import { quoteComposeHref } from "../post-counts";
+import { RepostMenu } from "./RepostMenu";
 
 type PostActionsProps = {
   postId: string;
   likes: number;
+  /** Reposts plus quotes. */
+  reposts: number;
   comments: number;
   views: number;
   liked: boolean;
+  reposted: boolean;
   onLike: () => void;
-  onShare: () => void;
+  onRepost: () => void;
   className?: string;
 };
 
 const formatCount = (value: number) => value >= 1000 ? (value / 1000).toFixed(1) + "k" : String(value);
 const actionBase = "pointer-events-auto inline-flex h-8 w-full items-center justify-center gap-1 rounded-full transition-colors";
 
-export function PostActions({ postId, likes, comments, views, liked, onLike, onShare, className = "" }: PostActionsProps) {
+export function PostActions({ postId, likes, reposts, comments, views, liked, reposted, onLike, onRepost, className = "" }: PostActionsProps) {
   const { requireAuth } = useAuthGate();
+  const router = useRouter();
 
   return (
     <div dir="ltr" className={`feed-post-actions pointer-events-auto relative z-20 mt-3 grid h-10 grid-cols-4 items-center rounded-xl border border-border bg-surface-glass px-1 text-icon-muted shadow-xs ${className}`}>
-      <button type="button" onClick={(event) => { event.stopPropagation(); onShare(); }} aria-label="اشتراک‌گذاری روایت" className={`${actionBase} hover:bg-info-surface hover:text-info`}><Share2 className="h-[17px] w-[17px]" /></button>
+      <RepostMenu
+        reposted={reposted}
+        onRepost={onRepost}
+        onQuote={() => router.push(quoteComposeHref(postId) as Route)}
+        className={`${actionBase} hover:bg-success-surface ${reposted ? "text-success" : "hover:text-success"}`}
+      >
+        <Repeat2 className="h-[18px] w-[18px]" /><span className="text-xs">{formatCount(reposts)}</span>
+      </RepostMenu>
       <Link
         scroll={false}
         onClick={(event) => {

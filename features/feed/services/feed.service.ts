@@ -1,5 +1,6 @@
 import { meydanApi, meydanApiPage, plainText } from "@/lib/meydan-api";
 import type { FeedAttachment, FeedPost, FollowSuggestion } from "../types";
+import { mapQuotedNarrative, type ApiQuotedNarrative } from "./quote-mapper";
 
 type ApiActor = {
   id: string;
@@ -40,7 +41,8 @@ type ApiNarrative = {
     viewer_state?: { joined?: boolean };
   } | null;
   media_reflections?: Array<{ outlet: string; title: string; url?: string }>;
-  stats?: { likes?: number; comments?: number; reposts?: number; views?: number };
+  stats?: { likes?: number; comments?: number; reposts?: number; quotes?: number; views?: number };
+  quoted_narrative?: ApiQuotedNarrative;
   viewer_state?: { liked?: boolean; reposted?: boolean; can_delete?: boolean } | null;
 };
 
@@ -184,8 +186,10 @@ function mapNarrative(item: ApiNarrative): FeedPost {
       likes: item.stats?.likes || 0,
       comments: item.stats?.comments || 0,
       reposts: item.stats?.reposts || 0,
+      quotes: item.stats?.quotes || 0,
       views: item.stats?.views || 0,
     },
+    quote: mapQuotedNarrative(item.quoted_narrative),
     callToAction: item.initiative?.cta_label || undefined,
   };
 }
@@ -239,4 +243,21 @@ export async function getFollowSuggestions(): Promise<FollowSuggestion[]> {
     narrativeCount: square.stats?.narratives,
     followerCount: square.stats?.followers,
   }));
+}
+
+/** The narratives that quote `postId`, newest first. */
+export async function getQuotesPage(
+  postId: string,
+  cursor: string | null = null,
+  init?: RequestInit,
+): Promise<FeedPage> {
+  const params = new URLSearchParams({ limit: String(FEED_PAGE_SIZE) });
+  if (cursor) params.set("cursor", cursor);
+
+  const page = await meydanApiPage<ApiNarrative[]>(`/narratives/${postId}/quotes?${params}`, init);
+
+  return {
+    posts: page.data.map(mapNarrative),
+    nextCursor: page.nextCursor,
+  };
 }
