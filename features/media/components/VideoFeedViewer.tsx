@@ -13,6 +13,7 @@ import {
   type VideoPageState,
 } from "../video-feed-queue";
 import { MEDIA_POST_UPDATE, type MediaPostUpdate } from "../post-interactions";
+import { useDragPager } from "../use-drag-pager";
 import { ImmersivePostSlide } from "./ImmersivePostSlide";
 
 type Props = {
@@ -49,7 +50,6 @@ export function VideoFeedViewer({ session, onClose }: Props) {
   });
   const request = useRef<AbortController | null>(null);
   const pendingEnd = useRef<string | null>(null);
-  const touch = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
   const wheel = useRef({ delta: 0, last: 0, consumed: false });
 
@@ -102,6 +102,18 @@ export function VideoFeedViewer({ session, onClose }: Props) {
       locked.current = false;
     }, 380);
   }, []);
+
+  // Vertical paging follows the finger: the track carries the whole offset so
+  // a drag never re-renders a slide, and `move` only runs once it has settled.
+  const { trackRef: feedTrackRef, handlers: feedDrag } = useDragPager({
+    axis: "y",
+    index,
+    count: queue.length,
+    transform: (slide, drag) => `translate3d(0, calc(${-slide * 100}% + ${drag}px), 0)`,
+    onIndexChange: (next) => move(next - index),
+    reservedSelector: "button, input, textarea, [role=slider], a, [data-image-gesturing=true]",
+    onDragged: () => { suppressClick.current = true; },
+  });
 
   const load = useCallback(async () => {
     if (request.current || pageState.current.exhausted) return;
@@ -403,75 +415,54 @@ export function VideoFeedViewer({ session, onClose }: Props) {
           move(state.delta > 0 ? 1 : -1);
         }
       }}
+      {...feedDrag}
       onPointerDown={(event) => {
         suppressClick.current = false;
-        if (!event.isPrimary) {
-          touch.current = null;
-          return;
-        }
-        if (
-          event.pointerType === "mouse" ||
-          (event.target as HTMLElement).closest(
-            "button, input, textarea, [role=slider], a, [data-image-gesturing=true]",
-          )
-        )
-          return;
-        touch.current = { x: event.clientX, y: event.clientY };
-      }}
-      onPointerUp={(event) => {
-        const start = touch.current;
-        touch.current = null;
-        if (!start) return;
-        const dy = event.clientY - start.y,
-          dx = event.clientX - start.x;
-        if (Math.abs(dy) >= 50 && Math.abs(dy) > Math.abs(dx) * 1.2) {
-          suppressClick.current = true;
-          move(dy < 0 ? 1 : -1);
-        }
-      }}
-      onPointerCancel={() => {
-        touch.current = null;
+        feedDrag.onPointerDown(event);
       }}
     >
-      <div className="video-feed-track relative h-full w-full">
-        {queue.map((entry, slide) => (
-          <section
-            key={entry.key}
-            inert={slide !== index}
-            aria-hidden={slide !== index}
-            className="video-feed-slide absolute inset-0 h-full w-full"
-            style={{ transform: `translateY(${(slide - index) * 100}%)` }}
-          >
-            {Math.abs(slide - index) <= 1 ? (
-              <ImmersivePostSlide
-                key={entry.key}
-                entry={entry}
-                active={slide === index}
-                times={times}
-                selections={selections}
-                onMediaChange={() => { pendingEnd.current = null; setEnded(null); }}
-                onClose={onClose}
-                closeRef={slide === index ? closeButton : undefined}
-                onPlaybackStart={() => {
-                  if (pendingEnd.current === entry.key) {
-                    pendingEnd.current = null;
-                    setEnded(null);
-                  }
-                }}
-                onEnded={() => finish(entry.key, slide)}
-                onFullscreen={toggleFullscreen}
-                footer={slide === index ? footer : undefined}
-              />
-            ) : entry.item.poster ? (
-              <div
-                className="h-full w-full bg-contain bg-center bg-no-repeat"
-                style={{
-                  backgroundImage: `url(${JSON.stringify(entry.item.poster)})`,
-                }}
-              />
-            ) : null}
-          </section>
-        ))}
+      {/* The clipping box has to stay put: the track inside it is what moves. */}
+      <div className="video-feed-viewport relative h-full w-full">
+        <div ref={feedTrackRef} className="video-feed-track absolute inset-0">
+          {queue.map((entry, slide) => (
+            <section
+              key={entry.key}
+              inert={slide !== index}
+              aria-hidden={slide !== index}
+              className="video-feed-slide absolute inset-0 h-full w-full"
+              style={{ transform: `translateY(${slide * 100}%)` }}
+            >
+              {Math.abs(slide - index) <= 1 ? (
+                <ImmersivePostSlide
+                  key={entry.key}
+                  entry={entry}
+                  active={slide === index}
+                  times={times}
+                  selections={selections}
+                  onMediaChange={() => { pendingEnd.current = null; setEnded(null); }}
+                  onClose={onClose}
+                  closeRef={slide === index ? closeButton : undefined}
+                  onPlaybackStart={() => {
+                    if (pendingEnd.current === entry.key) {
+                      pendingEnd.current = null;
+                      setEnded(null);
+                    }
+                  }}
+                  onEnded={() => finish(entry.key, slide)}
+                  onFullscreen={toggleFullscreen}
+                  footer={slide === index ? footer : undefined}
+                />
+              ) : entry.item.poster ? (
+                <div
+                  className="h-full w-full bg-contain bg-center bg-no-repeat"
+                  style={{
+                    backgroundImage: `url(${JSON.stringify(entry.item.poster)})`,
+                  }}
+                />
+              ) : null}
+            </section>
+          ))}
+        </div>
       </div>
     </div>,
     document.body,

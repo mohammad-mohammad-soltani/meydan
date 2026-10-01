@@ -10,19 +10,32 @@
 
 /* One viewport per video; gestures are handled by the shared transition gate. */
 .video-feed-viewer { height: 100dvh; touch-action: none; overscroll-behavior: none; }
-.video-feed-track { overflow: hidden; }
-.video-feed-slide {
+/* The track carries the paging offset, so a drag moves one compositor layer
+   instead of every slide, and the slides themselves never animate. */
+.video-feed-viewport { overflow: hidden; }
+.video-feed-track {
   transition: transform 360ms cubic-bezier(.22,.7,.25,1);
   will-change: transform;
 }
 .video-feed-button { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: #ffffff20; }
 .video-feed-button:disabled { opacity: .3; }
 .video-feed-button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) { .video-feed-slide { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .video-feed-track { transition: none; } }
 
 /* The immersive viewer keeps the media geometry independent of its chrome. */
 .immersive-post { position: relative; height: 100%; width: 100%; max-width: 900px; margin-inline: auto; background: #000; color: #fff; }
-.viewer-media-stage { position: absolute; inset: 56px 0 0; display: flex; align-items: center; justify-content: center; }
+.viewer-media-stage { position: absolute; inset: 56px 0 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+/* Attachments of one post live side by side; the track carries the offset so a
+   horizontal drag moves a single compositor layer. */
+.viewer-media-track {
+  position: absolute;
+  inset: 0;
+  transition: transform 320ms cubic-bezier(.22,.7,.25,1);
+  will-change: transform;
+}
+.viewer-media-slide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.viewer-media-preview { height: 100%; width: 100%; background-size: contain; background-position: center; background-repeat: no-repeat; }
+@media (prefers-reduced-motion: reduce) { .viewer-media-track { transition: none; } }
 @media (max-width: 767px) and (orientation: portrait) {
   .is-portrait .viewer-media-stage { inset: 0; }
   .is-portrait .viewer-topbar { display: none; }

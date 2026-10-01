@@ -26,6 +26,24 @@ import { VideoPlayer } from "./VideoPlayer";
 import { MediaStage } from "./MediaLightbox";
 import { publicProfileHref } from "@/lib/profile-route";
 import { useViewerPost } from "../hooks/useViewerPost";
+import { useDragPager } from "../use-drag-pager";
+
+/**
+ * Stand-in for a neighbouring attachment while it is being dragged in. Mounting
+ * a second player or zoomable stage for a pane the viewer may never commit to
+ * would cost far more than the still it is about to replace.
+ */
+function MediaNeighbour({ item }: { item: VideoFeedEntry["item"] }) {
+  const src = item.kind === "video" ? item.poster : item.src;
+  if (!src) return null;
+  return (
+    <div
+      aria-hidden="true"
+      className="viewer-media-preview"
+      style={{ backgroundImage: `url(${JSON.stringify(src)})` }}
+    />
+  );
+}
 
 export function ImmersivePostSlide({
   entry,
@@ -65,7 +83,6 @@ export function ImmersivePostSlide({
     item.width && item.height ? item.width / item.height : 9 / 16,
   );
   const [controlsHost, setControlsHost] = useState<HTMLDivElement | null>(null);
-  const gesture = useRef<{ x: number; y: number } | null>(null);
   const suppress = useRef(false);
   const slideRef = useRef<HTMLDivElement>(null);
   const replyRef = useRef<HTMLInputElement>(null);
@@ -99,6 +116,19 @@ export function ImmersivePostSlide({
         : 9 / 16,
     );
   };
+  // Attachments inside one post page horizontally with the same finger-tracked
+  // feel as the video feed itself; a zoomed photo keeps its own gestures.
+  const { trackRef: mediaTrackRef, handlers: mediaDrag } = useDragPager({
+    axis: "x",
+    index: mediaIndex,
+    count: media.length,
+    enabled: media.length > 1,
+    transform: (position, drag) => `translate3d(calc(${-position * 100}% + ${drag}px), 0, 0)`,
+    onIndexChange: (next) => go(next - mediaIndex),
+    reservedSelector: "button, a, input, textarea, [role=slider], [data-image-gesturing=true]",
+    onDragged: () => { suppress.current = true; },
+  });
+
   const toggleChrome = () => {
     setVisible((value) => !value);
   };
@@ -183,34 +213,10 @@ export function ImmersivePostSlide({
           suppress.current = false;
         }
       }}
+      {...mediaDrag}
       onPointerDown={(event) => {
         suppress.current = false;
-        if (!event.isPrimary) {
-          gesture.current = null;
-          return;
-        }
-        if (
-          item.kind === "image" ||
-          (event.target as HTMLElement).closest(
-            "button,a,input,textarea,[role=slider]",
-          )
-        )
-          return;
-        gesture.current = { x: event.clientX, y: event.clientY };
-      }}
-      onPointerUp={(event) => {
-        const start = gesture.current;
-        gesture.current = null;
-        if (!start) return;
-        const dx = event.clientX - start.x,
-          dy = event.clientY - start.y;
-        if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-          suppress.current = true;
-          go(dx < 0 ? 1 : -1);
-        }
-      }}
-      onPointerCancel={() => {
-        gesture.current = null;
+        mediaDrag.onPointerDown(event);
       }}
     >
       <div
@@ -231,39 +237,61 @@ export function ImmersivePostSlide({
           <ArrowLeft aria-hidden="true" />
         </button>
       </div>
-      <div
-        className="viewer-media-stage"
-        onClick={(event) => {
-          if (event.target === event.currentTarget) toggleChrome();
-        }}
-      >
-        {item.kind === "video" ? (
-          <VideoPlayer
-            key={mediaKey}
-            item={item}
-            variant="immersive"
-            fillStage
-            active={active}
-            initialTime={times.get(mediaKey) || 0}
-            onPlaybackTime={(time) => times.set(mediaKey, time)}
-            chromeVisible={visible}
-            onToggleChrome={toggleChrome}
-            controlsHost={controlsHost}
-            onAspectRatio={setRatio}
-            onEnded={onEnded}
-            onPlaybackStart={onPlaybackStart}
-            onRequestFullscreen={onFullscreen}
-          />
-        ) : (
-          <MediaStage
-            key={mediaKey}
-            item={item}
-            onSwipe={go}
-            onBackdropClick={toggleChrome}
-            immersive
-            chromeVisible={visible}
-          />
-        )}
+      <div className="viewer-media-stage">
+        <div
+          ref={mediaTrackRef}
+          className="viewer-media-track"
+          onClick={(event) => {
+            // Only a tap on the empty area around the media toggles the chrome.
+            const target = event.target as HTMLElement;
+            if (target === event.currentTarget || target.classList.contains("viewer-media-slide")) {
+              toggleChrome();
+            }
+          }}
+        >
+          {media.map((attachment, position) => (
+            <div
+              key={attachment.id}
+              className="viewer-media-slide"
+              style={{ transform: `translateX(${position * 100}%)` }}
+              inert={position !== mediaIndex}
+              aria-hidden={position !== mediaIndex}
+            >
+              {position === mediaIndex ? (
+                item.kind === "video" ? (
+                  <VideoPlayer
+                    key={mediaKey}
+                    item={item}
+                    variant="immersive"
+                    fillStage
+                    active={active}
+                    initialTime={times.get(mediaKey) || 0}
+                    onPlaybackTime={(time) => times.set(mediaKey, time)}
+                    chromeVisible={visible}
+                    onToggleChrome={toggleChrome}
+                    controlsHost={controlsHost}
+                    onAspectRatio={setRatio}
+                    onEnded={onEnded}
+                    onPlaybackStart={onPlaybackStart}
+                    onRequestFullscreen={onFullscreen}
+                  />
+                ) : (
+                  <MediaStage
+                    key={mediaKey}
+                    item={item}
+                    /* Paging is the pager's job now; the stage keeps zoom and pan. */
+                    onSwipe={() => {}}
+                    onBackdropClick={toggleChrome}
+                    immersive
+                    chromeVisible={visible}
+                  />
+                )
+              ) : Math.abs(position - mediaIndex) === 1 ? (
+                <MediaNeighbour item={attachment} />
+              ) : null}
+            </div>
+          ))}
+        </div>
       </div>
       {portrait && (
         <div className={chrome("viewer-top-author")} inert={!visible}>
