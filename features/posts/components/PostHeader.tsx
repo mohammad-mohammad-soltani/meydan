@@ -11,11 +11,23 @@ type PostHeaderProps = { timeAgo: string };
 
 export function PostHeader({ timeAgo }: PostHeaderProps) {
   const router = useRouter();
+  /**
+   * `history.length > 1` says nothing about where back actually lands: an
+   * overlay that pushed an entry of its own (the video feed does) leaves the
+   * reader on this very URL, faded out by the exit animation and apparently
+   * stuck. Go back, then check that the route really changed.
+   */
   const handleBack = () => {
-    document.getElementById("view-full-post")?.classList.add("ui-exit");
+    const view = document.getElementById("view-full-post");
+    const from = window.location.pathname;
+    view?.classList.add("ui-exit");
     window.setTimeout(() => {
-      if (window.history.length > 1) router.back();
-      else router.push("/home");
+      router.back();
+      window.setTimeout(() => {
+        if (window.location.pathname !== from) return;
+        view?.classList.remove("ui-exit");
+        router.push("/home");
+      }, 320);
     }, 180);
   };
 

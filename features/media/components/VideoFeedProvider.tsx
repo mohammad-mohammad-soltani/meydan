@@ -54,7 +54,11 @@ export function VideoFeedProvider({ children }: { children: ReactNode }) {
     if (document.pictureInPictureElement)
       void document.exitPictureInPicture().catch(() => {});
     const currentState = history.state && typeof history.state === "object" ? history.state : {};
-    history.pushState({ ...currentState, [VIDEO_FEED_HISTORY_KEY]: true }, "");
+    // One entry per viewer, never one per open: a second push would cost the
+    // page behind an extra back press that appears to do nothing.
+    if (!currentState[VIDEO_FEED_HISTORY_KEY]) {
+      history.pushState({ ...currentState, [VIDEO_FEED_HISTORY_KEY]: true }, "");
+    }
     setSession({
       ...request,
       queue: appendVideos([request.entry], request.candidates),
@@ -65,6 +69,17 @@ export function VideoFeedProvider({ children }: { children: ReactNode }) {
           : null,
     });
   }, []);
+  // A link inside the viewer navigates without going through `close`, which
+  // would carry the marker onto the next page and leave `close` believing an
+  // entry of ours is still on the stack.
+  useEffect(() => {
+    if (session) return;
+    const state = history.state;
+    if (state && typeof state === "object" && state[VIDEO_FEED_HISTORY_KEY]) {
+      history.replaceState({ ...state, [VIDEO_FEED_HISTORY_KEY]: false }, "");
+    }
+  }, [session]);
+
   const close = useCallback(() => {
     if (history.state?.[VIDEO_FEED_HISTORY_KEY]) {
       history.back();
