@@ -89,30 +89,28 @@ test("the read more control reveals the rest in place", () => {
   assert.match(component, /aria-controls=\{bodyId\}/);
   assert.match(component, /useId\(\)/);
 
-  // The hidden remainder is revealed with the shared animation utility.
-  assert.match(component, /read-more-reveal-open/);
+  // Unfolding animates the height down to the last line with a fading edge.
+  assert.match(component, /element\.animate\(/);
+  assert.match(component, /maskImage/);
 });
 
-test("the reveal animation respects reduced motion", () => {
-  const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
+test("the reveal animation is quick and respects reduced motion", async () => {
+  const { readMoreDuration } = await loadReadMore();
+  const component = source("features/feed/components/ReadMoreText.tsx");
 
-  assert.match(css, /@keyframes read-more-reveal-keyframes/);
-  assert.match(css, /@utility read-more-reveal-open/);
-  // `.read-more-reveal` keeps the hidden remainder out of layout entirely.
-  assert.match(css, /@utility read-more-reveal \{\s*display: none;/);
-
-  // The global reduced-motion block collapses every animation duration, so the
-  // reveal must be covered by it rather than opting out with its own rule.
-  const reducedMotion = css.slice(css.indexOf("prefers-reduced-motion"));
-  assert.match(reducedMotion, /animation-duration: 0\.01ms !important/);
+  assert.equal(readMoreDuration(0), 220, "a couple of lines still animate visibly");
+  assert.equal(readMoreDuration(10_000), 420, "a very long post never drags");
+  assert.ok(readMoreDuration(200) > readMoreDuration(40), "longer reveals take a little longer");
+  assert.match(component, /prefers-reduced-motion: reduce/);
 });
 
-test("both post layouts fold their long bodies", () => {
+test("the timeline folds long bodies while the post page shows them in full", () => {
   const card = source("features/feed/components/PostCard.tsx");
 
-  // Timeline and detail both render the shared control, and neither still
-  // prints the raw body as text.
+  // Only the timeline folds; the post page renders the whole body, and
+  // neither still prints the raw body as text.
   const usages = card.match(/<ReadMoreText/g) ?? [];
-  assert.equal(usages.length, 2, "timeline and detail must both use ReadMoreText");
+  assert.equal(usages.length, 1, "only the timeline uses ReadMoreText");
+  assert.match(card, /<MarkdownText\s+body=\{post\.body\}/);
   assert.doesNotMatch(card, />\s*\{post\.body\}\s*</, "no layout may still print the raw body");
 });

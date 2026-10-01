@@ -14,6 +14,7 @@ import { PostShareButton } from "./PostShareButton";
 import { QuotedPostCard } from "./QuotedPostCard";
 import { repostTotal } from "../post-counts";
 import { ReadMoreText } from "./ReadMoreText";
+import { MarkdownText } from "@/components/shared/MarkdownText";
 import { MediaGallery } from "@/features/media/components/MediaGallery";
 import { mediaItemsFromAttachments } from "@/features/media/media-utils";
 import type { FeedPost } from "../types";
@@ -184,11 +185,13 @@ export function PostCard({
             <h1 className="sr-only">{post.title}</h1>
           ) : null}
 
-          <ReadMoreText
-            body={post.body}
-            className="text-[16px] leading-8 text-foreground"
-            contentClassName="relative z-10"
-          />
+          {/* The post page is where the reader came to read it all: never fold. */}
+          <div className="relative z-10">
+            <MarkdownText
+              body={post.body}
+              className="whitespace-pre-wrap text-[16px] leading-8 text-foreground"
+            />
+          </div>
         </div>
         {/* Media */}
         {post.attachments.length > 0 ? (

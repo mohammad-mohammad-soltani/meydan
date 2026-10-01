@@ -516,19 +516,6 @@ html.dark {
     scale: 1;
   }
 }
-@keyframes read-more-reveal-keyframes {
-  from {
-    opacity: 0;
-    filter: blur(0.4rem);
-    transform: translateY(-0.3rem);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(0);
-  }
-}
-
 .route-transition-stage {
   animation: route-transition-enter-keyframes var(--motion-page)
     var(--motion-ease-emphasized) both;
@@ -628,17 +615,6 @@ html.dark {
  * for text of unknown height — interpolate-size is not available everywhere
  * yet, so the reveal animates the incoming text rather than the box.
  */
-@utility read-more-reveal {
-  display: none;
-}
-
-@utility read-more-reveal-open {
-  display: inline;
-  animation: read-more-reveal-keyframes var(--motion-slow)
-    var(--motion-ease-emphasized) both;
-  will-change: opacity, filter, transform;
-}
-
 @utility read-more-toggle {
   /* The timeline card is one big link; the toggle must sit above it. */
   isolation: isolate;

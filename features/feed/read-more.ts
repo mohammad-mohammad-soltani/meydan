@@ -39,3 +39,11 @@ export function truncateAtWordBoundary(body: string, limit = READ_MORE_LIMIT): s
 
   return `${cut.replace(/\s+$/, "")}${ELLIPSIS}`;
 }
+
+/**
+ * Length of the unfold/fold motion for a height change of `distance` pixels:
+ * quick for a few extra lines, a little longer for a long post, never sluggish.
+ */
+export function readMoreDuration(distance: number): number {
+  return Math.round(Math.min(420, Math.max(220, 180 + Math.max(0, distance) * 0.35)));
+}
