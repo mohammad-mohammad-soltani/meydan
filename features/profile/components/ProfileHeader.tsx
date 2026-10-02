@@ -3,13 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
-import { useState } from "react";
-import { ArrowRight, Check, LoaderCircle, MessageCircle, UserRoundPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, CalendarDays, Camera, Check, LoaderCircle, Mail, MapPin, Pencil, Share2, UserRoundPlus } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
-import { ProfileActionsMenu } from "./ProfileActionsMenu";
+import { ProfileActionsMenu, shareProfile } from "./ProfileActionsMenu";
+import { meydanApi } from "@/lib/meydan-api";
+import { ENTITY_KIND_LABELS, isEntityKind } from "@/lib/profile-route";
 import { AdminNavLink } from "@/components/layouts/AdminNavLink";
 import type { ProfileDetails } from "../types";
 import { AccountBadges } from "@/components/shared/AccountBadges";
@@ -29,63 +31,178 @@ type ProfileHeaderProps = {
   inviteVenue?: string;
 };
 
+type FollowedBy = { count: number; actors: Array<{ display_name?: string; avatar_url?: string }> };
+
+const number = new Intl.NumberFormat("fa-IR");
+const compact = new Intl.NumberFormat("fa-IR", { notation: "compact", maximumFractionDigits: 1 });
+const persianMonth = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { month: "long" });
+const persianYear = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric" });
+/** «مهر ۱۴۰۲»: month first, as in the reference (the locale puts the year first). */
+const monthYear = { format: (date: Date) => `${persianMonth.format(date)} ${persianYear.format(date).replace(/\s*ه\.ش\.?/, "")}` };
+
+const glass = "grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-md transition hover:bg-black/50 active:scale-95";
+
+/**
+ * Profile header in the reference design: cover with glass controls, the
+ * avatar centred between the follower and post counts, centred identity and
+ * bio, info chips, two equal actions and «دنبال‌شده توسط …».
+ */
 export function ProfileHeader({ profile, canEdit = false, isFollowing = false, isFollowLoading = false, followStateReady = true, isChatOpening = false, onToggleFollow, onMessage, canInvite = false, inviteVenue = "" }: ProfileHeaderProps) {
-  const { requireAuth } = useAuthGate();
+  const { requireAuth, isAuthenticated } = useAuthGate();
   const [notice, setNotice] = useState("");
+  const [followedBy, setFollowedBy] = useState<FollowedBy | null>(null);
   const { identity, accountType, narratives } = profile;
-  const postLabel = new Intl.NumberFormat("fa-IR").format(
-    profile.narrativeCount ?? narratives.length,
-  );
+  const kind = accountType === "square" ? profile.kind ?? "square" : "user";
   const canBeInvited = !canEdit && accountType !== "square" && Boolean(identity.isSpeaker || identity.verifiedSpeaker);
+  const posts = profile.narrativeCount ?? narratives.length;
+  const followers = profile.social?.followers;
+  const joined = profile.social?.joinedAt ? monthYear.format(new Date(profile.social.joinedAt)) : null;
+  const kindLabel = accountType === "square" && isEntityKind(profile.kind) ? ENTITY_KIND_LABELS[profile.kind] : null;
+  // A short headline reads as a role chip; a long one is the bio line (when there is no «درباره»).
+  const shortSubtitle = identity.subtitle && identity.subtitle.length <= 40 ? identity.subtitle : "";
+  const bio = profile.about || (shortSubtitle ? "" : identity.subtitle);
+  const chips = [
+    ...(kindLabel ? [{ key: "kind", label: kindLabel, strong: true }] : []),
+    ...(shortSubtitle ? [{ key: "subtitle", label: shortSubtitle, strong: true }] : []),
+    ...(accountType === "square" ? profile.squareStats : [])
+      .filter((stat) => stat.value && stat.value !== "…")
+      .slice(1, 3)
+      .map((stat) => ({ key: `stat-${stat.label}`, label: `${stat.value} ${stat.label}`, strong: false })),
+    ...profile.skills.slice(0, 4).map((skill) => ({ key: `skill-${skill}`, label: `#${skill.replace(/^#/, "")}`, strong: false })),
+  ];
+
+  // Only signed-in visitors of someone else's profile see «followed by»; one small request.
+  useEffect(() => {
+    if (canEdit || !isAuthenticated) return;
+    let active = true;
+    void meydanApi<FollowedBy>(`/actors/${kind}/${profile.actorId}/followed-by`)
+      .then((value) => active && setFollowedBy(value))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [canEdit, isAuthenticated, kind, profile.actorId]);
+
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-divider bg-surface/95 px-3 backdrop-blur">
-        <button type="button" aria-label="بازگشت" onClick={() => history.back()} className="grid h-11 w-11 place-items-center rounded-full text-icon hover:bg-hover"><ArrowRight className="h-5 w-5" /></button>
-        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><AccountBadges verified={identity.verified} speaker={identity.verifiedSpeaker} official={identity.verifiedOfficial} kind={profile.accountType === "square" ? profile.kind ?? "square" : "user"} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postLabel} روایت منتشر شده</p></div>
-      </header>
-
-      <div className="bg-surface">
-        <div className="relative h-36 overflow-hidden  sm:h-48">{identity.cover ? <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" className="object-cover" /> :  <Image src="/images/header.jpg" alt={`کاور ${identity.name}`} fill className="object-cover" />}</div>
-        <div className="relative px-4 pb-5">
-          <div className="flex min-h-16 items-start justify-between">
-            <div className="-mt-10 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-surface bg-surface-muted text-3xl font-black text-foreground sm:-mt-14 sm:h-28 sm:w-28">{identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}</div>
-            <div className="mt-3 flex min-w-0 flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
-              {canEdit ? <><AdminNavLink isAuthenticated className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-brand-border bg-brand-muted px-3 text-xs font-black text-brand hover:bg-selected lg:hidden" /><Link href={"/profile/edit" as Route} className="inline-flex min-h-10 items-center rounded-pill border border-border px-4 text-xs font-black text-foreground hover:bg-hover">ویرایش پروفایل</Link></> : (
-                <>
-                  <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-3 text-xs font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
-                    {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
-                    پیام
-                  </button>
-                  {canBeInvited ? (
-                    <SpeakerInviteButton
-                      speaker={{
-                        userId: String(profile.actorId),
-                        name: identity.name,
-                        avatarUrl: identity.avatar,
-                        verifiedSpeaker: identity.verifiedSpeaker,
-                      }}
-                      canInvite={canInvite}
-                      venue={inviteVenue}
-                      size="md"
-                      className="!px-3 sm:!px-4"
-                    />
-                  ) : null}
-                </>
-              )}
-              <ProfileActionsMenu profile={profile} canEdit={canEdit} onNotice={setNotice} />
-            </div>
+      <div className="relative">
+        <div className="relative h-48 overflow-hidden rounded-b-[2rem] bg-surface-elevated">
+          {identity.cover ? (
+            <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" className="object-cover" />
+          ) : (
+            <Image src="/images/header.jpg" alt={`کاور ${identity.name}`} fill className="object-cover" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30" />
+        </div>
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
+          <button type="button" aria-label="بازگشت" onClick={() => history.back()} className={glass}>
+            <ArrowRight className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            {canEdit ? <AdminNavLink isAuthenticated className={`${glass} !w-auto px-3 text-xs font-black lg:hidden`} /> : null}
+            <button type="button" aria-label="اشتراک‌گذاری نمایه" onClick={() => void shareProfile(profile, setNotice)} className={glass}>
+              <Share2 className="h-[18px] w-[18px]" />
+            </button>
+            <ProfileActionsMenu profile={profile} canEdit={canEdit} onNotice={setNotice} triggerClassName={glass} />
           </div>
-          <div className="mt-3 flex items-center gap-3">
-            <h2 className="flex min-w-0 items-center gap-1.5 text-xl font-black leading-8 text-foreground"><span className="truncate">{identity.name}</span><AccountBadges verified={identity.verified} speaker={identity.verifiedSpeaker} official={identity.verifiedOfficial} kind={profile.accountType === "square" ? profile.kind ?? "square" : "user"} size="lg" /></h2>
-            {!canEdit ? (
-              <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border px-2.5 text-xs sm:px-4 font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
-                  {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
-                {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
-              </button>
+        </div>
+        {canEdit ? (
+          <Link href={"/profile/edit" as Route} aria-label="تغییر کاور" className={`${glass} absolute bottom-3 left-3 h-9 w-9`}>
+            <Camera className="h-4 w-4" />
+          </Link>
+        ) : null}
+      </div>
+
+      <div className="px-4 pb-5">
+        <div className="-mt-14 grid grid-cols-[1fr_auto_1fr] items-end">
+          <div className="pb-2 text-center">
+            <strong className="block text-lg font-black text-foreground">{followers === undefined ? "—" : followers >= 100_000 ? compact.format(followers) : number.format(followers)}</strong>
+            <span className="text-[11px] text-muted-foreground">دنبال‌کننده</span>
+          </div>
+          <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-background bg-surface-muted text-3xl font-black text-foreground">
+            {identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}
+          </div>
+          <div className="pb-2 text-center">
+            <strong className="block text-lg font-black text-foreground">{number.format(posts)}</strong>
+            <span className="text-[11px] text-muted-foreground">روایت</span>
+          </div>
+        </div>
+
+        <div className="mt-3 text-center">
+          <h1 className="flex items-center justify-center gap-1.5 text-xl font-black leading-8 text-foreground">
+            <span className="truncate">{identity.name}</span>
+            <AccountBadges verified={identity.verified} speaker={identity.verifiedSpeaker} official={identity.verifiedOfficial} kind={kind} size="lg" />
+          </h1>
+          {identity.handle ? <p className="latin-digits mt-0.5 text-xs text-muted-foreground" dir="ltr">@{identity.handle}</p> : null}
+          {bio ? <p className="mx-auto mt-3 max-w-md whitespace-pre-wrap text-[13px] leading-7 text-foreground-secondary">{bio}</p> : null}
+        </div>
+
+        {chips.length || identity.location || joined ? (
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            {chips.map((chip) => (
+              <span key={chip.key} className={`rounded-full border border-border bg-surface-muted px-3 py-1 text-[11px] ${chip.strong ? "font-black text-foreground" : "text-muted-foreground"}`}>{chip.label}</span>
+            ))}
+            {identity.location ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1 text-[11px] text-muted-foreground"><MapPin aria-hidden="true" className="h-3.5 w-3.5" />{identity.location}</span>
+            ) : null}
+            {joined ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1 text-[11px] text-muted-foreground"><CalendarDays aria-hidden="true" className="h-3.5 w-3.5" />عضویت از {joined}</span>
             ) : null}
           </div>
-          
+        ) : null}
+
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          {canEdit ? (
+            <>
+              <Link href={"/profile/edit" as Route} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emphasis text-sm font-black text-emphasis-foreground transition hover:opacity-90">
+                <Pencil aria-hidden="true" className="h-4 w-4" />
+                ویرایش نمایه
+              </Link>
+              <button type="button" onClick={() => void shareProfile(profile, setNotice)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface-sunken text-sm font-black text-foreground transition hover:bg-hover">
+                <Share2 aria-hidden="true" className="h-4 w-4" />
+                اشتراک نمایه
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full text-sm font-black transition disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border border-border-strong bg-surface-sunken text-foreground hover:bg-hover" : "bg-emphasis text-emphasis-foreground hover:opacity-90"}`}>
+                {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
+                {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
+              </button>
+              <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface-sunken text-sm font-black text-foreground transition hover:bg-hover disabled:cursor-wait disabled:opacity-70">
+                {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                پیام
+              </button>
+            </>
+          )}
         </div>
+        {canBeInvited ? (
+          <div className="mt-2.5">
+            <SpeakerInviteButton
+              speaker={{ userId: String(profile.actorId), name: identity.name, avatarUrl: identity.avatar, verifiedSpeaker: identity.verifiedSpeaker }}
+              canInvite={canInvite}
+              venue={inviteVenue}
+              size="md"
+              className="w-full justify-center"
+            />
+          </div>
+        ) : null}
+
+        {followedBy && followedBy.count > 0 ? (
+          <p className="mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+            <span className="flex -space-x-2 space-x-reverse">
+              {followedBy.actors.slice(0, 3).map((actor, index) => (
+                <span key={index} className="grid h-5 w-5 place-items-center overflow-hidden rounded-full border border-background bg-surface-elevated text-[9px] font-black text-foreground">
+                  {actor.avatar_url ? <OptimizedAvatar src={actor.avatar_url} alt="" width={20} className="h-full w-full object-cover" /> : (actor.display_name ?? "").slice(0, 1)}
+                </span>
+              ))}
+            </span>
+            <span>
+              دنبال‌شده توسط {followedBy.actors[0]?.display_name ?? "دوستانتان"}
+              {followedBy.count > 1 ? ` و ${number.format(followedBy.count - 1)} نفر دیگر` : ""}
+            </span>
+          </p>
+        ) : null}
       </div>
 
       <p

@@ -63,4 +63,10 @@ export type ProfileDetails = {
   replies: ProfileReply[];
   about: string;
   skills: string[];
+  /** Follower/following counts and join date (reference-design header). */
+  social?: ProfileSocial;
+  /** The account's pinned narrative, shown above its posts. */
+  pinnedPost?: import("@/features/feed/types").FeedPost | null;
 };
+
+export type ProfileSocial = { followers: number; following: number; joinedAt?: string };

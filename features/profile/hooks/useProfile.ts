@@ -32,6 +32,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [isChatOpening, setIsChatOpening] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [narrativePosts, setNarrativePosts] = useState<FeedPost[]>(profile.narrativePosts);
+  const [pinnedPost, setPinnedPost] = useState<FeedPost | null>(profile.pinnedPost ?? null);
   const [latestNarrativePageStart, setLatestNarrativePageStart] = useState(0);
   const [nextNarrativeCursor, setNextNarrativeCursor] = useState(profile.nextNarrativeCursor ?? null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -277,7 +278,8 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
         body: JSON.stringify({ type: targetActorType, id: profile.actorId, identity: profile.identity, cursor: firstPage ? undefined : nextNarrativeCursor, own: canManage }),
       });
       if (!response.ok) throw new Error("Profile narratives request failed");
-      const page = await response.json() as { posts: FeedPost[]; nextCursor: string | null };
+      const page = await response.json() as { posts: FeedPost[]; nextCursor: string | null; pinned?: FeedPost | null };
+      if (firstPage && page.pinned !== undefined) setPinnedPost(page.pinned);
       const knownIds = new Set(narrativePosts.map((post) => post.id));
       const freshPosts = page.posts.filter((post) => !knownIds.has(post.id));
       setLatestNarrativePageStart(narrativePosts.length);
@@ -369,8 +371,26 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     }
   };
 
+  /** Owner only: pins `post` to the profile, or unpins it when it is the pinned one. */
+  const togglePin = async (post: FeedPost) => {
+    const unpin = pinnedPost?.id === post.id;
+    const previous = pinnedPost;
+    setPinnedPost(unpin ? null : post);
+    try {
+      await meydanApi("/me/pinned-narrative", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ narrative_id: unpin ? null : Number(post.id) }),
+      });
+    } catch {
+      setPinnedPost(previous);
+    }
+  };
+
   return {
     profile: displayProfile,
+    pinnedPost,
+    togglePin,
     narrativePosts,
     latestNarrativePageStart,
     nextNarrativeCursor,

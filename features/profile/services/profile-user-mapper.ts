@@ -65,6 +65,9 @@ export function mapUser(
   return {
     actorId: profile.id,
 
+    // The account total; a page count, when the API sends one, replaces it.
+    narrativeCount: profile.stats?.narratives ?? null,
+
     accountType: "resume",
 
     provinceId: profile.province_id,

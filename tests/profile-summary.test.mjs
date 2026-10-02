@@ -10,7 +10,10 @@ const source = (relative) => readFileSync(path.join(root, relative), "utf8");
 test("profile header always describes the published narrative count", () => {
   const header = source("features/profile/components/ProfileHeader.tsx");
 
-  assert.match(header, /\{postLabel\} روایت منتشر شده/);
+  // Reference design: the count flanks the avatar, labelled «روایت», and is the account total.
+  assert.match(header, /const posts = profile\.narrativeCount \?\? narratives\.length;/);
+  assert.match(header, /\{number\.format\(posts\)\}/);
+  assert.match(header, />روایت</);
   assert.doesNotMatch(header, /const postCounts = stats\[0\]\.value/);
 });
 

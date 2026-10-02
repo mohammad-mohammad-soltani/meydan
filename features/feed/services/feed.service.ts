@@ -252,6 +252,15 @@ export async function getFollowSuggestions(): Promise<FollowSuggestion[]> {
   }));
 }
 
+/**
+ * Any narrative list of mixed authors, mapped like the timeline: used by the
+ * profile's «پسندها» and «برجسته‌ها» tabs.
+ */
+export async function getNarrativeList(path: string, init?: RequestInit): Promise<FeedPage> {
+  const page = await meydanApiPage<ApiNarrative[]>(path, init);
+  return { posts: (page.data ?? []).map(mapNarrative), nextCursor: page.nextCursor };
+}
+
 /** The narratives that quote `postId`, newest first. */
 export async function getQuotesPage(
   postId: string,

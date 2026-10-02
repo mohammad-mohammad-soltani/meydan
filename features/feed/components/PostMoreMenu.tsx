@@ -1,10 +1,10 @@
 "use client";
 
-import { Ellipsis, Link2, Trash2 } from "lucide-react";
+import { Ellipsis, Link2, Pin, PinOff, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 /** The «…» menu in a post header: copy link, and delete when the viewer may. */
-export function PostMoreMenu({ postId, onDelete }: { postId: string; onDelete?: () => void }) {
+export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin }: { postId: string; onDelete?: () => void; /** Owner's own profile: pin to / unpin from the profile. */ pinned?: boolean; onTogglePin?: () => void }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -66,6 +66,21 @@ export function PostMoreMenu({ postId, onDelete }: { postId: string; onDelete?: 
             <Link2 aria-hidden="true" className="h-4 w-4" />
             {copied ? "کپی شد" : "کپی پیوند روایت"}
           </button>
+          {onTogglePin ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={(event) => {
+                stop(event);
+                setOpen(false);
+                onTogglePin();
+              }}
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-right text-xs font-bold text-foreground hover:bg-hover"
+            >
+              {pinned ? <PinOff aria-hidden="true" className="h-4 w-4" /> : <Pin aria-hidden="true" className="h-4 w-4" />}
+              {pinned ? "برداشتن سنجاق از نمایه" : "سنجاق در نمایه"}
+            </button>
+          ) : null}
           {onDelete ? (
             <button
               type="button"

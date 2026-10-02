@@ -28,14 +28,38 @@ const itemToneClass =
 const dangerItemToneClass =
   "text-danger hover:bg-danger-surface focus-visible:bg-danger-surface";
 
+/** Native share sheet when available, otherwise copies the profile link. */
+export async function shareProfile(profile: ProfileDetails, onNotice: (message: string) => void): Promise<void> {
+  const url = new URL(profilePath(profile), window.location.origin).toString();
+  if (typeof navigator.share === "function") {
+    try {
+      // Cancelling the native sheet rejects; that is not an error.
+      await navigator.share({ title: profile.identity.name, text: profile.identity.name, url });
+    } catch {
+      /* user dismissed the share sheet */
+    }
+    return;
+  }
+  try {
+    if (!navigator.clipboard) throw new Error("clipboard unavailable");
+    await navigator.clipboard.writeText(url);
+    onNotice("لینک نمایه کپی شد");
+  } catch {
+    onNotice("کپی لینک انجام نشد");
+  }
+}
+
 export function ProfileActionsMenu({
   profile,
   canEdit = false,
   onNotice,
+  triggerClassName,
 }: {
   profile: ProfileDetails;
   canEdit?: boolean;
   onNotice: (message: string) => void;
+  /** Overrides the trigger's look, e.g. the glass circle on the profile cover. */
+  triggerClassName?: string;
 }) {
   const wrapper = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -72,17 +96,7 @@ export function ProfileActionsMenu({
   }
 
   async function share() {
-    const url = canonicalUrl();
-    if (typeof navigator.share === "function") {
-      try {
-        // Cancelling the native sheet rejects; that is not an error.
-        await navigator.share({ title: profile.identity.name, text: profile.identity.name, url });
-      } catch {
-        /* user dismissed the share sheet */
-      }
-      return;
-    }
-    await copyLink();
+    await shareProfile(profile, onNotice);
   }
 
   function openConfirm() {
@@ -209,7 +223,7 @@ export function ProfileActionsMenu({
         aria-expanded={open}
         aria-controls="profile-actions-menu"
         onClick={() => setOpen((current) => !current)}
-        className="grid h-10 w-10 place-items-center rounded-full border border-border text-icon outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
+        className={triggerClassName ?? "grid h-10 w-10 place-items-center rounded-full border border-border text-icon outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"}
       >
         <MoreHorizontal className="h-5 w-5" />
       </button>

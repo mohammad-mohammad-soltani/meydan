@@ -8,7 +8,6 @@ import { DeletePostDialog } from "@/features/feed/components/DeletePostDialog";
 import type { FeedPost } from "@/features/feed/types";
 import { ProfileActivity } from "./ProfileActivity";
 import { ProfileHeader } from "./ProfileHeader";
-import { ProfileInfo } from "./ProfileInfo";
 import { SquareLocationCard } from "./SquareLocationCard";
 import { SquareSchedule } from "./SquareSchedule";
 import { useProfile } from "../hooks/useProfile";
@@ -32,13 +31,12 @@ export function ProfileView({ initialProfile, canManage = true, canInvite = fals
 
   return (
     <section id="view-combined-profile" className="min-h-dvh bg-background pb-20 text-foreground">
-      <div className="mx-auto w-full max-w-2xl border-x border-divider bg-surface">
+      <div className="mx-auto w-full max-w-2xl bg-background">
         <ProfileHeader profile={profile.profile} canEdit={canManage} isFollowing={profile.isFollowing} isFollowLoading={profile.isFollowLoading} followStateReady={profile.followStateReady} isChatOpening={profile.isChatOpening} onToggleFollow={() => void profile.toggleFollowing()} onMessage={() => void profile.openChat()} canInvite={canInvite} inviteVenue={inviteVenue} />
         {profile.chatError ? <p role="alert" className="border-b border-divider bg-danger-surface px-4 py-2 text-xs text-danger-foreground">{profile.chatError}</p> : null}
-        <ProfileInfo profile={profile.profile} tab={profile.selectedTab} expandedSections={profile.expandedSections} onToggleSection={profile.toggleSection} />
         {isSquareAccount ? <SquareLocationCard profile={profile.profile} /> : null}
         {isSquareAccount ? <SquareSchedule items={profile.profile.schedule} canManage={canManage} /> : null}
-        <ProfileActivity posts={profile.narrativePosts} latestPageStart={profile.latestNarrativePageStart} replies={profile.profile.replies} likedPostIds={profile.likedNarrativeIds} repostedPostIds={profile.repostedNarrativeIds} onLike={(postId) => void profile.toggleLike(postId)} onRepost={(postId) => void profile.toggleRepost(postId)} onShare={(post) => void profile.shareNarrative(post)} onDelete={(post) => { setDeleteError(null); setDeleteTarget(post); }} hasMore={profile.nextNarrativeCursor !== null} isLoadingMore={profile.isLoadingMore} initialLoading={!profile.initialNarrativesLoaded} loadMoreFailed={profile.loadMoreFailed} onLoadMore={() => void profile.loadMore()} />
+        <ProfileActivity actorType={profile.profile.accountType === "square" ? (profile.profile.kind ?? "square") : "user"} actorId={profile.profile.actorId} postCount={profile.profile.narrativeCount} pinnedPost={profile.pinnedPost} onTogglePin={canManage ? (post) => void profile.togglePin(post) : undefined} posts={profile.narrativePosts} latestPageStart={profile.latestNarrativePageStart} replies={profile.profile.replies} likedPostIds={profile.likedNarrativeIds} repostedPostIds={profile.repostedNarrativeIds} onLike={(postId) => void profile.toggleLike(postId)} onRepost={(postId) => void profile.toggleRepost(postId)} onShare={(post) => void profile.shareNarrative(post)} onDelete={(post) => { setDeleteError(null); setDeleteTarget(post); }} hasMore={profile.nextNarrativeCursor !== null} isLoadingMore={profile.isLoadingMore} initialLoading={!profile.initialNarrativesLoaded} loadMoreFailed={profile.loadMoreFailed} onLoadMore={() => void profile.loadMore()} />
       </div>
       {profile.isLoading ? <p className="px-4 text-xs text-muted-foreground">در حال دریافت پروفایل…</p> : null}
       {canManage && profile.isManagementOpen ? (

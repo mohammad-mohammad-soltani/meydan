@@ -20,6 +20,8 @@ export type ApiPage<T> = {
   data: T;
   nextCursor: string | null;
   count: number | null;
+  /** The raw envelope meta, for endpoint-specific extras (e.g. a profile's pinned post). */
+  meta?: Record<string, unknown>;
 };
 
 /**
@@ -183,7 +185,8 @@ export async function meydanApiPage<T>(path: string, init?: MeydanRequestInit): 
   const nextCursor =
     "meta" in body && typeof body.meta?.next_cursor === "string" ? body.meta.next_cursor : null;
   const count = "meta" in body && typeof body.meta?.count === "number" ? body.meta.count : null;
-  return { data: body.data, nextCursor, count };
+  const meta = "meta" in body && body.meta && typeof body.meta === "object" ? (body.meta as Record<string, unknown>) : undefined;
+  return { data: body.data, nextCursor, count, meta };
 }
 
 export async function meydanApi<T>(path: string, init?: MeydanRequestInit): Promise<T> {

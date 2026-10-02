@@ -2,7 +2,7 @@ import { MeydanApiError, isAuthApiError, meydanApi, meydanApiPage } from "@/lib/
 import { entityApiPath, isEntityKind, type ActorKind, type EntityKind } from "@/lib/profile-route";
 import { accessTokenHeader } from "@/lib/meydan-session";
 import type { FeedPost } from "@/features/feed/types";
-import type { ProfileDetails } from "../types";
+import type { ProfileDetails, ProfileSocial } from "../types";
 import type {
   ApiComment,
   ApiEntityMe,
@@ -10,6 +10,8 @@ import type {
   ApiMediaReflectionCount,
   ApiNarrative,
   ApiPublicUser,
+  ApiSocial,
+  WithSocial,
   ApiSquare,
 } from "./profile-api-types";
 import { mapNarrativePost } from "./profile-narrative-mappers";
@@ -26,6 +28,7 @@ export async function getProfileNarrativePage(
   posts: FeedPost[];
   nextCursor: string | null;
   count: number | null;
+  pinned?: FeedPost | null;
 }> {
   const params = new URLSearchParams({ limit: "20" });
   if (cursor) params.set("cursor", cursor);
@@ -41,6 +44,8 @@ export async function getProfileNarrativePage(
     posts: page.data.map((item) => mapNarrativePost(item, identity)),
     nextCursor: page.nextCursor,
     count: page.count,
+    // First page only: the backend adds the account's pinned narrative to `meta`.
+    pinned: !cursor && page.meta && "pinned" in page.meta ? (page.meta.pinned ? mapNarrativePost(page.meta.pinned as ApiNarrative, identity) : null) : undefined,
   };
 }
 
@@ -60,7 +65,19 @@ type ApiProfilePage = {
   narratives: ApiNarrative[];
   replies: ApiComment[];
   square_meta: { start_date?: string | null; media_reflections?: number } | null;
+  pinned?: ApiNarrative | null;
 };
+
+/** `social` from any profile payload, in app shape. */
+export function socialFrom(value: ApiSocial | undefined | null): ProfileSocial | undefined {
+  if (!value) return undefined;
+  return { followers: Number(value.followers ?? 0), following: Number(value.following ?? 0), joinedAt: value.joined_at ?? undefined };
+}
+
+function withExtras(profile: ProfileDetails, social: ApiSocial | undefined | null, pinned: unknown): ProfileDetails {
+  const pinnedPost = pinned && typeof pinned === "object" ? mapNarrativePost(pinned as ApiNarrative, profile.identity) : null;
+  return { ...profile, social: socialFrom(social), pinnedPost };
+}
 
 /**
  * The whole own-profile page in one backend request (`/me/profile-page`).
@@ -79,19 +96,21 @@ async function profileFromSinglePage(
     if (reason instanceof MeydanApiError && (reason.status === 404 || reason.status === 405)) return undefined;
     throw reason;
   }
-  const { me, narratives, replies, square_meta: squareMeta } = page.data;
+  const { me, narratives, replies, square_meta: squareMeta, pinned } = page.data;
   if (!me) return undefined;
-  const narrativePage = { nextNarrativeCursor: page.nextCursor, narrativeCount: page.count };
+  // A null page count must not erase the account total the mappers already set.
+  const narrativePage = { nextNarrativeCursor: page.nextCursor, ...(page.count != null ? { narrativeCount: page.count } : {}) };
+  const social = (me as WithSocial).social;
 
   if (me.account_type === "user" || me.account_type === "official") {
-    return { ...mapUser(me.profile, narratives, replies), ...narrativePage };
+    return withExtras({ ...mapUser(me.profile, narratives, replies), ...narrativePage }, social, pinned);
   }
   if (me.account_type === "speaker") {
-    return { ...mapUser(me.profile, narratives, replies, me.speaker || null), ...narrativePage };
+    return withExtras({ ...mapUser(me.profile, narratives, replies, me.speaker || null), ...narrativePage }, social, pinned);
   }
   const entity = me.entity ?? me.square;
   if (!entity) return null;
-  return {
+  return withExtras({
     ...mapSquare(
       { ...entity, start_date: squareMeta?.start_date ?? entity.start_date },
       narratives,
@@ -100,7 +119,7 @@ async function profileFromSinglePage(
     ),
     ...narrativePage,
     metaHydrated: true,
-  };
+  }, social, pinned);
 }
 
 async function authenticatedProfile(): Promise<ProfileDetails | null> {
@@ -160,7 +179,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
       return {
         ...mapUser(me.profile, narrativePage.data, replies),
         nextNarrativeCursor: narrativePage.nextCursor,
-        narrativeCount: narrativePage.count,
+        ...(narrativePage.count != null ? { narrativeCount: narrativePage.count } : {}),
       };
     }
 
@@ -168,7 +187,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
       return {
         ...mapUser(me.profile, narrativePage.data, replies, me.speaker || null),
         nextNarrativeCursor: narrativePage.nextCursor,
-        narrativeCount: narrativePage.count,
+        ...(narrativePage.count != null ? { narrativeCount: narrativePage.count } : {}),
       };
     }
 
@@ -199,7 +218,7 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
         mediaReflectionCount,
       ),
       nextNarrativeCursor: narrativePage.nextCursor,
-      narrativeCount: narrativePage.count,
+      ...(narrativePage.count != null ? { narrativeCount: narrativePage.count } : {}),
     };
   } catch {
     return null;
@@ -228,6 +247,7 @@ export async function getPublicProfileDetails(
       const summary = mapSquare(square);
       return {
         ...summary,
+        social: socialFrom((square as WithSocial).social),
         squareStats: summary.squareStats.map((stat, index) =>
           index === 0 ? { ...stat, value: "…" } : stat,
         ),
@@ -255,7 +275,9 @@ export async function getPublicProfileDetails(
         narratives.data,
       ),
       nextNarrativeCursor: narratives.nextCursor,
-      narrativeCount: narratives.count,
+      ...(narratives.count != null ? { narrativeCount: narratives.count } : {}),
+      social: socialFrom(user.social),
+      pinnedPost: narratives.meta?.pinned ? mapNarrativePost(narratives.meta.pinned as ApiNarrative, { name: user.profile.full_name || user.actor.display_name || "کاربر میدان", handle: "", subtitle: "", location: "", verified: Boolean(user.actor.verified) }) : null,
     };
   } catch {
     return null;

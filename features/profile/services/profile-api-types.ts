@@ -110,8 +110,12 @@ export type ApiMe =
       profile: ApiUserProfile;
     };
 
+/** Follower/following counts and join date, as sent by `/me`, `/users/{id}` and entity profiles. */
+export type ApiSocial = { followers?: number; following?: number; joined_at?: string | null };
+
 export type ApiPublicUser = {
   id: number;
+  social?: ApiSocial;
   actor: {
     avatar_url?: string;
     display_name?: string;
@@ -122,6 +126,9 @@ export type ApiPublicUser = {
   };
   profile: Omit<ApiUserProfile, "id" | "avatar_url" | "verified">;
 };
+
+/** `social` on any profile payload. */
+export type WithSocial = { social?: ApiSocial };
 
 export type ApiNarrative = {
   id: number;

@@ -39,6 +39,9 @@ type PostCardProps = {
   /** Whether the viewer follows the author; the «دنبال کردن» pill shows when `onFollow` is set. */
   following?: boolean;
   onFollow?: () => void;
+  /** Own profile: pin/unpin from the «…» menu. */
+  pinned?: boolean;
+  onTogglePin?: () => void;
 };
 
 function TimelineMediaReflectionText({
@@ -105,6 +108,8 @@ export function PostCard({
   hideActions = false,
   following = false,
   onFollow,
+  pinned = false,
+  onTogglePin,
 }: PostCardProps) {
   void onJoin;
 
@@ -351,7 +356,7 @@ export function PostCard({
           <div className="flex shrink-0 items-center gap-1.5">
             {onFollow ? <FollowPill following={following} onToggle={onFollow} /> : null}
             {!hideActions ? (
-              <PostMoreMenu postId={post.id} onDelete={post.viewerState?.canDelete ? onDelete : undefined} />
+              <PostMoreMenu postId={post.id} onDelete={post.viewerState?.canDelete ? onDelete : undefined} pinned={pinned} onTogglePin={onTogglePin} />
             ) : null}
           </div>
         </div>

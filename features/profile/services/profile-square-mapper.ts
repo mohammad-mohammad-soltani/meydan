@@ -93,6 +93,8 @@ export function mapSquare(
   return {
     actorId: square.id,
 
+    narrativeCount: square.stats?.narratives ?? null,
+
     startDate: square.start_date ?? undefined,
 
     accountType: "square",
