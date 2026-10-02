@@ -4,6 +4,9 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { Bookmark, ChevronLeft } from "lucide-react";
 import { getBookmarkedContent } from "@/features/content/services/content.service";
+import { getNarrativeList } from "@/features/feed/services/feed.service";
+import type { FeedPost } from "@/features/feed/types";
+import { SavedTabs } from "./SavedTabs";
 import type { ContentItem } from "@/features/content/types";
 import { loginHref } from "@/lib/auth-navigation";
 import { accessTokenHeader, isAuthenticated } from "@/lib/meydan-session";
@@ -14,19 +17,22 @@ export const dynamic = "force-dynamic";
 export default async function BookmarksPage() {
   if (!(await isAuthenticated())) redirect(loginHref("/bookmarks"));
 
-  let items: ContentItem[] = [];
-  let failed = false;
-  try {
-    items = await getBookmarkedContent({ headers: await accessTokenHeader() });
-  } catch {
-    failed = true;
-  }
+  // Saved narratives (share sheet «ذخیره روایت») and bookmarked content, read together.
+  const headers = await accessTokenHeader();
+  const [narrativesResult, contentResult] = await Promise.allSettled([
+    getNarrativeList("/me/saved-narratives?limit=20", { headers }),
+    getBookmarkedContent({ headers }),
+  ]);
+  const posts: FeedPost[] = narrativesResult.status === "fulfilled" ? narrativesResult.value.posts : [];
+  const items: ContentItem[] = contentResult.status === "fulfilled" ? contentResult.value : [];
+  const failed = contentResult.status === "rejected";
 
   return (
     <section className="min-h-full bg-background">
       <header className="sticky top-0 z-30 border-b border-divider bg-surface-glass px-4 py-3 backdrop-blur-md">
         <h1 className="text-sm font-black text-foreground">نشان‌شده‌ها</h1>
       </header>
+      <SavedTabs posts={posts} postsFailed={narrativesResult.status === "rejected"}>
       {failed ? (
         <p role="alert" className="p-6 text-center text-xs text-muted-foreground">دریافت نشان‌شده‌ها ممکن نشد. دوباره تلاش کنید.</p>
       ) : items.length === 0 ? (
@@ -58,6 +64,7 @@ export default async function BookmarksPage() {
           ))}
         </ul>
       )}
+      </SavedTabs>
     </section>
   );
 }

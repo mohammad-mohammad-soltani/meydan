@@ -6,6 +6,8 @@ import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { isAuthApiError, meydanApi } from "@/lib/meydan-api";
 import { MEDIA_POST_UPDATE, type MediaPostUpdate } from "@/features/media/post-interactions";
 import type { PostComment, PostDetail } from "../types";
+import { useShare } from "@/features/share/ShareProvider";
+import { splitPostTitle } from "@/features/feed/post-title";
 
 function redirectToLogin() {
   if (typeof window === "undefined") return;
@@ -66,11 +68,10 @@ export function usePost(post: PostDetail) {
     }
   };
 
+  const { openShare } = useShare();
   const share = async () => {
-    const text = post.author.name + " — " + post.body;
-    await meydanApi(`/narratives/${post.id}/share`, { method: "POST", headers: { "idempotency-key": crypto.randomUUID() } }).catch(() => undefined);
-    if (navigator.share) { await navigator.share({ title: "روایت میدان", text }); return; }
-    await navigator.clipboard?.writeText(text);
+    const { title, rest } = splitPostTitle(post.body);
+    openShare({ id: post.id, title, body: rest, authorName: post.author.name, authorAvatar: post.author.avatarUrl, authorVerified: Boolean(post.author.verified) });
   };
 
   const toggleLike = async () => {

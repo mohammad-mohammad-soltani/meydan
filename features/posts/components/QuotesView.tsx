@@ -14,6 +14,8 @@ import { useInfiniteScroll } from "@/features/feed/hooks/useInfiniteScroll";
 import { quoteComposeHref } from "@/features/feed/post-counts";
 import { getQuotesPage } from "@/features/feed/services/feed.service";
 import type { FeedPost } from "@/features/feed/types";
+import { useShare } from "@/features/share/ShareProvider";
+import { toSharePost } from "@/features/share/to-share-post";
 
 type StatsPayload = { likes?: number; reposts?: number; quotes?: number; comments?: number; views?: number };
 
@@ -86,15 +88,9 @@ export function QuotesView({ postId, initialPosts, initialNextCursor }: { postId
     }
   };
 
+  const { openShare } = useShare();
   const share = async (post: FeedPost) => {
-    const url = `${window.location.origin}/posts/${post.id}`;
-    void meydanApi(`/narratives/${post.id}/share`, { method: "POST", headers: { "idempotency-key": crypto.randomUUID() } }).catch(() => undefined);
-    try {
-      if (navigator.share) await navigator.share({ title: post.title, text: post.body, url });
-      else await navigator.clipboard?.writeText(url);
-    } catch {
-      // The reader dismissed the share sheet.
-    }
+    openShare(toSharePost(post));
   };
 
   const goBack = () => {

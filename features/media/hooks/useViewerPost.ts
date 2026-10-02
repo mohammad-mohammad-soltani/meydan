@@ -9,6 +9,8 @@ import {
   setActorFollowing,
 } from "@/lib/meydan-follow";
 import type { FeedPost } from "@/features/feed/types";
+import { useShare } from "@/features/share/ShareProvider";
+import { toSharePost } from "@/features/share/to-share-post";
 import { publishMediaPost } from "../post-interactions";
 
 export function useViewerPost(post: FeedPost | undefined) {
@@ -139,24 +141,10 @@ export function useViewerPost(post: FeedPost | undefined) {
       setBusy(false);
     }
   };
+  const { openShare } = useShare();
   const share = async () => {
     if (!post) return;
-    const url = `${location.origin}/posts/${post.id}`;
-    try {
-      if (navigator.share)
-        await navigator.share({ title: post.squareName, text: post.body, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        setNotice("پیوند کپی شد.");
-      }
-      void meydanApi(`/narratives/${post.id}/share`, {
-        method: "POST",
-        headers: { "idempotency-key": crypto.randomUUID() },
-      }).catch(() => {});
-    } catch (error) {
-      if (!(error instanceof DOMException && error.name === "AbortError"))
-        setNotice("اشتراک‌گذاری انجام نشد.");
-    }
+    openShare(toSharePost(post));
   };
   return {
     stats,

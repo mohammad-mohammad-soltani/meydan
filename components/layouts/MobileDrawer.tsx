@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   Bookmark,
@@ -34,6 +34,8 @@ const ITEMS: Item[] = [
   { href: "/compose", label: "ثبت روایت یا پویش جدید", icon: Plus, active: () => false },
 ];
 
+const subscribeNothing = () => () => {};
+
 const compact = new Intl.NumberFormat("fa-IR", { notation: "compact", maximumFractionDigits: 1 });
 
 /**
@@ -56,6 +58,7 @@ export function MobileDrawer({
   const filter = useSearchParams().get("filter");
   const panelRef = useRef<HTMLDivElement>(null);
   const touchStart = useRef<number | null>(null);
+  const hydrated = useSyncExternalStore(subscribeNothing, () => true, () => false);
 
   // Close on navigation, Escape, and lock the page behind it while open.
   useEffect(() => {
@@ -78,7 +81,8 @@ export function MobileDrawer({
     };
   }, [open, onClose]);
 
-  if (typeof document === "undefined") return null;
+  // Portals only after hydration: the server has no document.body to render into.
+  if (!hydrated) return null;
 
   return createPortal(
     <div className={`fixed inset-0 z-[70] lg:hidden ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>

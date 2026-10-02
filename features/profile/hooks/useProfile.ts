@@ -5,6 +5,8 @@ import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { compactFa, isAuthApiError, meydanApi, plainText } from "@/lib/meydan-api";
 import { invalidateMe } from "@/lib/me-client";
+import { useShare } from "@/features/share/ShareProvider";
+import { toSharePost } from "@/features/share/to-share-post";
 import { getActorFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { actorKindOf, entityApiPath, isEntityKind } from "@/lib/profile-route";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
@@ -32,6 +34,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [isChatOpening, setIsChatOpening] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [narrativePosts, setNarrativePosts] = useState<FeedPost[]>(profile.narrativePosts);
+  const { openShare } = useShare();
   const [pinnedPost, setPinnedPost] = useState<FeedPost | null>(profile.pinnedPost ?? null);
   const [latestNarrativePageStart, setLatestNarrativePageStart] = useState(0);
   const [nextNarrativeCursor, setNextNarrativeCursor] = useState(profile.nextNarrativeCursor ?? null);
@@ -242,10 +245,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   };
 
   const shareNarrative = async (post: FeedPost) => {
-    await meydanApi(`/narratives/${post.id}/share`, { method: "POST", headers: { "idempotency-key": crypto.randomUUID() } }).catch(() => undefined);
-    const text = `${post.title} — ${post.body}`;
-    if (navigator.share) { await navigator.share({ title: post.title, text }); return; }
-    await navigator.clipboard?.writeText(text);
+    openShare(toSharePost(post));
   };
 
   const deleteNarrative = async (postId: string) => {

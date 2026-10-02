@@ -7,6 +7,8 @@ import { isAuthApiError, MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { actorKey, actorNumericId, getFollowingStates, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { MEDIA_POST_UPDATE, type MediaPostUpdate } from "@/features/media/post-interactions";
 import { getFeedPage } from "../services/feed.service";
+import { useShare } from "@/features/share/ShareProvider";
+import { toSharePost } from "@/features/share/to-share-post";
 import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion, MediaReflection } from "../types";
 
 function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
@@ -431,15 +433,11 @@ export function useFeed(
     }
   }, [remotePosts, requireAuth]);
 
+  // The share sheet counts the share itself, once the reader actually shares.
+  const { openShare } = useShare();
   const sharePost = useCallback(async (post: FeedPost) => {
-    const text = post.title + " — " + post.body;
-    await meydanApi(`/narratives/${post.id}/share`, { method: "POST", headers: { "idempotency-key": crypto.randomUUID() } }).catch(() => undefined);
-    if (navigator.share) {
-      await navigator.share({ title: post.title, text });
-      return;
-    }
-    await navigator.clipboard?.writeText(text);
-  }, []);
+    openShare(toSharePost(post));
+  }, [openShare]);
 
   const deletePost = useCallback(async (postId: string) => {
     const post = remotePosts.find((item) => item.id === postId);

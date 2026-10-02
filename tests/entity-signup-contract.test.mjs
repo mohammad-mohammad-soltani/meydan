@@ -127,3 +127,19 @@ test("every surface that shows a name renders the shared account badges", () => 
     assert.match(read(file), /<AccountBadges\s/, `${file} must render AccountBadges`);
   }
 });
+
+test("every post surface shares through the one share sheet, with the story studio and saved narratives", () => {
+  for (const file of ["features/feed/hooks/useFeed.ts", "features/profile/hooks/useProfile.ts", "features/posts/hooks/usePost.ts", "features/posts/components/QuotesView.tsx", "features/media/hooks/useViewerPost.ts"]) {
+    const src = read(file);
+    assert.match(src, /openShare\(/, file);
+    assert.doesNotMatch(src, /navigator\.share\(/, `${file} must not bypass the sheet`);
+  }
+  const sheet = read("features/share/components/ShareSheet.tsx");
+  for (const label of ["ارسال سریع به مخاطبین", "اشتراک در پیام‌رسان‌ها", "کپی پیوند", "عکس‌نوشت ساز", "ذخیره روایت"]) assert.ok(sheet.includes(label), label);
+  assert.match(sheet, /\/narratives\/\$\{post\.id\}\/bookmark/);
+  const canvas = read("features/share/story-canvas.ts");
+  assert.match(canvas, /story: \{ width: 1080, height: 1920 \}/);
+  assert.match(canvas, /square: \{ width: 1080, height: 1080 \}/);
+  assert.match(read("app/(app)/layout.tsx"), /<ShareProvider>/);
+  assert.match(read("app/(app)/bookmarks/page.tsx"), /\/me\/saved-narratives/);
+});

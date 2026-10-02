@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layouts/AppShell";
 import { AuthGateProvider } from "@/components/providers/AuthGateProvider";
 import { AudioProvider } from "@/features/audio/AudioProvider";
 import { VideoFeedProvider } from "@/features/media/components/VideoFeedProvider";
+import { ShareProvider } from "@/features/share/ShareProvider";
 import { isAuthenticated } from "@/lib/meydan-session";
 import { isNaghshmanNativeClient } from "@/lib/native-client";
 
@@ -13,6 +14,8 @@ export default async function AppLayout({ children }: Readonly<{ children: React
 
   return (
     <AuthGateProvider isAuthenticated={authenticated}>
+      {/* Above the video viewer, which can open the share sheet too. */}
+      <ShareProvider>
       <VideoFeedProvider>
         <AudioProvider>
           <AppShell isAuthenticated={authenticated} isNativeClient={nativeClient}>
@@ -20,6 +23,7 @@ export default async function AppLayout({ children }: Readonly<{ children: React
           </AppShell>
         </AudioProvider>
       </VideoFeedProvider>
+      </ShareProvider>
     </AuthGateProvider>
   );
 }
