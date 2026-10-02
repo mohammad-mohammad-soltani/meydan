@@ -79,12 +79,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
               <ProfileActionsMenu profile={profile} canEdit={canEdit} onNotice={setNotice} />
             </div>
           </div>
-          {/* <div className="mt-2">
-            <div className="flex flex-wrap items-center gap-1.5"><h2 className="text-xl font-black leading-8 text-foreground">{identity.name}</h2>{identity.verified ? <BadgeCheck aria-label="حساب تأییدشده" className="h-5 w-5 fill-verified text-on-solid" /> : null}<SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /><OfficialBadge official={identity.verifiedOfficial} size="lg" /></div>
-            <p dir="ltr" className="mt-0.5 text-left text-sm text-foreground-subtle">@{identity.handle}</p>
-          </div> 
-          TODO: i will add id here
-          */}
+          <h2 className="mt-3 flex min-w-0 items-center gap-1.5 text-xl font-black leading-8 text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /><OfficialBadge official={identity.verifiedOfficial} size="lg" /></h2>
           
         </div>
       </div>

@@ -196,7 +196,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
         if (event.dataTransfer?.files?.length) addFiles(event.dataTransfer.files);
       }}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-divider px-4 py-4">
+      <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-divider bg-background/90 px-4 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-2">
           <button type="button" onClick={requestClose} aria-label="بازگشت" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand">
             <ChevronRight className="h-5 w-5" />
@@ -214,17 +214,16 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
       </div>
 
       <div className="flex flex-1 flex-col px-4 pb-24 pt-4">
-        {!quoteId ? <div className="flex gap-2 border-b border-divider pb-4">
-          <button type="button" onClick={() => setIsEcho(false)} className={`rounded-xl px-4 py-2 text-xs font-black transition-colors ${!isEcho ? "bg-brand text-brand-foreground" : "bg-surface-muted text-muted-foreground hover:bg-hover hover:text-foreground"}`}>
-            روایت میدانی
-          </button>
-          <button type="button" onClick={() => setIsEcho(true)} className={`rounded-xl px-4 py-2 text-xs font-black transition-colors ${isEcho ? "bg-brand text-brand-foreground" : "bg-surface-muted text-muted-foreground hover:bg-hover hover:text-foreground"}`}>
-            پژواک (ایده و کار)
-          </button>
+        {!quoteId ? <div role="tablist" aria-label="نوع روایت" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-muted p-1">
+          {([[false, "روایت میدانی"], [true, "پژواک (ایده و کار)"]] as const).map(([echo, label]) => (
+            <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`rounded-xl px-4 py-2.5 text-xs font-black transition-all ${isEcho === echo ? "bg-surface text-brand shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+              {label}
+            </button>
+          ))}
         </div> : null}
 
         <div className="space-y-3 pt-5">
-          {!quoteId ? <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="تیتر یا موضوع اصلی روایت..." aria-label="تیتر روایت" className="min-h-14 w-full rounded-2xl border border-input-border bg-input px-4 text-sm font-bold text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand" /> : null}
+          {!quoteId ? <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="تیتر یا موضوع اصلی روایت..." aria-label="تیتر روایت" className="min-h-14 w-full rounded-2xl border border-input-border bg-input px-4 text-base font-black text-foreground placeholder:font-medium placeholder:text-placeholder" /> : null}
           <textarea
             ref={textRef}
             value={text}
@@ -239,8 +238,12 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
             placeholder={quoteId ? "نظر خودت را دربارهٔ این روایت بنویس..." : "شرح ماجرا، حال‌وهوای امشب میدان، نیازها یا دستاوردها..."}
             rows={7}
             aria-label="شرح روایت"
-            className="min-h-44 w-full resize-none rounded-2xl border border-input-border bg-input p-4 text-sm leading-7 text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-brand"
+            className="min-h-52 w-full resize-none rounded-2xl border border-input-border bg-input p-4 text-[15px] leading-8 text-foreground placeholder:text-placeholder"
           />
+          <div className="flex items-center justify-between px-1 text-[11px] font-bold">
+            <span className="text-foreground-subtle">{isEcho ? "ایده یا کار را کوتاه و روشن بنویس" : "از دل میدان بنویس"}</span>
+            <span className={`tabular-nums ${text.length > MAX_CHARACTERS - 20 ? "text-danger" : "text-foreground-subtle"}`}>{text.length.toLocaleString("fa-IR")} / {MAX_CHARACTERS.toLocaleString("fa-IR")}</span>
+          </div>
         </div>
 
         {quoteId ? (
@@ -270,7 +273,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           </div>
         ) : null}
 
-        <div className="mt-4 rounded-2xl border border-border bg-surface p-3.5">
+        <div className="mt-4 rounded-3xl border border-border bg-surface p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <span className="text-[11px] font-black text-foreground-secondary">پیوست‌های چندرسانه‌ای</span>
             <span className="inline-flex items-center gap-2">
