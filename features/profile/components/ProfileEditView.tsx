@@ -216,7 +216,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           </button>
         </header>
         <div className="relative h-40 bg-gradient-to-l from-brand via-brand-hover to-solid-dark">
-          {cover ? <Image src={cover} alt="" fill quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" unoptimized={/^(?:blob:|data:)/i.test(cover)} className="object-cover" /> : null}
+          {cover ? <Image src={cover} alt="" fill quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" unoptimized={/^(?:blob:|data:)/i.test(cover)} className="object-cover" /> : <Image src="/images/header.jpg" alt="" fill sizes="(max-width: 720px) 100vw, 640px" className="object-cover" />}
           <button
             type="button"
             onClick={() => coverInput.current?.click()}

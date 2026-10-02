@@ -132,7 +132,7 @@ export function HandleInput({
   return (
     <div>
       <div className="relative">
-        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3.5 mt-2 flex items-center text-sm font-black text-muted-foreground" dir="ltr">
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-sm font-black text-muted-foreground" dir="ltr">
           @
         </span>
         <input
