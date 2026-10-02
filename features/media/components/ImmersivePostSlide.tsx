@@ -345,12 +345,14 @@ export function ImmersivePostSlide({
             onClick={(event) => {
               event.stopPropagation();
               if ((event.target as HTMLElement).closest("a")) return;
-              if (!captionOpen) setCaptionOpen(true);
+              // Selecting text to copy must not collapse the sheet.
+              if (window.getSelection()?.toString()) return;
+              setCaptionOpen((open) => !open);
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                setCaptionOpen(true);
+                setCaptionOpen((open) => !open);
               }
             }}
           >
@@ -387,12 +389,14 @@ export function ImmersivePostSlide({
             onClick={(event) => {
               event.stopPropagation();
               if ((event.target as HTMLElement).closest("a")) return;
-              if (!captionOpen) setCaptionOpen(true);
+              // Selecting text to copy must not collapse the sheet.
+              if (window.getSelection()?.toString()) return;
+              setCaptionOpen((open) => !open);
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                setCaptionOpen(true);
+                setCaptionOpen((open) => !open);
               }
             }}
           >
