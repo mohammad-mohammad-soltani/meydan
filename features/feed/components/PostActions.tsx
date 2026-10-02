@@ -31,14 +31,7 @@ export function PostActions({ postId, likes, reposts, comments, views, liked, re
 
   return (
     <div dir="ltr" className={`feed-post-actions pointer-events-auto relative z-20 mt-3 grid h-10 grid-cols-4 items-center rounded-xl border border-border bg-surface-glass px-1 text-icon-muted shadow-xs ${className}`}>
-      <RepostMenu
-        reposted={reposted}
-        onRepost={onRepost}
-        onQuote={() => router.push(quoteComposeHref(postId) as Route)}
-        className={`${actionBase} hover:bg-success-surface ${reposted ? "text-success" : "hover:text-success"}`}
-      >
-        <Repeat2 className="h-[18px] w-[18px]" /><span className="text-xs">{formatCount(reposts)}</span>
-      </RepostMenu>
+      
       <Link
         scroll={false}
         onClick={(event) => {
@@ -61,6 +54,14 @@ export function PostActions({ postId, likes, reposts, comments, views, liked, re
       <button type="button" onClick={(event) => { event.stopPropagation(); if (!requireAuth()) return; onLike(); }} aria-label="پسندیدن روایت" aria-pressed={liked} className={`${actionBase} hover:bg-brand-muted ${liked ? "text-brand" : "hover:text-brand"}`}>
         <Heart className={`h-[17px] w-[17px] ${liked ? "fill-current" : ""}`} /><span className="text-xs">{formatCount(likes)}</span>
       </button>
+      <RepostMenu
+        reposted={reposted}
+        onRepost={onRepost}
+        onQuote={() => router.push(quoteComposeHref(postId) as Route)}
+        className={`${actionBase} hover:bg-success-surface ${reposted ? "text-success" : "hover:text-success"}`}
+      >
+        <Repeat2 className="h-[18px] w-[18px]" /><span className="text-xs">{formatCount(reposts)}</span>
+      </RepostMenu>
     </div>
   );
 }

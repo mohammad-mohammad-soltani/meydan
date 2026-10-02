@@ -347,12 +347,12 @@ export function PostCard({
               <>
                 <span
                   aria-hidden="true"
-                  className="shrink-0 text-[11px] text-foreground-subtle"
+                  className="shrink-0 text-[11px] text-foreground-subtle lg:block hidden"
                 >
                   ·
                 </span>
 
-                <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+                <span className="min-w-0 truncate text-[11px] text-muted-foreground lg:block hidden">
                   {post.badge}
                 </span>
               </>
