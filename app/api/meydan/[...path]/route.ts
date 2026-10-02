@@ -24,6 +24,17 @@ function upstreamCookie(response: Response, name: string): string | undefined {
   return setCookie.match(new RegExp(`(?:^|,\\s*)${name}=([^;]+)`))?.[1];
 }
 
+/** Only plain path segments may reach the API: no dot segments, encoded separators or control characters. */
+function isSafeSegment(segment: string): boolean {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(segment);
+  } catch {
+    return false;
+  }
+  return segment !== "" && decoded !== "." && decoded !== ".." && !/[\\/\u0000-\u001f?#]/.test(decoded) && !/^\.+$/.test(decoded);
+}
+
 async function upstream(
   request: NextRequest,
   path: string[],
@@ -72,6 +83,9 @@ async function refresh(refreshToken: string) {
 
 async function handle(request: NextRequest, context: RouteContext<"/api/meydan/[...path]">) {
   const { path } = await context.params;
+  if (!path.length || !path.every(isSafeSegment)) {
+    return NextResponse.json({ error: { code: "bad_request", message: "Invalid path." } }, { status: 400 });
+  }
   const isNativeClient = isNaghshmanNativeClient(request.headers.get("user-agent"));
   // The request stream can be read only once. Preserve it so a refreshed
   // authenticated request can be retried without losing its payload.
