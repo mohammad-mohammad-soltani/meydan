@@ -24,7 +24,7 @@ export default async function SpeakerInvitationsPage() {
   ]);
 
   // Only square accounts invite; the venue preview comes from that same profile.
-  const canInvite = profile?.accountType === "square";
+  const canInvite = profile?.accountType === "square" && (profile.kind ?? "square") === "square";
 
   return (
     <SpeakerInvitationsView

@@ -8,16 +8,19 @@ import { closeRealtimeSession } from "@/lib/realtime/user-channel";
 import { meydanApi } from "@/lib/meydan-api";
 
 type ApiMe = {
-  account_type?: "user" | "square" | "speaker";
+  account_type?: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official";
   profile?: { id?: number; full_name?: string; avatar_url?: string };
+  /** Profile of an entity account of any kind. */
+  entity?: { id?: number; name?: string; avatar_url?: string } | null;
   square?: { id?: number; name?: string; avatar_url?: string } | null;
 };
 
 type Viewer = { name: string; avatarUrl?: string };
 
 function identityFrom(me: ApiMe): Viewer {
-  if (me.account_type === "square") {
-    return { name: me.square?.name || "میدان من", avatarUrl: me.square?.avatar_url || undefined };
+  if (me.account_type === "square" || me.account_type === "media" || me.account_type === "collective" || me.account_type === "organization") {
+    const entity = me.entity ?? me.square;
+    return { name: entity?.name || "حساب من", avatarUrl: entity?.avatar_url || undefined };
   }
   return { name: me.profile?.full_name || "کاربر میدان", avatarUrl: me.profile?.avatar_url || undefined };
 }

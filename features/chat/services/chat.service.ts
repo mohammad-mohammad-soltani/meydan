@@ -1,6 +1,7 @@
 import { meydanApi } from "@/lib/meydan-api";
 import { chatUploadKey, emitChatUploadProgress } from "../chat-upload-progress";
 import type { ChatAttachment, ChatMessage, Conversation } from "../types";
+import type { ActorKind } from "@/lib/profile-route";
 
 type ApiConversation = {
   id: string | number;
@@ -12,7 +13,7 @@ type ApiConversation = {
     avatar_url?: string | null;
     verified?: boolean;
     verified_official?: boolean;
-    profile_type?: "user" | "square";
+    profile_type?: ActorKind;
     profile_id?: string | number;
   };
   preview?: string;
@@ -200,7 +201,7 @@ export type ShareableSquare = {
 };
 
 type ApiViewerMe = {
-  account_type?: "user" | "square" | "speaker" | "official";
+  account_type?: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official";
   square?: { id?: number; name?: string } | null;
 };
 

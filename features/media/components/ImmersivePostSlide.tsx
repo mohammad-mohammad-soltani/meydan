@@ -184,6 +184,7 @@ export function ImmersivePostSlide({
             publicProfileHref(
               entry.post.author.type,
               entry.post.author.id,
+              entry.post.author.handle,
             ) as Route
           }
           className="viewer-author-link flex min-w-0 flex-1 items-center gap-3 rounded-lg"

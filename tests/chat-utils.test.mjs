@@ -39,7 +39,11 @@ test("collects telegram-style Media, Files and Links without stories", () => {
 });
 
 test("builds the real Meydan user profile route", () => {
-  assert.equal(participantProfileHref({ id: "42" }), "/42");
+  // Without a handle the id-based address is used; the app redirects it to /{handle}.
+  assert.equal(participantProfileHref({ id: "42" }), "/users/user/42");
+  assert.equal(participantProfileHref({ id: "42", handle: "@reza_s" }), "/reza_s");
+  assert.equal(participantProfileHref({ id: "42", handle: "@user42" }), "/users/user/42");
+  assert.equal(participantProfileHref({ id: "9", handle: "@saba", profileType: "media", profileId: "9" }), "/saba");
 });
 
 test("builds a dedicated full-screen contact page inside the conversation", () => {
@@ -194,7 +198,14 @@ test("routes square-scoped notices to the square profile", () => {
       id: "13", kind: "system", rawType: "square_verified", title: "", description: "",
       createdAt: "", targetUrl: "/profile", entityType: "square", entityId: "136",
     }),
-    "/square/136",
+    "/users/square/136",
+  );
+  assert.equal(
+    notificationHref({
+      id: "14", kind: "system", rawType: "square_verified", title: "", description: "",
+      createdAt: "", targetUrl: "/profile", entityType: "media", entityId: "9",
+    }),
+    "/users/media/9",
   );
 });
 
@@ -218,10 +229,14 @@ test("routes legacy placeholder deep links to the real actor profile", () => {
     targetUrl: "/profile", entityType: "actor", entityId: "54",
     actor: { id: "54", name: "رضا", handle: "", avatarLabel: "رض", avatarTone: "slate", profileType: "user", profileId: "54" },
   };
-  assert.equal(notificationHref(follow), "/54");
+  assert.equal(notificationHref(follow), "/users/user/54");
+  assert.equal(notificationHref({ ...follow, actor: { ...follow.actor, handle: "@reza" } }), "/reza");
 
   const squareFollow = { ...follow, actor: { ...follow.actor, profileType: "square", profileId: "136" } };
-  assert.equal(notificationHref(squareFollow), "/square/136");
+  assert.equal(notificationHref(squareFollow), "/users/square/136");
+
+  const mediaFollow = { ...follow, actor: { ...follow.actor, handle: "@saba", profileType: "media", profileId: "9" } };
+  assert.equal(notificationHref(mediaFollow), "/saba");
 });
 
 test("canonicalizes old stored profile deep links", () => {
@@ -231,9 +246,10 @@ test("canonicalizes old stored profile deep links", () => {
     entityType: "actor", entityId: "54",
   };
 
-  assert.equal(notificationHref({ ...base, targetUrl: "/users/user/54" }), "/54");
-  assert.equal(notificationHref({ ...base, targetUrl: "/profile/user/54?tab=resume" }), "/54?tab=resume");
-  assert.equal(notificationHref({ ...base, targetUrl: "/users/square/136#latest" }), "/square/136#latest");
+  assert.equal(notificationHref({ ...base, targetUrl: "/users/user/54" }), "/users/user/54");
+  assert.equal(notificationHref({ ...base, targetUrl: "/profile/user/54?tab=resume" }), "/users/user/54?tab=resume");
+  assert.equal(notificationHref({ ...base, targetUrl: "/users/square/136#latest" }), "/users/square/136#latest");
+  assert.equal(notificationHref({ ...base, targetUrl: "/square/136" }), "/users/square/136");
 });
 
 test("prefers a specific stored deep link over derived routes", () => {

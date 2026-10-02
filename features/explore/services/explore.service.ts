@@ -6,10 +6,12 @@ import type {
   ExploreResultKind,
   ExploreTrend,
 } from "../types";
+import { ENTITY_KIND_LABELS, actorKindOf, isEntityKind, publicProfileHref, type ActorKind, type EntityKind } from "@/lib/profile-route";
 
 type ApiActor = {
   id: string;
-  type?: "user" | "square";
+  type?: ActorKind;
+  handle?: string;
   display_name?: string;
   avatar_url?: string;
   verified?: boolean;
@@ -39,6 +41,9 @@ type ApiNarrative = {
 
 type ApiSquare = {
   id: number;
+  /** square | media | collective | organization */
+  kind?: string;
+  handle?: string;
   name?: string;
   description?: string;
   avatar_url?: string;
@@ -81,6 +86,9 @@ type ExploreSearchResponse = {
   sections?: {
     narratives?: ApiNarrative[];
     squares?: ApiSquare[];
+    media?: ApiSquare[];
+    collectives?: ApiSquare[];
+    organizations?: ApiSquare[];
     users?: ApiActor[];
     content?: ApiContent[];
     creators?: ApiCreator[];
@@ -104,6 +112,9 @@ type ExploreTrendsResponse = {
 const apiTypeByFilter: Partial<Record<ExploreFilter, string>> = {
   narrative: "narrative",
   square: "square",
+  media: "media",
+  collective: "collective",
+  organization: "organization",
   creator: "creator",
   content: "content",
   user: "user",
@@ -126,7 +137,7 @@ function actorNumericId(value?: string): number {
 function actorHref(actor?: ApiActor): string {
   const id = actorNumericId(actor?.id);
   if (!id) return "/profile";
-  return `/users/${actor?.type === "square" ? "square" : "user"}/${id}`;
+  return publicProfileHref(actorKindOf(actor?.type), id, actor?.handle);
 }
 
 function firstVisual(attachments?: ApiAttachment[]): string | undefined {
@@ -161,17 +172,21 @@ function mapNarrative(item: ApiNarrative): ExploreResult {
   };
 }
 
-function mapSquare(item: ApiSquare): ExploreResult {
+/** A square, media, collective or organization; each links to its own `/{handle}`. */
+function mapEntity(item: ApiSquare, fallback: EntityKind = "square"): ExploreResult {
+  const kind: EntityKind = isEntityKind(item.kind) ? item.kind : fallback;
+  const label = ENTITY_KIND_LABELS[kind];
+
   return {
-    id: `square-${item.id}`,
+    id: `${kind}-${item.id}`,
     entityId: String(item.id),
-    kind: "square",
-    title: item.name || "میدان",
-    subtitle: item.location?.address || item.description || "میدان فعال",
-    href: `/users/square/${item.id}`,
+    kind,
+    title: item.name || label,
+    subtitle: item.location?.address || item.description || `${label} فعال`,
+    href: publicProfileHref(kind, item.id, item.handle),
     avatarUrl: item.avatar_url,
     verified: item.verified ?? true,
-    meta: "میدان",
+    meta: label,
   };
 }
 
@@ -214,7 +229,7 @@ function mapUser(item: ApiActor): ExploreResult {
     kind: "user",
     title: item.display_name || "کاربر میدان",
     subtitle: "کاربر میدان",
-    href: id ? `/users/user/${id}` : "/explore",
+    href: id ? publicProfileHref("user", id, item.handle) : "/explore",
     avatarUrl: item.avatar_url,
     verified: Boolean(item.verified),
     meta: "کاربر",
@@ -235,18 +250,19 @@ function mapTopic(item: ApiTopic): ExploreResult {
 
 function mapRecommendedActor(item: ApiActor): ExploreResult {
   const id = actorNumericId(item.id);
-  const kind: ExploreResultKind = item.type === "square" ? "square" : "user";
+  const kind: ExploreResultKind = actorKindOf(item.type);
+  const label = isEntityKind(kind) ? ENTITY_KIND_LABELS[kind] : "کاربر";
 
   return {
     id: `recommended-${item.id}`,
     entityId: String(id || item.id),
     kind,
     title: item.display_name || "پیشنهاد میدان",
-    subtitle: kind === "square" ? "میدان پیشنهادی" : "کاربر پیشنهادی",
+    subtitle: `${label} پیشنهادی`,
     href: actorHref(item),
     avatarUrl: item.avatar_url,
     verified: Boolean(item.verified),
-    meta: kind === "square" ? "میدان" : "کاربر",
+    meta: label,
   };
 }
 
@@ -271,7 +287,10 @@ export async function searchExplore(
 
   return [
     ...(sections.narratives || []).map(mapNarrative),
-    ...(sections.squares || []).map(mapSquare),
+    ...(sections.squares || []).map((item) => mapEntity(item, "square")),
+    ...(sections.media || []).map((item) => mapEntity(item, "media")),
+    ...(sections.collectives || []).map((item) => mapEntity(item, "collective")),
+    ...(sections.organizations || []).map((item) => mapEntity(item, "organization")),
     ...(sections.content || []).map(mapContent),
     ...(sections.creators || []).map(mapCreator),
     ...(sections.users || []).map(mapUser),
@@ -292,7 +311,7 @@ export async function getExploreLanding(): Promise<ExploreLanding> {
   const people = suggestions.recommended_actors?.length
     ? suggestions.recommended_actors.map(mapRecommendedActor)
     : [
-        ...(suggestions.nearby_squares || []).map(mapSquare),
+        ...(suggestions.nearby_squares || []).map((item) => mapEntity(item, "square")),
         ...(suggestions.creators || []).map(mapCreator),
       ];
 

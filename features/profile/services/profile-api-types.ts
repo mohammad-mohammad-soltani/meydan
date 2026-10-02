@@ -1,5 +1,6 @@
 import type { ApiQuotedNarrative } from "@/features/feed/services/quote-mapper";
 import type { ProfileStat } from "../types";
+import type { ActorKind } from "@/lib/profile-route";
 
 type ApiSchedule = {
   id: number;
@@ -87,8 +88,11 @@ export type ApiSpeaker = {
 
 export type ApiMe =
   | {
-      account_type: "square";
-      square: ApiSquare | null;
+      /** An entity account: square, media, collective or organization. */
+      account_type: "square" | "media" | "collective" | "organization";
+      entity?: ApiSquare | null;
+      /** Same payload as `entity`; only sent for squares. */
+      square?: ApiSquare | null;
     }
   | {
       account_type: "speaker";
@@ -122,7 +126,8 @@ export type ApiNarrative = {
 
   author?: {
     id?: string;
-    type?: "user" | "square";
+    type?: ActorKind;
+    handle?: string;
     display_name?: string;
     avatar_url?: string;
     verified?: boolean;

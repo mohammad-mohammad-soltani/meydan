@@ -32,7 +32,7 @@ export function CommentsList({
         <div className="divide-y divide-divider">
           {comments.map((comment) => {
             const profileHref: Route | null = comment.authorId
-              ? (publicProfileHref(comment.authorType || "user", comment.authorId) as Route)
+              ? (publicProfileHref(comment.authorType || "user", comment.authorId, comment.authorHandle) as Route)
               : null;
 
             const avatar = comment.avatarUrl ? (

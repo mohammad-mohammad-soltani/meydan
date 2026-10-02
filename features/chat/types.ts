@@ -1,3 +1,4 @@
+import type { ActorKind } from "@/lib/profile-route";
 export type MessageStatus = "sending" | "sent" | "failed";
 
 export type ChatUser = {
@@ -10,7 +11,7 @@ export type ChatUser = {
   isVerified?: boolean;
   isOfficial?: boolean;
   isOnline?: boolean;
-  profileType?: "user" | "square";
+  profileType?: ActorKind;
   profileId?: string;
 };
 

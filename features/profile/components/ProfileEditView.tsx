@@ -18,10 +18,12 @@ import type { ProfileDetails } from "../types";
 
 export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
   const router = useRouter();
-  const isSquare = profile.accountType === "square";
+  // Every entity edits its profile through /me/square; only squares have a location.
+  const isEntity = profile.accountType === "square";
+  const isSquare = isEntity && (profile.kind ?? "square") === "square";
 
   const [name, setName] = useState(profile.identity.name);
-  const initialHandle = /^(?:user|square)_\d+$/.test(profile.identity.handle) ? "" : profile.identity.handle;
+  const initialHandle = /^(?:user|square|media|collective|organization)_\d+$/.test(profile.identity.handle) ? "" : profile.identity.handle;
   const [handle, setHandle] = useState(initialHandle);
   const [handleValid, setHandleValid] = useState(true);
   const [handleError, setHandleError] = useState<string | null>(null);
@@ -122,8 +124,8 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
       .map((x) => x.trim())
       .filter(Boolean);
     try {
-      if (isSquare) {
-        if (selectedLocation && (!selectedLocation.provinceId || !selectedLocation.cityId)) {
+      if (isEntity) {
+        if (isSquare && selectedLocation && (!selectedLocation.provinceId || !selectedLocation.cityId)) {
           throw new Error("unresolved_location");
         }
 
@@ -141,7 +143,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           }),
         });
 
-        if (selectedLocation) {
+        if (isSquare && selectedLocation) {
           await meydanApi("/me/square/location", {
             method: "PUT",
             headers: { "content-type": "application/json" },

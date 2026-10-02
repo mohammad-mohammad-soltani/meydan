@@ -1,6 +1,9 @@
 export type ExploreResultKind =
   | "narrative"
   | "square"
+  | "media"
+  | "collective"
+  | "organization"
   | "creator"
   | "content"
   | "user"

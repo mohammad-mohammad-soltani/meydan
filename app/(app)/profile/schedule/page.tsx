@@ -12,7 +12,7 @@ export default async function SquareSchedulePage() {
   if (!profile) redirect(loginHref("/profile/schedule"));
 
   // Only a square account owns a programme board.
-  if (profile.accountType !== "square") redirect("/profile");
+  if (profile.accountType !== "square" || (profile.kind ?? "square") !== "square") redirect("/profile");
 
   return <ScheduleView initialItems={profile.schedule} squareName={profile.identity.name} />;
 }

@@ -17,6 +17,8 @@ export async function hydrateSquareProfileMeta(
   profile: ProfileDetails,
 ): Promise<ProfileDetails> {
   if (profile.accountType !== "square" || profile.metaHydrated) return profile;
+  // Only squares have reflection stats and a start date.
+  if (profile.kind && profile.kind !== "square") return profile;
 
   try {
     const [square, reflections] = await Promise.all([

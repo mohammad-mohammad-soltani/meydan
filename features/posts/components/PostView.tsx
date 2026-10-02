@@ -13,6 +13,7 @@ import { CommentsList } from "./CommentsList";
 import { CommentInput } from "./CommentInput";
 import { AddReflectionButton } from "./AddReflectionButton";
 import { MediaReflections } from "./MediaReflections";
+import { isEntityKind } from "@/lib/profile-route";
 import { useMediaViewer } from "../hooks/useMediaViewer";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { PostAdminActions } from "./PostAdminActions";
@@ -174,7 +175,7 @@ export function PostView({
   const { isAuthenticated } = useAuthGate();
   const mediaViewer = useMediaViewer(isAuthenticated);
   const isOwnPost =
-    state.post.author.type === "square" && Number(state.post.author.id) === mediaViewer.squareId;
+    isEntityKind(state.post.author.type) && Number(state.post.author.id) === mediaViewer.squareId;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);

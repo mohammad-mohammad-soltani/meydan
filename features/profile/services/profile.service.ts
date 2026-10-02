@@ -1,4 +1,5 @@
 import { MeydanApiError, isAuthApiError, meydanApi, meydanApiPage } from "@/lib/meydan-api";
+import { entityApiPath, isEntityKind, type ActorKind, type EntityKind } from "@/lib/profile-route";
 import { accessTokenHeader } from "@/lib/meydan-session";
 import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails } from "../types";
@@ -15,7 +16,7 @@ import { mapSquare } from "./profile-square-mapper";
 import { mapUser } from "./profile-user-mapper";
 
 export async function getProfileNarrativePage(
-  type: "user" | "square",
+  type: ActorKind,
   id: number,
   identity: ProfileDetails["identity"],
   cursor?: string | null,
@@ -29,7 +30,7 @@ export async function getProfileNarrativePage(
   if (cursor) params.set("cursor", cursor);
   const path = own
     ? "/me/narratives"
-    : `/${type === "square" ? "squares" : "users"}/${id}/narratives`;
+    : `${isEntityKind(type) ? entityApiPath(type, id) : `/users/${id}`}/narratives`;
   const page = own
     ? await meydanApiPage<ApiNarrative[]>(`${path}?${params}`, {
         headers: await accessTokenHeader(),
@@ -87,13 +88,14 @@ async function profileFromSinglePage(
   if (me.account_type === "speaker") {
     return { ...mapUser(me.profile, narratives, replies, me.speaker || null), ...narrativePage };
   }
-  if (!me.square) return null;
+  const entity = me.entity ?? me.square;
+  if (!entity) return null;
   return {
     ...mapSquare(
-      { ...me.square, start_date: squareMeta?.start_date ?? me.square.start_date },
+      { ...entity, start_date: squareMeta?.start_date ?? entity.start_date },
       narratives,
       replies,
-      squareMeta?.media_reflections ?? 0,
+      squareMeta ? (squareMeta.media_reflections ?? 0) : undefined,
     ),
     ...narrativePage,
     metaHydrated: true,
@@ -133,11 +135,11 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
     }
 
     const actorId =
-      me.account_type === "square" ? me.square?.id : me.profile.id;
+      isEntityKind(me.account_type) ? (me.entity ?? me.square)?.id : me.profile.id;
 
     // Speakers are `user` actors everywhere interactions and replies are keyed:
-    // `/actors/{type}` only accepts `user|square`, never `speaker`.
-    const actorType = me.account_type === "square" ? "square" : "user";
+    // `/actors/{type}` accepts `user` and the entity kinds, never `speaker`.
+    const actorType: ActorKind = isEntityKind(me.account_type) ? me.account_type : "user";
 
     if (actorId) {
       try {
@@ -168,25 +170,28 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
       };
     }
 
-    if (!me.square) {
+    const entity = me.entity ?? me.square;
+    if (!entity) {
       return null;
     }
 
-    let mediaReflectionCount = 0;
+    // Media reflections are counted for squares only.
+    let mediaReflectionCount: number | undefined;
+    if (me.account_type === "square") {
+      try {
+        const reflectionStats = await meydanApi<ApiMediaReflectionCount>(
+          `/squares/${entity.id}/media-reflections/count`,
+        );
 
-    try {
-      const reflectionStats = await meydanApi<ApiMediaReflectionCount>(
-        `/squares/${me.square.id}/media-reflections/count`,
-      );
-
-      mediaReflectionCount = reflectionStats.count ?? 0;
-    } catch {
-      mediaReflectionCount = 0;
+        mediaReflectionCount = reflectionStats.count ?? 0;
+      } catch {
+        mediaReflectionCount = 0;
+      }
     }
 
     return {
       ...mapSquare(
-        me.square,
+        entity,
         narrativePage.data,
         replies,
         mediaReflectionCount,
@@ -210,13 +215,13 @@ export async function getProfileDetails(): Promise<ProfileDetails> {
 }
 
 export async function getPublicProfileDetails(
-  type: "user" | "square",
+  type: ActorKind,
   id: number,
 ): Promise<ProfileDetails | null> {
   try {
-    if (type === "square") {
+    if (isEntityKind(type)) {
       const square = await meydanApi<ApiSquare>(
-        `/squares/${id}?defer_counts=1`,
+        `${entityApiPath(type as EntityKind, id)}?defer_counts=1`,
       );
       const summary = mapSquare(square);
       return {

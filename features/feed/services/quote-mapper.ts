@@ -1,4 +1,5 @@
 import type { FeedAttachment, QuotedPost } from "../types";
+import { type ActorKind, actorKindOf } from "../../../lib/profile-route.ts";
 
 type ApiQuotedAttachment = {
   id: number;
@@ -18,7 +19,8 @@ export type ApiQuotedNarrative = {
   unavailable?: boolean;
   author?: {
     id: string;
-    type?: "user" | "square";
+    type?: ActorKind;
+    handle?: string;
     display_name?: string;
     avatar_url?: string;
     verified?: boolean;
@@ -74,7 +76,8 @@ export function mapQuotedNarrative(item: ApiQuotedNarrative | undefined): Quoted
     unavailable: false,
     author: {
       id: authorId,
-      type: item.author?.type || "square",
+      type: actorKindOf(item.author?.type),
+      handle: item.author?.handle || undefined,
       name,
       avatarUrl: item.author?.avatar_url || undefined,
       verified: Boolean(item.author?.verified),

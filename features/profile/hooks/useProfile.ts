@@ -5,6 +5,7 @@ import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { compactFa, isAuthApiError, meydanApi, plainText } from "@/lib/meydan-api";
 import { getActorFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
+import { actorKindOf, entityApiPath, isEntityKind } from "@/lib/profile-route";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
 import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileSection } from "../types";
@@ -19,7 +20,7 @@ function redirectToLogin() {
 export function useProfile(profile: ProfileDetails, canManage = false) {
   const { isAuthenticated, requireAuth } = useAuthGate();
   const selectedTab = profile.initialTab ?? "square";
-  const targetActorType: ActorType = profile.accountType === "square" ? "square" : "user";
+  const targetActorType: ActorType = profile.accountType === "square" ? actorKindOf(profile.kind, "square") : "user";
   const [displayProfile, setDisplayProfile] = useState(profile);
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);
@@ -134,7 +135,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     try {
       let chatUserId = profile.actorId;
       if (profile.accountType === "square") {
-        const square = await meydanApi<{ chat_user_id?: number | null }>(`/squares/${profile.actorId}`);
+        const square = await meydanApi<{ chat_user_id?: number | null }>(isEntityKind(targetActorType) ? entityApiPath(targetActorType, profile.actorId) : `/squares/${profile.actorId}`);
         chatUserId = Number(square.chat_user_id || 0);
         if (!chatUserId) throw new Error("Square chat target is unavailable");
       }
@@ -313,7 +314,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   useEffect(() => {
     if (!profile.narrativesDeferred || !initialNarrativesLoaded) return;
     let active = true;
-    void meydanApi<{ stats?: { narratives?: number } }>(`/squares/${profile.actorId}`)
+    void meydanApi<{ stats?: { narratives?: number } }>(isEntityKind(targetActorType) ? entityApiPath(targetActorType, profile.actorId) : `/squares/${profile.actorId}`)
       .then((square) => {
         if (!active || typeof square.stats?.narratives !== "number") return;
         setDisplayProfile((current) => ({
@@ -326,7 +327,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       })
       .catch(() => undefined);
     return () => { active = false; };
-  }, [initialNarrativesLoaded, profile.actorId, profile.narrativesDeferred]);
+  }, [initialNarrativesLoaded, profile.actorId, profile.narrativesDeferred, targetActorType]);
 
   const saveUserDetails = async (input: { name: string; subtitle: string; about: string; skills: string[] }) => {
     if (!requireAuth("/profile/edit")) return;

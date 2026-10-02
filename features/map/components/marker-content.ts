@@ -1,3 +1,4 @@
+import { publicProfileHref } from "@/lib/profile-route";
 import type { SquareMarker } from "../services/map.service";
 import { mediaThumbnailSrc } from "@/features/media/media-utils";
 
@@ -57,7 +58,7 @@ export function squarePopup(square: DisplaySquare): HTMLElement {
   value.textContent = `${square.latitude.toFixed(4)}, ${square.longitude.toFixed(4)}`;
   coordinates.append(label, value);
   const link = document.createElement("a");
-  link.href = `/square/${encodeURIComponent(square.id)}`;
+  link.href = publicProfileHref("square", square.id, square.handle);
   link.className = "map-square-card-link";
   const linkLabel = document.createElement("span");
   linkLabel.textContent = "مشاهده میدان";

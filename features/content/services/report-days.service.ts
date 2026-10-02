@@ -1,5 +1,6 @@
 import { meydanApi } from "@/lib/meydan-api";
 import type { FeedPost } from "@/features/feed/types";
+import type { ActorKind } from "@/lib/profile-route";
 
 type ApiReportDay = {
   date: string;
@@ -69,7 +70,8 @@ export async function getReportDay(
 
 type ApiActor = {
   id?: string;
-  type?: "user" | "square";
+  type?: ActorKind;
+  handle?: string;
   display_name?: string;
   avatar_url?: string;
   verified?: boolean;

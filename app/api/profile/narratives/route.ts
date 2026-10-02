@@ -1,9 +1,10 @@
 import { getProfileNarrativePage } from "@/features/profile/services/profile.service";
 import type { ProfileDetails } from "@/features/profile/types";
+import { isActorKind, type ActorKind } from "@/lib/profile-route";
 
 export async function POST(request: Request) {
   let input: {
-    type?: "user" | "square";
+    type?: ActorKind;
     id?: number;
     identity?: ProfileDetails["identity"];
     cursor?: string;
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
-  if ((input.type !== "user" && input.type !== "square") || !Number.isSafeInteger(input.id) || !input.id || input.id < 1 || !input.identity || typeof input.identity.name !== "string" || (input.cursor !== undefined && typeof input.cursor !== "string")) {
+  if (!isActorKind(input.type) || !Number.isSafeInteger(input.id) || !input.id || input.id < 1 || !input.identity || typeof input.identity.name !== "string" || (input.cursor !== undefined && typeof input.cursor !== "string")) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
   try {

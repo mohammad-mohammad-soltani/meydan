@@ -1,6 +1,8 @@
+import { isActorKind, publicProfileHref, type ActorKind } from "../../../lib/profile-route.ts";
 export type ContentProducerSource = {
   id?: string | number;
   type?: string;
+  handle?: string;
   display_name?: string;
   name?: string;
   avatar_url?: string;
@@ -27,15 +29,18 @@ export type DisplayContentProducer = {
 const ROLE_BY_ACTOR_TYPE: Record<string, string> = {
   user: "تولیدکننده محتوا",
   square: "میدان",
+  media: "رسانه",
+  collective: "مجموعه",
+  organization: "سازمان",
 };
 
 function producerProfileHref(producer?: ContentProducerSource | null): string | undefined {
-  if (producer?.type !== "user" && producer?.type !== "square") return undefined;
+  if (!isActorKind(producer?.type)) return undefined;
 
-  const actorId = String(producer.id ?? "").replace(/^(?:usr|sq)_/, "");
+  const actorId = String(producer?.id ?? "").replace(/^[a-z]{2,3}_/, "");
   if (!/^[1-9]\d*$/.test(actorId)) return undefined;
 
-  return producer.type === "square" ? `/square/${actorId}` : `/${actorId}`;
+  return publicProfileHref(producer!.type as ActorKind, actorId, producer?.handle);
 }
 
 /**

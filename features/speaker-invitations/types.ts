@@ -1,3 +1,4 @@
+import type { ActorKind } from "@/lib/profile-route";
 export type SpeakerInvitationStatus = "pending" | "accepted" | "rejected" | "cancelled";
 
 /** Reuses the speakers feature shape; categories are admin-editable so slug is opaque. */
@@ -5,7 +6,8 @@ export type SpeakerCategory = { slug: string; name: string };
 
 export type InvitationActor = {
   id: string;
-  type: "user" | "square";
+  type: ActorKind;
+  handle?: string;
   name: string;
   avatarUrl?: string;
   verified: boolean;

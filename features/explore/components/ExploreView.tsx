@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
+  Building2,
   ChevronLeft,
   FileText,
   Flame,
@@ -13,11 +14,13 @@ import {
   MapPin,
   MessageSquareText,
   Mic2,
+  Newspaper,
   RefreshCw,
   Search,
   SearchX,
   Sparkles,
   UserRound,
+  Users,
   X,
 } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
@@ -44,6 +47,9 @@ const filters: Array<{
   { id: "all", label: "همه", icon: Search },
   { id: "narrative", label: "روایت‌ها", icon: MessageSquareText },
   { id: "square", label: "میدان‌ها", icon: MapPin },
+  { id: "media", label: "رسانه‌ها", icon: Newspaper },
+  { id: "collective", label: "مجموعه‌ها", icon: Users },
+  { id: "organization", label: "سازمان‌ها", icon: Building2 },
   { id: "content", label: "محتوا", icon: FileText },
   { id: "creator", label: "سخنران‌ها", icon: Mic2 },
   { id: "user", label: "کاربران", icon: UserRound },
@@ -56,6 +62,9 @@ const kindMeta: Record<
 > = {
   narrative: { label: "روایت", icon: MessageSquareText },
   square: { label: "میدان", icon: MapPin },
+  media: { label: "رسانه", icon: Newspaper },
+  collective: { label: "مجموعه", icon: Users },
+  organization: { label: "سازمان", icon: Building2 },
   creator: { label: "سخنران", icon: Mic2 },
   content: { label: "محتوا", icon: FileText },
   user: { label: "کاربر", icon: UserRound },
@@ -470,11 +479,10 @@ export function ExploreView() {
                             />
                           ) : (
                             <span className="grid h-14 w-14 place-items-center rounded-full bg-brand-muted text-brand">
-                              {item.kind === "square" ? (
-                                <MapPin className="h-5 w-5" />
-                              ) : (
-                                <UserRound className="h-5 w-5" />
-                              )}
+                              {(() => {
+                                const KindIcon = kindMeta[item.kind].icon;
+                                return <KindIcon className="h-5 w-5" />;
+                              })()}
                             </span>
                           )}
 

@@ -3,6 +3,7 @@ import type { FeedAttachment, FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileNarrative, ProfileReply } from "../types";
 import type { ApiComment, ApiNarrative } from "./profile-api-types";
 import { mapQuotedNarrative } from "@/features/feed/services/quote-mapper";
+import { actorKindOf } from "@/lib/profile-route";
 
 export function timeFa(value: string): string {
   const date = new Date(value);
@@ -190,7 +191,9 @@ export function mapNarrativePost(
     author: {
       id: actorId,
 
-      type: item.author?.type || "square",
+      type: actorKindOf(item.author?.type),
+
+      handle: item.author?.handle || undefined,
 
       avatarUrl: item.author?.avatar_url || identity.avatar,
 

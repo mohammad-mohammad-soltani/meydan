@@ -1,19 +1,14 @@
+import { actorKindOf, canonicalPublicProfileHref, isEntityKind, publicProfileHref, type ActorKind } from "../../lib/profile-route.ts";
 import type { ChatAttachment, ChatNotification, ChatNotificationKind, ChatUser } from "./types";
+
+/** `@name` / `name` -> `name`; the `@user12` placeholder of an account without a handle is not a handle. */
+function usableHandle(value?: string | null): string | undefined {
+  const handle = (value ?? "").replace(/^@/, "");
+  return /^user\d+$/.test(handle) ? undefined : handle || undefined;
+}
 
 export type ChatAttachmentKind = "image" | "video" | "audio" | "file";
 
-function publicProfileHref(type: "user" | "square", id: string | number): string {
-  const numericId = String(id).match(/(\d+)$/)?.[1] || "";
-  if (!numericId) return "/";
-  return type === "square" ? `/square/${numericId}` : `/${numericId}`;
-}
-
-function canonicalPublicProfileHref(href: string): string {
-  const value = href.trim();
-  const match = value.match(/^\/(?:users|profile)\/(user|square)\/(\d+)([?#].*)?$/);
-  if (!match) return value;
-  return `${publicProfileHref(match[1] as "user" | "square", match[2])}${match[3] || ""}`;
-}
 
 type SearchableMessage = {
   id: string;
@@ -45,7 +40,7 @@ export type ApiNotificationLike = {
   payload?: { initiative_title?: string | null; aggregate_count?: number | null } | null;
   actor?: {
     id?: string | number | null;
-    type?: "user" | "square" | string | null;
+    type?: ActorKind | string | null;
     numeric_id?: string | number | null;
     display_name?: string | null;
     handle?: string | null;
@@ -102,9 +97,9 @@ export function collectConversationSharedItems<T extends SearchableMessage>(mess
 }
 
 export function participantProfileHref(participant: Pick<ChatUser, "id"> & Partial<Pick<ChatUser, "profileType" | "profileId">>): string {
-  const type = participant.profileType === "square" ? "square" : "user";
+  const type = actorKindOf(participant.profileType);
   const id = participant.profileId || participant.id;
-  return publicProfileHref(type, id);
+  return publicProfileHref(type, id, usableHandle((participant as Partial<ChatUser>).handle));
 }
 
 export function chatContactHref(conversationId: string | number): string {
@@ -163,7 +158,7 @@ export function mapApiNotification(item: ApiNotificationLike): ChatNotification 
     avatarTone: "slate",
     avatarUrl: actor.avatar_url || undefined,
     isVerified: Boolean(actor.verified),
-    profileType: actor.type === "square" ? "square" : "user",
+    profileType: actorKindOf(actor.type),
     profileId: actorNumericId || undefined,
   } : undefined;
 
@@ -320,13 +315,13 @@ export function notificationHref(notification: ChatNotification): string | undef
   if (isActorTarget) {
     const actorId = notificationActorId(notification.actor);
     if (actorId) {
-      const kind = notification.actor?.profileType === "square" ? "square" : "user";
-      return publicProfileHref(kind, actorId);
+      const kind = actorKindOf(notification.actor?.profileType);
+      return publicProfileHref(kind, actorId, usableHandle(notification.actor?.handle));
     }
   }
   if (notification.entityType === "narrative" && entityId) return `/posts/${entityId}`;
-  // Square-scoped notices (verification, rejection) target the square itself.
-  if (notification.entityType === "square" && entityId) return publicProfileHref("square", entityId);
+  // Entity-scoped notices (verification, rejection) target the entity itself.
+  if (isEntityKind(notification.entityType) && entityId) return publicProfileHref(notification.entityType, entityId);
   return link || undefined;
 }
 

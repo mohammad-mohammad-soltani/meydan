@@ -17,7 +17,7 @@ const MEDIA_ACCEPT = "image/*,video/*,audio/*";
 
 type ViewerState = {
   /** `speaker` publishes as the user account behind it. */
-  accountType: "user" | "square" | "speaker" | "";
+  accountType: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official" | "";
   /** Set for an approved media account (رسانه), which can file quotes as media reflections. */
   mediaOutletId?: number | null;
 };
@@ -104,7 +104,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   }, [quoteId]);
 
   useEffect(() => {
-    void meydanApi<{ account_type: "user" | "square" | "speaker"; media_outlet_id?: number | null }>("/me")
+    void meydanApi<{ account_type: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official"; media_outlet_id?: number | null }>("/me")
       .then((me) => {
         setViewer({ accountType: me.account_type, mediaOutletId: me.media_outlet_id ?? null });
       })
@@ -213,7 +213,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           disabled={!canPublish}
           className="shrink-0 rounded-full bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground sm:px-5"
         >
-          {isPublishing ? "در حال انتشار…" : isUploading ? "در حال بارگذاری…" : viewer.accountType === "square" ? "انتشار به نام میدان" : quoteId ? "انتشار نقل‌قول" : "انتشار"}
+          {isPublishing ? "در حال انتشار…" : isUploading ? "در حال بارگذاری…" : viewer.accountType === "square" ? "انتشار به نام میدان" : viewer.accountType === "media" ? "انتشار به نام رسانه" : viewer.accountType === "collective" ? "انتشار به نام مجموعه" : viewer.accountType === "organization" ? "انتشار به نام سازمان" : quoteId ? "انتشار نقل‌قول" : "انتشار"}
         </button>
       </div>
 

@@ -8,6 +8,7 @@ import type {
   SpeakerInvitation,
   SpeakerInvitationStatus,
 } from "../types";
+import { actorKindOf } from "@/lib/profile-route";
 
 type ApiActor = {
   id?: string | null;
@@ -59,7 +60,8 @@ function mapActor(actor?: ApiActor | null): InvitationActor | null {
 
   const mapped: InvitationActor = {
     id: String(actor.id || ""),
-    type: actor.type === "square" ? "square" : "user",
+    type: actorKindOf(actor.type),
+    handle: actor.handle || undefined,
     name: String(actor.display_name),
     avatarUrl: actor.avatar_url || undefined,
     verified: Boolean(actor.verified),

@@ -1,3 +1,4 @@
+import type { ActorKind } from "@/lib/profile-route";
 export type FeedTab = "for-you" | "following";
 export type FeedFilter = "all" | "initiatives" | "reflected";
 export type PostKind = "ideas" | "media";
@@ -29,7 +30,7 @@ export type MediaReflection = {
 export type QuotedPost = {
   id: string;
   unavailable: boolean;
-  author?: { id: number; type: "user" | "square"; name: string; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
+  author?: { id: number; type: ActorKind; handle?: string; name: string; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
   timeAgo?: string;
   body?: string;
   attachments?: FeedAttachment[];
@@ -37,7 +38,7 @@ export type QuotedPost = {
 
 export type FeedPost = {
   id: string;
-  author: { id: number; type: "user" | "square"; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
+  author: { id: number; type: ActorKind; handle?: string; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
   initiativeId?: number;
   initiativeWorkId?: string | null;
   initiativeClosed?: boolean;
@@ -70,7 +71,7 @@ export type FeedPost = {
 
 export type FollowSuggestion = {
   id: string;
-  actorType: "user" | "square";
+  actorType: ActorKind;
   name: string;
   city: string;
   handle: string;

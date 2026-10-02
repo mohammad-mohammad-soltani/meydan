@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { meydanApi } from "@/lib/meydan-api";
 
-type MeMedia = { media_outlet_id?: number | null; square?: { id?: number | null } | null };
+type MeMedia = { media_outlet_id?: number | null; entity?: { id?: number | null } | null; square?: { id?: number | null } | null };
 
 export type MediaViewer = {
   /** The republishing outlet of an approved media account; null for everyone else. */
@@ -29,7 +29,7 @@ export function useMediaViewer(enabled: boolean): MediaViewer {
       .then((me) => {
         if (!active) return;
         const outletId = Number(me.media_outlet_id ?? 0);
-        setViewer(outletId > 0 ? { outletId, squareId: Number(me.square?.id ?? 0) || null } : NONE);
+        setViewer(outletId > 0 ? { outletId, squareId: Number((me.entity ?? me.square)?.id ?? 0) || null } : NONE);
       })
       .catch(() => undefined);
     return () => {

@@ -8,16 +8,17 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { closeRealtimeSession } from "@/lib/realtime/user-channel";
-import { publicProfileHref } from "@/lib/profile-route";
+import { actorKindOf, publicProfileHref } from "@/lib/profile-route";
 import type { ProfileDetails } from "../types";
 
 /**
- * Canonical public path for a profile. `accountType` uses the internal
- * "resume" label for personal accounts (public route `/{id}`), while squares
- * live at `/square/{id}` — see `publicProfileHref`.
+ * Canonical public path for a profile: `/{handle}` for every kind. `accountType`
+ * uses the internal "resume" label for personal accounts; `kind` says which
+ * entity a square-type profile is.
  */
-export function profilePath(profile: Pick<ProfileDetails, "accountType" | "actorId">): string {
-  return publicProfileHref(profile.accountType === "square" ? "square" : "user", profile.actorId);
+export function profilePath(profile: Pick<ProfileDetails, "accountType" | "actorId"> & Partial<Pick<ProfileDetails, "kind" | "identity">>): string {
+  const type = profile.accountType === "square" ? actorKindOf(profile.kind, "square") : "user";
+  return publicProfileHref(type, profile.actorId, profile.identity?.handle);
 }
 
 const itemClass =

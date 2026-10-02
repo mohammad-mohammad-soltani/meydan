@@ -3,18 +3,17 @@ import { ProfileView } from "@/features/profile/components/ProfileView";
 import { getPublicProfileDetails } from "@/features/profile/services/profile.service";
 import { meydanApi } from "@/lib/meydan-api";
 import { accessTokenHeader } from "@/lib/meydan-session";
+import { isEntityKind, type ActorKind } from "@/lib/profile-route";
 
-type PublicProfileType = "user" | "square";
+type PublicProfileType = ActorKind;
 
-type ApiMeIdentity =
-  | {
-      account_type: "square";
-      square?: { id?: number } | null;
-    }
-  | {
-      account_type: "user" | "speaker" | "official";
-      profile?: { id?: number } | null;
-    };
+type ApiMeIdentity = {
+  account_type: string;
+  /** Profile of an entity account of any kind (square, media, collective, organization). */
+  entity?: { id?: number } | null;
+  square?: { id?: number } | null;
+  profile?: { id?: number } | null;
+};
 
 async function isOwnProfile(
   type: PublicProfileType,
@@ -25,10 +24,10 @@ async function isOwnProfile(
 
   try {
     const me = await meydanApi<ApiMeIdentity>("/me", { headers });
-    const actorType = me.account_type === "square" ? "square" : "user";
-    const actorId = me.account_type === "square" ? me.square?.id : me.profile?.id;
-
-    return actorType === type && Number(actorId) === id;
+    if (isEntityKind(type)) {
+      return me.account_type === type && Number((me.entity ?? me.square)?.id) === id;
+    }
+    return !isEntityKind(me.account_type) && Number(me.profile?.id) === id;
   } catch {
     // Public profiles must stay available even if the optional session
     // self-check fails or the access token has expired.

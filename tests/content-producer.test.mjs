@@ -29,7 +29,7 @@ test("a user producer takes precedence over a different legacy creator", async (
     name: "نویسندهٔ روایت",
     role: "تولیدکننده محتوا",
     avatar: "https://cdn.example/user.jpg",
-    profileHref: "/42",
+    profileHref: "/users/user/42",
     bio: "",
     publishedCount: "",
   });
@@ -48,7 +48,7 @@ test("a square producer is shown as the square itself", async () => {
   assert.equal(producer.name, "میدان آزادی");
   assert.equal(producer.role, "میدان");
   assert.equal(producer.avatar, "https://cdn.example/square.jpg");
-  assert.equal(producer.profileHref, "/square/136");
+  assert.equal(producer.profileHref, "/users/square/136");
 });
 
 test("legacy creators and an empty content row retain their fallbacks", async () => {
@@ -86,4 +86,18 @@ test("the content detail makes an actor producer name a profile link", () => {
 
   assert.match(view, /item\.creator\.profileHref/);
   assert.match(view, /<Link\s+href=\{item\.creator\.profileHref as Route\}/);
+});
+
+test("a media producer links to its handle", async () => {
+  const { contentProducer } = await loadProducer();
+
+  const producer = contentProducer({
+    type: "media",
+    id: "md_9",
+    handle: "saba_news",
+    display_name: "خبرگزاری صبا",
+  });
+
+  assert.equal(producer.role, "رسانه");
+  assert.equal(producer.profileHref, "/saba_news");
 });

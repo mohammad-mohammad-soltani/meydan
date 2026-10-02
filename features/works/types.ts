@@ -1,3 +1,4 @@
+import type { ActorKind } from "@/lib/profile-route";
 /** Shapes returned by the `/works` REST API (backend: Domain\Work*). */
 
 export type WorkUser = {
@@ -7,7 +8,7 @@ export type WorkUser = {
   avatar_url: string | null;
   verified?: boolean;
   verified_official?: boolean;
-  profile_type?: "user" | "square";
+  profile_type?: ActorKind;
   profile_id?: string;
   /** Attribute (صفت) the managers gave this person in the current work. */
   work_label?: string | null;

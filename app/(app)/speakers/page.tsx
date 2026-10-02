@@ -15,7 +15,7 @@ export default async function SpeakersPage() {
 
   // Only a square account may invite, and its own registered address becomes
   // the venue; guests and personal accounts get the directory without invites.
-  const canInvite = viewer?.accountType === "square";
+  const canInvite = viewer?.accountType === "square" && (viewer.kind ?? "square") === "square";
 
   return (
     <SpeakersView

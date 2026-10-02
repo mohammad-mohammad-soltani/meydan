@@ -1,10 +1,11 @@
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
-import { publicProfileHref } from "@/lib/profile-route";
+import { publicProfileHref, actorKindOf } from "@/lib/profile-route";
 import type { InitiativeParticipant, InitiativeParticipants } from "../types";
 
 type ApiParticipant = {
   id?: string | number | null;
   type?: string | null;
+  handle?: string | null;
   display_name?: string | null;
   avatar_url?: string | null;
   verified?: boolean | null;
@@ -17,10 +18,10 @@ type ApiParticipants = {
   participant_count?: number | null;
 };
 
-/** `usr_9` / `sq_54` -> `/9` / `/square/54`. */
-export function participantProfileHref(participant: Pick<InitiativeParticipant, "type" | "id">): string {
+/** `usr_9` / `sq_54` -> `/{handle}` (or the id-based address when the handle is unknown). */
+export function participantProfileHref(participant: Pick<InitiativeParticipant, "type" | "id" | "handle">): string {
   const numericId = String(participant.id).match(/(\d+)$/)?.[1] || "";
-  return publicProfileHref(participant.type, numericId);
+  return publicProfileHref(participant.type, numericId, participant.handle);
 }
 
 /**
@@ -46,7 +47,8 @@ export async function getInitiativeParticipants(initiativeId: string): Promise<I
       Boolean(item?.id) && Boolean(item?.display_name))
     .map((item): InitiativeParticipant => ({
       id: String(item.id),
-      type: item.type === "square" ? "square" : "user",
+      type: actorKindOf(item.type),
+      handle: item.handle || undefined,
       name: String(item.display_name),
       avatarUrl: item.avatar_url || undefined,
       verified: Boolean(item.verified),

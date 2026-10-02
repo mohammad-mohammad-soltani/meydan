@@ -1,6 +1,9 @@
 import { meydanApi } from "@/lib/meydan-api";
 
-export type ActorType = "user" | "square";
+import type { ActorKind } from "@/lib/profile-route";
+
+/** `user` or an entity kind (square, media, collective, organization); a speaker is a `user` actor. */
+export type ActorType = ActorKind;
 
 export type FollowActor = {
   id: string;
@@ -11,8 +14,8 @@ export type FollowActor = {
 };
 
 type MeResponse =
-  | { account_type: "user" | "speaker"; profile?: { id?: number } }
-  | { account_type: "square"; square?: { id?: number } | null };
+  | { account_type: "user" | "speaker" | "official"; profile?: { id?: number } }
+  | { account_type: "square" | "media" | "collective" | "organization"; entity?: { id?: number } | null; square?: { id?: number } | null };
 
 export function actorNumericId(value: string | number): number {
   const match = String(value).match(/(\d+)$/);
@@ -31,10 +34,10 @@ export function actorKey(type: ActorType, value: string | number): string {
  * and `/actors/{type}` has no `speaker` route.
  */
 export function viewerActor(me: MeResponse): { type: ActorType; id?: number } {
-  if (me.account_type === "square") {
-    return { type: "square", id: me.square?.id };
+  if (me.account_type === "user" || me.account_type === "speaker" || me.account_type === "official") {
+    return { type: "user", id: me.profile?.id };
   }
-  return { type: "user", id: me.profile?.id };
+  return { type: me.account_type, id: (me.entity ?? me.square)?.id };
 }
 
 export async function getFollowingStates(actors: Array<{ type: ActorType; id: number }>): Promise<{ keys: string[]; hasFollowing: boolean }> {

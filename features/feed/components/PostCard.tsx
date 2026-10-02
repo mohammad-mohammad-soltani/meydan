@@ -108,6 +108,7 @@ export function PostCard({
   const profileHref = publicProfileHref(
     post.author.type,
     post.author.id,
+    post.author.handle,
   ) as Route;
 
   /*

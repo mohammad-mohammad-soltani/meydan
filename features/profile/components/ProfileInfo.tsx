@@ -3,6 +3,7 @@ import {
   MapPin,
 } from "lucide-react";
 
+import { ENTITY_KIND_LABELS, isEntityKind } from "@/lib/profile-route";
 import type {
   ProfileDetails,
   ProfileSection,
@@ -57,6 +58,7 @@ export function ProfileInfo({
   tab,
 }: ProfileInfoProps) {
   const isSquare = tab === "square";
+  const entityKind = isEntityKind(profile.kind) ? profile.kind : "square";
 
   const stats = isSquare
     ? profile.squareStats
@@ -68,7 +70,9 @@ export function ProfileInfo({
         <p className="whitespace-pre-wrap text-sm leading-7 text-foreground">
           {profile.about ||
             (isSquare
-              ? "این میدان برای روایت‌کردن تجربه‌ها و اتفاق‌های محله فعال است."
+              ? entityKind === "square"
+                ? "این میدان برای روایت‌کردن تجربه‌ها و اتفاق‌های محله فعال است."
+                : `این ${ENTITY_KIND_LABELS[entityKind]} در میدان فعال است.`
               : "عضو میدان")}
         </p>
 

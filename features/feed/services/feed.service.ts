@@ -1,10 +1,11 @@
 import { meydanApi, meydanApiPage, plainText } from "@/lib/meydan-api";
 import type { FeedAttachment, FeedPost, FollowSuggestion } from "../types";
 import { mapQuotedNarrative, type ApiQuotedNarrative } from "./quote-mapper";
+import { type ActorKind, actorKindOf } from "@/lib/profile-route";
 
 type ApiActor = {
   id: string;
-  type: "user" | "square";
+  type: ActorKind;
   display_name: string;
   avatar_url?: string;
   handle?: string;
@@ -51,6 +52,7 @@ type ApiNarrative = {
 type ApiSquare = {
   id: number;
   name: string;
+  kind?: string;
   description?: string;
   handle?: string;
   avatar_url?: string;
@@ -133,7 +135,8 @@ function mapNarrative(item: ApiNarrative): FeedPost {
     id: String(item.id),
     author: {
       id: numericActorId(item.author?.id),
-      type: item.author?.type || "square",
+      type: actorKindOf(item.author?.type),
+      handle: item.author?.handle || undefined,
       avatarUrl: item.author?.avatar_url,
       verified: Boolean(item.author?.verified),
       verifiedSpeaker: Boolean(item.author?.verified_speaker),
@@ -237,7 +240,7 @@ export async function getFollowSuggestions(): Promise<FollowSuggestion[]> {
   const squares = await meydanApi<ApiSquare[]>("/squares?verified=1&limit=6");
   return squares.slice(0, 6).map((square) => ({
     id: String(square.id),
-    actorType: "square",
+    actorType: actorKindOf(square.kind, "square"),
     name: square.name,
     city: cityFromAddress(square.location?.address),
     handle: square.handle || `square_${square.id}`,

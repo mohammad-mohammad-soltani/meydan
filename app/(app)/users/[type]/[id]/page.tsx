@@ -1,6 +1,6 @@
-import type { Route } from "next";
-import { notFound, redirect } from "next/navigation";
-import { publicProfileHref } from "@/lib/profile-route";
+import { redirectToProfileById } from "@/lib/profile-redirect";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{
@@ -9,13 +9,8 @@ type Props = {
   }>;
 };
 
-/** Compatibility redirect for the previous /users/{type}/{id} scheme. */
-export default async function LegacyUsersProfilePage({ params }: Props) {
+/** Compatibility redirect for links created before `/{handle}` addresses. */
+export default async function LegacyPublicProfilePage({ params }: Props) {
   const { type, id } = await params;
-
-  if ((type !== "user" && type !== "square") || !/^\d+$/.test(id)) {
-    notFound();
-  }
-
-  redirect(publicProfileHref(type, id) as Route);
+  return redirectToProfileById(type, id);
 }

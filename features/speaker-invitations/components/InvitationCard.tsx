@@ -31,11 +31,11 @@ const statusLabels: Record<SpeakerInvitation["status"], string> = {
   cancelled: "لغو‌شده",
 };
 
-/** `usr_9` / `sq_54` -> `/9` / `/square/54`. */
+/** `usr_9` / `sq_54` -> `/{handle}`. */
 function actorProfileHref(actor: InvitationActor | null): Route | null {
   const numericId = actor?.id?.match(/(\d+)$/)?.[1];
   if (!numericId) return null;
-  return publicProfileHref(actor?.type === "square" ? "square" : "user", numericId) as Route;
+  return publicProfileHref(actor?.type ?? "user", numericId, actor?.handle) as Route;
 }
 
 function ActorAvatar({ actor }: { actor: InvitationActor | null }) {

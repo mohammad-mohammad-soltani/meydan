@@ -1,5 +1,6 @@
 "use client";
 
+import { publicProfileHref } from "@/lib/profile-route";
 import { HandleInput } from "@/components/shared/HandleInput";
 import { AdminEditor } from "./AdminEditor";
 
@@ -232,7 +233,7 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
 
           <div className="mt-3 flex flex-wrap gap-2">
             <a
-              href={`/users/square/${square.id}`}
+              href={publicProfileHref(square.kind, square.id, square.handle)}
               className={secondaryButtonClass}
               target="_blank"
               rel="noreferrer"

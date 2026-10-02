@@ -1,11 +1,12 @@
 import type { QuotedPost } from "@/features/feed/types";
+import type { ActorKind } from "@/lib/profile-route";
 
 export type PostMediaKind = "image" | "video" | "microphone" | "article";
 export type ReactionKind = "like" | "repost";
 
 export type PostAuthor = {
   id: number;
-  type: "user" | "square";
+  type: ActorKind;
   name: string;
   handle: string;
   initials: string;
@@ -45,7 +46,8 @@ export type PostComment = {
   id: string;
   author: string;
   authorId?: number;
-  authorType?: "user" | "square";
+  authorType?: ActorKind;
+  authorHandle?: string;
   verified?: boolean;
   verifiedOfficial?: boolean;
   initials: string;

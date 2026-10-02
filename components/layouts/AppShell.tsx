@@ -1,5 +1,6 @@
 "use client";
 
+import { isPublicProfilePath } from "@/lib/profile-route";
 import type { ReactNode } from "react";
 import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
@@ -63,7 +64,8 @@ export function AppShell({
   const isPublicProfilePage =
     pathname.startsWith("/users/") ||
     pathname.startsWith("/profile/") ||
-    /^\/\d+$/.test(pathname) || pathname.startsWith("/square/");
+    /^\/\d+$/.test(pathname) || pathname.startsWith("/square/") ||
+    isPublicProfilePath(pathname);
     // Conversation routes own their internal scrolling (header + list + composer).
   // Chat is the two-pane workspace (conversations + work groups), laid out like the old «کارها» page.
   const isWorksRoute = pathname === "/chat" || pathname.startsWith("/chat/");

@@ -77,3 +77,29 @@ test("profile lists show reposts, labelled as reposted", () => {
   assert.match(read("features/profile/services/profile-narrative-mappers.ts"), /repostedAt: item\.reposted_at/);
   assert.match(read("features/profile/components/ProfileActivity.tsx"), /post\.repostedAt/);
 });
+
+test("media, collectives and organizations are separate public entities, not squares", () => {
+  const route = read("lib/profile-route.ts");
+  assert.match(route, /ACTOR_KINDS = \["user", "square", "media", "collective", "organization"\]/);
+  assert.match(route, /entityApiPath/);
+  assert.match(read("lib/meydan-follow.ts"), /export type ActorType = ActorKind;/);
+  const service = read("features/profile/services/profile.service.ts");
+  assert.match(service, /entityApiPath\(type as EntityKind, id\)/);
+  assert.match(service, /me\.entity \?\? me\.square/);
+  // Location, schedule and invitations stay square-only.
+  assert.match(read("features/profile/components/ProfileView.tsx"), /isSquareAccount = profile\.profile\.accountType === "square" && entityKind === "square"/);
+  assert.match(read("app/(app)/profile/schedule/page.tsx"), /\(profile\.kind \?\? "square"\) !== "square"/);
+  assert.match(read("app/(app)/speakers/page.tsx"), /\(viewer\.kind \?\? "square"\) === "square"/);
+});
+
+test("search has a filter and a result kind for every entity kind", () => {
+  const view = read("features/explore/components/ExploreView.tsx");
+  for (const id of ["media", "collective", "organization"]) {
+    assert.match(view, new RegExp(`id: "${id}", label`));
+  }
+  const service = read("features/explore/services/explore.service.ts");
+  assert.match(service, /sections\.media/);
+  assert.match(service, /sections\.collectives/);
+  assert.match(service, /sections\.organizations/);
+  assert.match(service, /publicProfileHref\(kind, item\.id, item\.handle\)/);
+});
