@@ -2179,8 +2179,8 @@
   .works-feature .r-title { flex: 1 1 0 }
   .works-feature .r-title b { font-size: 15px }
   .works-feature .r-title small { overflow: hidden; text-overflow: ellipsis; display: block }
-  .works-feature .r-views { order: 5; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr) }
-  .works-feature .r-views button { justify-content: center; padding: 7px 6px }
+  .works-feature .r-views { display: none }
+  .works-feature .r-more { display: grid }
   .works-feature .r-role { padding: 6px 12px; flex-wrap: wrap }
   .works-feature .r-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 10px 12px }
   .works-feature .stream { padding-inline: 10px }
@@ -2188,3 +2188,13 @@
   .works-feature .kb button { font-size: 12.5px; padding: 9px 8px; min-height: 40px }
   .works-feature .quote > span { max-width: 100% }
 }
+
+/* mobile: the three views live behind a «⋯» button at the header's end */
+.works-feature .r-more { display: none; place-items: center; flex: none }
+.works-feature .view-menu { min-width: 180px; padding: 6px }
+.works-feature .view-menu-list { display: flex; flex-direction: column; gap: 2px }
+.works-feature .view-menu-list button { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: var(--fg); text-align: right }
+.works-feature .view-menu-list button:hover { background: var(--surface-2) }
+.works-feature .view-menu-list button.on { background: var(--accent-soft); color: var(--accent) }
+
+@media (max-width: 560px) { .works-feature .r-more { display: grid } }

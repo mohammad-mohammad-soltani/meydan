@@ -8,6 +8,7 @@ import type { WorkKind, WorkMessage } from "../types";
 import { dayLabel, fa, sameDay } from "../utils";
 import { Icon } from "./Icon";
 import { MessageRow } from "./MessageRow";
+import { Popover } from "./Popover";
 import { SystemLine } from "./bubbles/SystemLine";
 import { WorkBoard } from "./WorkBoard";
 import { WorkComposer, type ComposerHandle } from "./WorkComposer";
@@ -32,6 +33,8 @@ export function WorkRoom({ workId }: { workId: string }) {
   const room = useWorkRoom(workId);
   const { work, messages, tasks, kind, mine, view, viewerId, loading, error, busy, hasOlder, firstUnreadId } = room;
   const [reply, setReply] = useState<WorkMessage | null>(null);
+  const [viewMenu, setViewMenu] = useState(false);
+  const viewMenuBtn = useRef<HTMLButtonElement>(null);
   const [detailsOpen, setDetailsOpen] = useState<Set<string>>(() => new Set());
   const [info, setInfo] = useState(false);
   const composer = useRef<ComposerHandle>(null);
@@ -187,6 +190,27 @@ export function WorkRoom({ workId }: { workId: string }) {
               </button>
             ))}
           </div>
+          <button ref={viewMenuBtn} type="button" className="icon-btn r-more" aria-label="بخش‌های کار" aria-haspopup="menu" aria-expanded={viewMenu} onClick={() => setViewMenu((v) => !v)}>
+            <Icon name="more" size={20} />
+          </button>
+          {viewMenu ? (
+            <Popover anchor={viewMenuBtn} className="picker view-menu" onClose={() => setViewMenu(false)}>
+              <div role="menu" className="view-menu-list">
+                {(
+                  [
+                    ["chat", "گفتگو", "chat"],
+                    ["board", "بورد", "board"],
+                    ["members", "اعضا", "users"],
+                  ] as const
+                ).map(([v, label, icon]) => (
+                  <button key={v} type="button" role="menuitemradio" aria-checked={view === v} className={view === v ? "on" : ""} onClick={() => { room.setView(v); setViewMenu(false); }}>
+                    <Icon name={icon} size={16} />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </Popover>
+          ) : null}
         </div>
 
         <div className="r-role">
