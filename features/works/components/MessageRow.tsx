@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { kindNames, type WorkMessage } from "../types";
+import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { kindNames, messageTitle, type WorkMessage } from "../types";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
-import { Popover } from "./Popover";
+import { MessageMenu, type MenuPoint } from "./MessageMenu";
 import { AnnouncementBubble, AnnouncementKeyboard } from "./bubbles/AnnouncementBubble";
 import { MeetingBubble, MeetingKeyboard } from "./bubbles/MeetingBubble";
 import { PollBubble } from "./bubbles/PollBubble";
@@ -12,9 +12,6 @@ import { Foot, Who } from "./bubbles/Shared";
 import { TaskBubble, TaskKeyboard } from "./bubbles/TaskBubble";
 import { TextBubble } from "./bubbles/TextBubble";
 import { useRoom } from "./roomContext";
-
-/** Scroll the touch action bar into view when it opens (it can sit under the composer). */
-const revealBar = (el: HTMLDivElement | null) => el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 
 export const QUICK_REACTIONS = ["👍", "❤️", "😂", "🔥"];
 
@@ -38,13 +35,8 @@ export function MessageRow({ m, cont, last }: { m: WorkMessage; cont: boolean; l
   const mine = m.sender?.id === viewerId && !!viewerId;
   const [editing, setEditing] = useState(false);
   const [seenOpen, setSeenOpen] = useState(false);
-  const [reactOpen, setReactOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [barOpen, setBarOpen] = useState(false);
-  const [barConfirm, setBarConfirm] = useState(false);
-  const reactBtn = useRef<HTMLButtonElement>(null);
-  const moreBtn = useRef<HTMLButtonElement>(null);
+  const [menu, setMenu] = useState<MenuPoint | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
   const wrapRef = useRef<HTMLDivElement>(null);
   const swipeIcon = useRef<HTMLSpanElement>(null);
   const swipe = useRef<{ id: number; x: number; y: number; active: boolean; dx: number } | null>(null);
@@ -153,140 +145,72 @@ export function MessageRow({ m, cont, last }: { m: WorkMessage; cont: boolean; l
     window.setTimeout(() => { swiped.current = false; }, 60);
     const fire = e.type === "pointerup" && st.dx >= SWIPE_TRIGGER;
     paint(0, true);
-    if (fire) {
-      setBarOpen(false);
-      reply(m);
-    }
+    if (fire) reply(m);
   }
 
-  const actions = (
-    <>
-      {canReact ? (
-        <button ref={reactBtn} type="button" aria-label="واکنش" title="واکنش" onClick={() => setReactOpen((v) => !v)}>
-          <Icon name="smile" size={16} />
-        </button>
-      ) : null}
-      {canEdit ? (
-        <button ref={moreBtn} type="button" aria-label="بیشتر" title="بیشتر" onClick={() => { setMoreOpen((v) => !v); setConfirmDelete(false); }}>
-          <Icon name="more" size={16} />
-        </button>
-      ) : null}
-    </>
-  );
+  const canCopy = !deleted && !m.delivery && !!(m.body || messageTitle(m));
+  const openMenuAt = (x: number, y: number) => {
+    if (deleted || m.delivery) return;
+    setMenu({ x, y });
+  };
+  const copyText = () => {
+    closeMenu();
+    const text = [messageTitle(m), m.body].filter((v, i, a) => v && a.indexOf(v) === i).join("\n");
+    void navigator.clipboard?.writeText(text).catch(() => undefined);
+  };
 
   return (
     <div className={`row ${mine ? "mine" : "oth"} ${cont ? "grp-cont" : ""}`}>
       {mine ? null : last && m.sender ? <Avatar user={m.sender} className="side" /> : <span className="av side ghost" />}
       <div
         ref={wrapRef}
-        className="bwrap"
+        className={`bwrap ${menu ? "menu-open" : ""}`}
         {...swipeHandlers}
         onClick={(e) => {
-          if (swiped.current) return;
-          // Touch widths have no hover: tap the bubble to reveal the actions bar.
-          if (!window.matchMedia("(max-width:820px)").matches || m.delivery || deleted) return;
+          if (swiped.current || m.delivery || deleted) return;
+          // Touch widths have no right-click: a tap on the bubble opens the same context menu.
+          if (!window.matchMedia("(max-width:820px)").matches) return;
           if ((e.target as HTMLElement).closest("button,a,input,textarea,label,select,video,audio")) return;
-          setBarOpen((v) => !v);
+          openMenuAt(e.clientX, e.clientY);
+        }}
+        onContextMenu={(e) => {
+          if (m.delivery || deleted) return;
+          if ((e.target as HTMLElement).closest("a,input,textarea")) return;
+          if (window.getSelection()?.toString()) return;
+          e.preventDefault();
+          openMenuAt(e.clientX, e.clientY);
         }}
       >
         {canReply ? <span ref={swipeIcon} className="swipe-ic" aria-hidden="true"><Icon name="reply" size={16} /></span> : null}
         {bubble}
         {keyboard}
         {canReply ? (
-          <button type="button" className="b-reply" aria-label="پاسخ" title="پاسخ" onClick={() => { setBarOpen(false); reply(m); }}>
+          <button type="button" className="b-reply" aria-label="پاسخ" title="پاسخ" onClick={() => { reply(m); }}>
             <Icon name="reply" size={15} />
           </button>
         ) : null}
-        {!m.delivery && !deleted ? <div className="b-acts">{actions}</div> : null}
-        {barOpen && barConfirm ? (
-          <div className="m-acts" ref={revealBar}>
-            <b style={{ fontSize: 13 }}>این پیام حذف شود؟</b>
-            <button type="button" className="danger" onClick={() => { setBarOpen(false); setBarConfirm(false); void act(`messages/${m.id}`, "DELETE"); }}>
-              بله، حذف شود
+        {!m.delivery && !deleted && (canReact || canEdit || canCopy) ? (
+          <div className="b-acts">
+            <button type="button" aria-label="گزینه‌ها" title="گزینه‌ها" onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); openMenuAt(r.right, r.bottom + 4); }}>
+              <Icon name="more" size={16} />
             </button>
-            <button type="button" onClick={() => setBarConfirm(false)}>
-              انصراف
-            </button>
-          </div>
-        ) : barOpen ? (
-          <div className="m-acts" ref={revealBar}>
-            {canReply ? (
-              <button type="button" onClick={() => { setBarOpen(false); reply(m); }}>
-                <Icon name="reply" size={15} /> پاسخ
-              </button>
-            ) : null}
-            {canReact
-              ? QUICK_REACTIONS.map((e) => (
-                  <button key={e} type="button" aria-label={`واکنش ${e}`} onClick={() => { setBarOpen(false); toggleReaction(e, !!m.reactions.find((r) => r.emoji === e)?.mine); }}>
-                    {e}
-                  </button>
-                ))
-              : null}
-            {canEdit ? (
-              <>
-                <button type="button" onClick={() => { setBarOpen(false); setEditing(true); }}>
-                  <Icon name="edit" size={15} /> ویرایش
-                </button>
-                <button type="button" className="danger" onClick={() => setBarConfirm(true)}>
-                  <Icon name="trash" size={15} /> حذف
-                </button>
-              </>
-            ) : null}
           </div>
         ) : null}
       </div>
-      {reactOpen ? (
-        <Popover anchor={reactBtn} className="picker emoji-pop" onClose={() => setReactOpen(false)}>
-          <div className="emoji-row">
-            {QUICK_REACTIONS.map((e) => (
-              <button
-                key={e}
-                type="button"
-                aria-label={`واکنش ${e}`}
-                onClick={() => {
-                  setReactOpen(false);
-                  toggleReaction(e, !!m.reactions.find((r) => r.emoji === e)?.mine);
-                }}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        </Popover>
-      ) : null}
-      {moreOpen ? (
-        <Popover anchor={moreBtn} className="picker more-pop" onClose={() => { setMoreOpen(false); setConfirmDelete(false); }}>
-          {confirmDelete ? (
-            <div className="more-confirm">
-              <b>این پیام حذف شود؟</b>
-              <div className="edit-acts">
-                <button
-                  type="button"
-                  className="qa go"
-                  onClick={() => {
-                    setMoreOpen(false);
-                    setConfirmDelete(false);
-                    void act(`messages/${m.id}`, "DELETE");
-                  }}
-                >
-                  بله، حذف شود
-                </button>
-                <button type="button" className="qa" onClick={() => setConfirmDelete(false)}>
-                  انصراف
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <button type="button" className="more-item" onClick={() => { setMoreOpen(false); setEditing(true); }}>
-                <Icon name="edit" size={15} /> ویرایش
-              </button>
-              <button type="button" className="more-item danger" onClick={() => setConfirmDelete(true)}>
-                <Icon name="trash" size={15} /> حذف
-              </button>
-            </>
-          )}
-        </Popover>
+      {menu ? (
+        <MessageMenu
+          point={menu}
+          reactions={canReact ? QUICK_REACTIONS.map((emoji) => ({ emoji, mine: !!m.reactions.find((r) => r.emoji === emoji)?.mine })) : null}
+          canReply={!!canReply}
+          canEdit={canEdit}
+          canCopy={canCopy}
+          onReact={(emoji, mineNow) => { closeMenu(); toggleReaction(emoji, mineNow); }}
+          onReply={() => { closeMenu(); reply(m); }}
+          onCopy={copyText}
+          onEdit={() => { closeMenu(); setEditing(true); }}
+          onDelete={() => { closeMenu(); void act(`messages/${m.id}`, "DELETE"); }}
+          onClose={closeMenu}
+        />
       ) : null}
     </div>
   );
