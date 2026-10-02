@@ -8,23 +8,31 @@ type ApiSquareMeta = {
   };
 };
 
+type ApiMediaReflectionCount = {
+  square_id: number;
+  count: number;
+};
+
 export async function hydrateSquareProfileMeta(
   profile: ProfileDetails,
 ): Promise<ProfileDetails> {
   if (profile.accountType !== "square") return profile;
 
   try {
-    // The reflection count was already read while building the profile, so it
-    // is reused instead of running the same heavy query a second time.
-    const square = await meydanApi<ApiSquareMeta>(`/squares/${profile.actorId}`);
+    const [square, reflections] = await Promise.all([
+      meydanApi<ApiSquareMeta>(`/squares/${profile.actorId}`),
+      meydanApi<ApiMediaReflectionCount>(
+        `/squares/${profile.actorId}/media-reflections/count`,
+      ),
+    ]);
 
     const stats: ProfileStat[] = [
       {
         value: compactFa(square.stats?.narratives ?? 0),
         label: "روایت منتشرشده",
       },
-      profile.squareStats[1] ?? {
-        value: `${compactFa(0)} روایت`,
+      {
+        value: `${compactFa(reflections.count ?? 0)} روایت`,
         label: "بازتاب رسانه‌ای",
         tone: "success",
       },

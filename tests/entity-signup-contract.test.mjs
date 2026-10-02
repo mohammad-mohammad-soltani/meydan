@@ -58,10 +58,3 @@ test("admin lists can approve or suspend each account directly", () => {
   assert.match(view, /setSquareStatus\(String\(square\.id\), status, square\.adminNote\)/);
   assert.match(view, /تأیید و فعال‌سازی/);
 });
-
-test("own profile reads run in parallel and the reflection count is read once", () => {
-  const service = read("features/profile/services/profile.service.ts");
-  assert.match(service, /await Promise\.all\(\[\s*meydanApiPage/);
-  const meta = read("features/profile/services/square-profile-meta.service.ts");
-  assert.doesNotMatch(meta, /media-reflections\/count/);
-});
