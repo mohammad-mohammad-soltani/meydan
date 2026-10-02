@@ -126,7 +126,7 @@ export function AdminSquaresView({
     setStatusBusy(square.id);
     setLinkError(null);
     try {
-      await setSquareStatus(String(square.id), status);
+      await setSquareStatus(String(square.id), status, square.adminNote);
       await load(applied, page, perPage);
     } catch (reason) {
       setLinkError(adminErrorMessage(reason, "تغییر وضعیت ممکن نشد."));

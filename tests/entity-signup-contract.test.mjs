@@ -55,6 +55,6 @@ test("quote compose lets media accounts opt out of filing a reflection (default 
 
 test("admin lists can approve or suspend each account directly", () => {
   const view = read("features/admin/components/AdminSquaresView.tsx");
-  assert.match(view, /setSquareStatus\(String\(square\.id\), status\)/);
+  assert.match(view, /setSquareStatus\(String\(square\.id\), status, square\.adminNote\)/);
   assert.match(view, /تأیید و فعال‌سازی/);
 });
