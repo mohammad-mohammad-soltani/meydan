@@ -31,6 +31,7 @@ export function AdminUserForm({ user, roles, created = false, initialRole }: { u
     cover_media_id: user?.cover_media_id ?? null,
     eitaa_channel: user?.eitaa_channel ?? "", bale_channel: user?.bale_channel ?? "",
     is_student_or_seminarian: user?.is_student_or_seminarian ?? false,
+    student_kind: user?.student_kind ?? null,
   });
   const [square, setSquare] = useState<SquareFields>(emptySquare);
   const [provinces, setProvinces] = useState<GeoOption[]>([]);
@@ -100,6 +101,15 @@ export function AdminUserForm({ user, roles, created = false, initialRole }: { u
           <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-input-border bg-input text-brand-foreground transition-colors peer-checked:border-brand peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-ring">{form.is_student_or_seminarian ? <Check className="h-3.5 w-3.5" /> : null}</span>
           طلبه یا دانشجو هستم
         </label>
+        {form.is_student_or_seminarian ? (
+          <AdminField label="طلبه یا دانشجو" htmlFor="user-student-kind" error={fieldErrors.student_kind} className="mt-4">
+            <select id="user-student-kind" className={fieldClass} value={form.student_kind ?? ""} onChange={(event) => set("student_kind", (event.target.value || null) as "student" | "seminarian" | null)}>
+              <option value="">مشخص نشده</option>
+              <option value="student">دانشجو</option>
+              <option value="seminarian">طلبه</option>
+            </select>
+          </AdminField>
+        ) : null}
         <AdminField label="معرفی" htmlFor="user-about" error={fieldErrors.about} className="mt-4"><textarea id="user-about" rows={4} className={fieldClass} value={form.about ?? ""} onChange={(event) => set("about", event.target.value)} /></AdminField>
       </section>
       <section className="grid gap-4 rounded-2xl border border-border bg-surface p-5 shadow-card md:grid-cols-2">

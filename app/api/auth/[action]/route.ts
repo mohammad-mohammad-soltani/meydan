@@ -19,6 +19,7 @@ const routes: Record<string, string> = {
   "otp-verify": "/auth/otp/verify",
   "register-user": "/auth/register/user",
   "register-square": "/auth/register/square",
+  "register-entity": "/auth/register/entity",
   "native-restore": "/auth/refresh",
   logout: "/auth/logout",
 };

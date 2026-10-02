@@ -13,11 +13,12 @@ import { AdminTable, type AdminColumn } from "./AdminTable";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { SquareStatusBadge, VerifiedBadge } from "./AdminStatusBadge";
 import { fa, secondaryButtonClass } from "./styles";
-import { adminErrorMessage, deleteSquare, getSquares } from "../services/squares.service";
+import { adminErrorMessage, deleteSquare, getSquares, linkSquareOutlet } from "../services/squares.service";
 import { getCities, getProvinces } from "../services/programs.service";
-import type { AdminPage, GeoOption, Square, SquareFilters } from "../types";
+import type { AdminPage, EntityKind, GeoOption, MediaOutlet, Square, SquareFilters } from "../types";
 import {
   EMPTY_SQUARE_FILTERS,
+  ENTITY_KIND_LABELS,
   SQUARE_STATUS_LABELS,
   SQUARE_STATUSES,
 } from "../types";
@@ -30,9 +31,23 @@ import {
  * changes. The square itself is the row's link, so a row is not a nested
  * button.
  */
-export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Square> }) {
-  const [filters, setFilters] = useState<SquareFilters>(EMPTY_SQUARE_FILTERS);
-  const [applied, setApplied] = useState<SquareFilters>(EMPTY_SQUARE_FILTERS);
+export function AdminSquaresView({
+  initialPage,
+  kind = "square",
+  outlets = [],
+}: {
+  initialPage: AdminPage<Square>;
+  /** Which kind of account this list shows; the default keeps the squares page as it was. */
+  kind?: EntityKind;
+  /** Republishing outlets, offered for linking on the media list only. */
+  outlets?: MediaOutlet[];
+}) {
+  const kindLabel = ENTITY_KIND_LABELS[kind];
+  const baseFilters = useMemo<SquareFilters>(() => ({ ...EMPTY_SQUARE_FILTERS, kind }), [kind]);
+  const [linkBusy, setLinkBusy] = useState<number | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<SquareFilters>(baseFilters);
+  const [applied, setApplied] = useState<SquareFilters>(baseFilters);
   const [page, setPage] = useState(initialPage.page || 1);
   const [perPage, setPerPage] = useState(initialPage.perPage || 20);
   const [result, setResult] = useState<AdminPage<Square>>(initialPage);
@@ -100,10 +115,23 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
   };
 
   const resetFilters = () => {
-    setFilters(EMPTY_SQUARE_FILTERS);
-    setApplied(EMPTY_SQUARE_FILTERS);
+    setFilters(baseFilters);
+    setApplied(baseFilters);
     setPage(1);
-    void load(EMPTY_SQUARE_FILTERS, 1, perPage);
+    void load(baseFilters, 1, perPage);
+  };
+
+  const changeLink = async (square: Square, raw: string) => {
+    setLinkBusy(square.id);
+    setLinkError(null);
+    try {
+      await linkSquareOutlet(square.id, raw ? Number(raw) : null);
+      await load(applied, page, perPage);
+    } catch (reason) {
+      setLinkError(adminErrorMessage(reason, "لینک رسانه ذخیره نشد."));
+    } finally {
+      setLinkBusy(null);
+    }
   };
 
   const removeSquare = async () => {
@@ -127,7 +155,7 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
         kind: "search",
         key: "q",
         label: "جست‌وجو",
-        placeholder: "نام میدان یا نشانی",
+        placeholder: kind === "square" ? "نام میدان یا نشانی" : `نام ${kindLabel}`,
         value: filters.q,
         onChange: (value) => setFilters((current) => ({ ...current, q: value })),
       },
@@ -184,13 +212,13 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
           setFilters((current) => ({ ...current, cityId: value ? Number(value) : null })),
       },
     ],
-    [cities, filters, provinces],
+    [cities, filters, provinces, kind, kindLabel],
   );
 
   const columns: Array<AdminColumn<Square>> = [
     {
       key: "name",
-      header: "میدان",
+      header: kindLabel,
       // The card layout on narrow screens uses this as the row heading.
       primary: true,
       render: (square) => (
@@ -232,6 +260,33 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
         </div>
       ),
     },
+    ...(kind === "media"
+      ? [
+          {
+            key: "outlet",
+            header: "رسانه بازنشر",
+            render: (square: Square) => (
+              <select
+                aria-label="رسانه بازنشر لینک‌شده"
+                value={square.linkedOutletId ? String(square.linkedOutletId) : ""}
+                disabled={linkBusy === square.id}
+                onChange={(event) => void changeLink(square, event.target.value)}
+                className="min-h-9 w-full min-w-32 rounded-control border border-border bg-surface px-2 text-[11px] font-black text-foreground"
+              >
+                <option value="">بدون لینک</option>
+                {square.linkedOutletId && !outlets.some((outlet) => outlet.id === square.linkedOutletId) ? (
+                  <option value={String(square.linkedOutletId)}>رسانه #{square.linkedOutletId} (منتشرنشده)</option>
+                ) : null}
+                {outlets.map((outlet) => (
+                  <option key={outlet.id} value={String(outlet.id)}>{outlet.name}</option>
+                ))}
+              </select>
+            ),
+          } satisfies AdminColumn<Square>,
+        ]
+      : []),
+    ...(kind === "square"
+      ? [
     {
       key: "location",
       header: "موقعیت",
@@ -243,10 +298,12 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
         ) : (
           <span className="text-[11px] text-warning-foreground">بدون رکورد جغرافیایی</span>
         ),
-    },
+    } satisfies AdminColumn<Square>,
+      ]
+      : []),
     {
       key: "owner",
-      header: "خادم میدان",
+      header: kind === "square" ? "خادم میدان" : "مالک حساب",
       // Truncated to one line: the owner name is already secondary here, and
       // letting it wrap turned a four-column table into a wall of text.
       render: (square) => (
@@ -282,7 +339,7 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
             className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-control border border-danger-border bg-danger-surface px-3 text-[11px] font-black text-danger-foreground transition-colors hover:opacity-80"
           >
             <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
-            حذف میدان
+            حذف {kindLabel}
           </button>
         </div>
       ),
@@ -292,9 +349,9 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
   return (
     <div className="min-h-full bg-background">
       <AdminPageHeader
-        title="میادین"
-        description="فهرست میادین با فیلتر وضعیت، تأیید و محدوده جغرافیایی."
-        crumbs={[{ label: "میادین" }]}
+        title={kind === "square" ? "میادین" : `${kindLabel}‌ها`}
+        description={kind === "square" ? "فهرست میادین با فیلتر وضعیت، تأیید و محدوده جغرافیایی." : `فهرست حساب‌های ${kindLabel} و فعال‌سازی توسط مدیر.`}
+        crumbs={[{ label: kind === "square" ? "میادین" : `${kindLabel}‌ها` }]}
         actions={
           <>
             <button
@@ -310,7 +367,7 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
               className="inline-flex min-h-10 items-center gap-2 rounded-control bg-brand px-4 text-xs font-black text-brand-foreground transition-colors hover:bg-brand-hover"
             >
               <Plus aria-hidden="true" className="h-4 w-4" />
-              افزودن میدان
+              {kind === "square" ? "افزودن میدان" : "افزودن حساب"}
             </Link>
           </>
         }
@@ -322,6 +379,8 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
         onReset={resetFilters}
         busy={loading}
       />
+
+      {linkError ? <p role="alert" className="px-3 pb-2 text-xs font-black text-danger-foreground sm:px-4">{linkError}</p> : null}
 
       {error ? (
         <AdminErrorState
@@ -337,8 +396,8 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
             columns={columns}
             rows={result.items}
             rowKey={(square) => square.id}
-            caption="فهرست میادین"
-            emptyTitle="میدانی با این فیلترها پیدا نشد."
+            caption={`فهرست ${kindLabel}‌ها`}
+            emptyTitle={`${kindLabel}ی با این فیلترها پیدا نشد.`}
             emptyDescription="فیلترها را تغییر دهید یا یک میدان تازه بسازید."
             emptyIcon={<MapPinned aria-hidden="true" className="h-5 w-5" />}
           />
@@ -355,7 +414,7 @@ export function AdminSquaresView({ initialPage }: { initialPage: AdminPage<Squar
             }}
           />
           <p className="px-3 pb-6 pt-2 text-[10px] text-muted-foreground sm:px-4">
-            {fa(result.total)} میدان در این فیلتر
+            {fa(result.total)} {kindLabel} در این فیلتر
             {result.paginated ? "" : " (سرور صفحه‌بندی برنگرداند)"}
           </p>
         </>

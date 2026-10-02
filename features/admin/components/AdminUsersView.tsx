@@ -17,6 +17,9 @@ import { adminErrorMessage } from "../services/admin-api";
 import { deleteUser, EMPTY_USER_FILTERS, getUsers, setUserDisabled, type AdminUser, type AdminUserRole, type UserFilters } from "../services/users.service";
 import type { AdminPage } from "../types";
 
+/** Roles of entity accounts (مجموعه/رسانه/سازمان); managed from their own lists, not the role picker. */
+const ENTITY_ROLE_LABELS: Record<string, string> = { meydan_collective: "مجموعه", meydan_media: "رسانه", meydan_organization: "سازمان" };
+
 export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FILTERS, title = "کاربران", description = "مدیریت حساب‌های سایت و پنل", newHref = "/admin/users/new", fixedRole }: { initial: AdminPage<AdminUser>; roles: AdminUserRole[]; initialFilters?: UserFilters; title?: string; description?: string; newHref?: string; fixedRole?: string }) {
   const [filters, setFilters] = useState<UserFilters>(initialFilters);
   const [applied, setApplied] = useState<UserFilters>(initialFilters);
@@ -80,8 +83,8 @@ export function AdminUsersView({ initial, roles, initialFilters = EMPTY_USER_FIL
   const columns: AdminColumn<AdminUser>[] = [
     { key: "name", header: "کاربر", primary: true, render: (user) => <span className="flex items-center gap-2"><span className={`grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-surface-muted ${user.disabled ? "grayscale opacity-60" : ""}`}>{user.avatar_url ? <OptimizedAvatar src={user.avatar_url} alt="" width={36} className="h-full w-full object-cover" /> : <UserRound size={18} />}</span><span className="min-w-0"><strong className="block truncate">{user.full_name}</strong><small className="text-muted-foreground">#{user.id.toLocaleString("fa-IR")}</small></span></span> },
     { key: "phone", header: "شماره", render: (user) => <span dir="ltr">{user.phone || "—"}</span> },
-    { key: "role", header: "نقش", render: (user) => roles.find((r) => r.value === user.role)?.label ?? user.role },
-    { key: "student_or_seminarian", header: "طلبه/دانشجو", render: (user) => user.is_student_or_seminarian ? <span className="rounded-full bg-brand-muted px-2.5 py-1 text-xs font-bold text-brand">بله</span> : <span className="text-muted-foreground">خیر</span> },
+    { key: "role", header: "نقش", render: (user) => roles.find((r) => r.value === user.role)?.label ?? ENTITY_ROLE_LABELS[user.role] ?? user.role },
+    { key: "student_or_seminarian", header: "طلبه/دانشجو", render: (user) => user.is_student_or_seminarian ? <span className="rounded-full bg-brand-muted px-2.5 py-1 text-xs font-bold text-brand">{user.student_kind === "seminarian" ? "طلبه" : user.student_kind === "student" ? "دانشجو" : "بله"}</span> : <span className="text-muted-foreground">خیر</span> },
     { key: "status", header: "وضعیت", render: (user) => <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${user.disabled ? "border border-danger-border bg-danger-surface text-danger-foreground" : "bg-success-surface text-success"}`}>{user.disabled ? "غیرفعال" : "فعال"}</span> },
     { key: "actions", header: "عملیات", render: (user) => <span className="flex flex-wrap gap-2">{user.disabled ? <button type="button" className={dangerButtonClass} aria-label={`حذف دائمی ${user.full_name}`} onClick={(event) => { event.stopPropagation(); setActionError(null); setDeleteTarget(user); }}><Trash2 size={15} />حذف</button> : <Link href={`/admin/users/${user.id}` as Route} className={secondaryButtonClass} aria-label={`ویرایش ${user.full_name}`}><Pencil size={15} />ویرایش</Link>}<button type="button" className={secondaryButtonClass} onClick={(event) => { event.stopPropagation(); setActionError(null); setTarget(user); }}>{user.disabled ? "فعال‌سازی" : "غیرفعال‌سازی"}</button></span> },
   ];

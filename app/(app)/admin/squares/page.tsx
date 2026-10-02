@@ -16,6 +16,7 @@ export default async function AdminSquaresPage() {
   // rendering, so no query runs and nothing is shown without the role.
   if (!(await isAdministrator())) return null;
 
-  const initialPage = await getSquares(EMPTY_SQUARE_FILTERS, 1, 20);
-  return <AdminSquaresView initialPage={initialPage} />;
+  // Squares only: other kinds have their own lists. Legacy squares have no kind and count as squares.
+  const initialPage = await getSquares({ ...EMPTY_SQUARE_FILTERS, kind: "square" }, 1, 20);
+  return <AdminSquaresView initialPage={initialPage} kind="square" />;
 }

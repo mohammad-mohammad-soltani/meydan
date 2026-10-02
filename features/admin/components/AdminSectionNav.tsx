@@ -35,6 +35,9 @@ const SECTIONS: Section[] = [
   { href: "/admin", label: "نمای کلی", icon: LayoutDashboard },
   { href: "/admin/squares", label: "میادین", icon: Map },
   { href: "/admin/squares/map", label: "نقشه میادین", icon: Map },
+  { href: "/admin/collectives", label: "مجموعه‌ها", icon: UsersRound },
+  { href: "/admin/media-accounts", label: "حساب‌های رسانه", icon: Megaphone },
+  { href: "/admin/organizations", label: "سازمان‌ها", icon: FolderKanban },
   { href: "/admin/speakers", label: "سخنرانان", icon: Mic },
   { href: "/admin/users", label: "کاربران", icon: UsersRound },
   {

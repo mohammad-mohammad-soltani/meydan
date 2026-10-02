@@ -1,5 +1,7 @@
+import { ENTITY_KINDS } from "../types";
 import type {
   AdminPage,
+  EntityKind,
   Square,
   SquareCreateInput,
   SquareFilters,
@@ -39,6 +41,8 @@ type ApiSquare = {
   avatar_url?: string | null;
   cover_url?: string | null;
   approval_status?: string | null;
+  kind?: string | null;
+  linked_outlet_id?: number | null;
   verified?: boolean | null;
   post_status?: string | null;
   owner_user_id?: number | null;
@@ -69,6 +73,8 @@ export function mapSquare(row: ApiSquare): Square {
     avatarUrl: row.avatar_url || null,
     coverUrl: row.cover_url || null,
     approvalStatus: (row.approval_status as SquareStatus) || "pending_verification",
+    kind: (ENTITY_KINDS as readonly string[]).includes(row.kind ?? "") ? (row.kind as EntityKind) : "square",
+    linkedOutletId: row.linked_outlet_id ? Number(row.linked_outlet_id) : null,
     verified: Boolean(row.verified),
     postStatus: String(row.post_status ?? ""),
     ownerUserId: row.owner_user_id ? Number(row.owner_user_id) : null,
@@ -117,6 +123,7 @@ export function squaresListPath(filters: SquareFilters, page = 1, perPage = 20):
   return `/admin/squares${query({
     q: filters.q.trim(),
     status: filters.status,
+    kind: filters.kind,
     // `verified` is only meaningful when explicitly set; the controller checks
     // `has_param`, so sending "false" is different from omitting it.
     verified: filters.verified === "" ? "" : filters.verified,
@@ -153,6 +160,15 @@ export async function getSquares(
     pages,
     paginated: "total" in meta,
   };
+}
+
+/** Links a media account to a republishing outlet, or detaches it with `null`. */
+export async function linkSquareOutlet(id: number, outletId: number | null): Promise<Square> {
+  return mapSquare(
+    await adminPost<ApiSquare>(`/admin/squares/${segment(String(id))}/media-link`, {
+      outlet_id: outletId,
+    }),
+  );
 }
 
 /** `null` (rather than a throw,) when the square is gone, so the route can 404. */

@@ -30,6 +30,15 @@ import { persistNativeLogin } from "@/lib/native-auth-session";
 
 type AuthStep = "phone" | "code" | "register";
 type AccountType = "user" | "square";
+type EntityKind = "square" | "collective" | "media" | "organization";
+type StudentKind = "student" | "seminarian";
+
+const ENTITY_KINDS: { value: EntityKind; label: string; nameLabel: string; namePlaceholder: string }[] = [
+  { value: "square", label: "میدان", nameLabel: "نام میدان", namePlaceholder: "نام میدان یا پایگاه" },
+  { value: "collective", label: "مجموعه", nameLabel: "نام مجموعه", namePlaceholder: "نام مجموعه" },
+  { value: "media", label: "رسانه", nameLabel: "نام رسانه", namePlaceholder: "نام رسانه" },
+  { value: "organization", label: "سازمان", nameLabel: "نام سازمان", namePlaceholder: "نام سازمان" },
+];
 
 // Mirrors OtpService::RESEND_AFTER on the backend. The server enforces the
 // real limit (and a daily cap) regardless of this value — this only keeps the
@@ -213,6 +222,8 @@ export default function AuthPage() {
   const [handle, setHandle] = useState("");
   const [handleValid, setHandleValid] = useState(false);
   const [isStudentOrSeminarian, setIsStudentOrSeminarian] = useState(false);
+  const [studentKind, setStudentKind] = useState<StudentKind | null>(null);
+  const [entityKind, setEntityKind] = useState<EntityKind>("square");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(false);
@@ -361,7 +372,10 @@ export default function AuthPage() {
     location.address.trim() !== "" &&
     Number.isFinite(location.latitude) &&
     Number.isFinite(location.longitude);
-  const locationReady = accountType === "user" || (hasLocation && !resolving);
+  // Only a square (میدان) has a physical location; the other kinds share the same form without it.
+  const needsLocation = accountType === "square" && entityKind === "square";
+  const entityMeta = ENTITY_KINDS.find((item) => item.value === entityKind) ?? ENTITY_KINDS[0];
+  const locationReady = !needsLocation || (hasLocation && !resolving);
 
   const submitRegistration = async (event: FormEvent) => {
     event.preventDefault();
@@ -371,7 +385,11 @@ export default function AuthPage() {
       setError("استان و شهر را انتخاب کنید.");
       return;
     }
-    if (accountType === "square" && !hasLocation) {
+    if (isStudentOrSeminarian && studentKind === null) {
+      setError("مشخص کنید طلبه هستید یا دانشجو.");
+      return;
+    }
+    if (needsLocation && !hasLocation) {
       setError("روی نقشه نقطه‌ای را برای موقعیت میدان انتخاب کنید.");
       return;
     }
@@ -386,7 +404,10 @@ export default function AuthPage() {
 
       let refreshToken: string | undefined;
       if (accountType === "user") {
-        const result = await api<{ refresh_token?: string }>("register-user", { ...base, handle, full_name: name, is_student_or_seminarian: isStudentOrSeminarian });
+        const result = await api<{ refresh_token?: string }>("register-user", { ...base, handle, full_name: name, is_student_or_seminarian: isStudentOrSeminarian, ...(isStudentOrSeminarian && studentKind ? { student_kind: studentKind } : {}) });
+        refreshToken = result.refresh_token;
+      } else if (!needsLocation) {
+        const result = await api<{ refresh_token?: string }>("register-entity", { ...base, handle, kind: entityKind, square_name: name });
         refreshToken = result.refresh_token;
       } else if (location) {
         const result = await api<{ refresh_token?: string }>("register-square", {
@@ -627,19 +648,33 @@ export default function AuthPage() {
                             <span className={`grid h-9 w-9 place-items-center rounded-xl ${accountType === "square" ? "bg-brand text-brand-foreground" : "bg-surface-muted text-icon-muted"}`}>
                               <UsersRound aria-hidden="true" className="h-4.5 w-4.5" />
                             </span>
-                            <strong className="mt-3 block text-xs font-black text-foreground">حساب میدان</strong>
-                            <span className="mt-1 block text-[10px] leading-5 text-muted-foreground">برای یک پایگاه یا میدان محلی</span>
+                            <strong className="mt-3 block text-xs font-black text-foreground">میدان یا مجموعه هستم</strong>
+                            <span className="mt-1 block text-[10px] leading-5 text-muted-foreground">میدان، مجموعه، رسانه یا سازمان</span>
                           </button>
                         </div>
                       </fieldset>
 
-                      <Field label={accountType === "user" ? "نام و نام خانوادگی" : "نام میدان"}>
+                      {accountType === "square" ? (
+                        <Field label="نوع">
+                          <select
+                            className={inputClass}
+                            value={entityKind}
+                            onChange={(event) => setEntityKind(event.target.value as EntityKind)}
+                          >
+                            {ENTITY_KINDS.map((item) => (
+                              <option key={item.value} value={item.value}>{item.label}</option>
+                            ))}
+                          </select>
+                        </Field>
+                      ) : null}
+
+                      <Field label={accountType === "user" ? "نام و نام خانوادگی" : entityMeta.nameLabel}>
                         <input
                           className={inputClass}
                           value={name}
                           onChange={(event) => setName(event.target.value)}
                           autoComplete={accountType === "user" ? "name" : "organization"}
-                          placeholder={accountType === "user" ? "نام کامل شما" : "نام میدان یا پایگاه"}
+                          placeholder={accountType === "user" ? "نام کامل شما" : entityMeta.namePlaceholder}
                           required
                         />
                       </Field>
@@ -657,14 +692,33 @@ export default function AuthPage() {
                       </Field>
 
                       {accountType === "user" ? (
+                        <div className="space-y-2">
                         <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface p-3.5 text-sm font-black text-foreground transition-colors hover:bg-hover has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring">
-                          <input type="checkbox" checked={isStudentOrSeminarian} onChange={(event) => setIsStudentOrSeminarian(event.target.checked)} className="peer sr-only" />
+                          <input type="checkbox" checked={isStudentOrSeminarian} onChange={(event) => { setIsStudentOrSeminarian(event.target.checked); if (!event.target.checked) setStudentKind(null); }} className="peer sr-only" />
                           <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-input-border bg-input text-brand-foreground transition-colors peer-checked:border-brand peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-ring">{isStudentOrSeminarian ? <Check className="h-3.5 w-3.5" /> : null}</span>
                           طلبه یا دانشجو هستم
                         </label>
+                        {isStudentOrSeminarian ? (
+                          <div role="group" aria-label="طلبه یا دانشجو" className="grid grid-cols-2 gap-2">
+                            {([["student", "دانشجو هستم"], ["seminarian", "طلبه هستم"]] as const).map(([value, label]) => (
+                              <button
+                                key={value}
+                                type="button"
+                                aria-pressed={studentKind === value}
+                                onClick={() => setStudentKind(value)}
+                                className={`rounded-card border px-3 py-2.5 text-xs font-black outline-none transition-[border-color,background-color] focus-visible:ring-2 focus-visible:ring-ring ${
+                                  studentKind === value ? "border-brand bg-brand-muted text-foreground" : "border-border bg-surface text-foreground-secondary hover:bg-hover"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                        </div>
                       ) : null}
 
-                      {accountType === "square" ? (
+                      {needsLocation ? (
                         <SquareLocationField
                           provinces={provinces}
                           cities={cities}

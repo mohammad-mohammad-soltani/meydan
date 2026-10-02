@@ -18,6 +18,16 @@ export const SQUARE_STATUSES = [
 ] as const;
 export type SquareStatus = (typeof SQUARE_STATUSES)[number];
 
+/** `EntityKinds::KINDS`: legacy squares have no kind and read as `square`. */
+export const ENTITY_KINDS = ["square", "collective", "media", "organization"] as const;
+export type EntityKind = (typeof ENTITY_KINDS)[number];
+export const ENTITY_KIND_LABELS: Record<EntityKind, string> = {
+  square: "میدان",
+  collective: "مجموعه",
+  media: "رسانه",
+  organization: "سازمان",
+};
+
 /** POST /admin/squares only accepts these two initial states. */
 export const SQUARE_CREATE_STATUSES = ["pending_verification", "approved"] as const;
 export type SquareCreateStatus = (typeof SQUARE_CREATE_STATUSES)[number];
@@ -45,6 +55,9 @@ export type Square = {
   avatarUrl: string | null;
   coverUrl: string | null;
   approvalStatus: SquareStatus;
+  kind: EntityKind;
+  /** The republishing outlet this media account is linked to. */
+  linkedOutletId: number | null;
   verified: boolean;
   postStatus: string;
   ownerUserId: number | null;
@@ -69,6 +82,8 @@ export type SquareMapPoint = {
 export type SquareFilters = {
   q: string;
   status: SquareStatus | "";
+  /** "" lists every kind. */
+  kind: EntityKind | "";
   verified: "" | "true" | "false";
   provinceId: number | null;
   cityId: number | null;
@@ -77,6 +92,7 @@ export type SquareFilters = {
 export const EMPTY_SQUARE_FILTERS: SquareFilters = {
   q: "",
   status: "",
+  kind: "",
   verified: "",
   provinceId: null,
   cityId: null,
