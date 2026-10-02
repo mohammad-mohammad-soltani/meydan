@@ -129,7 +129,7 @@ export function WorkMembers({
                   واگذاری وظیفه
                 </button>
               ) : null}
-              {manager ? (
+              {manager && !editing ? (
                 <button
                   type="button"
                   className="qa"

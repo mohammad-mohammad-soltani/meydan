@@ -88,9 +88,9 @@ export function RepostMenu({ reposted, onRepost, onQuote, children, className = 
 
   const isSheet = placement?.mode === "sheet";
   const optionClass = isSheet
-    ? "flex min-h-14 w-full items-center gap-4 px-5 text-start text-[17px] font-bold text-foreground transition-colors hover:bg-hover active:bg-hover"
+    ? "flex min-h-14 w-full items-center gap-1 px-5 text-start text-[13px] font-bold text-foreground transition-colors hover:bg-hover active:bg-hover"
     : "flex min-h-11 w-full items-center gap-3 px-4 text-start text-[15px] font-bold text-foreground transition-colors hover:bg-hover";
-  const iconClass = isSheet ? "h-6 w-6 shrink-0" : "h-5 w-5 shrink-0";
+  const iconClass = isSheet ? "size-5 shrink-0" : "h-5 w-5 shrink-0";
 
   const options = (
     <>

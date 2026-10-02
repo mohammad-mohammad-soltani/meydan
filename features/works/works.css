@@ -678,8 +678,7 @@
   border-color:var(--qc)
 }
 .works-feature .qa.go {
-  background:var(--qc);
-  border-color:var(--qc);
+  background:var(--color-brand);
   color:#fff
 }
 .works-feature .qa.ok {
@@ -1032,6 +1031,9 @@
 }
 .works-feature .b-acts {
   position:absolute;
+  flex-direction: column;
+  justify-content:end;
+  height:100%;
   top:50%;
   transform:translateY(-50%);
   display:flex;
