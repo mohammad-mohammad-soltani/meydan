@@ -37,7 +37,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
   const postLabel = new Intl.NumberFormat("fa-IR").format(
     profile.narrativeCount ?? narratives.length,
   );
-  const canBeInvited = !canEdit && accountType !== "square" && Boolean(identity.verifiedSpeaker);
+  const canBeInvited = !canEdit && accountType !== "square" && Boolean(identity.isSpeaker || identity.verifiedSpeaker);
   return (
     <>
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-divider bg-surface/95 px-3 backdrop-blur">

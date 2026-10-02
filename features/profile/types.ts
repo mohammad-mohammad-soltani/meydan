@@ -11,6 +11,8 @@ export type ProfileIdentity = {
   verified: boolean;
   /** Red speaker badge — granted via the linked curated speaker profile. */
   verifiedSpeaker?: boolean;
+  /** Any speaker account (verified or not): the only accounts a square can invite. */
+  isSpeaker?: boolean;
   /** Grey badge for accounts with the Meydan official role. */
   verifiedOfficial?: boolean;
 };

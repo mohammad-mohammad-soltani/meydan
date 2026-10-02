@@ -192,6 +192,7 @@ export async function getPublicProfileDetails(
           avatar_url: user.actor.avatar_url,
           verified: user.actor.verified,
           verified_speaker: user.actor.verified_speaker,
+          is_speaker: user.actor.is_speaker,
           verified_official: user.actor.verified_official,
         },
         narratives.data,

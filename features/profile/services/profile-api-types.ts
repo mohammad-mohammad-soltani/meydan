@@ -50,6 +50,8 @@ export type ApiUserProfile = {
   headline?: string;
   verified?: boolean;
   verified_speaker?: boolean;
+  /** Any speaker account, verified or not. */
+  is_speaker?: boolean;
   verified_official?: boolean;
   location_label?: string;
   province_id?: number;
@@ -107,6 +109,7 @@ export type ApiPublicUser = {
     display_name?: string;
     verified?: boolean;
     verified_speaker?: boolean;
+    is_speaker?: boolean;
     verified_official?: boolean;
   };
   profile: Omit<ApiUserProfile, "id" | "avatar_url" | "verified">;

@@ -49,6 +49,8 @@ export function mapUser(
 
     verifiedSpeaker: Boolean(speaker?.verified ?? profile.verified_speaker),
 
+    isSpeaker: Boolean(speaker || profile.is_speaker || profile.verified_speaker),
+
     verifiedOfficial: Boolean(profile.verified_official),
   };
 
