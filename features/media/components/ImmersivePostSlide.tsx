@@ -15,7 +15,6 @@ import {
   Heart,
   MessageCircle,
   Repeat2,
-  Share2,
   ChartNoAxesColumn,
   Send,
   BadgeCheck,
@@ -161,8 +160,8 @@ export function ImmersivePostSlide({
         </span>
       )}
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1 font-bold">
-          <span className="line-clamp-2 min-w-0 break-words leading-snug">{entry.author}</span>
+        <span className="flex min-w-0 items-center gap-1 font-bold">
+          <span className="min-w-0 truncate">{entry.author}</span>
           {entry.post?.author.verified && (
             <BadgeCheck size={17} className="shrink-0 text-sky-400" />
           )}
@@ -208,19 +207,6 @@ export function ImmersivePostSlide({
       )}
     </div>
   );
-  const shareButton = (extraClass = "") => entry.post ? (
-    <button
-      type="button"
-      className={`video-feed-button ${extraClass}`}
-      aria-label="اشتراک‌گذاری"
-      onClick={(event) => {
-        event.stopPropagation();
-        void state.share();
-      }}
-    >
-      <Share2 aria-hidden="true" />
-    </button>
-  ) : null;
   return (
     <div
       ref={slideRef}
@@ -256,7 +242,6 @@ export function ImmersivePostSlide({
         >
           <ArrowLeft aria-hidden="true" />
         </button>
-        {shareButton()}
       </div>
       <div className="viewer-media-stage">
         <div
@@ -330,7 +315,6 @@ export function ImmersivePostSlide({
               <ArrowLeft aria-hidden="true" />
             </button>
             {author}
-            {shareButton("viewer-portrait-back")}
           </div>
         </div>
       )}
