@@ -258,6 +258,8 @@ export function mapNarrativePost(
       views: item.stats?.views || 0,
     },
 
+    repostedAt: item.reposted_at,
+
     quote: mapQuotedNarrative(item.quoted_narrative),
 
     callToAction: item.initiative?.cta_label || undefined,

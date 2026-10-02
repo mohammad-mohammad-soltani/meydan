@@ -175,6 +175,9 @@ export type ApiNarrative = {
   };
 
   quoted_narrative?: ApiQuotedNarrative;
+
+  /** Set when the profile owner reposted this narrative rather than wrote it. */
+  reposted_at?: string;
 };
 
 export type ApiComment = {

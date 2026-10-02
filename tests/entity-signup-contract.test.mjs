@@ -72,3 +72,8 @@ test("own profile falls back to separate requests only when the endpoint is miss
   assert.match(service, /throw reason;/);
   assert.match(read("features/profile/services/profile-square-mapper.ts"), /kind: square\.kind/);
 });
+
+test("profile lists show reposts, labelled as reposted", () => {
+  assert.match(read("features/profile/services/profile-narrative-mappers.ts"), /repostedAt: item\.reposted_at/);
+  assert.match(read("features/profile/components/ProfileActivity.tsx"), /post\.repostedAt/);
+});

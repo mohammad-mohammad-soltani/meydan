@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { LoaderCircle, MessageCircle, Sparkles } from "lucide-react";
+import { LoaderCircle, MessageCircle, Repeat2, Sparkles } from "lucide-react";
 import { Fragment, useState } from "react";
 import { PostCard } from "@/features/feed/components/PostCard";
 import type { FeedPost } from "@/features/feed/types";
@@ -35,6 +35,7 @@ export function ProfileActivity({ posts, latestPageStart, replies, likedPostIds,
     {activeTab === "replies" ? <Replies items={replies} /> : <>
       {initialLoading && !isLoadingMore && !loadMoreFailed ? <p role="status" className="px-4 py-10 text-center text-xs text-foreground-subtle">در حال بارگذاری روایت‌ها…</p> : null}
       {visiblePosts.length === 0 && !hasMore && !initialLoading ? <EmptyState label={emptyLabel} /> : visiblePosts.map((post, index) => <Fragment key={post.id}>
+        {post.repostedAt ? <p className="flex items-center gap-1.5 px-4 pt-3 -mb-1 text-xs font-bold text-foreground-subtle"><Repeat2 aria-hidden="true" className="h-4 w-4" />بازنشر شده</p> : null}
         <PostCard post={post} liked={likedPostIds.has(post.id)} reposted={repostedPostIds.has(post.id)} joined={Boolean(post.viewerState?.joined)} onLike={() => onLike(post.id)} onRepost={() => onRepost(post.id)} onShare={() => void onShare(post)} onJoin={() => undefined} onOpenMedia={() => undefined} onDelete={() => onDelete(post)} />
         {index + 1 === prefetchIndex && hasMore ? <div ref={sentinelRef} className="h-px" aria-hidden="true" /> : null}
       </Fragment>)}

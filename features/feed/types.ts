@@ -61,6 +61,8 @@ export type FeedPost = {
     quotes?: number;
     views: number;
   };
+  /** Set on a profile list when the profile owner reposted this post instead of writing it. */
+  repostedAt?: string;
   /** Set when this post quotes another narrative. */
   quote?: QuotedPost;
   callToAction?: string;
