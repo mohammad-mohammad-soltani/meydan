@@ -56,6 +56,7 @@
 .viewer-top-author { position: absolute; z-index: 20;left:0 ; width: 100%; padding: 8px 16px 32px; background: linear-gradient(#0007, transparent); }
 .viewer-author { display: flex; align-items: center; gap: 12px; width: 100%; font-size: 16px; }
 .viewer-portrait-author-row { display: flex; width: 100%; align-items: center; gap: 8px; }
+.viewer-portrait-author-row .viewer-author { width: auto; flex: 1 1 0; min-width: 0; }
 .viewer-portrait-back { flex: none; background: transparent; }
 .viewer-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: none; }
 .viewer-follow { flex: none; border-radius: 999px; padding: 7px 16px; background: #202d35; font-size: 14px; font-weight: 700; white-space: nowrap; }
@@ -203,8 +204,8 @@
 /* Tapping the caption lifts the bottom panel to 55% of the height, fades the video to black and
    shows the whole text (scrollable); one tap anywhere outside restores the normal layout. */
 .viewer-caption-scrim { position: absolute; inset: 0; z-index: 25; background: linear-gradient(rgba(0,0,0,0) 0%, rgba(0,0,0,.28) 30%, rgba(0,0,0,.6) 55%, rgba(0,0,0,.9) 100%); animation: viewer-scrim-in 220ms ease both; }
-.viewer-bottom.is-caption-open { height: 55%; min-height: 0; max-height: 55%; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 12%, rgba(0,0,0,.45) 26%, rgba(0,0,0,.75) 42%, rgba(0,0,0,.92) 58%, #000 78%); padding-top: 84px; transition: height 220ms ease; }
+.viewer-bottom.is-caption-open { height: auto; min-height: 0; max-height: 55%; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 12%, rgba(0,0,0,.45) 26%, rgba(0,0,0,.75) 42%, rgba(0,0,0,.92) 58%, #000 78%); padding-top: 84px; transition: height 220ms ease; }
 .is-landscape .viewer-bottom.is-caption-open { min-height: 0; }
-.viewer-bottom.is-caption-open .viewer-caption { display: block; -webkit-line-clamp: unset; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; cursor: default; font-size: 15px; touch-action: pan-y; }
+.viewer-bottom.is-caption-open .viewer-caption { display: block; -webkit-line-clamp: unset; flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; cursor: default; font-size: 15px; touch-action: pan-y; }
 @keyframes viewer-scrim-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .viewer-chrome { transition: none; } .viewer-caption-scrim { animation: none; } .viewer-bottom.is-caption-open { transition: none; } }
