@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useState } from "react";
-import { ArrowRight, CalendarDays, Camera, Check, LoaderCircle, Mail, MapPin, Pencil, Share2, UserRoundPlus } from "lucide-react";
+import { ArrowRight, Bell, BellRing, CalendarDays, Camera, Check, LoaderCircle, Mail, MapPin, Pencil, Share2, UserRoundPlus } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
@@ -18,6 +18,9 @@ import { AccountBadges } from "@/components/shared/AccountBadges";
 
 type ProfileHeaderProps = {
   profile: ProfileDetails;
+  /** Cover bell: «اعلان‌های نمایه» for this account. */
+  isNotifying?: boolean;
+  onToggleNotify?: () => Promise<boolean | undefined>;
   canEdit?: boolean;
   isFollowing?: boolean;
   isFollowLoading?: boolean;
@@ -47,9 +50,15 @@ const glass = "grid h-10 w-10 place-items-center rounded-full border border-whit
  * avatar centred between the follower and post counts, centred identity and
  * bio, info chips, two equal actions and «دنبال‌شده توسط …».
  */
-export function ProfileHeader({ profile, canEdit = false, isFollowing = false, isFollowLoading = false, followStateReady = true, isChatOpening = false, onToggleFollow, onMessage, canInvite = false, inviteVenue = "" }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, canEdit = false, isFollowing = false, isFollowLoading = false, followStateReady = true, isChatOpening = false, onToggleFollow, onMessage, canInvite = false, inviteVenue = "" }: ProfileHeaderProps) {
   const { requireAuth, isAuthenticated } = useAuthGate();
   const [notice, setNotice] = useState("");
+  // Toasts fade on their own; before, a copied-link notice stayed on screen.
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 2400);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
   const [followedBy, setFollowedBy] = useState<FollowedBy | null>(null);
   const { identity, accountType, narratives } = profile;
   const kind = accountType === "square" ? profile.kind ?? "square" : "user";
@@ -100,6 +109,17 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
           </button>
           <div className="flex items-center gap-2">
             {canEdit ? <AdminNavLink isAuthenticated className={`${glass} !w-auto px-3 text-xs font-black lg:hidden`} /> : null}
+            {!canEdit && isAuthenticated && onToggleNotify ? (
+              <button
+                type="button"
+                aria-label="اعلان‌های نمایه"
+                aria-pressed={isNotifying}
+                onClick={() => void onToggleNotify().then((on) => { if (on !== undefined) setNotice(on ? "اعلان‌های نمایه فعال شد" : "اعلان‌های نمایه خاموش شد"); })}
+                className={isNotifying ? "grid h-10 w-10 place-items-center rounded-full bg-emphasis text-emphasis-foreground transition active:scale-95" : glass}
+              >
+                {isNotifying ? <BellRing className="h-[18px] w-[18px]" /> : <Bell className="h-[18px] w-[18px]" />}
+              </button>
+            ) : null}
             <button type="button" aria-label="اشتراک‌گذاری نمایه" onClick={() => void shareProfile(profile, setNotice)} className={glass}>
               <Share2 className="h-[18px] w-[18px]" />
             </button>

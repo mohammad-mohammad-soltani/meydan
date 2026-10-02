@@ -60,6 +60,20 @@ export async function getFollowingStates(actors: Array<{ type: ActorType; id: nu
   return { keys, hasFollowing };
 }
 
+/** Follow state plus the profile bell («اعلان‌های نمایه»), from one request. */
+export async function getActorFollowState(type: ActorType, value: string | number): Promise<{ following: boolean; notify: boolean }> {
+  const id = actorNumericId(value);
+  if (!id) throw new Error("Invalid actor id");
+  const result = await meydanApi<{ following: boolean; notify?: boolean }>(`/actors/${type}/${id}/follow-state`);
+  return { following: result.following === true, notify: result.notify === true };
+}
+
+export async function setActorNotify(type: ActorType, value: string | number, notify: boolean): Promise<void> {
+  const id = actorNumericId(value);
+  if (!id) throw new Error("Invalid actor id");
+  await meydanApi(`/actors/${type}/${id}/notify`, { method: notify ? "PUT" : "DELETE" });
+}
+
 export async function getActorFollowing(type: ActorType, value: string | number): Promise<boolean> {
   const id = actorNumericId(value);
   if (!id) throw new Error("Invalid actor id");

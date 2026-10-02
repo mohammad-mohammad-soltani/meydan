@@ -7,7 +7,7 @@ import { compactFa, isAuthApiError, meydanApi, plainText } from "@/lib/meydan-ap
 import { invalidateMe } from "@/lib/me-client";
 import { useShare } from "@/features/share/ShareProvider";
 import { toSharePost } from "@/features/share/to-share-post";
-import { getActorFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
+import { getActorFollowState, setActorFollowing, setActorNotify, type ActorType } from "@/lib/meydan-follow";
 import { actorKindOf, entityApiPath, isEntityKind } from "@/lib/profile-route";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
 import type { FeedPost } from "@/features/feed/types";
@@ -27,6 +27,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
   const [displayProfile, setDisplayProfile] = useState(profile);
   const [expandedSections, setExpandedSections] = useState<Set<ProfileSection>>(() => new Set(["about"]));
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isNotifying, setIsNotifying] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [followStateReady, setFollowStateReady] = useState(canManage);
   const [followRequiresAuth, setFollowRequiresAuth] = useState(false);
@@ -90,10 +91,11 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       return () => { active = false; };
     }
     let active = true;
-    void getActorFollowing(targetActorType, profile.actorId)
-      .then((following) => {
+    void getActorFollowState(targetActorType, profile.actorId)
+      .then(({ following, notify }) => {
         if (!active) return;
         setIsFollowing(following);
+        setIsNotifying(notify);
         setFollowRequiresAuth(false);
       })
       .catch((reason) => {
@@ -129,6 +131,21 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
       if (isAuthApiError(reason)) redirectToLogin();
     } finally {
       setIsFollowLoading(false);
+    }
+  };
+
+  /** The cover bell: notify me when this account publishes. */
+  const toggleNotify = async () => {
+    if (canManage || !requireAuth()) return;
+    const next = !isNotifying;
+    setIsNotifying(next);
+    try {
+      await setActorNotify(targetActorType, profile.actorId, next);
+      return next;
+    } catch (reason) {
+      setIsNotifying(!next);
+      if (isAuthApiError(reason)) redirectToLogin();
+      return !next;
     }
   };
 
@@ -401,6 +418,8 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     selectedTab,
     expandedSections,
     isFollowing,
+    isNotifying,
+    toggleNotify,
     isFollowLoading,
     followStateReady,
     isManagementOpen,

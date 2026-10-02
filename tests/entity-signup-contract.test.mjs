@@ -143,3 +143,9 @@ test("every post surface shares through the one share sheet, with the story stud
   assert.match(read("app/(app)/layout.tsx"), /<ShareProvider>/);
   assert.match(read("app/(app)/bookmarks/page.tsx"), /\/me\/saved-narratives/);
 });
+
+test("the profile cover bell subscribes to an account's new posts from the follow-state read", () => {
+  assert.match(read("lib/meydan-follow.ts"), /\/notify`, \{ method: notify \? "PUT" : "DELETE" \}/);
+  assert.match(read("features/profile/hooks/useProfile.ts"), /getActorFollowState\(/);
+  assert.match(read("features/profile/components/ProfileHeader.tsx"), /aria-label="اعلان‌های نمایه"/);
+});

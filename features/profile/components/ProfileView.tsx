@@ -32,7 +32,7 @@ export function ProfileView({ initialProfile, canManage = true, canInvite = fals
   return (
     <section id="view-combined-profile" className="min-h-dvh bg-background pb-20 text-foreground">
       <div className="mx-auto w-full max-w-2xl bg-background">
-        <ProfileHeader profile={profile.profile} canEdit={canManage} isFollowing={profile.isFollowing} isFollowLoading={profile.isFollowLoading} followStateReady={profile.followStateReady} isChatOpening={profile.isChatOpening} onToggleFollow={() => void profile.toggleFollowing()} onMessage={() => void profile.openChat()} canInvite={canInvite} inviteVenue={inviteVenue} />
+        <ProfileHeader profile={profile.profile} isNotifying={profile.isNotifying} onToggleNotify={profile.toggleNotify} canEdit={canManage} isFollowing={profile.isFollowing} isFollowLoading={profile.isFollowLoading} followStateReady={profile.followStateReady} isChatOpening={profile.isChatOpening} onToggleFollow={() => void profile.toggleFollowing()} onMessage={() => void profile.openChat()} canInvite={canInvite} inviteVenue={inviteVenue} />
         {profile.chatError ? <p role="alert" className="border-b border-divider bg-danger-surface px-4 py-2 text-xs text-danger-foreground">{profile.chatError}</p> : null}
         {isSquareAccount ? <SquareLocationCard profile={profile.profile} /> : null}
         {isSquareAccount ? <SquareSchedule items={profile.profile.schedule} canManage={canManage} /> : null}
