@@ -23,10 +23,15 @@ export function ImageCropDialog({
 }) {
   const [url, setUrl] = useState("");
   const frame = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(
-    null,
-  );
+  // Active touches/pointers on the frame: one drags the image, two pinch-zoom it.
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<
+    | { kind: "drag"; x: number; y: number; px: number; py: number }
+    | { kind: "pinch"; zoom: number; dist: number; x: number; y: number; cx: number; cy: number }
+    | null
+  >(null);
   const [ratio, setRatio] = useState(1);
+  const MAX_ZOOM = 4;
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(1);
   const [x, setX] = useState(0);
@@ -48,21 +53,66 @@ export function ImageCropDialog({
     return () => URL.revokeObjectURL(next);
   }, [file]);
   const clamp = (v: number, max: number) => Math.max(-max, Math.min(max, v));
+  const limits = (z: number) => ({
+    mx: Math.max(0, (baseWidth * z - 100) / 2),
+    my: Math.max(0, (baseHeight * z - 100) / 2),
+  });
+  const applyView = (nextZoom: number, nextX: number, nextY: number) => {
+    const z = Math.max(1, Math.min(MAX_ZOOM, nextZoom));
+    const { mx, my } = limits(z);
+    setZoom(z);
+    setX(clamp(nextX, mx));
+    setY(clamp(nextY, my));
+  };
+  const beginGesture = () => {
+    const points = Array.from(pointers.current.values());
+    if (points.length >= 2) {
+      const [a, b] = points;
+      gesture.current = {
+        kind: "pinch",
+        zoom,
+        dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+        x,
+        y,
+        cx: (a.x + b.x) / 2,
+        cy: (a.y + b.y) / 2,
+      };
+    } else if (points.length === 1) {
+      gesture.current = { kind: "drag", x, y, px: points[0].x, py: points[0].y };
+    } else {
+      gesture.current = null;
+    }
+  };
   const move = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!drag.current || !frame.current) return;
+    if (!frame.current || !pointers.current.has(event.pointerId)) return;
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const state = gesture.current;
+    if (!state) return;
     const box = frame.current.getBoundingClientRect();
-    setX(
-      clamp(
-        drag.current.x + ((event.clientX - drag.current.px) / box.width) * 100,
-        maxX,
-      ),
+    if (state.kind === "drag") {
+      applyView(
+        zoom,
+        state.x + ((event.clientX - state.px) / box.width) * 100,
+        state.y + ((event.clientY - state.py) / box.height) * 100,
+      );
+      return;
+    }
+    const [a, b] = Array.from(pointers.current.values());
+    if (!a || !b) return;
+    const dist = Math.hypot(a.x - b.x, a.y - b.y);
+    const cx = (a.x + b.x) / 2;
+    const cy = (a.y + b.y) / 2;
+    applyView(
+      state.zoom * (dist / state.dist),
+      state.x + ((cx - state.cx) / box.width) * 100,
+      state.y + ((cy - state.cy) / box.height) * 100,
     );
-    setY(
-      clamp(
-        drag.current.y + ((event.clientY - drag.current.py) / box.height) * 100,
-        maxY,
-      ),
-    );
+  };
+  const release = (event: ReactPointerEvent<HTMLDivElement>) => {
+    pointers.current.delete(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    beginGesture();
   };
   const apply = async () => {
     setSaving(true);
@@ -147,16 +197,16 @@ export function ImageCropDialog({
             ref={frame}
             className={`relative touch-none overflow-hidden border-4 border-info shadow-lg ${purpose === "avatar" ? "h-72 w-72 rounded-full" : "aspect-[3/1] w-full rounded-sm"}`}
             onPointerDown={(event) => {
-              drag.current = { x, y, px: event.clientX, py: event.clientY };
+              pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
               event.currentTarget.setPointerCapture(event.pointerId);
+              beginGesture();
             }}
             onPointerMove={move}
-            onPointerUp={(event) => {
-              drag.current = null;
-              event.currentTarget.releasePointerCapture(event.pointerId);
-            }}
-            onPointerCancel={() => {
-              drag.current = null;
+            onPointerUp={release}
+            onPointerCancel={release}
+            onWheel={(event) => {
+              // Trackpad pinch (ctrl+wheel) and mouse wheel zoom on desktop.
+              applyView(zoom * Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.002)), x, y);
             }}
           >
             <img
@@ -178,7 +228,7 @@ export function ImageCropDialog({
         </div>
         <div className="shrink-0 border-t border-divider bg-surface px-5 py-5">
           <p className="mb-3 text-center text-xs text-foreground-subtle">
-            برای جابه‌جایی، تصویر را بکشید.
+            برای جابه‌جایی، تصویر را بکشید؛ برای بزرگ‌نمایی با دو انگشت بکشید.
           </p>
           <div className="flex items-center gap-3">
             <Minus className="h-4 w-4 text-icon-muted" />
@@ -186,19 +236,10 @@ export function ImageCropDialog({
               aria-label="بزرگ‌نمایی"
               type="range"
               min="1"
-              max="3"
+              max={MAX_ZOOM}
               step=".05"
               value={zoom}
-              onChange={(event) => {
-                const next = Number(event.target.value);
-                setZoom(next);
-                setX((value) =>
-                  clamp(value, Math.max(0, (baseWidth * next - 100) / 2)),
-                );
-                setY((value) =>
-                  clamp(value, Math.max(0, (baseHeight * next - 100) / 2)),
-                );
-              }}
+              onChange={(event) => applyView(Number(event.target.value), x, y)}
               className="w-full accent-info"
             />
             <Plus className="h-4 w-4 text-icon-muted" />
