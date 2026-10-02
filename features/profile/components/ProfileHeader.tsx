@@ -53,13 +53,9 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
             <div className="mt-3 flex min-w-0 flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
               {canEdit ? <><AdminNavLink isAuthenticated className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-brand-border bg-brand-muted px-3 text-xs font-black text-brand hover:bg-selected lg:hidden" /><Link href={"/profile/edit" as Route} className="inline-flex min-h-10 items-center rounded-pill border border-border px-4 text-xs font-black text-foreground hover:bg-hover">ویرایش پروفایل</Link></> : (
                 <>
-                  <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-2.5 text-xs sm:px-3 font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
+                  <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-3 text-xs font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
                     {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                     پیام
-                  </button>
-                  <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border px-2.5 text-xs sm:px-4 font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
-                    {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
-                    {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
                   </button>
                   {canBeInvited ? (
                     <SpeakerInviteButton
@@ -72,7 +68,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
                       canInvite={canInvite}
                       venue={inviteVenue}
                       size="md"
-                      className="!px-2.5 sm:!px-4"
+                      className="!px-3 sm:!px-4"
                     />
                   ) : null}
                 </>
@@ -80,7 +76,15 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
               <ProfileActionsMenu profile={profile} canEdit={canEdit} onNotice={setNotice} />
             </div>
           </div>
-          <h2 className="mt-3 flex min-w-0 items-center gap-1.5 text-xl font-black leading-8 text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /><OfficialBadge official={identity.verifiedOfficial} size="lg" /></h2>
+          <div className="mt-3 flex items-center gap-3">
+            <h2 className="flex min-w-0 items-center gap-1.5 text-xl font-black leading-8 text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /><OfficialBadge official={identity.verifiedOfficial} size="lg" /></h2>
+            {!canEdit ? (
+              <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border px-2.5 text-xs sm:px-4 font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
+                  {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
+                {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
+              </button>
+            ) : null}
+          </div>
           
         </div>
       </div>
