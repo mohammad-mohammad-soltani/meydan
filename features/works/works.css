@@ -1207,7 +1207,7 @@
   --tc:var(--s2)
 }
 .works-feature .t-poll {
-  --tc:#8b5cf6
+  --tc:var(--accent)
 }
 .works-feature .t-note {
   --tc:var(--faint)
@@ -1297,8 +1297,8 @@
   color:#fff
 }
 .works-feature .popt.mine .rd {
-  background:#8b5cf6;
-  border-color:#8b5cf6
+  background:var(--accent);
+  border-color:var(--accent)
 }
 .works-feature .popt .bar {
   grid-column:2/4;
@@ -1310,7 +1310,7 @@
 .works-feature .popt .bar i {
   display:block;
   height:100%;
-  background:#8b5cf6;
+  background:var(--accent);
   border-radius:9px;
   transition:width .5s
 }
