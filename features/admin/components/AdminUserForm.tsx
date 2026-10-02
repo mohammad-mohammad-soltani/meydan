@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Check, LoaderCircle, Save } from "lucide-react";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { AdminField, fieldClass } from "./AdminField";
+import { HandleInput } from "@/components/shared/HandleInput";
 import { MediaPickerField } from "./MediaPickerField";
 import { ChannelFields } from "./ChannelFields";
 import { AdminSuccessToast } from "./AdminSuccessToast";
@@ -23,7 +24,7 @@ const emptySquare: SquareFields = { name: "", address: "", province_id: 0, city_
 export function AdminUserForm({ user, roles, created = false, initialRole }: { user?: AdminUser; roles: AdminUserRole[]; created?: boolean; initialRole?: string }) {
   const router = useRouter();
   const [form, setForm] = useState<UserInput>({
-    full_name: user?.full_name ?? "", phone: user?.phone ?? "", email: user?.email ?? "",
+    full_name: user?.full_name ?? "", handle: user?.handle ?? "", phone: user?.phone ?? "", email: user?.email ?? "",
     role: user?.role ?? initialRole ?? "meydan_user", headline: user?.headline ?? "", about: user?.about ?? "",
     location_label: user?.location_label ?? "", province_id: user?.province_id ?? null,
     city_id: user?.city_id ?? null, avatar_media_id: user?.avatar_media_id ?? null,
@@ -83,6 +84,9 @@ export function AdminUserForm({ user, roles, created = false, initialRole }: { u
         <h2 className="mb-5 text-base font-black">اطلاعات حساب</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {textField("full_name", "نام کامل", true)}
+          <AdminField label="شناسه کاربری" htmlFor="user-handle" error={fieldErrors.handle} hint="اختیاری؛ اگر خالی بماند از نام ساخته می‌شود.">
+            <HandleInput id="user-handle" value={form.handle ?? ""} onChange={(handle) => set("handle", handle)} nameHint={user ? "" : form.full_name ?? ""} required={false} exceptUserId={user?.id ?? null} serverError={fieldErrors.handle} inputClassName={fieldClass} />
+          </AdminField>
           {textField("phone", "شماره موبایل ورود", true)}
           {textField("email", "ایمیل")}
           <AdminField label="نقش" htmlFor="user-role" error={fieldErrors.role} required><select id="user-role" className={fieldClass} value={form.role} onChange={(event) => set("role", event.target.value)}>{roles.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}</select></AdminField>

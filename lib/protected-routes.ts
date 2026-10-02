@@ -16,6 +16,7 @@ export const PROTECTED_ROUTE_PREFIXES = [
   "/speaker-invitations",
   "/compose",
   "/chat",
+  "/works",
   "/profile",
   // The admin panel needs *a* session to be rendered at all; the role check
   // that rejects non-administrators lives in `app/(app)/admin/layout.tsx`,

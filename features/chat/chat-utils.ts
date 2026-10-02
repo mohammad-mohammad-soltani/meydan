@@ -112,6 +112,7 @@ export function chatContactHref(conversationId: string | number): string {
 }
 
 export function notificationKind(type?: string | null): ChatNotificationKind {
+  if (String(type || "").startsWith("work_")) return "work";
   switch (String(type || "").toLowerCase()) {
     case "like":
       return "like";
@@ -206,9 +207,9 @@ const NOTIFICATION_PHRASES: Record<string, string> = {
   comment: "{actor} روی روایت شما نظر گذاشت",
   comment_reply: "{actor} به نظر شما پاسخ داد",
   mention: "{actor} شما را در یک روایت نام برد",
-  initiative_join: "{actor} به کار خوب شما ملحق شد",
+  initiative_join: "{actor} به کار شما ملحق شد",
   initiative_update: "کاری که در آن عضو هستید به‌روزرسانی شد",
-  initiative_join_confirmed: "عضویت شما در کار خوب ثبت شد",
+  initiative_join_confirmed: "عضویت شما در کار ثبت شد",
   media_reflection_added: "یک بازنشر رسانه‌ای برای روایت شما ثبت شد",
   square_verified: "میدان شما تأیید شد",
   square_rejected: "درخواست میدان شما رد شد",
@@ -217,6 +218,19 @@ const NOTIFICATION_PHRASES: Record<string, string> = {
   speaker_invitation: "{actor} شما را برای سخنرانی دعوت کرده است",
   speaker_invitation_accepted: "{actor} دعوت سخنرانی شما را پذیرفت",
   speaker_invitation_rejected: "{actor} دعوت سخنرانی شما را نپذیرفت",
+  work_message_updated: "{actor} یک پیام در کار را به‌روز کرد",
+  work_task_created: "{actor} یک وظیفه جدید در کار گذاشت",
+  work_task_assigned: "{actor} شما را مسئول یک وظیفه کرد",
+  work_task_status: "{actor} وضعیت وظیفه را تغییر داد",
+  work_task_reminder: "{actor} انجام وظیفه را یادآوری کرد",
+  work_meeting_created: "{actor} یک جلسه ثبت کرد",
+  work_announcement: "{actor} یک اعلان فرستاد",
+  work_announcement_seen: "{actor} اعلان شما را دید",
+  work_announcement_reminder: "{actor} دیدن اعلان را یادآوری کرد",
+  work_poll_created: "{actor} یک نظرسنجی گذاشت",
+  work_mention: "{actor} شما را در کار نام برد",
+  work_member_joined: "{actor} به کار پیوست",
+  work_role_changed: "نقش شما در کار تغییر کرد",
   content_published: "محتوای جدیدی منتشر شد",
 };
 

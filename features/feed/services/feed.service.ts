@@ -35,6 +35,8 @@ type ApiNarrative = {
   attachments?: ApiAttachment[];
   tags?: string[];
   initiative?: {
+    work_id?: string | null;
+    work_closed?: boolean;
     id?: number;
     cta_label?: string;
     participant_count?: number;
@@ -138,6 +140,8 @@ function mapNarrative(item: ApiNarrative): FeedPost {
       verifiedOfficial: Boolean(item.author?.verified_official),
     },
     initiativeId: item.initiative?.id,
+    initiativeWorkId: item.initiative?.work_id,
+    initiativeClosed: Boolean(item.initiative?.work_closed),
     initiativeParticipantCount: item.initiative?.participant_count,
     viewerState: {
       liked: Boolean(item.viewer_state?.liked),

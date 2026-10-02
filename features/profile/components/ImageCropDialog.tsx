@@ -4,7 +4,6 @@
 
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -22,7 +21,7 @@ export function ImageCropDialog({
   onCancel: () => void;
   onApply: (file: File) => Promise<void>;
 }) {
-  const url = useMemo(() => URL.createObjectURL(file), [file]);
+  const [url, setUrl] = useState("");
   const frame = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(
     null,
@@ -40,7 +39,14 @@ export function ImageCropDialog({
   const maxY = Math.max(0, (baseHeight * zoom - 100) / 2);
   const width = (size.width * baseWidth * zoom) / 100;
   const height = (size.height * baseHeight * zoom) / 100;
-  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+  // Created inside the effect (not memoised) so React StrictMode's simulated unmount
+  // cannot revoke a URL the re-mounted dialog is still showing.
+  useEffect(() => {
+    const next = URL.createObjectURL(file);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- object URLs must be created and revoked together with the effect.
+    setUrl(next);
+    return () => URL.revokeObjectURL(next);
+  }, [file]);
   const clamp = (v: number, max: number) => Math.max(-max, Math.min(max, v));
   const move = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!drag.current || !frame.current) return;
@@ -61,6 +67,7 @@ export function ImageCropDialog({
   const apply = async () => {
     setSaving(true);
     try {
+      if (!url) return;
       const image = new Image();
       image.src = url;
       await image.decode();
@@ -130,7 +137,7 @@ export function ImageCropDialog({
         </header>
         <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-5">
           <img
-            src={url}
+            src={url || undefined}
             alt=""
             aria-hidden="true"
             className="pointer-events-none absolute max-w-none opacity-25"
@@ -153,7 +160,7 @@ export function ImageCropDialog({
             }}
           >
             <img
-              src={url}
+              src={url || undefined}
               alt="برای جابه‌جایی تصویر، آن را بکشید"
               draggable={false}
               onLoad={(event) => {

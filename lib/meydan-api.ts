@@ -78,6 +78,8 @@ const FIELD_REASON_MESSAGES: Record<string, string> = {
   invalid_or_taken: "این مقدار معتبر نیست یا قبلاً ثبت شده است.",
   not_eligible: "این حساب واجد شرایط نیست.",
   too_long: "مقدار وارد‌شده بیش از حد بلند است.",
+  length: "شناسه کاربری باید بین ۳ تا ۳۰ نویسه باشد.",
+  reserved: "این شناسه کاربری قابل استفاده نیست.",
 };
 
 /**

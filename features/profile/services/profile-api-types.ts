@@ -43,6 +43,7 @@ export type ApiSquare = {
 
 export type ApiUserProfile = {
   id: number;
+  handle?: string;
   full_name: string;
   avatar_url?: string;
   cover_url?: string;
@@ -145,6 +146,8 @@ export type ApiNarrative = {
   }>;
 
   initiative?: {
+    work_id?: string | null;
+    work_closed?: boolean;
     id?: number;
     cta_label?: string;
     viewer_state?: {

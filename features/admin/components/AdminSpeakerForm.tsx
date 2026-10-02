@@ -9,6 +9,7 @@ import Link from "next/link";
 import { LoaderCircle, Plus, Save, Trash2 } from "lucide-react";
 import { AdminCheckbox, AdminField, fieldClass } from "./AdminField";
 import { AdminDialog } from "./AdminDialog";
+import { HandleInput } from "@/components/shared/HandleInput";
 import { MediaPickerField } from "./MediaPickerField";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { AdminFieldMessage } from "./AdminFieldMessage";
@@ -76,6 +77,7 @@ export function AdminSpeakerForm({
   const [userId, setUserId] = useState<number | null>(speaker?.userId ?? null);
   const [userQuery, setUserQuery] = useState("");
   const [accountFullName, setAccountFullName] = useState("");
+  const [handle, setHandle] = useState(speaker?.handle ?? "");
   const [accountPhone, setAccountPhone] = useState("");
   const [accountEmail, setAccountEmail] = useState("");
   const [accountAbout, setAccountAbout] = useState("");
@@ -166,6 +168,7 @@ export function AdminSpeakerForm({
   );
 
   const input: SpeakerProfileInput = {
+    handle,
     avatarMediaId,
     verified,
     cities: cityIds,
@@ -604,12 +607,24 @@ export function AdminSpeakerForm({
         </AdminDisclosureSection>
 
         <AdminDisclosureSection
-          title="تصویر و نشان تأیید"
+          title="شناسه، تصویر و نشان تأیید"
           className="admin-speaker-verification"
-          defaultOpen={mode !== "edit" || Boolean(speaker?.avatarUrl)}
-          hasError={Boolean(errors.fields.avatar_media_id)}
+          defaultOpen
+          hasError={Boolean(errors.fields.avatar_media_id || errors.fields.handle)}
         >
           <div className="space-y-4">
+            <AdminField label="شناسه کاربری" htmlFor="speaker-handle" error={errors.fields.handle} hint="اختیاری؛ اگر خالی بماند از نام ساخته می‌شود.">
+              <HandleInput
+                id="speaker-handle"
+                value={handle}
+                onChange={setHandle}
+                nameHint={mode === "new-account" ? accountFullName : ""}
+                required={false}
+                exceptUserId={speaker?.userId ?? userId}
+                serverError={errors.fields.handle}
+                inputClassName={fieldClass}
+              />
+            </AdminField>
             <MediaPickerField id="speaker-avatar" label="تصویر سخنران" hint="اگر فایلی انتخاب نکنید، تصویر فعلی تغییر نمی‌کند." mediaId={avatarMediaId} currentUrl={speaker?.avatarUrl} onChange={setAvatarMediaId} onBusyChange={setUploadBusy} error={errors.fields.avatar_media_id} />
             <AdminCheckbox id="speaker-verified" label="دارای نشان تأیید" description="نشان تأیید در نمایه عمومی سخنران نمایش داده می‌شود." checked={verified} onChange={setVerified} />
           </div>

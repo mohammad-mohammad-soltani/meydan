@@ -345,6 +345,7 @@ export function validateSquareCreate(input: SquareCreateInput): Record<string, s
 
 export type SquareFormState = {
   squareName: string;
+  handle: string;
   description: string;
   contactName: string;
   contactPhone: string;
@@ -373,6 +374,7 @@ export type SquareFormState = {
 export function buildSquareUpdate(input: SquareFormState): SquareUpdateInput {
   const patch: SquareUpdateInput = {
     squareName: input.squareName,
+    handle: input.handle,
     description: input.description,
     contactName: input.contactName,
     contactPhone: input.contactPhone,

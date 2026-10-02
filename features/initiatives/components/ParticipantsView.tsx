@@ -81,7 +81,7 @@ export function ParticipantsView({
           <ArrowRight className="h-5 w-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-sm font-black leading-tight text-foreground">افراد پیوسته به این کار خوب</h1>
+          <h1 className="truncate text-sm font-black leading-tight text-foreground">افراد پیوسته به این کار</h1>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             {participantCount.toLocaleString("fa-IR")} نفر
           </p>
@@ -95,9 +95,9 @@ export function ParticipantsView({
               <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-warning-surface text-warning">
                 <HandHeart aria-hidden="true" className="h-6 w-6" />
               </div>
-              <p className="mt-4 text-sm font-bold text-foreground">هنوز کسی به این کار خوب نپیوسته است</p>
+              <p className="mt-4 text-sm font-bold text-foreground">هنوز کسی به این کار نپیوسته است</p>
               <p className="mx-auto mt-2 max-w-xs text-xs leading-6 text-foreground-subtle">
-                اولین نفری باشید که به این کار خوب می‌پیوندد.
+                اولین نفری باشید که به این کار می‌پیوندد.
               </p>
             </div>
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { HandleInput } from "@/components/shared/HandleInput";
 import { AdminEditor } from "./AdminEditor";
 
 import { useMemo, useState } from "react";
@@ -57,6 +58,7 @@ export function AdminSquareCreateForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [squareName, setSquareName] = useState("");
+  const [handle, setHandle] = useState("");
   const [description, setDescription] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -76,6 +78,7 @@ export function AdminSquareCreateForm() {
       phone,
       fullName,
       email,
+      handle,
       squareName,
       description,
       contactName,
@@ -101,6 +104,7 @@ export function AdminSquareCreateForm() {
       email,
       fullName,
       geo,
+      handle,
       phone,
       squareName,
       startDate,
@@ -234,6 +238,23 @@ export function AdminSquareCreateForm() {
               aria-invalid={fieldErrors.square_name ? true : undefined}
               onChange={(event) => setSquareName(event.target.value)}
               className={fieldClass}
+            />
+          </AdminField>
+
+          <AdminField
+            label="شناسه کاربری"
+            htmlFor="square-handle"
+            error={fieldErrors.handle}
+            hint="اختیاری؛ اگر خالی بماند از نام میدان ساخته می‌شود."
+          >
+            <HandleInput
+              id="square-handle"
+              value={handle}
+              onChange={setHandle}
+              nameHint={squareName}
+              required={false}
+              serverError={fieldErrors.handle}
+              inputClassName={fieldClass}
             />
           </AdminField>
 

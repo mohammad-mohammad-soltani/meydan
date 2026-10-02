@@ -50,6 +50,7 @@ export type Square = {
   ownerUserId: number | null;
   ownerName: string | null;
   adminNote: string;
+  handle: string;
   eitaaChannel: string;
   baleChannel: string;
   location: SquareLocation | null;
@@ -86,6 +87,8 @@ export type SquareCreateInput = {
   phone: string;
   fullName: string;
   email: string;
+  /** Optional: blank lets the server derive one from the square name. */
+  handle: string;
   squareName: string;
   description: string;
   contactName: string;
@@ -105,6 +108,7 @@ export type SquareCreateInput = {
 
 export type SquareUpdateInput = {
   squareName?: string;
+  handle?: string;
   description?: string;
   contactName?: string;
   contactPhone?: string;
@@ -184,6 +188,8 @@ export type LinkableUser = {
 };
 
 export type SpeakerProfileInput = {
+  /** Blank keeps the current handle (or derives one on creation). */
+  handle: string;
   avatarMediaId: number | null;
   verified: boolean;
   cities: number[];

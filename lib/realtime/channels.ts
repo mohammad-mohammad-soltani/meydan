@@ -26,6 +26,11 @@ export const USER_CHANNEL_EVENTS = [
   "notification:created",
   "notification:updated",
   "presence:changed",
+  "work:message:created",
+  "work:message:updated",
+  "work:message:deleted",
+  "work:updated",
+  "work:read",
 ] as const;
 
 export type RealtimeEventName = (typeof USER_CHANNEL_EVENTS)[number];

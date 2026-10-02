@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { HandleInput } from "@/components/shared/HandleInput";
 import type { ClipboardEvent, FormEvent, KeyboardEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -209,6 +210,8 @@ export default function AuthPage() {
   const [registrationToken, setRegistrationToken] = useState("");
   const [accountType, setAccountType] = useState<AccountType>("user");
   const [name, setName] = useState("");
+  const [handle, setHandle] = useState("");
+  const [handleValid, setHandleValid] = useState(false);
   const [isStudentOrSeminarian, setIsStudentOrSeminarian] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -383,11 +386,12 @@ export default function AuthPage() {
 
       let refreshToken: string | undefined;
       if (accountType === "user") {
-        const result = await api<{ refresh_token?: string }>("register-user", { ...base, full_name: name, is_student_or_seminarian: isStudentOrSeminarian });
+        const result = await api<{ refresh_token?: string }>("register-user", { ...base, handle, full_name: name, is_student_or_seminarian: isStudentOrSeminarian });
         refreshToken = result.refresh_token;
       } else if (location) {
         const result = await api<{ refresh_token?: string }>("register-square", {
           ...base,
+          handle,
           square_name: name,
           address: location.address,
           latitude: location.latitude,
@@ -640,6 +644,18 @@ export default function AuthPage() {
                         />
                       </Field>
 
+                      <Field label="شناسه کاربری" hint="در همه‌جا با @ نمایش داده می‌شود">
+                        <HandleInput
+                          id="register-handle"
+                          value={handle}
+                          onChange={setHandle}
+                          nameHint={name}
+                          autoSuggest
+                          onValidityChange={setHandleValid}
+                          inputClassName={inputClass}
+                        />
+                      </Field>
+
                       {accountType === "user" ? (
                         <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface p-3.5 text-sm font-black text-foreground transition-colors hover:bg-hover has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring">
                           <input type="checkbox" checked={isStudentOrSeminarian} onChange={(event) => setIsStudentOrSeminarian(event.target.checked)} className="peer sr-only" />
@@ -678,7 +694,7 @@ export default function AuthPage() {
                         />
                       )}
 
-                      <button disabled={pending || !name.trim() || provinceId === null || cityId === null || !locationReady} className={primaryButtonClass}>
+                      <button disabled={pending || !name.trim() || !handleValid || provinceId === null || cityId === null || !locationReady} className={primaryButtonClass}>
                         {pending ? <LoaderCircle aria-hidden="true" className="h-4.5 w-4.5 animate-spin" /> : <ArrowLeft aria-hidden="true" className="h-4.5 w-4.5" />}
                         {pending ? "در حال ساخت حساب…" : "تکمیل ثبت‌نام و ورود"}
                       </button>

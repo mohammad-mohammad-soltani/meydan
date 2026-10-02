@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ParticipantsView } from "@/features/initiatives/components/ParticipantsView";
 import { getInitiativeParticipants } from "@/features/initiatives/services/initiatives.service";
 
-export const metadata: Metadata = { title: "افراد پیوسته به کار خوب | نقش من" };
+export const metadata: Metadata = { title: "افراد پیوسته به کار | نقش من" };
 export const dynamic = "force-dynamic";
 
 type ParticipantsPageProps = {

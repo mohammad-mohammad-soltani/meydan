@@ -20,7 +20,7 @@ const filters: FilterItem[] = [
   },
   {
     id: "initiatives",
-    label: "کار خوب",
+    label: "کارها",
     icon: Sparkles,
   },
   {

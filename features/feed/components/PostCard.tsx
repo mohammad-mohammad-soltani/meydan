@@ -263,6 +263,8 @@ export function PostCard({
         {post.initiativeId ? (
           <ConnectedGoodActionCard
             initiativeId={post.initiativeId}
+            initialWorkId={post.initiativeWorkId}
+            initialClosed={post.initiativeClosed}
             initialJoined={joined}
             initialParticipantCount={post.initiativeParticipantCount}
             label={post.callToAction ?? "پیوستن"}
@@ -429,6 +431,8 @@ export function PostCard({
           {post.initiativeId ? (
             <ConnectedGoodActionCard
               initiativeId={post.initiativeId}
+            initialWorkId={post.initiativeWorkId}
+            initialClosed={post.initiativeClosed}
               initialJoined={joined}
               initialParticipantCount={post.initiativeParticipantCount}
               label={post.callToAction ?? "پیوستن"}

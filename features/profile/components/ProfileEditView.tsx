@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { CalendarDays, Camera, ChevronLeft, LoaderCircle, MapPin, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { meydanApi } from "@/lib/meydan-api";
+import { MeydanApiError, fieldErrorMessage, meydanApi } from "@/lib/meydan-api";
+import { HandleInput } from "@/components/shared/HandleInput";
 import { getCityMap } from "@/features/map/services/map.service";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 import { ImageCropDialog } from "./ImageCropDialog";
@@ -20,6 +21,10 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
   const isSquare = profile.accountType === "square";
 
   const [name, setName] = useState(profile.identity.name);
+  const initialHandle = /^(?:user|square)_\d+$/.test(profile.identity.handle) ? "" : profile.identity.handle;
+  const [handle, setHandle] = useState(initialHandle);
+  const [handleValid, setHandleValid] = useState(true);
+  const [handleError, setHandleError] = useState<string | null>(null);
   const [bio, setBio] = useState(profile.about);
   const [headline, setHeadline] = useState(profile.identity.subtitle);
   const [skills, setSkills] = useState(profile.skills.join("، "));
@@ -127,6 +132,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             name,
+            handle,
             subtitle: headline,
             profile_about: bio,
             profile_skills: skillList,
@@ -154,6 +160,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             full_name: name,
+            handle,
             headline,
             about: bio,
             skills: skillList,
@@ -165,8 +172,12 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
       router.push("/profile");
       router.refresh();
     } catch (reason) {
+      const handleReason = reason instanceof MeydanApiError ? reason.fields?.handle : undefined;
+      if (handleReason) setHandleError(fieldErrorMessage(handleReason));
       setError(
-        reason instanceof Error && reason.message === "unresolved_location"
+        handleReason
+          ? "شناسه کاربری معتبر نیست."
+          : reason instanceof Error && reason.message === "unresolved_location"
           ? "برای این نقطه شهر یا استان معتبر پیدا نشد؛ نقطه‌ی دیگری را انتخاب کنید."
           : "ذخیره‌سازی انجام نشد.",
       );
@@ -198,7 +209,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           <button
             type="button"
             onClick={() => void save()}
-            disabled={saving}
+            disabled={saving || !handleValid}
             className="min-h-9 rounded-pill bg-foreground px-4 text-xs font-black text-background"
           >
             {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : "ذخیره"}
@@ -260,6 +271,19 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           <Field label="نام">
             <input value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
+          <div>
+            <span className="mb-1.5 block px-1 text-xs text-foreground-subtle">شناسه کاربری</span>
+            <HandleInput
+              id="profile-handle"
+              value={handle}
+              onChange={(value) => { setHandle(value); setHandleError(null); }}
+              nameHint={initialHandle ? "" : name}
+              autoSuggest={!initialHandle}
+              onValidityChange={setHandleValid}
+              serverError={handleError}
+              inputClassName="min-h-12 w-full rounded-control border border-input-border bg-input px-3 text-sm"
+            />
+          </div>
           <Field label="معرفی کوتاه">
             <input value={headline} onChange={(e) => setHeadline(e.target.value)} />
           </Field>

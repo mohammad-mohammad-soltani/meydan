@@ -107,7 +107,7 @@ test("builds a real actor sentence for every user-generated notification type", 
     ["comment", "محمد محمد سلطانی روی روایت شما نظر گذاشت"],
     ["comment_reply", "محمد محمد سلطانی به نظر شما پاسخ داد"],
     ["mention", "محمد محمد سلطانی شما را در یک روایت نام برد"],
-    ["initiative_join", "محمد محمد سلطانی به کار خوب شما ملحق شد"],
+    ["initiative_join", "محمد محمد سلطانی به کار شما ملحق شد"],
   ];
 
   for (const [rawType, expected] of cases) {
@@ -267,6 +267,6 @@ test("carries raw type and entity so typed rows keep working after mapping", () 
   assert.equal(mapped.unread, false);
 
   const presentation = chatUtils.getNotificationPresentation(mapped);
-  assert.equal(presentation.title, "غلامرضا محمد سلطانی به کار خوب شما ملحق شد");
+  assert.equal(presentation.title, "غلامرضا محمد سلطانی به کار شما ملحق شد");
   assert.equal(presentation.href, "/posts/77");
 });

@@ -200,6 +200,8 @@ export function mapNarrativePost(
     },
 
     initiativeId: item.initiative?.id,
+    initiativeWorkId: item.initiative?.work_id,
+    initiativeClosed: Boolean(item.initiative?.work_closed),
 
     viewerState: {
       liked: Boolean(item.viewer_state?.liked),

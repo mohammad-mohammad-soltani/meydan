@@ -307,6 +307,7 @@ export async function getSpeakerInvitation(
 
 function speakerProfileBody(input: SpeakerProfileInput): Record<string, unknown> {
   return {
+    ...(input.handle.trim() !== "" ? { handle: input.handle.trim() } : {}),
     ...(input.avatarMediaId !== null ? { avatar_media_id: input.avatarMediaId } : {}),
     verified: input.verified,
     cities: input.cities,

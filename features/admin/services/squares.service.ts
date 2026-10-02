@@ -44,6 +44,7 @@ type ApiSquare = {
   owner_user_id?: number | null;
   owner?: { id?: number; name?: string | null } | null;
   admin_note?: string | null;
+  handle?: string | null;
   eitaa_channel?: string | null;
   bale_channel?: string | null;
   location?: ApiSquareLocation | null;
@@ -73,6 +74,7 @@ export function mapSquare(row: ApiSquare): Square {
     ownerUserId: row.owner_user_id ? Number(row.owner_user_id) : null,
     ownerName: row.owner?.name ? String(row.owner.name) : null,
     adminNote: String(row.admin_note ?? ""),
+    handle: String(row.handle ?? ""),
     eitaaChannel: String(row.eitaa_channel ?? ""),
     baleChannel: String(row.bale_channel ?? ""),
     location: row.location
@@ -196,6 +198,7 @@ export function squareCreateBody(input: SquareCreateInput): Record<string, unkno
     full_name: input.fullName.trim(),
     email: input.email.trim(),
     square_name: input.squareName.trim(),
+    handle: input.handle.trim(),
     description: input.description,
     contact_name: input.contactName.trim(),
     contact_phone: input.contactPhone.trim(),
@@ -229,6 +232,7 @@ export function squareUpdateBody(input: SquareUpdateInput): Record<string, unkno
   const body: Record<string, unknown> = {};
 
   if (input.squareName !== undefined) body.square_name = input.squareName.trim();
+  if (input.handle !== undefined && input.handle.trim() !== "") body.handle = input.handle.trim();
   if (input.description !== undefined) body.description = input.description;
   if (input.contactName !== undefined) body.contact_name = input.contactName.trim();
   if (input.contactPhone !== undefined) body.contact_phone = input.contactPhone.trim();

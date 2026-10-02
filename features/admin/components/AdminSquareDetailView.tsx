@@ -1,5 +1,6 @@
 "use client";
 
+import { HandleInput } from "@/components/shared/HandleInput";
 import { AdminEditor } from "./AdminEditor";
 
 import { useState } from "react";
@@ -56,6 +57,7 @@ function reasonMessages(fields?: Record<string, string>): Record<string, string>
 function toFormState(square: Square): SquareFormState {
   return {
     squareName: square.name,
+    handle: square.handle,
     description: square.description,
     contactName: "",
     contactPhone: "",
@@ -250,6 +252,18 @@ export function AdminSquareDetailView({ square: initial }: { square: Square }) {
               value={form.squareName}
               onChange={(event) => setForm({ ...form, squareName: event.target.value })}
               className={fieldClass}
+            />
+          </AdminField>
+
+          <AdminField label="شناسه کاربری" htmlFor="detail-handle" error={fieldErrors.handle} hint="بدون @؛ در همه‌جا با @ نمایش داده می‌شود.">
+            <HandleInput
+              id="detail-handle"
+              value={form.handle}
+              onChange={(handle) => setForm({ ...form, handle })}
+              exceptUserId={square.ownerUserId}
+              required={false}
+              serverError={fieldErrors.handle}
+              inputClassName={fieldClass}
             />
           </AdminField>
 

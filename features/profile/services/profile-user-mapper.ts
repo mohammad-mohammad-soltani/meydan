@@ -35,7 +35,7 @@ export function mapUser(
   const identity = {
     name: speaker?.name || profile.full_name || "کاربر میدان",
 
-    handle: speaker?.handle || `user_${profile.id}`,
+    handle: profile.handle || speaker?.handle || `user_${profile.id}`,
 
     subtitle: speaker?.role || profile.headline || "عضو میدان",
 

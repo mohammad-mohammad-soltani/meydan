@@ -59,7 +59,7 @@ export type ChatAttachment = {
 
 export type MessageReply = { id: string; body: string; senderName: string };
 
-export type ChatNotificationKind = "like" | "repost" | "quote" | "media" | "mention" | "follow" | "comment" | "initiative" | "system";
+export type ChatNotificationKind = "like" | "repost" | "quote" | "media" | "mention" | "follow" | "comment" | "initiative" | "work" | "system";
 
 export type ChatNotification = {
   id: string;

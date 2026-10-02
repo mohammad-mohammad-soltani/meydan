@@ -39,6 +39,8 @@ export type FeedPost = {
   id: string;
   author: { id: number; type: "user" | "square"; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
   initiativeId?: number;
+  initiativeWorkId?: string | null;
+  initiativeClosed?: boolean;
   initiativeParticipantCount?: number;
   viewerState?: { liked: boolean; reposted: boolean; joined: boolean; canDelete?: boolean };
   kind: PostKind;

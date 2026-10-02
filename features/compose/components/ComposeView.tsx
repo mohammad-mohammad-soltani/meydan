@@ -33,7 +33,7 @@ type QuoteState =
   | { status: "failed" };
 
 /** `quoteId` is the narrative being quoted (`/compose?quote=ID`). */
-export function ComposeView({ quoteId }: { quoteId?: string }) {
+export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; workMode?: boolean }) {
   const router = useRouter();
   // A quote keeps its own draft so it never overwrites the plain-narrative one.
   const DRAFT_KEY = quoteId ? `${BASE_DRAFT_KEY}:quote:${quoteId}` : BASE_DRAFT_KEY;
@@ -44,7 +44,7 @@ export function ComposeView({ quoteId }: { quoteId?: string }) {
 
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
-  const [isEcho, setIsEcho] = useState(false);
+  const [isEcho, setIsEcho] = useState(workMode);
   const [exitOpen, setExitOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -65,7 +65,7 @@ export function ComposeView({ quoteId }: { quoteId?: string }) {
           const draft = JSON.parse(stored) as Partial<ComposeDraft>;
           if (typeof draft.title === "string") setTitle(draft.title);
           if (typeof draft.text === "string") setText(draft.text);
-          if (typeof draft.isEcho === "boolean") setIsEcho(draft.isEcho);
+          if (typeof draft.isEcho === "boolean") setIsEcho(workMode || draft.isEcho);
         } catch {
           setText(stored);
         }
@@ -74,7 +74,7 @@ export function ComposeView({ quoteId }: { quoteId?: string }) {
     });
     const frame = window.requestAnimationFrame(() => (quoteId ? textRef.current : titleRef.current)?.focus());
     return () => { active = false; window.cancelAnimationFrame(frame); };
-  }, [DRAFT_KEY, quoteId]);
+  }, [workMode, DRAFT_KEY, quoteId]);
 
   useEffect(() => {
     if (!draftLoaded) return;
@@ -146,7 +146,7 @@ export function ComposeView({ quoteId }: { quoteId?: string }) {
     setIsPublishing(true);
     setPublishError("");
     try {
-      const created = await meydanApi<{ id?: number }>("/narratives", {
+      const created = await meydanApi<{ id?: number; initiative?: { work_id?: string | null } | null }>("/narratives", {
         method: "POST",
         headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
         body: JSON.stringify({
@@ -161,7 +161,9 @@ export function ComposeView({ quoteId }: { quoteId?: string }) {
       setText("");
       setIsEcho(false);
       reset();
-      router.push(quoteId && created?.id ? `/posts/${created.id}` : "/home");
+      // «کار جدید» lands in the freshly created work room; everything else keeps its old destination.
+      const workId = workMode ? created?.initiative?.work_id : null;
+      router.push(workId ? `/works/${workId}` : quoteId && created?.id ? `/posts/${created.id}` : "/home");
       router.refresh();
     } catch (error) {
       const message =
@@ -217,7 +219,7 @@ export function ComposeView({ quoteId }: { quoteId?: string }) {
             روایت میدانی
           </button>
           <button type="button" onClick={() => setIsEcho(true)} className={`rounded-xl px-4 py-2 text-xs font-black transition-colors ${isEcho ? "bg-brand text-brand-foreground" : "bg-surface-muted text-muted-foreground hover:bg-hover hover:text-foreground"}`}>
-            پژواک (ایده و کار خوب)
+            پژواک (ایده و کار)
           </button>
         </div> : null}
 

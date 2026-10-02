@@ -1,7 +1,7 @@
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import Link from "next/link";
 import type { Route } from "next";
-import { AtSign, Bell, Heart, MessageCircle, Newspaper, Quote, Repeat2, UserPlus, Users } from "lucide-react";
+import { AtSign, BriefcaseBusiness, Bell, Heart, MessageCircle, Newspaper, Quote, Repeat2, UserPlus, Users } from "lucide-react";
 import { getNotificationPresentation } from "../chat-utils";
 import type { ChatNotification, ChatNotificationKind } from "../types";
 
@@ -14,6 +14,7 @@ const icons: Record<ChatNotificationKind, typeof Heart> = {
   follow: UserPlus,
   comment: MessageCircle,
   initiative: Users,
+  work: BriefcaseBusiness,
   system: Bell,
 };
 
@@ -26,6 +27,7 @@ const tones: Record<ChatNotificationKind, string> = {
   follow: "bg-accent-surface text-accent",
   comment: "bg-info-surface text-info",
   initiative: "bg-success-surface text-success",
+  work: "bg-brand-muted text-brand",
   system: "bg-muted text-foreground-secondary",
 };
 

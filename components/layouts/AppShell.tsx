@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import {
+  BriefcaseBusiness,
   FolderKanban,
   Home,
   LogIn,
@@ -65,6 +66,7 @@ export function AppShell({
     pathname.startsWith("/profile/") ||
     /^\/\d+$/.test(pathname) || pathname.startsWith("/square/");
     // Conversation routes own their internal scrolling (header + list + composer).
+  const isWorksRoute = pathname === "/works" || pathname.startsWith("/works/");
   const isChatRoute = pathname.startsWith("/chat/");
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
@@ -82,7 +84,7 @@ export function AppShell({
   return (
     <UnreadProvider isAuthenticated={isAuthenticated}>
       <div
-        className={`mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground ${isAdminRoute ? "admin-route" : ""}`}
+        className={`mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground ${isAdminRoute ? "admin-route" : ""} ${isWorksRoute ? "works-route" : ""}`}
       >
         <PostLoginReturn />
         <PushEnrollment isAuthenticated={isAuthenticated} />
@@ -122,6 +124,7 @@ export function AppShell({
                   <Map className="h-5 w-5" />
                   نقشه زنده
                 </Link>
+                <Link href="/works" {...desktopLink(pathname, "/works")}><BriefcaseBusiness className="h-5 w-5" />کارها</Link>
                 <Link href="/chat" {...desktopLink(pathname, "/chat")}>
                   <MessageCircle className="h-5 w-5" />
                   گفتگو
@@ -161,17 +164,17 @@ export function AppShell({
           id="mainAppShell"
           className={`relative flex h-[100dvh] min-h-0 w-full flex-col border-x border-border bg-background transition-colors duration-150 ${isAdminRoute ? "max-w-none" : "max-w-xl pb-[var(--comment-composer-height)]"}`}
         >
-          {!isAdminRoute && !isComposePage && !isPublicProfilePage ? (
+          {!isWorksRoute && !isAdminRoute && !isComposePage && !isPublicProfilePage ? (
             pathname === "/home" ? null : <MobileHeader />
           ) : null}
           <main
             ref={mainScrollRef}
-            className={`relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isAdminRoute || isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}
+            className={`relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden no-scrollbar ${isAdminRoute || isWorksRoute || isChatRoute ? "overflow-hidden" : "overflow-y-auto"}`}
           >
             {pathname === "/home" ? <MobileHeader /> : null}
             {children}
           </main>
-          {!isAdminRoute ? (
+          {!isAdminRoute && !isWorksRoute ? (
             <>
               <FloatingComposeButton />
               <SilentBoundary label="mini-player">
@@ -179,7 +182,7 @@ export function AppShell({
               </SilentBoundary>
             </>
           ) : null}
-          {!isPostPage && !isAdminRoute && (!isNativeClient || isAuthenticated) ? (
+          {!isPostPage && !isAdminRoute && !pathname.startsWith("/works/") && (!isNativeClient || isAuthenticated) ? (
             <BottomNavigation isAuthenticated={isAuthenticated} />
           ) : null}
         </div>
