@@ -9,6 +9,13 @@ import {
   timeFa,
 } from "./profile-narrative-mappers";
 
+const KIND_SUBTITLE: Record<string, string> = {
+  square: "پایگاه فعال میدان",
+  collective: "مجموعه‌ی فعال در میدان",
+  media: "رسانه‌ی فعال در میدان",
+  organization: "سازمان فعال در میدان",
+};
+
 function toFiniteNumber(value: unknown): number | undefined {
   const number = Number(value);
 
@@ -70,7 +77,7 @@ export function mapSquare(
 
     handle: square.handle || `square_${square.id}`,
 
-    subtitle: square.subtitle || "پایگاه فعال میدان",
+    subtitle: square.subtitle || KIND_SUBTITLE[square.kind ?? "square"] || KIND_SUBTITLE.square,
 
     location: square.location?.address || "",
 
@@ -89,6 +96,8 @@ export function mapSquare(
     startDate: square.start_date ?? undefined,
 
     accountType: "square",
+
+    kind: square.kind,
 
     provinceId: square.location?.province_id,
 

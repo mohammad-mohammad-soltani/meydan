@@ -21,6 +21,8 @@ type ApiSquareLocation = {
 export type ApiSquare = {
   id: number;
   name: string;
+  /** square | collective | media | organization; absent on older backends. */
+  kind?: string;
   description?: string;
   verified?: boolean;
   avatar_url?: string;

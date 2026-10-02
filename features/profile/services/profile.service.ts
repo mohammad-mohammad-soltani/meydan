@@ -1,4 +1,4 @@
-import { isAuthApiError, meydanApi, meydanApiPage } from "@/lib/meydan-api";
+import { MeydanApiError, isAuthApiError, meydanApi, meydanApiPage } from "@/lib/meydan-api";
 import { accessTokenHeader } from "@/lib/meydan-session";
 import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails } from "../types";
@@ -71,8 +71,11 @@ async function profileFromSinglePage(
   let page: { data: ApiProfilePage; nextCursor: string | null; count: number | null };
   try {
     page = await meydanApiPage<ApiProfilePage>("/me/profile-page?limit=20", { headers });
-  } catch {
-    return undefined;
+  } catch (reason) {
+    // Only a missing endpoint (older backend) falls back to the four serial
+    // requests; a slow or failing page must not double the wait.
+    if (reason instanceof MeydanApiError && (reason.status === 404 || reason.status === 405)) return undefined;
+    throw reason;
   }
   const { me, narratives, replies, square_meta: squareMeta } = page.data;
   if (!me) return undefined;

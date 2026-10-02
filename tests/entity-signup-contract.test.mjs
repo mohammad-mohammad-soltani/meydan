@@ -65,3 +65,10 @@ test("own profile loads in one request with a fallback for older backends", () =
   assert.match(service, /if \(single !== undefined\) return single;/);
   assert.match(read("features/profile/services/square-profile-meta.service.ts"), /profile\.metaHydrated/);
 });
+
+test("own profile falls back to separate requests only when the endpoint is missing", () => {
+  const service = read("features/profile/services/profile.service.ts");
+  assert.match(service, /reason\.status === 404/);
+  assert.match(service, /throw reason;/);
+  assert.match(read("features/profile/services/profile-square-mapper.ts"), /kind: square\.kind/);
+});

@@ -40,6 +40,8 @@ export type ProfileDetails = {
   actorId: number;
   chatUserId?: number;
   accountType: ProfileTab;
+  /** Entity kind of a square-type account (square, collective, media, organization). */
+  kind?: string;
   provinceId?: number;
   cityId?: number;
   latitude?: number;
