@@ -65,23 +65,6 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
       headers,
     });
 
-    let narrativePage = {
-      data: [] as ApiNarrative[],
-      nextCursor: null as string | null,
-      count: null as number | null,
-    };
-
-    let replies: ApiComment[] = [];
-
-    try {
-      narrativePage = await meydanApiPage<ApiNarrative[]>(
-        "/me/narratives?limit=20",
-        { headers },
-      );
-    } catch {
-      narrativePage = { data: [], nextCursor: null, count: null };
-    }
-
     const actorId =
       me.account_type === "square" ? me.square?.id : me.profile.id;
 
@@ -89,18 +72,29 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
     // `/actors/{type}` only accepts `user|square`, never `speaker`.
     const actorType = me.account_type === "square" ? "square" : "user";
 
-    if (actorId) {
-      try {
-        replies = await meydanApi<ApiComment[]>(
-          `/actors/${actorType}/${actorId}/replies`,
-          {
+    // Independent reads run together: the page used to wait for them one by
+    // one, so its load time was the sum of every backend call.
+    const [narrativePage, replies, mediaReflectionCount] = await Promise.all([
+      meydanApiPage<ApiNarrative[]>("/me/narratives?limit=20", { headers }).catch(
+        () => ({
+          data: [] as ApiNarrative[],
+          nextCursor: null as string | null,
+          count: null as number | null,
+        }),
+      ),
+      actorId
+        ? meydanApi<ApiComment[]>(`/actors/${actorType}/${actorId}/replies`, {
             headers,
-          },
-        );
-      } catch {
-        replies = [];
-      }
-    }
+          }).catch(() => [] as ApiComment[])
+        : Promise.resolve([] as ApiComment[]),
+      me.account_type === "square" && me.square
+        ? meydanApi<ApiMediaReflectionCount>(
+            `/squares/${me.square.id}/media-reflections/count`,
+          )
+            .then((stats) => stats.count ?? 0)
+            .catch(() => 0)
+        : Promise.resolve(0),
+    ]);
 
     if (me.account_type === "user" || me.account_type === "official") {
       return {
@@ -120,18 +114,6 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
 
     if (!me.square) {
       return null;
-    }
-
-    let mediaReflectionCount = 0;
-
-    try {
-      const reflectionStats = await meydanApi<ApiMediaReflectionCount>(
-        `/squares/${me.square.id}/media-reflections/count`,
-      );
-
-      mediaReflectionCount = reflectionStats.count ?? 0;
-    } catch {
-      mediaReflectionCount = 0;
     }
 
     return {
