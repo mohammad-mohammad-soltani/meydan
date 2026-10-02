@@ -288,6 +288,7 @@ export function PostCard({
           reposted={reposted}
           onLike={onLike}
           onRepost={onRepost}
+          bookmarked={Boolean(post.viewerState?.bookmarked)}
           className="mt-3"
         /> : null}
       </article>
@@ -427,6 +428,7 @@ export function PostCard({
           onLike={onLike}
           onRepost={onRepost}
           onShare={onShare}
+          bookmarked={Boolean(post.viewerState?.bookmarked)}
         /> : null}
       </div>
     </article>

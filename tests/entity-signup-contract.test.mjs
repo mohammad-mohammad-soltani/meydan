@@ -170,3 +170,13 @@ test("route skeletons mirror the new designs", () => {
   assert.match(read("features/feed/components/FeedSkeleton.tsx"), /export function PostCardSkeleton/);
   assert.match(read("app/(app)/bookmarks/loading.tsx"), /BookmarksRouteSkeleton/);
 });
+
+test("posts can be bookmarked from the action bar, in step with the share sheet", () => {
+  assert.match(read("features/feed/components/PostActions.tsx"), /<BookmarkButton postId=\{postId\} bookmarked=\{bookmarked\}/);
+  assert.match(read("features/feed/components/PostCard.tsx"), /bookmarked=\{Boolean\(post\.viewerState\?\.bookmarked\)\}/);
+  const button = read("features/feed/components/BookmarkButton.tsx");
+  assert.match(button, /method: next \? "PUT" : "DELETE"/);
+  assert.match(button, /announceBookmark/);
+  assert.match(read("features/share/components/ShareSheet.tsx"), /announceBookmark/);
+  assert.match(read("features/feed/services/feed.service.ts"), /bookmarked: Boolean\(item\.viewer_state\?\.bookmarked\)/);
+});

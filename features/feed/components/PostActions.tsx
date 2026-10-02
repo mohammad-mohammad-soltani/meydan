@@ -7,6 +7,7 @@ import { Eye, Heart, MessageCircle, Repeat2, Share2 } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { quoteComposeHref } from "../post-counts";
 import { RepostMenu } from "./RepostMenu";
+import { BookmarkButton } from "./BookmarkButton";
 
 type PostActionsProps = {
   postId: string;
@@ -21,6 +22,8 @@ type PostActionsProps = {
   onRepost: () => void;
   /** Shows the «اشتراک» control at the end of the pill. */
   onShare?: () => void;
+  /** Saved state from the post; the bookmark button shows when it is given. */
+  bookmarked?: boolean;
   className?: string;
 };
 
@@ -28,7 +31,7 @@ const formatCount = (value: number) => value >= 1000 ? (value / 1000).toFixed(1)
 const actionBase = "pointer-events-auto inline-flex h-7 items-center justify-center gap-1.5 rounded-full px-1.5 text-xs transition-colors";
 
 /** The reference design's single rounded bar: like, repost, views, comments, share. */
-export function PostActions({ postId, likes, reposts, comments, views, liked, reposted, onLike, onRepost, onShare, className = "" }: PostActionsProps) {
+export function PostActions({ postId, likes, reposts, comments, views, liked, reposted, onLike, onRepost, onShare, bookmarked, className = "" }: PostActionsProps) {
   const { requireAuth } = useAuthGate();
   const router = useRouter();
 
@@ -69,6 +72,7 @@ export function PostActions({ postId, likes, reposts, comments, views, liked, re
           <Share2 className="h-4 w-4" /><span>اشتراک</span>
         </button>
       ) : null}
+      {bookmarked !== undefined ? <BookmarkButton postId={postId} bookmarked={bookmarked} /> : null}
     </div>
   );
 }

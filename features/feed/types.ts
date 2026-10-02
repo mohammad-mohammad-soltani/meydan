@@ -45,7 +45,7 @@ export type FeedPost = {
   initiativeWorkId?: string | null;
   initiativeClosed?: boolean;
   initiativeParticipantCount?: number;
-  viewerState?: { liked: boolean; reposted: boolean; joined: boolean; canDelete?: boolean };
+  viewerState?: { liked: boolean; reposted: boolean; joined: boolean; canDelete?: boolean; bookmarked?: boolean };
   kind: PostKind;
   squareName: string;
   handle: string;

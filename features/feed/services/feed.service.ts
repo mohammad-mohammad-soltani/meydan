@@ -46,7 +46,7 @@ type ApiNarrative = {
   media_reflections?: Array<{ outlet: string; title: string; url?: string }>;
   stats?: { likes?: number; comments?: number; reposts?: number; quotes?: number; views?: number };
   quoted_narrative?: ApiQuotedNarrative;
-  viewer_state?: { liked?: boolean; reposted?: boolean; can_delete?: boolean } | null;
+  viewer_state?: { liked?: boolean; reposted?: boolean; bookmarked?: boolean; can_delete?: boolean } | null;
 };
 
 type ApiSquare = {
@@ -149,6 +149,7 @@ function mapNarrative(item: ApiNarrative): FeedPost {
     viewerState: {
       liked: Boolean(item.viewer_state?.liked),
       reposted: Boolean(item.viewer_state?.reposted),
+      bookmarked: Boolean(item.viewer_state?.bookmarked),
       joined: Boolean(item.initiative?.viewer_state?.joined),
       canDelete: Boolean(item.viewer_state?.can_delete),
     },

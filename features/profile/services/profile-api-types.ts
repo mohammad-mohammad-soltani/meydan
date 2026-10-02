@@ -177,6 +177,7 @@ export type ApiNarrative = {
   viewer_state?: {
     liked?: boolean;
     reposted?: boolean;
+    bookmarked?: boolean;
     can_delete?: boolean;
   } | null;
 

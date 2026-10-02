@@ -8,6 +8,7 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { meydanApi } from "@/lib/meydan-api";
 import type { SharePost } from "../types";
 import { StoryStudio } from "./StoryStudio";
+import { announceBookmark } from "@/features/feed/bookmark-sync";
 
 type Messenger = { id: string; label: string; color: string; href?: (url: string, text: string) => string; web?: string };
 
@@ -143,6 +144,7 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
     setSaved(next);
     try {
       await meydanApi(`/narratives/${post.id}/bookmark`, { method: next ? "PUT" : "DELETE" });
+      announceBookmark({ id: post.id, bookmarked: next });
       flash(next ? "روایت ذخیره شد؛ در «نشان‌شده‌ها» می‌بینید" : "از ذخیره‌ها برداشته شد");
     } catch {
       setSaved(!next);

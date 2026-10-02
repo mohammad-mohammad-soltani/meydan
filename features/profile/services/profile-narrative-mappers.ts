@@ -210,6 +210,7 @@ export function mapNarrativePost(
       liked: Boolean(item.viewer_state?.liked),
 
       reposted: Boolean(item.viewer_state?.reposted),
+      bookmarked: Boolean(item.viewer_state?.bookmarked),
 
       joined: Boolean(item.initiative?.viewer_state?.joined),
 
