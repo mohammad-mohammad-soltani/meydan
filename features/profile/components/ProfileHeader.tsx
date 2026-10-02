@@ -49,15 +49,15 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
         <div className="relative h-36 overflow-hidden  sm:h-48">{identity.cover ? <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" className="object-cover" /> :  <Image src="/images/header.jpg" alt={`کاور ${identity.name}`} fill className="object-cover" />}</div>
         <div className="relative px-4 pb-5">
           <div className="flex min-h-16 items-start justify-between">
-            <div className="-mt-12 grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-surface bg-surface-muted text-3xl font-black text-foreground sm:-mt-14 sm:h-28 sm:w-28">{identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}</div>
-            <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+            <div className="-mt-10 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-surface bg-surface-muted text-3xl font-black text-foreground sm:-mt-14 sm:h-28 sm:w-28">{identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}</div>
+            <div className="mt-3 flex min-w-0 flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
               {canEdit ? <><AdminNavLink isAuthenticated className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-brand-border bg-brand-muted px-3 text-xs font-black text-brand hover:bg-selected lg:hidden" /><Link href={"/profile/edit" as Route} className="inline-flex min-h-10 items-center rounded-pill border border-border px-4 text-xs font-black text-foreground hover:bg-hover">ویرایش پروفایل</Link></> : (
                 <>
-                  <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-3 text-xs font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
+                  <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-pill border border-border bg-surface px-2.5 text-xs sm:px-3 font-black text-foreground transition-colors hover:bg-hover disabled:cursor-wait disabled:opacity-70">
                     {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                     پیام
                   </button>
-                  <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-pill border px-4 text-xs font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
+                  <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border px-2.5 text-xs sm:px-4 font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
                     {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
                     {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
                   </button>
@@ -72,6 +72,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
                       canInvite={canInvite}
                       venue={inviteVenue}
                       size="md"
+                      className="!px-2.5 sm:!px-4"
                     />
                   ) : null}
                 </>
