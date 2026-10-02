@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ImagePlus, LoaderCircle, Save, Trash2, UploadCloud, X } from "lucide-react";
+import { Bookmark, Hash, Image as ImageIcon, LoaderCircle, Plus, Save, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
+import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { getMe } from "@/lib/me-client";
 import { QuotedPostCard } from "@/features/feed/components/QuotedPostCard";
@@ -21,6 +22,7 @@ type ViewerState = {
   accountType: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official" | "";
   /** Set for an approved media account (رسانه), which can file quotes as media reflections. */
   mediaOutletId?: number | null;
+  avatarUrl?: string;
 };
 
 type ComposeDraft = {
@@ -55,6 +57,9 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   const [viewer, setViewer] = useState<ViewerState>({ accountType: "" });
   const [fileAsReflection, setFileAsReflection] = useState(true);
   const [draftLoaded, setDraftLoaded] = useState(false);
+  const [showTitle, setShowTitle] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [pickerAccept, setPickerAccept] = useState(MEDIA_ACCEPT);
 
   const { media, notice, addFiles, remove, retry, reset, isUploading, hasUploadError, readyAttachments, isReady } =
     useComposeMedia();
@@ -67,7 +72,10 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
       if (stored) {
         try {
           const draft = JSON.parse(stored) as Partial<ComposeDraft>;
-          if (typeof draft.title === "string") setTitle(draft.title);
+          if (typeof draft.title === "string") {
+            setTitle(draft.title);
+            if (draft.title) setShowTitle(true);
+          }
           if (typeof draft.text === "string") setText(draft.text);
           if (typeof draft.isEcho === "boolean") setIsEcho(workMode || draft.isEcho);
         } catch {
@@ -76,7 +84,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
       }
       setDraftLoaded(true);
     });
-    const frame = window.requestAnimationFrame(() => (quoteId ? textRef.current : titleRef.current)?.focus());
+    const frame = window.requestAnimationFrame(() => textRef.current?.focus());
     return () => { active = false; window.cancelAnimationFrame(frame); };
   }, [workMode, DRAFT_KEY, quoteId]);
 
@@ -105,9 +113,9 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   }, [quoteId]);
 
   useEffect(() => {
-    void getMe<{ account_type: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official"; media_outlet_id?: number | null }>()
+    void getMe<{ account_type: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official"; media_outlet_id?: number | null; profile?: { avatar_url?: string }; entity?: { avatar_url?: string } | null }>()
       .then((me) => {
-        setViewer({ accountType: me.account_type, mediaOutletId: me.media_outlet_id ?? null });
+        setViewer({ accountType: me.account_type, mediaOutletId: me.media_outlet_id ?? null, avatarUrl: (me.entity ?? me.profile)?.avatar_url || undefined });
       })
       .catch(() => undefined);
   }, []);
@@ -138,11 +146,26 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
     goBack();
   };
 
-  const openPicker = () => {
+  const openPicker = (accept = MEDIA_ACCEPT) => {
     const input = fileInputRef.current;
     if (!input) return;
+    setPickerAccept(accept);
+    input.accept = accept;
     input.value = "";
     input.click();
+  };
+
+  /** Inserts at the caret, so hashtag and emoji buttons write where the user is typing. */
+  const insertText = (value: string) => {
+    const area = textRef.current;
+    const start = area?.selectionStart ?? text.length;
+    const end = area?.selectionEnd ?? text.length;
+    const next = (text.slice(0, start) + value + text.slice(end)).slice(0, MAX_CHARACTERS);
+    setText(next);
+    window.requestAnimationFrame(() => {
+      area?.focus();
+      area?.setSelectionRange(start + value.length, start + value.length);
+    });
   };
 
   const publish = async () => {
@@ -201,34 +224,60 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
         if (event.dataTransfer?.files?.length) addFiles(event.dataTransfer.files);
       }}
     >
-      <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-divider bg-background/90 px-4 py-3 backdrop-blur">
-        <div className="flex min-w-0 items-center gap-2">
-          <button type="button" onClick={requestClose} aria-label="بازگشت" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand">
-            <ChevronRight className="h-5 w-5" />
-          </button>
-          <h1 className="truncate text-sm font-black text-foreground sm:text-base">{quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}</h1>
-        </div>
-        <button
-          type="button"
-          onClick={() => void publish()}
-          disabled={!canPublish}
-          className="shrink-0 rounded-full bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground transition-[transform,background-color] hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground sm:px-5"
-        >
-          {isPublishing ? "در حال انتشار…" : isUploading ? "در حال بارگذاری…" : viewer.accountType === "square" ? "انتشار به نام میدان" : viewer.accountType === "media" ? "انتشار به نام رسانه" : viewer.accountType === "collective" ? "انتشار به نام مجموعه" : viewer.accountType === "organization" ? "انتشار به نام سازمان" : quoteId ? "انتشار نقل‌قول" : "انتشار"}
+      <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-divider bg-background/95 px-4 py-2.5 backdrop-blur">
+        <button type="button" onClick={requestClose} className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground transition-colors hover:text-foreground-secondary">
+          <X aria-hidden="true" className="h-5 w-5" />
+          انصراف
         </button>
+        <h1 className="sr-only">{quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}</h1>
+        <div className="flex items-center gap-2">
+          {/* The draft is saved automatically on this device; this keeps it and leaves. */}
+          <button type="button" onClick={goBack} disabled={!hasContent} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3.5 py-2 text-xs font-bold text-foreground-secondary transition-colors hover:text-foreground disabled:opacity-50">
+            <Bookmark aria-hidden="true" className="h-3.5 w-3.5" />
+            پیش‌نویس
+          </button>
+          <button
+            type="button"
+            onClick={() => void publish()}
+            disabled={!canPublish}
+            aria-label={viewer.accountType === "square" ? "انتشار به نام میدان" : viewer.accountType === "media" ? "انتشار به نام رسانه" : viewer.accountType === "collective" ? "انتشار به نام مجموعه" : viewer.accountType === "organization" ? "انتشار به نام سازمان" : quoteId ? "انتشار نقل‌قول" : "انتشار"}
+            className="rounded-full bg-emphasis px-5 py-2 text-xs font-black text-emphasis-foreground transition-[transform,opacity] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isPublishing ? "در حال انتشار…" : isUploading ? "در حال بارگذاری…" : "انتشار"}
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-4 pb-24 pt-4">
-        {!quoteId ? <div role="tablist" aria-label="نوع روایت" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-muted p-1">
-          {([[false, "روایت میدانی"], [true, "پژواک (ایده و کار)"]] as const).map(([echo, label]) => (
-            <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`rounded-xl px-4 py-2.5 text-xs font-black transition-all ${isEcho === echo ? "bg-surface text-brand shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+      <div className="flex flex-1 flex-col px-4 pb-28 pt-4">
+        {!quoteId ? <div role="tablist" aria-label="نوع روایت" className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-surface-muted p-1">
+          {([[false, "روایت", null], [true, "کار", Sparkles]] as const).map(([echo, label, Icon]) => (
+            <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black transition-all ${isEcho === echo ? "bg-emphasis text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              {Icon ? <Icon aria-hidden="true" className="h-4 w-4" /> : null}
               {label}
             </button>
           ))}
         </div> : null}
 
-        <div className="space-y-3 pt-5">
-          {!quoteId ? <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="تیتر یا موضوع اصلی روایت..." aria-label="تیتر روایت" className="min-h-14 w-full rounded-2xl border border-input-border bg-input px-4 text-base font-black text-foreground placeholder:font-medium placeholder:text-placeholder" /> : null}
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-emphasis text-xs font-black text-emphasis-foreground">
+              {viewer.avatarUrl ? <OptimizedAvatar src={viewer.avatarUrl} alt="" width={40} className="h-full w-full object-cover" /> : "من"}
+            </span>
+            <span className="min-w-0">
+              <strong className="block truncate text-xs font-black text-foreground">{quoteId ? "نقل‌قول روایت" : isEcho ? "ثبت کار یا ایده" : "ارسال مطلب جدید"}</strong>
+              <span className="block truncate text-[10px] text-muted-foreground">انتشار در شبکه مردمی</span>
+            </span>
+          </div>
+          {!quoteId && !showTitle ? (
+            <button type="button" onClick={() => { setShowTitle(true); window.requestAnimationFrame(() => titleRef.current?.focus()); }} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:bg-hover">
+              <Plus aria-hidden="true" className="h-3.5 w-3.5" />
+              افزودن عنوان (اختیاری)
+            </button>
+          ) : null}
+        </div>
+
+        <div className="pt-3">
+          {!quoteId && showTitle ? <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="عنوان (اختیاری)" aria-label="تیتر روایت" className="w-full border-0 bg-transparent py-2 text-base font-black text-foreground shadow-none outline-none ring-0 placeholder:font-medium placeholder:text-placeholder focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0" /> : null}
           <textarea
             ref={textRef}
             value={text}
@@ -240,19 +289,15 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
               addFiles(files);
             }}
             maxLength={MAX_CHARACTERS}
-            placeholder={quoteId ? "نظر خودت را دربارهٔ این روایت بنویس..." : "شرح ماجرا، حال‌وهوای امشب میدان، نیازها یا دستاوردها..."}
-            rows={7}
+            placeholder={quoteId ? "نظر خودت را دربارهٔ این روایت بنویس..." : "چه خبر؟ ماجرا یا شرح حال را بنویسید..."}
+            rows={8}
             aria-label="شرح روایت"
-            className="min-h-52 w-full resize-none rounded-2xl border border-input-border bg-input p-4 text-[15px] leading-8 text-foreground placeholder:text-placeholder"
+            className="min-h-56 w-full resize-none border-0 bg-transparent py-2 text-[15px] leading-8 text-foreground shadow-none outline-none ring-0 placeholder:text-placeholder focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
           />
-          <div className="flex items-center justify-between px-1 text-[11px] font-bold">
-            <span className="text-foreground-subtle">{isEcho ? "ایده یا کار را کوتاه و روشن بنویس" : "از دل میدان بنویس"}</span>
-            <span className={`tabular-nums ${text.length > MAX_CHARACTERS - 20 ? "text-danger" : "text-foreground-subtle"}`}>{text.length.toLocaleString("fa-IR")} / {MAX_CHARACTERS.toLocaleString("fa-IR")}</span>
-          </div>
         </div>
 
         {quoteId ? (
-          <div className="mt-4">
+          <div className="mt-2">
             {quote.status === "loading" ? (
               <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface p-4 text-xs text-muted-foreground">
                 <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
@@ -284,70 +329,67 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           </div>
         ) : null}
 
-        <div className="mt-4 rounded-3xl border border-border bg-surface p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] font-black text-foreground-secondary">پیوست‌های چندرسانه‌ای</span>
-            <span className="inline-flex items-center gap-2">
-              {isUploading ? (
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-brand">
-                  <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
-                  در حال بارگذاری…
-                </span>
-              ) : null}
-              <span className={`rounded-pill px-2.5 py-1 text-[10px] font-black tabular-nums ${media.length ? "bg-brand-muted text-brand" : "bg-surface-muted text-muted-foreground"}`}>
-                {media.length.toLocaleString("fa-IR")} از {MAX_COMPOSE_MEDIA.toLocaleString("fa-IR")}
-              </span>
-            </span>
-          </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={pickerAccept}
+          className="hidden"
+          onChange={(event) => {
+            if (event.target.files?.length) addFiles(event.target.files);
+            event.target.value = "";
+          }}
+        />
 
-          {/* One picker for images, video and audio. */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept={MEDIA_ACCEPT}
-            className="hidden"
-            onChange={(event) => {
-              if (event.target.files?.length) addFiles(event.target.files);
-              event.target.value = "";
-            }}
-          />
+        {media.length ? <ComposeMediaGrid media={media} onRemove={remove} onRetry={retry} /> : null}
 
-          <button
-            type="button"
-            disabled={atCapacity}
-            onClick={openPicker}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-brand-border bg-brand-muted/60 px-4 py-3 text-xs font-black text-brand transition-colors hover:border-brand hover:bg-brand-muted disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-disabled-foreground"
-          >
-            <ImagePlus aria-hidden="true" className="h-4 w-4" />
-            {media.length ? "افزودن پیوست بیشتر" : "افزودن عکس، ویدیو یا صوت"}
-          </button>
-
-          <p className="mt-2 text-center text-[10px] leading-5 text-foreground-subtle">
-            تا {MAX_COMPOSE_MEDIA.toLocaleString("fa-IR")} فایل، ترکیبی از عکس، ویدیو و صوت · می‌توانی فایل‌ها را همین‌جا رها کنی یا از کلیپ‌بورد بچسبانی
+        {notice ? (
+          <p role="status" aria-live="polite" className="mt-2 text-center text-[11px] font-bold text-warning-foreground">
+            {notice}
           </p>
+        ) : null}
 
-          <ComposeMediaGrid media={media} onRemove={remove} onRetry={retry} />
-
-          {notice ? (
-            <p role="status" aria-live="polite" className="mt-2 text-center text-[11px] font-bold text-warning-foreground">
-              {notice}
-            </p>
-          ) : null}
-
-          {hasUploadError ? (
-            <p role="alert" className="mt-2 text-center text-[11px] font-bold text-danger">
-              یکی از فایل‌ها بارگذاری نشد؛ «تلاش دوباره» را بزن یا حذفش کن.
-            </p>
-          ) : null}
-        </div>
+        {hasUploadError ? (
+          <p role="alert" className="mt-2 text-center text-[11px] font-bold text-danger">
+            یکی از فایل‌ها بارگذاری نشد؛ «تلاش دوباره» را بزن یا حذفش کن.
+          </p>
+        ) : null}
 
         {publishError ? <p role="alert" className="mt-3 text-xs font-bold text-danger">{publishError}</p> : null}
       </div>
 
+      {/* Bottom toolbar of the reference: media pickers, hashtag, emoji and the character ring. */}
+      <div className="sticky bottom-0 z-20 mt-auto border-t border-divider bg-background/95 px-4 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+        {emojiOpen ? (
+          <div className="mb-3 grid grid-cols-8 gap-1 rounded-2xl border border-border bg-surface p-2">
+            {["🙂", "😍", "🙏", "👏", "❤️", "🔥", "💪", "🌹", "🇮🇷", "✌️", "🤲", "😢", "😂", "👍", "🎉", "✨"].map((emoji) => (
+              <button key={emoji} type="button" onClick={() => insertText(emoji)} className="grid h-9 place-items-center rounded-xl text-lg hover:bg-hover">{emoji}</button>
+            ))}
+          </div>
+        ) : null}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-foreground">
+            <button type="button" disabled={atCapacity} onClick={() => openPicker("image/*")} aria-label="افزودن عکس" className="transition-opacity hover:opacity-70 disabled:opacity-30"><ImageIcon className="h-[22px] w-[22px]" /></button>
+            <button type="button" disabled={atCapacity} onClick={() => openPicker("video/*")} aria-label="افزودن ویدیو" className="transition-opacity hover:opacity-70 disabled:opacity-30"><Video className="h-[22px] w-[22px]" /></button>
+            <button type="button" disabled={atCapacity} onClick={() => openPicker("audio/*")} aria-label="افزودن صوت" className="transition-opacity hover:opacity-70 disabled:opacity-30"><Volume2 className="h-[22px] w-[22px]" /></button>
+            <button type="button" onClick={() => insertText("#")} aria-label="افزودن هشتگ" className="transition-opacity hover:opacity-70"><Hash className="h-[22px] w-[22px]" /></button>
+            <button type="button" onClick={() => setEmojiOpen((value) => !value)} aria-label="شکلک" aria-expanded={emojiOpen} className="transition-opacity hover:opacity-70"><Smile className="h-[22px] w-[22px]" /></button>
+          </div>
+          <div className="flex items-center gap-2">
+            {isUploading ? <LoaderCircle aria-label="در حال بارگذاری" className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
+            {media.length ? <span className="text-[11px] font-bold text-muted-foreground">{media.length.toLocaleString("fa-IR")}/{MAX_COMPOSE_MEDIA.toLocaleString("fa-IR")} پیوست</span> : null}
+            <span dir="ltr" className={`latin-digits text-[11px] tabular-nums ${text.length > MAX_CHARACTERS - 20 ? "text-danger" : "text-muted-foreground"}`}>{text.length} / {MAX_CHARACTERS}</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 -rotate-90">
+              <circle cx="12" cy="12" r="9" fill="none" strokeWidth="2.5" className="stroke-border-strong" />
+              <circle cx="12" cy="12" r="9" fill="none" strokeWidth="2.5" strokeLinecap="round" className={text.length > MAX_CHARACTERS - 20 ? "stroke-danger" : "stroke-foreground"} strokeDasharray={`${(Math.min(text.length, MAX_CHARACTERS) / MAX_CHARACTERS) * 56.55} 56.55`} />
+            </svg>
+          </div>
+        </div>
+      </div>
+
       {dragging ? (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-2 z-30 grid place-items-center rounded-3xl border-2 border-dashed border-brand bg-brand-muted/80 backdrop-blur-sm">
-          <span className="flex flex-col items-center gap-2 text-xs font-black text-brand">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-2 z-30 grid place-items-center rounded-3xl border-2 border-dashed border-border-strong bg-surface/90 backdrop-blur-sm">
+          <span className="flex flex-col items-center gap-2 text-xs font-black text-foreground">
             <UploadCloud className="h-7 w-7" />
             برای پیوست رها کن
           </span>
@@ -360,7 +402,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
             <h2 className="text-sm font-black">پیش‌نویس ذخیره شود؟</h2>
             <p className="mt-2 text-xs leading-6 text-muted-foreground">متن روایت به‌صورت خودکار روی این دستگاه ذخیره شده و می‌توانی بعداً ادامه بدهی. فایل‌های پیوست ذخیره نمی‌شوند.</p>
             <div className="mt-4 grid gap-2">
-              <button type="button" onClick={goBack} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand px-4 text-xs font-black text-brand-foreground"><Save className="h-4 w-4" />ذخیره و خروج</button>
+              <button type="button" onClick={goBack} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-emphasis px-4 text-xs font-black text-emphasis-foreground"><Save className="h-4 w-4" />ذخیره و خروج</button>
               <button type="button" onClick={discardAndExit} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-danger-border bg-danger-surface px-4 text-xs font-black text-danger"><Trash2 className="h-4 w-4" />حذف پیش‌نویس</button>
               <button type="button" onClick={() => setExitOpen(false)} className="min-h-11 rounded-control px-4 text-xs font-bold text-foreground-secondary hover:bg-hover">ادامه نوشتن</button>
             </div>

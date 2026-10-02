@@ -78,7 +78,8 @@ test("the composer publishes a quote with the quoted narrative id", () => {
   const page = source("app/(app)/compose/page.tsx");
 
   assert.match(compose, /quoted_narrative_id:\s*Number\(quoteId\)/);
-  assert.match(compose, /\{!quoteId \? <input ref=\{titleRef\}/);
+  // The optional title (reference design: «+ افزودن عنوان») never shows on a quote.
+  assert.match(compose, /\{!quoteId && showTitle \? <input ref=\{titleRef\}/);
   assert.match(page, /\\d\{1,12\}/);
 });
 

@@ -185,7 +185,7 @@ export function AppShell({
               </SilentBoundary>
             </>
           ) : null}
-          {!isPostPage && !isAdminRoute && !pathname.startsWith("/chat/") && (!isNativeClient || isAuthenticated) ? (
+          {!isPostPage && !isComposePage && !isAdminRoute && !pathname.startsWith("/chat/") && (!isNativeClient || isAuthenticated) ? (
             <BottomNavigation isAuthenticated={isAuthenticated} />
           ) : null}
         </div>
