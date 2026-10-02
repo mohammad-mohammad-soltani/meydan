@@ -83,6 +83,7 @@ export function ImmersivePostSlide({
   );
   const item = media[mediaIndex];
   const [visible, setVisible] = useState(true);
+  const [captionOpen, setCaptionOpen] = useState(false);
   const [ratio, setRatio] = useState(
     item.width && item.height ? item.width / item.height : 9 / 16,
   );
@@ -101,6 +102,7 @@ export function ImmersivePostSlide({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (active) setVisible(true);
+      else setCaptionOpen(false);
     }, 0);
     return () => clearTimeout(timer);
   }, [active]);
@@ -159,10 +161,10 @@ export function ImmersivePostSlide({
         </span>
       )}
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1 truncate font-bold">
-          {entry.author}
+        <span className="flex items-center gap-1 font-bold">
+          <span className="line-clamp-2 min-w-0 break-words leading-snug">{entry.author}</span>
           {entry.post?.author.verified && (
-            <BadgeCheck size={17} className="text-sky-400" />
+            <BadgeCheck size={17} className="shrink-0 text-sky-400" />
           )}
         </span>
         <span className="block truncate text-sm text-white/70">
@@ -332,10 +334,37 @@ export function ImmersivePostSlide({
           </div>
         </div>
       )}
-      <div className={chrome("viewer-bottom")} inert={!visible}>
+      {captionOpen && (
+        <div
+          className="viewer-caption-scrim"
+          aria-hidden="true"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            setCaptionOpen(false);
+          }}
+        />
+      )}
+      <div className={`${chrome("viewer-bottom")} ${captionOpen ? "is-caption-open" : ""}`} inert={!visible}>
         {!portrait && author}
         {!portrait && (
-          <p dir="rtl" className="viewer-caption">
+          <p
+            dir="rtl"
+            className="viewer-caption"
+            role="button"
+            tabIndex={0}
+            aria-expanded={captionOpen}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!captionOpen) setCaptionOpen(true);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setCaptionOpen(true);
+              }
+            }}
+          >
             {entry.body}
           </p>
         )}
@@ -360,7 +389,23 @@ export function ImmersivePostSlide({
           </div>
         )}
         {portrait && (
-          <p dir="rtl" className="viewer-caption">
+          <p
+            dir="rtl"
+            className="viewer-caption"
+            role="button"
+            tabIndex={0}
+            aria-expanded={captionOpen}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!captionOpen) setCaptionOpen(true);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setCaptionOpen(true);
+              }
+            }}
+          >
             {entry.body}
           </p>
         )}

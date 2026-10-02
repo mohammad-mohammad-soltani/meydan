@@ -58,7 +58,7 @@
 .viewer-portrait-author-row { display: flex; width: 100%; align-items: center; gap: 8px; }
 .viewer-portrait-back { flex: none; background: transparent; }
 .viewer-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: none; }
-.viewer-follow { border-radius: 999px; padding: 7px 16px; background: #202d35; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.viewer-follow { flex: none; border-radius: 999px; padding: 7px 16px; background: #202d35; font-size: 14px; font-weight: 700; white-space: nowrap; }
 .is-portrait .viewer-follow { border: 1px solid #fff; background: transparent; }
 .viewer-bottom { position: absolute; inset: auto 0 0; z-index: 30; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px max(12px, env(safe-area-inset-bottom)); }
 .is-portrait .viewer-bottom { background: linear-gradient(transparent, #0009 35%, #000d); padding-top: 36px; }
@@ -69,7 +69,7 @@
   background: linear-gradient(to top, rgba(0, 0, 0, .94) 0%, rgba(0, 0, 0, .72) 52%, transparent 100%);
   padding-top: 72px;
 }
-.viewer-caption { font-size: 15px; line-height: 1.7; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; }
+.viewer-caption { cursor: pointer; font-size: 15px; line-height: 1.7; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; }
 .is-portrait .viewer-caption { font-size: 13px; -webkit-line-clamp: 1; }
 .viewer-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; gap: 10px; }
 .viewer-actions > button, .viewer-actions > a, .viewer-views { display: inline-flex; min-width: 0; min-height: 44px; width: 100%; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; font-size: 12px; }
@@ -200,4 +200,11 @@
   .viewer-bottom, .is-landscape .viewer-bottom { left: 60%; min-height: 0; gap: 6px; max-height: calc(100% - 60px); overflow-y: auto; }
   .viewer-top-author { right: 40%; }
 }
-@media (prefers-reduced-motion: reduce) { .viewer-chrome { transition: none; } }
+/* Tapping the caption lifts the bottom panel to 55% of the height, fades the video to black and
+   shows the whole text (scrollable); one tap anywhere outside restores the normal layout. */
+.viewer-caption-scrim { position: absolute; inset: 0; z-index: 25; background: linear-gradient(rgba(0,0,0,.15), rgba(0,0,0,.88)); animation: viewer-scrim-in 220ms ease both; }
+.viewer-bottom.is-caption-open { height: 55%; min-height: 0; max-height: 55%; background: linear-gradient(transparent, rgba(0,0,0,.92) 12%, #000 32%); padding-top: 36px; transition: height 220ms ease; }
+.is-landscape .viewer-bottom.is-caption-open { min-height: 0; }
+.viewer-bottom.is-caption-open .viewer-caption { display: block; -webkit-line-clamp: unset; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; cursor: default; font-size: 15px; touch-action: pan-y; }
+@keyframes viewer-scrim-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .viewer-chrome { transition: none; } .viewer-caption-scrim { animation: none; } .viewer-bottom.is-caption-open { transition: none; } }
