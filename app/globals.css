@@ -155,7 +155,7 @@
 
   --input: #ffffff;
   --input-hover: #fafafa;
-  --input-border: #d8d8d8;
+  --input-border: #c6c6c6;
   --input-border-hover: #bdbdbd;
   --placeholder: #8a8a8a;
 
@@ -408,6 +408,31 @@ html.dark {
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+  }
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="button"], [type="submit"], [type="hidden"]),
+  textarea,
+  select {
+    color: var(--foreground);
+    caret-color: var(--brand);
+    font-weight: 500;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--foreground-subtle);
+    font-weight: 400;
+    opacity: 0.85;
+  }
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):not(:disabled):hover,
+  textarea:not(:disabled):hover,
+  select:not(:disabled):hover {
+    border-color: var(--input-border-hover);
+  }
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 16%, transparent);
   }
   ::selection {
     background: var(--selection-bg);

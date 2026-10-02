@@ -281,7 +281,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
               autoSuggest={!initialHandle}
               onValidityChange={setHandleValid}
               serverError={handleError}
-              inputClassName="min-h-12 w-full rounded-control border border-input-border bg-input px-3 text-sm"
+              inputClassName="min-h-12 w-full rounded-control border border-input-border bg-input px-3 text-sm text-foreground"
             />
           </div>
           <Field label="معرفی کوتاه">
