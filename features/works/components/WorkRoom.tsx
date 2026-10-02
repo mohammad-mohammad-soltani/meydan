@@ -135,7 +135,7 @@ export function WorkRoom({ workId }: { workId: string }) {
           {error ? (
             <div>
               <p role="alert">{error}</p>
-              <Link className="btn" href="/works">
+              <Link className="btn" href="/chat">
                 بازگشت به کارها
               </Link>
             </div>
@@ -166,7 +166,7 @@ export function WorkRoom({ workId }: { workId: string }) {
     <RoomContext.Provider value={ctx}>
       <div className="w-room">
         <div className="r-head">
-          <Link href="/works" className="icon-btn r-back" aria-label="بازگشت به کارها">
+          <Link href="/chat" className="icon-btn r-back" aria-label="بازگشت به گفتگوها">
             <Icon name="back" size={20} weight={2} />
           </Link>
           <WorkIcon work={work} size={40} />

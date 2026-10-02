@@ -89,6 +89,7 @@ function mapConversation(item: ApiConversation): Conversation {
     },
     preview: item.preview || "گفتگوی جدید",
     updatedAt: timeLabel(item.updated_at),
+    updatedAtIso: item.updated_at,
     unreadCount: Number(item.unread_count || 0),
     lastMessageId: item.last_message_id ? String(item.last_message_id) : undefined,
     notificationsMuted: Boolean(item.notifications_muted),

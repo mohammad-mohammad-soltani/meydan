@@ -77,6 +77,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // «کارها» now lives inside the chat page; old links (and backend notification deep links) keep working.
+      { source: "/works", destination: "/chat", permanent: false },
+      { source: "/works/:id(\\d+)", destination: "/chat/work/:id", permanent: false },
       {
         // Notifications created before the invitation page existed stored a
         // per-request deep link (`/speaker-requests/{id}`) that never had a

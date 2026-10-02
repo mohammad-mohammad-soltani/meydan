@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import {
-  BriefcaseBusiness,
   FolderKanban,
   Home,
   LogIn,
@@ -66,8 +65,9 @@ export function AppShell({
     pathname.startsWith("/profile/") ||
     /^\/\d+$/.test(pathname) || pathname.startsWith("/square/");
     // Conversation routes own their internal scrolling (header + list + composer).
-  const isWorksRoute = pathname === "/works" || pathname.startsWith("/works/");
-  const isChatRoute = pathname.startsWith("/chat/");
+  // Chat is the two-pane workspace (conversations + work groups), laid out like the old «کارها» page.
+  const isWorksRoute = pathname === "/chat" || pathname.startsWith("/chat/");
+  const isChatRoute = isWorksRoute;
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
   // The app scrolls inside <main>, not window. Next.js cannot restore/reset this
@@ -124,7 +124,6 @@ export function AppShell({
                   <Map className="h-5 w-5" />
                   نقشه زنده
                 </Link>
-                <Link href="/works" {...desktopLink(pathname, "/works")}><BriefcaseBusiness className="h-5 w-5" />کارها</Link>
                 <Link href="/chat" {...desktopLink(pathname, "/chat")}>
                   <MessageCircle className="h-5 w-5" />
                   گفتگو
@@ -182,7 +181,7 @@ export function AppShell({
               </SilentBoundary>
             </>
           ) : null}
-          {!isPostPage && !isAdminRoute && !pathname.startsWith("/works/") && (!isNativeClient || isAuthenticated) ? (
+          {!isPostPage && !isAdminRoute && !pathname.startsWith("/chat/") && (!isNativeClient || isAuthenticated) ? (
             <BottomNavigation isAuthenticated={isAuthenticated} />
           ) : null}
         </div>

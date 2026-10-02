@@ -13,7 +13,7 @@ import { ConversationSearch } from "./ConversationSearch";
 import { MessageInput } from "./MessageInput";
 import { MessageList } from "./MessageList";
 
-export function ConversationView({ conversationId, conversation, messages }: { conversationId: string; conversation: Conversation | null; messages: ChatMessage[] }) {
+export function ConversationView({ conversationId, conversation, messages, embedded = false }: { conversationId: string; conversation: Conversation | null; messages: ChatMessage[]; embedded?: boolean }) {
   const chat = useConversation(conversationId, conversation, messages);
   const router = useRouter();
   const [isLeaving, setIsLeaving] = useState(false);
@@ -92,7 +92,7 @@ export function ConversationView({ conversationId, conversation, messages }: { c
 
   return (
     <section className={`relative isolate flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-surface-sunken before:pointer-events-none before:absolute before:inset-0 before:z-0 before:bg-[url('/images/patterns/resistance-chat-pattern-v2.png')] before:bg-[length:512px_512px] before:bg-repeat before:bg-center before:opacity-10 [&>*]:relative [&>*]:z-[1] ${isLeaving ? "ui-view-leave" : isOpeningInfo ? "ui-opening" : "ui-view-enter"}`}>
-      <ChatHeader conversation={conversationForUi} isLeaving={isLeaving || isOpeningInfo} onBack={leaveConversation} onOpenInfo={openInfo} onOpenProfile={openInfo} onOpenSearch={() => setIsSearchOpen(true)} onToggleMute={() => void toggleMute()} />
+      <ChatHeader embedded={embedded} conversation={conversationForUi} isLeaving={isLeaving || isOpeningInfo} onBack={leaveConversation} onOpenInfo={openInfo} onOpenProfile={openInfo} onOpenSearch={() => setIsSearchOpen(true)} onToggleMute={() => void toggleMute()} />
       {isSearchOpen ? <ConversationSearch query={searchQuery} resultCount={searchResults.length} isLoading={isSearching} onChange={setSearchQuery} onClose={() => { setIsSearchOpen(false); setSearchQuery(""); setSearchResults([]); }} /> : null}
       {chat.isPeerTyping ? <p className="border-b border-border bg-surface-glass px-4 py-1 text-[10px] text-verified">{chat.conversation.participant.name} در حال نوشتن است…</p> : !chat.isConnected ? <p className="border-b border-border bg-warning-surface px-4 py-1 text-[10px] text-warning">در حال اتصال مجدد…</p> : null}
       <MessageList messages={displayedMessages} currentUserId={chat.currentUserId} onReply={chat.startReply} onCopy={chat.copyMessage} onEdit={chat.startEdit} onDelete={chat.requestDelete} onForward={chat.requestForward} onReact={chat.toggleReaction} />

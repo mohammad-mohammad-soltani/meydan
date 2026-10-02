@@ -89,7 +89,7 @@ export function WorkInfo({ work, close, refresh, onLeft }: { work: WorkGroup; cl
     run(async () => {
       await workAction(work.id, "DELETE");
       window.dispatchEvent(new Event("works:changed"));
-      router.replace("/works");
+      router.replace("/chat");
     }, "حذف انجام نشد");
 
   const canLeave = work.viewer.joined && work.viewer.role !== "owner";

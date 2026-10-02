@@ -163,7 +163,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
       reset();
       // «کار جدید» lands in the freshly created work room; everything else keeps its old destination.
       const workId = workMode ? created?.initiative?.work_id : null;
-      router.push(workId ? `/works/${workId}` : quoteId && created?.id ? `/posts/${created.id}` : "/home");
+      router.push(workId ? `/chat/work/${workId}` : quoteId && created?.id ? `/posts/${created.id}` : "/home");
       router.refresh();
     } catch (error) {
       const message =

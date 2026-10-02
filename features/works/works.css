@@ -2199,3 +2199,32 @@
   .works-feature .r-views { display: none }
   .works-feature .r-more { display: grid }
 }
+
+/* ===================== unified chat page ===================== */
+/* Direct-chat panes use the app's Tailwind tokens; the works palette reuses three of those names, so restore them there. */
+.works-feature .tw-scope { --surface: #ffffff; --muted: #f0f0f0; --accent: #7c3aed; color-scheme: inherit }
+.dark .works-feature .tw-scope { --surface: #262626; --muted: #2d2d2d; --accent: #a78bfa }
+.black .works-feature .tw-scope { --surface: #000000; --muted: #000000; --accent: #a78bfa }
+.works-feature .w-room.tw-scope { background: var(--surface-2, transparent) }
+
+/* sidebar header: title + notifications/conversations switch */
+.works-feature .cs-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line) }
+.works-feature .cs-switch button { position: relative; display: grid; place-items: center; width: 34px; height: 30px; border: 0; border-radius: 9px; background: none; color: var(--muted) }
+.works-feature .cs-switch button.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.15) }
+.works-feature .cs-dot { position: absolute; top: 5px; inset-inline-end: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface) }
+.works-feature .cs-notif-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 14px; font-size: 11.5px; color: var(--muted); border-bottom: 1px solid var(--line-soft) }
+.works-feature .cs-notif-bar button { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--accent); font-weight: 800; font-size: 11.5px }
+
+/* direct rows inside the shared list */
+.works-feature .wg.dg .wg-main { justify-content: center }
+.works-feature .wg.dg .wg-main b { display: flex; align-items: center; gap: 4px; min-width: 0 }
+.works-feature .wk-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+
+/* work-group rows: tinted card, permanent accent bar, «کار» chip */
+.works-feature .wg.wk { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, var(--surface)), color-mix(in srgb, var(--s2) 7%, var(--surface))); border-color: color-mix(in srgb, var(--accent) 18%, var(--line-soft)); box-shadow: 0 1px 0 rgba(0,0,0,.03) }
+.works-feature .wg.wk::before { content: ""; position: absolute; inset-block: 12px; inset-inline-start: -1px; width: 3px; border-radius: 3px; background: var(--accent) }
+.works-feature .wg.wk:hover { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--surface)), color-mix(in srgb, var(--s2) 10%, var(--surface))) }
+.works-feature .wg.wk.on { border-color: var(--accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent), 0 6px 18px rgba(0,0,0,.1) }
+.works-feature .wg.wk .wg-main b { display: flex; align-items: center; gap: 6px; min-width: 0 }
+.works-feature .wk-chip { display: inline-flex; align-items: center; gap: 3px; flex: none; padding: 0 7px; border-radius: 999px; font-size: 10px; font-weight: 800; line-height: 1.7; color: var(--accent); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent) }
+.works-feature .wg.wk .wg-ic { border-radius: 14px; box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 22%, transparent) }

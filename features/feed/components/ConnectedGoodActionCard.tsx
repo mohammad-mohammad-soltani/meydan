@@ -110,7 +110,7 @@ export function ConnectedGoodActionCard({
               </span>
             ) : (
             <Link
-              href={workId ? `/works/${workId}` : `/initiatives/${initiativeId}/participants`}
+              href={workId ? `/chat/work/${workId}` : `/initiatives/${initiativeId}/participants`}
               className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-control text-[11px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             >
               <UsersRound aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
@@ -128,7 +128,7 @@ export function ConnectedGoodActionCard({
 
         {joined && !closed ? (
           <Link
-            href={workId ? `/works/${workId}` : `/initiatives/${initiativeId}/participants`}
+            href={workId ? `/chat/work/${workId}` : `/initiatives/${initiativeId}/participants`}
             className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-success-surface px-4 text-xs font-black text-success outline-none transition-colors hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:w-auto"
           >
             <Eye aria-hidden="true" className="h-4 w-4" />

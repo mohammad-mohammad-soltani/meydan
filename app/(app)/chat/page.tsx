@@ -1,5 +1,4 @@
-import { ChatView } from "@/features/chat/components/ChatView";
-
+/** The two-pane chat workspace lives in the layout; this route only selects "no room open". */
 export default function ChatPage() {
-  return <ChatView conversations={[]} notifications={[]} />;
+  return null;
 }

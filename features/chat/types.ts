@@ -20,6 +20,8 @@ export type Conversation = {
   participant: ChatUser;
   preview: string;
   updatedAt: string;
+  /** Raw ISO timestamp of the last activity (used to merge with work groups). */
+  updatedAtIso?: string;
   unreadCount: number;
   lastMessageId?: string;
   notificationsMuted?: boolean;

@@ -14,11 +14,13 @@ type ChatHeaderProps = {
   onOpenProfile: () => void;
   onOpenSearch: () => void;
   onToggleMute: () => void;
+  /** Two-pane layout: the list is always visible beside the room, so the back arrow is mobile-only. */
+  embedded?: boolean;
 };
 
 const menuItemClass = "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-right transition-colors hover:bg-hover";
 
-export function ChatHeader({ conversation, isLeaving, onBack, onOpenInfo, onOpenProfile, onOpenSearch, onToggleMute }: ChatHeaderProps) {
+export function ChatHeader({ conversation, isLeaving, onBack, onOpenInfo, onOpenProfile, onOpenSearch, onToggleMute, embedded = false }: ChatHeaderProps) {
   const { participant } = conversation;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const closeMenu = () => setIsMenuOpen(false);
@@ -27,7 +29,7 @@ export function ChatHeader({ conversation, isLeaving, onBack, onOpenInfo, onOpen
   return (
     <header className="relative z-30 flex h-[62px] shrink-0 items-center justify-between border-b border-border bg-surface-glass px-3 shadow-xs backdrop-blur-md">
       <div className="flex min-w-0 items-center gap-1">
-        <button type="button" onClick={onBack} disabled={isLeaving} aria-label="بازگشت به گفتگوها" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:text-disabled-foreground"><ArrowRight className="h-6 w-6" /></button>
+        <button type="button" onClick={onBack} disabled={isLeaving} aria-label="بازگشت به گفتگوها" className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-icon transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:text-disabled-foreground ${embedded ? "min-[821px]:hidden" : ""}`}><ArrowRight className="h-6 w-6" /></button>
         <button type="button" onClick={onOpenInfo} className="flex min-w-0 items-center gap-2 rounded-xl px-1.5 py-1 text-right hover:bg-hover" aria-label={`اطلاعات ${participant.name}`}>
           <ChatAvatar participant={participant} className="h-[42px] w-[42px]" textClassName="text-sm" />
           <div className="min-w-0">

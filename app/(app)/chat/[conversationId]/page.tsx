@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { ConversationView } from "@/features/chat/components/ConversationView";
 
 export const metadata: Metadata = { title: "گفتگو | نقش من" };
 
-type ConversationPageProps = {
-  params: Promise<{ conversationId: string }>;
-};
-
-export default async function ConversationPage({ params }: ConversationPageProps) {
-  const { conversationId } = await params;
-  return <ConversationView conversationId={conversationId} conversation={null} messages={[]} />;
+/** The conversation itself is rendered by the shared chat layout so the list stays mounted. */
+export default function ConversationPage() {
+  return null;
 }

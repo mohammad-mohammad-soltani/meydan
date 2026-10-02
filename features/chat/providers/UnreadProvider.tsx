@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { subscribeToUserChannel } from "@/lib/realtime/user-channel";
+import { worksPage } from "@/features/works/services/works.service";
 import { getConversations } from "../services/chat.service";
 import { getUnreadNotificationCount } from "../services/notification.service";
 
@@ -63,13 +64,17 @@ export function UnreadProvider({
     let active = true;
 
     const refresh = async () => {
-      const [conversations, notifications] = await Promise.allSettled([
+      const [conversations, notifications, works] = await Promise.allSettled([
         getConversations(),
         getUnreadNotificationCount(true),
+        // Work groups are part of the chat list now, so their unread counts feed the same badge.
+        worksPage("joined", ""),
       ]);
       if (!active) return;
       if (conversations.status === "fulfilled") {
-        const messages = conversations.value.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
+        const direct = conversations.value.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
+        const work = works.status === "fulfilled" ? works.value.data.reduce((sum, item) => sum + (item.viewer.unread_count || 0), 0) : 0;
+        const messages = direct + work;
         setCounts((current) => (current.messages === messages ? current : { ...current, messages }));
       }
       if (notifications.status === "fulfilled") {
@@ -93,6 +98,8 @@ export function UnreadProvider({
       "receipt:read": () => void refresh(),
       "notification:created": () => void refresh(),
       "notification:updated": () => void refresh(),
+      "work:message:created": () => void refresh(),
+      "work:read": () => void refresh(),
     })
       .then((off) => {
         if (active) unbind = off;
