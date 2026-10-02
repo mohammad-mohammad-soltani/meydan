@@ -13,7 +13,7 @@ import { AdminTable, type AdminColumn } from "./AdminTable";
 import { AdminPageHeader } from "./AdminPageHeader";
 import { SquareStatusBadge, VerifiedBadge } from "./AdminStatusBadge";
 import { fa, secondaryButtonClass } from "./styles";
-import { adminErrorMessage, deleteSquare, getSquares, linkSquareOutlet } from "../services/squares.service";
+import { adminErrorMessage, deleteSquare, getSquares, linkSquareOutlet, setSquareStatus } from "../services/squares.service";
 import { getCities, getProvinces } from "../services/programs.service";
 import type { AdminPage, EntityKind, GeoOption, MediaOutlet, Square, SquareFilters } from "../types";
 import {
@@ -119,6 +119,20 @@ export function AdminSquaresView({
     setApplied(baseFilters);
     setPage(1);
     void load(baseFilters, 1, perPage);
+  };
+
+  const [statusBusy, setStatusBusy] = useState<number | null>(null);
+  const changeStatus = async (square: Square, status: "approved" | "rejected" | "suspended") => {
+    setStatusBusy(square.id);
+    setLinkError(null);
+    try {
+      await setSquareStatus(String(square.id), status);
+      await load(applied, page, perPage);
+    } catch (reason) {
+      setLinkError(adminErrorMessage(reason, "تغییر وضعیت ممکن نشد."));
+    } finally {
+      setStatusBusy(null);
+    }
   };
 
   const changeLink = async (square: Square, raw: string) => {
@@ -320,7 +334,7 @@ export function AdminSquaresView({
     {
       key: "actions",
       header: "عملیات",
-      className: "w-56 whitespace-nowrap",
+      className: "w-80 whitespace-nowrap",
       render: (square) => (
         <div className="flex items-center gap-2">
           <Link
@@ -330,6 +344,25 @@ export function AdminSquaresView({
             <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
             ویرایش
           </Link>
+          {square.approvalStatus !== "approved" ? (
+            <button
+              type="button"
+              disabled={statusBusy === square.id}
+              onClick={() => void changeStatus(square, "approved")}
+              className="inline-flex min-h-9 flex-1 items-center justify-center rounded-control bg-brand px-3 text-[11px] font-black text-brand-foreground transition-colors hover:bg-brand-hover disabled:opacity-50"
+            >
+              تأیید و فعال‌سازی
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={statusBusy === square.id}
+              onClick={() => void changeStatus(square, "suspended")}
+              className="inline-flex min-h-9 flex-1 items-center justify-center rounded-control border border-border bg-surface px-3 text-[11px] font-black text-foreground transition-colors hover:bg-hover disabled:opacity-50"
+            >
+              تعلیق
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {

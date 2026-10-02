@@ -52,3 +52,9 @@ test("quote compose lets media accounts opt out of filing a reflection (default 
   assert.match(compose, /media_reflection: fileAsReflection/);
   assert.match(compose, /این نقل‌قول به‌عنوان بازنشر رسانه‌ای ثبت شود/);
 });
+
+test("admin lists can approve or suspend each account directly", () => {
+  const view = read("features/admin/components/AdminSquaresView.tsx");
+  assert.match(view, /setSquareStatus\(String\(square\.id\), status\)/);
+  assert.match(view, /تأیید و فعال‌سازی/);
+});
