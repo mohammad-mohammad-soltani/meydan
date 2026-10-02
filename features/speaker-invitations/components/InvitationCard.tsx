@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { CalendarDays, Check, LoaderCircle, MapPin, Phone, X } from "lucide-react";
+import { useState } from "react";
+import { createDirectConversation } from "@/features/chat/services/chat.service";
+import { CalendarDays, Check, LoaderCircle, MapPin, MessageCircle, X } from "lucide-react";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { publicProfileHref } from "@/lib/profile-route";
@@ -128,6 +130,21 @@ export function InvitationCard({
   const counterpart = perspective === "speaker" ? invitation.inviter : invitation.speaker;
   const counterpartRole = perspective === "speaker" ? "دعوت‌کننده" : "سخنران";
   const scheduled = when(invitation);
+  const speakerUserId = invitation.speaker?.id?.match(/(\d+)$/)?.[1];
+  const [chatBusy, setChatBusy] = useState(false);
+  const [chatError, setChatError] = useState("");
+  const openChat = async () => {
+    if (!speakerUserId || chatBusy) return;
+    setChatBusy(true);
+    setChatError("");
+    try {
+      const conversation = await createDirectConversation(speakerUserId);
+      window.location.href = `/chat/${conversation.id}`;
+    } catch {
+      setChatError("باز کردن گفتگو انجام نشد. دوباره تلاش کنید.");
+      setChatBusy(false);
+    }
+  };
   const canDecide = perspective === "speaker" && invitation.status === "pending";
 
   return (
@@ -163,23 +180,19 @@ export function InvitationCard({
         ) : null}
       </dl>
 
-      {/* Contact details are released by the API only after acceptance. */}
-      {perspective === "inviter" && invitation.phoneVisible && invitation.speaker?.phone ? (
+      {perspective === "inviter" && invitation.status === "accepted" && speakerUserId ? (
         <div className="border-t border-divider px-3.5 py-2.5">
-          <a
-            href={`tel:${invitation.speaker.phone}`}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-success-surface px-3 py-1.5 text-[11px] font-black text-success-foreground transition-opacity hover:opacity-90"
+          <button
+            type="button"
+            disabled={chatBusy}
+            onClick={() => void openChat()}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-success-surface px-3 py-1.5 text-[11px] font-black text-success-foreground transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
           >
-            <Phone aria-hidden="true" className="h-3.5 w-3.5" />
-            <span dir="ltr">{invitation.speaker.phone}</span>
-          </a>
+            {chatBusy ? <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle aria-hidden="true" className="h-3.5 w-3.5" />}
+            ارسال پیام به سخنران
+          </button>
+          {chatError ? <p role="alert" className="mt-1.5 text-[10px] font-bold text-danger">{chatError}</p> : null}
         </div>
-      ) : null}
-
-      {perspective === "inviter" && invitation.status === "accepted" && !invitation.speaker?.phone ? (
-        <p className="border-t border-divider px-3.5 py-2.5 text-[10px] text-foreground-subtle">
-          شماره تماس سخنران پس از پذیرش در دسترس است.
-        </p>
       ) : null}
 
       {canDecide ? (
