@@ -43,15 +43,14 @@ export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useCha
   return (
     <aside className="w-list">
       <div className="w-list-h">
-        <div>
-          <b>{notifications ? "اعلان‌ها" : "گفتگوها"}</b>
-        </div>
         <div className="cs-switch" role="tablist" aria-label="گفتگوها و اعلان‌ها">
           <button type="button" role="tab" aria-selected={!notifications} aria-label="گفتگوها" className={!notifications ? "on" : ""} onClick={() => chat.setSection("conversations")}>
             <MessageCircle className="h-4 w-4" />
+            گفتگوها
           </button>
           <button type="button" role="tab" aria-selected={notifications} aria-label="اعلان‌ها" className={notifications ? "on" : ""} onClick={() => chat.setSection("notifications")}>
             <Bell className="h-4 w-4" />
+            اعلان‌ها
             {chat.unreadNotificationCount > 0 ? <span className="cs-dot" aria-hidden="true" /> : null}
           </button>
         </div>

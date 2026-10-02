@@ -12,7 +12,6 @@ export const workActivity = (w: WorkGroup) => w.last_message?.created_at ?? w.up
 /** A work group as a row of the unified conversations list — deliberately richer than a direct chat row. */
 export function WorkRow({ w, selected }: { w: WorkGroup; selected: boolean }) {
   const last = w.last_message;
-  const p = w.progress ?? { done: 0, total: 0 };
   const preview = last
     ? `${last.sender_name ? firstName(last.sender_name) + ": " : ""}${last.kind !== "text" && last.kind !== "system" ? kindNames[last.kind] + " · " : ""}${last.title || last.body || ""}`
     : w.description || "هنوز پیامی ثبت نشده است";
@@ -24,19 +23,16 @@ export function WorkRow({ w, selected }: { w: WorkGroup; selected: boolean }) {
       <span className="wg-main">
         <b>
           <span className="wk-title">{w.title}</span>
-          <span className="wk-chip">
+          <span className="wk-badge">
             <Icon name="task" size={11} weight={2.2} />
             کار
           </span>
+          <span className="wk-members" title="تعداد اعضا">
+            <Icon name="users" size={11} />
+            {fa(w.member_count)}
+          </span>
         </b>
         <span className="last">{preview}</span>
-        <span className="wg-prog">
-          <span className="tr">
-            <span style={{ width: `${p.total ? (p.done / p.total) * 100 : 0}%` }} />
-          </span>
-          {fa(p.done)}/{fa(p.total)}
-          <span style={{ marginInlineStart: 2 }}>· {fa(w.member_count)} عضو</span>
-        </span>
       </span>
       <span className="wg-side">
         <span>{listTime(last?.created_at ?? w.updated_at)}</span>
