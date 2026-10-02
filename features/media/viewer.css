@@ -70,6 +70,9 @@
   background: linear-gradient(to top, rgba(0, 0, 0, .94) 0%, rgba(0, 0, 0, .72) 52%, transparent 100%);
   padding-top: 72px;
 }
+.viewer-caption .markdown-content p, .viewer-caption .markdown-content ul, .viewer-caption .markdown-content ol { margin: 0; }
+.viewer-caption .markdown-content a { color: #7cc4ff; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.viewer-caption .markdown-content img { display: inline-block; height: 1.1em; width: auto; vertical-align: -0.15em; }
 .viewer-caption { cursor: pointer; font-size: 15px; line-height: 1.7; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; }
 .is-portrait .viewer-caption { font-size: 13px; -webkit-line-clamp: 1; }
 .viewer-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; gap: 10px; }
@@ -209,3 +212,9 @@
 .viewer-bottom.is-caption-open .viewer-caption { display: block; -webkit-line-clamp: unset; flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; cursor: default; font-size: 15px; touch-action: pan-y; }
 @keyframes viewer-scrim-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .viewer-chrome { transition: none; } .viewer-caption-scrim { animation: none; } .viewer-bottom.is-caption-open { transition: none; } }
+
+/* Cinematic entrance: the viewer grows out of the tapped video (see VideoFeedViewer); the chrome fades in after it lands. */
+.video-feed-viewer .viewer-chrome, .video-feed-viewer .viewer-controls-slot { animation: viewer-chrome-in 480ms cubic-bezier(.2,.7,.2,1) 300ms backwards; }
+@keyframes viewer-chrome-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.video-feed-viewer.is-closing .viewer-chrome, .video-feed-viewer.is-closing .viewer-controls-slot { opacity: 0; transition: opacity 160ms ease; }
+@media (prefers-reduced-motion: reduce) { .video-feed-viewer .viewer-chrome, .video-feed-viewer .viewer-controls-slot { animation: none; } }

@@ -30,6 +30,7 @@ import { RepostMenu } from "@/features/feed/components/RepostMenu";
 import { quoteComposeHref, repostTotal } from "@/features/feed/post-counts";
 import { useRouter } from "next/navigation";
 import { useDragPager } from "../use-drag-pager";
+import { MarkdownText } from "@/components/shared/MarkdownText";
 
 /**
  * Stand-in for a neighbouring attachment while it is being dragged in. Mounting
@@ -55,6 +56,7 @@ export function ImmersivePostSlide({
   selections,
   onMediaChange,
   onClose,
+  onBack,
   onEnded,
   onPlaybackStart,
   onFullscreen,
@@ -67,6 +69,8 @@ export function ImmersivePostSlide({
   selections: Map<string, string>;
   onMediaChange: () => void;
   onClose: () => void;
+  /** Back button / dismiss gesture: plays the exit animation first; falls back to `onClose`. */
+  onBack?: () => void;
   onEnded: () => void;
   onPlaybackStart: () => void;
   onFullscreen: () => void;
@@ -237,7 +241,7 @@ export function ImmersivePostSlide({
           aria-label="بازگشت"
           onClick={(event) => {
             event.stopPropagation();
-            onClose();
+            (onBack ?? onClose)();
           }}
         >
           <ArrowLeft aria-hidden="true" />
@@ -309,7 +313,7 @@ export function ImmersivePostSlide({
               aria-label="بازگشت"
               onClick={(event) => {
                 event.stopPropagation();
-                onClose();
+                (onBack ?? onClose)();
               }}
             >
               <ArrowLeft aria-hidden="true" />
@@ -332,7 +336,7 @@ export function ImmersivePostSlide({
       <div className={`${chrome("viewer-bottom")} ${captionOpen ? "is-caption-open" : ""}`} inert={!visible}>
         {!portrait && author}
         {!portrait && (
-          <p
+          <div
             dir="rtl"
             className="viewer-caption"
             role="button"
@@ -340,6 +344,7 @@ export function ImmersivePostSlide({
             aria-expanded={captionOpen}
             onClick={(event) => {
               event.stopPropagation();
+              if ((event.target as HTMLElement).closest("a")) return;
               if (!captionOpen) setCaptionOpen(true);
             }}
             onKeyDown={(event) => {
@@ -349,8 +354,8 @@ export function ImmersivePostSlide({
               }
             }}
           >
-            {entry.body}
-          </p>
+            <MarkdownText body={entry.body} />
+          </div>
         )}
         <div className="viewer-controls-slot" ref={setControlsHost} />
         {media.length > 1 && (
@@ -373,7 +378,7 @@ export function ImmersivePostSlide({
           </div>
         )}
         {portrait && (
-          <p
+          <div
             dir="rtl"
             className="viewer-caption"
             role="button"
@@ -381,6 +386,7 @@ export function ImmersivePostSlide({
             aria-expanded={captionOpen}
             onClick={(event) => {
               event.stopPropagation();
+              if ((event.target as HTMLElement).closest("a")) return;
               if (!captionOpen) setCaptionOpen(true);
             }}
             onKeyDown={(event) => {
@@ -390,8 +396,8 @@ export function ImmersivePostSlide({
               }
             }}
           >
-            {entry.body}
-          </p>
+            <MarkdownText body={entry.body} />
+          </div>
         )}
         {entry.post && (
           <div className="viewer-actions" dir="ltr">

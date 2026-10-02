@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { getFeedPage } from "@/features/feed/services/feed.service";
@@ -52,6 +52,58 @@ export function VideoFeedViewer({ session, onClose }: Props) {
   const pendingEnd = useRef<string | null>(null);
   const suppressClick = useRef(false);
   const wheel = useRef({ delta: 0, last: 0, consumed: false });
+
+  /**
+   * Shared-element feel: the whole viewer starts as the tapped video's box (clip + scale
+   * towards its centre) and expands to full screen; the exit plays the same move backwards.
+   */
+  const motion = useCallback((reverse: boolean): Keyframe[] | null => {
+    const element = root.current;
+    if (!element || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const rect = session.source?.isConnected ? session.source.getBoundingClientRect() : null;
+    const usable = rect && rect.width > 40 && rect.height > 40 && rect.bottom > 0 && rect.top < vh;
+    const scale = usable ? Math.min(1, rect.width / vw) : 0.9;
+    const dx = usable ? rect.left + rect.width / 2 - vw / 2 : 0;
+    const dy = usable ? rect.top + rect.height / 2 - vh / 2 : 0;
+    const insetY = usable ? Math.max(0, (vh - rect.height / scale) / 2) : 0;
+    const from: Keyframe = {
+      transform: `translate(${dx}px, ${dy}px) scale(${scale})`,
+      clipPath: `inset(${insetY}px 0px round ${usable ? 14 / scale : 0}px)`,
+      opacity: usable ? 1 : 0,
+    };
+    const to: Keyframe = { transform: "translate(0px, 0px) scale(1)", clipPath: "inset(0px 0px round 0px)", opacity: 1 };
+    return reverse ? [to, from] : [from, to];
+  }, [session]);
+
+  useLayoutEffect(() => {
+    const frames = motion(false);
+    if (!frames) return;
+    root.current?.animate(frames, { duration: 560, easing: "cubic-bezier(.2,.8,.15,1)" });
+  }, [motion]);
+
+  const closing = useRef(false);
+  const dismissRef = useRef<() => void>(() => {});
+  const dismiss = useCallback(() => {
+    if (closing.current) return;
+    closing.current = true;
+    const element = root.current;
+    const frames = motion(true);
+    if (!element || !frames) {
+      onClose();
+      return;
+    }
+    element.classList.add("is-closing");
+    root.current?.querySelectorAll("video").forEach((video) => video.pause());
+    const animation = element.animate(frames, { duration: 380, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" });
+    animation.onfinish = () => onClose();
+    animation.oncancel = () => onClose();
+  }, [motion, onClose]);
+
+  useEffect(() => {
+    dismissRef.current = dismiss;
+  }, [dismiss]);
 
   useEffect(() => {
     const update = (event: Event) => {
@@ -199,7 +251,7 @@ export function VideoFeedViewer({ session, onClose }: Props) {
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
-        onClose();
+        dismissRef.current();
       } else if (
         (event.key === "ArrowDown" || event.key === "ArrowUp") &&
         !(
@@ -441,6 +493,7 @@ export function VideoFeedViewer({ session, onClose }: Props) {
                   selections={selections}
                   onMediaChange={() => { pendingEnd.current = null; setEnded(null); }}
                   onClose={onClose}
+                  onBack={dismiss}
                   closeRef={slide === index ? closeButton : undefined}
                   onPlaybackStart={() => {
                     if (pendingEnd.current === entry.key) {
