@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { BadgeCheck, CheckCheck } from "lucide-react";
-import { OfficialBadge } from "@/components/shared/OfficialBadge";
+import { CheckCheck } from "lucide-react";
 import type { Conversation } from "../types";
 import { ChatAvatar } from "./ChatAvatar";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 /** A direct conversation as a selectable row of the two-pane conversations list. */
 export function DirectRow({ conversation, selected }: { conversation: Conversation; selected: boolean }) {
@@ -17,8 +17,7 @@ export function DirectRow({ conversation, selected }: { conversation: Conversati
       <span className="wg-main">
         <b>
           <span className="wk-title">{participant.name}</span>
-          {participant.isVerified ? <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" aria-label="تأییدشده" /> : null}
-          <OfficialBadge official={participant.isOfficial} />
+          <AccountBadges verified={participant.isVerified} speaker={participant.isSpeaker} official={participant.isOfficial} kind={participant.profileType} size="md" />
         </b>
         <span className="last">
           {unread === 0 ? <CheckCheck className="ml-1 inline h-3.5 w-3.5 text-verified" /> : null}

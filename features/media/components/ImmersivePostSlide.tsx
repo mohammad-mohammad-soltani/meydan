@@ -17,7 +17,6 @@ import {
   Repeat2,
   ChartNoAxesColumn,
   Send,
-  BadgeCheck,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -31,6 +30,7 @@ import { quoteComposeHref, repostTotal } from "@/features/feed/post-counts";
 import { useRouter } from "next/navigation";
 import { useDragPager } from "../use-drag-pager";
 import { MarkdownText } from "@/components/shared/MarkdownText";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 /**
  * Stand-in for a neighbouring attachment while it is being dragged in. Mounting
@@ -166,9 +166,15 @@ export function ImmersivePostSlide({
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-1 font-bold">
           <span className="min-w-0 truncate">{entry.author}</span>
-          {entry.post?.author.verified && (
-            <BadgeCheck size={17} className="shrink-0 text-sky-400" />
-          )}
+          {entry.post ? (
+            <AccountBadges
+              verified={entry.post.author.verified}
+              speaker={entry.post.author.verifiedSpeaker}
+              official={entry.post.author.verifiedOfficial}
+              kind={entry.post.author.type}
+              size="md"
+            />
+          ) : null}
         </span>
         <span className="block truncate text-sm text-white/70">
           {entry.post?.handle}

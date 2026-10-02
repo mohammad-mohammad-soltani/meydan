@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { BadgeCheck, Check, LoaderCircle, UserRoundPlus } from "lucide-react";
+import { Check, LoaderCircle, UserRoundPlus } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { actorKey, type ActorType } from "@/lib/meydan-follow";
 import { publicProfileHref } from "@/lib/profile-route";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { FollowSuggestion } from "../types";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 type FollowSuggestionsProps = {
   suggestions: FollowSuggestion[];
@@ -50,7 +51,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
                 <div className="min-w-0 flex-1">
                   <Link href={profileHref} className="flex max-w-full min-w-0 items-center gap-1 font-black text-foreground hover:text-brand">
                     <span className="min-w-0 truncate">{suggestion.name}</span>
-                    {suggestion.verified ? <BadgeCheck aria-label="تأییدشده" className="h-4 w-4 shrink-0 fill-verified text-on-solid" /> : null}
+                    <AccountBadges verified={suggestion.verified} kind={suggestion.actorType} size="md" />
                   </Link>
                   <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{meta}</p>
                   <p className="mt-2 line-clamp-2 text-xs leading-5 text-foreground-secondary">{suggestion.description}</p>

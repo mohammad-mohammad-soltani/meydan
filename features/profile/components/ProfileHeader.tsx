@@ -5,8 +5,6 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useState } from "react";
 import { ArrowRight, Check, LoaderCircle, MessageCircle, UserRoundPlus } from "lucide-react";
-import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
-import { OfficialBadge } from "@/components/shared/OfficialBadge";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
@@ -14,6 +12,7 @@ import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { ProfileActionsMenu } from "./ProfileActionsMenu";
 import { AdminNavLink } from "@/components/layouts/AdminNavLink";
 import type { ProfileDetails } from "../types";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 type ProfileHeaderProps = {
   profile: ProfileDetails;
@@ -42,7 +41,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
     <>
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-divider bg-surface/95 px-3 backdrop-blur">
         <button type="button" aria-label="بازگشت" onClick={() => history.back()} className="grid h-11 w-11 place-items-center rounded-full text-icon hover:bg-hover"><ArrowRight className="h-5 w-5" /></button>
-        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} /><OfficialBadge official={identity.verifiedOfficial} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postLabel} روایت منتشر شده</p></div>
+        <div className="min-w-0"><h1 className="flex min-w-0 items-center gap-1.5 text-sm font-black text-foreground"><span className="truncate">{identity.name}</span><AccountBadges verified={identity.verified} speaker={identity.verifiedSpeaker} official={identity.verifiedOfficial} kind={profile.accountType === "square" ? profile.kind ?? "square" : "user"} /></h1><p className="mt-0.5 text-[11px] text-foreground-subtle">{postLabel} روایت منتشر شده</p></div>
       </header>
 
       <div className="bg-surface">
@@ -77,7 +76,7 @@ export function ProfileHeader({ profile, canEdit = false, isFollowing = false, i
             </div>
           </div>
           <div className="mt-3 flex items-center gap-3">
-            <h2 className="flex min-w-0 items-center gap-1.5 text-xl font-black leading-8 text-foreground"><span className="truncate">{identity.name}</span><SpeakerBadge verified={identity.verifiedSpeaker} size="lg" /><OfficialBadge official={identity.verifiedOfficial} size="lg" /></h2>
+            <h2 className="flex min-w-0 items-center gap-1.5 text-xl font-black leading-8 text-foreground"><span className="truncate">{identity.name}</span><AccountBadges verified={identity.verified} speaker={identity.verifiedSpeaker} official={identity.verifiedOfficial} kind={profile.accountType === "square" ? profile.kind ?? "square" : "user"} size="lg" /></h2>
             {!canEdit ? (
               <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-pill border px-2.5 text-xs sm:px-4 font-black transition-colors disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border-border bg-surface-muted text-foreground-secondary hover:bg-hover" : "border-brand bg-brand text-brand-foreground hover:bg-brand-hover"}`}>
                   {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}

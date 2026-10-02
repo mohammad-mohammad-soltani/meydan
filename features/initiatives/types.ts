@@ -7,6 +7,7 @@ export type InitiativeParticipant = {
   name: string;
   avatarUrl?: string;
   verified: boolean;
+  verifiedSpeaker?: boolean;
   verifiedOfficial?: boolean;
   joinedAt?: string;
 };

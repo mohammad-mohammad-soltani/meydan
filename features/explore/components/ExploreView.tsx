@@ -5,7 +5,6 @@ import type { Route } from "next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
-  BadgeCheck,
   Building2,
   ChevronLeft,
   FileText,
@@ -23,6 +22,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { getExploreLanding, searchExplore } from "../services/explore.service";
 import type {
@@ -108,12 +108,7 @@ function SearchResultRow({ item }: { item: ExploreResult }) {
             {item.title}
           </strong>
 
-          {item.verified ? (
-            <BadgeCheck
-              aria-label="تأییدشده"
-              className="h-4 w-4 shrink-0 fill-verified text-on-solid"
-            />
-          ) : null}
+          <AccountBadges verified={item.verified} speaker={item.speaker} official={item.official} kind={item.kind} size="md" />
 
           <span className="shrink-0 text-[10px] text-foreground-subtle">
             · {kindMeta[item.kind].label}
@@ -486,8 +481,10 @@ export function ExploreView() {
                             </span>
                           )}
 
-                          {item.verified ? (
-                            <BadgeCheck className="absolute -bottom-0.5 -left-0.5 h-4 w-4 fill-verified text-on-solid" />
+                          {item.verified || item.speaker || item.official ? (
+                            <span className="absolute -bottom-0.5 -left-0.5 flex">
+                              <AccountBadges verified={item.verified} speaker={item.speaker} official={item.official} kind={item.kind} size="md" />
+                            </span>
                           ) : null}
                         </span>
 
@@ -530,9 +527,7 @@ export function ExploreView() {
                             <strong className="truncate text-[12px] font-black text-foreground">
                               {trend.authorName}
                             </strong>
-                            {trend.verified ? (
-                              <BadgeCheck className="h-4 w-4 shrink-0 fill-verified text-on-solid" />
-                            ) : null}
+                            <AccountBadges verified={trend.verified} speaker={trend.authorSpeaker} official={trend.authorOfficial} kind={trend.authorKind} size="md" />
                             {trend.tag ? (
                               <span className="truncate text-[10px] font-bold text-brand">
                                 {trend.tag}

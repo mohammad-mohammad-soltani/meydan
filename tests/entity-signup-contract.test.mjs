@@ -103,3 +103,27 @@ test("search has a filter and a result kind for every entity kind", () => {
   assert.match(service, /sections\.organizations/);
   assert.match(service, /publicProfileHref\(kind, item\.id, item\.handle\)/);
 });
+
+test("every surface that shows a name renders the shared account badges", () => {
+  const badges = read("components/shared/AccountBadges.tsx");
+  assert.match(badges, /fill-verified/); // media and organizations use the same blue tick
+  assert.doesNotMatch(badges, /fill-foreground/);
+  for (const file of [
+    "features/feed/components/PostCard.tsx",
+    "features/feed/components/QuotedPostCard.tsx",
+    "features/feed/components/FollowSuggestions.tsx",
+    "features/posts/components/PostHeader.tsx",
+    "features/posts/components/CommentsList.tsx",
+    "features/media/components/ImmersivePostSlide.tsx",
+    "features/chat/components/ChatHeader.tsx",
+    "features/chat/components/ConversationItem.tsx",
+    "features/chat/components/DirectRow.tsx",
+    "features/chat/components/ChatUserInfo.tsx",
+    "features/initiatives/components/ParticipantsView.tsx",
+    "features/explore/components/ExploreView.tsx",
+    "features/profile/components/ProfileHeader.tsx",
+    "features/speaker-invitations/components/InvitationCard.tsx",
+  ]) {
+    assert.match(read(file), /<AccountBadges\s/, `${file} must render AccountBadges`);
+  }
+});

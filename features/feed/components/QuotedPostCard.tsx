@@ -3,12 +3,11 @@
 import Link from "next/link";
 import type { Route } from "next";
 import Image from "next/image";
-import { BadgeCheck, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
-import { OfficialBadge } from "@/components/shared/OfficialBadge";
-import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import type { QuotedPost } from "../types";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 type QuotedPostCardProps = {
   quote: QuotedPost;
@@ -45,9 +44,7 @@ export function QuotedPostCard({ quote, preview = false, className = "" }: Quote
           </span>
         )}
         <span className="min-w-0 truncate text-[13px] font-black text-foreground">{author.name}</span>
-        {author.verified ? <BadgeCheck aria-label="حساب تأییدشده" className="h-4 w-4 shrink-0 fill-verified text-on-solid" /> : null}
-        <SpeakerBadge verified={author.verifiedSpeaker} size="sm" />
-        <OfficialBadge official={author.verifiedOfficial} size="sm" />
+        <AccountBadges verified={author.verified} speaker={author.verifiedSpeaker} official={author.verifiedOfficial} kind={author.type} size="md" />
         {quote.timeAgo ? (
           <>
             <span aria-hidden="true" className="shrink-0 text-[11px] text-foreground-subtle">·</span>

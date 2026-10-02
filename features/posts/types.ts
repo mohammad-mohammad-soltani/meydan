@@ -49,6 +49,7 @@ export type PostComment = {
   authorType?: ActorKind;
   authorHandle?: string;
   verified?: boolean;
+  verifiedSpeaker?: boolean;
   verifiedOfficial?: boolean;
   initials: string;
   timeAgo: string;

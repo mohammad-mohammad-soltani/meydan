@@ -15,6 +15,8 @@ type ApiActor = {
   display_name?: string;
   avatar_url?: string;
   verified?: boolean;
+  verified_speaker?: boolean;
+  verified_official?: boolean;
 };
 
 type ApiAttachment = {
@@ -232,6 +234,8 @@ function mapUser(item: ApiActor): ExploreResult {
     href: id ? publicProfileHref("user", id, item.handle) : "/explore",
     avatarUrl: item.avatar_url,
     verified: Boolean(item.verified),
+    speaker: Boolean(item.verified_speaker),
+    official: Boolean(item.verified_official),
     meta: "کاربر",
   };
 }
@@ -262,6 +266,8 @@ function mapRecommendedActor(item: ApiActor): ExploreResult {
     href: actorHref(item),
     avatarUrl: item.avatar_url,
     verified: Boolean(item.verified),
+    speaker: Boolean(item.verified_speaker),
+    official: Boolean(item.verified_official),
     meta: label,
   };
 }
@@ -327,6 +333,9 @@ export async function getExploreLanding(): Promise<ExploreLanding> {
     authorName: item.author?.display_name || "میدان",
     authorAvatar: item.author?.avatar_url,
     verified: Boolean(item.author?.verified),
+    authorSpeaker: Boolean(item.author?.verified_speaker),
+    authorOfficial: Boolean(item.author?.verified_official),
+    authorKind: item.author?.type,
     tag: item.tags?.[0] ? `#${item.tags[0]}` : undefined,
     meta: `${Number(item.stats?.views || 0).toLocaleString("fa-IR")} بازدید`,
   }));

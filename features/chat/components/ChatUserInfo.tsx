@@ -10,7 +10,7 @@ import type { MediaItem } from "@/features/media/types";
 import { attachmentSource, classifyChatAttachment, collectConversationSharedItems, participantProfileHref } from "../chat-utils";
 import type { ChatMessage, Conversation } from "../types";
 import { ChatAvatar } from "./ChatAvatar";
-import { OfficialBadge } from "@/components/shared/OfficialBadge";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 type Tab = "media" | "files" | "links";
 
@@ -64,7 +64,7 @@ export function ChatUserInfo({
       <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
         <section className="px-5 pb-6 pt-6 text-center">
           <ChatAvatar participant={participant} className="mx-auto h-40 w-40 shadow-lg sm:h-44 sm:w-44" textClassName="text-5xl" />
-          <div className="mt-4 flex items-center justify-center gap-1.5"><h1 className="text-xl font-black text-foreground sm:text-2xl">{participant.name}</h1><OfficialBadge official={participant.isOfficial} size="lg" /></div>
+          <div className="mt-4 flex items-center justify-center gap-1.5"><h1 className="text-xl font-black text-foreground sm:text-2xl">{participant.name}</h1><AccountBadges verified={participant.isVerified} speaker={participant.isSpeaker} official={participant.isOfficial} kind={participant.profileType} size="lg" /></div>
           <p className={`mt-1 text-sm ${participant.isOnline ? "text-verified" : "text-muted-foreground"}`}>{participant.isOnline ? "آنلاین" : "آخرین بازدید اخیراً"}</p>
 
           <div className="mx-auto mt-5 grid w-full max-w-sm grid-cols-2 gap-2">

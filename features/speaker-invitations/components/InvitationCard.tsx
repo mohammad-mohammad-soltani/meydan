@@ -5,10 +5,10 @@ import type { Route } from "next";
 import { useState } from "react";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
 import { CalendarDays, Check, LoaderCircle, MapPin, MessageCircle, X } from "lucide-react";
-import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { publicProfileHref } from "@/lib/profile-route";
 import type { InvitationActor, SpeakerInvitation } from "../types";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 const statusStyles: Record<SpeakerInvitation["status"], string> = {
   pending: "bg-warning-surface text-warning-foreground",
@@ -76,7 +76,7 @@ function ActorIdentity({
   const heading = (
     <span className="flex min-w-0 items-center gap-1">
       <strong className="truncate text-xs font-black text-foreground">{name}</strong>
-      <SpeakerBadge verified={actor?.verifiedSpeaker} />
+      <AccountBadges verified={actor?.verified} speaker={actor?.verifiedSpeaker} kind={actor?.type} />
     </span>
   );
 

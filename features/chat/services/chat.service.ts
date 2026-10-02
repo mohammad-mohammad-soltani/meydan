@@ -13,6 +13,7 @@ type ApiConversation = {
     avatar_url?: string | null;
     verified?: boolean;
     verified_official?: boolean;
+    verified_speaker?: boolean;
     profile_type?: ActorKind;
     profile_id?: string | number;
   };
@@ -84,6 +85,7 @@ function mapConversation(item: ApiConversation): Conversation {
       avatarTone: avatarTone(id),
       avatarUrl: item.participant.avatar_url || undefined,
       isVerified: Boolean(item.participant.verified),
+      isSpeaker: Boolean(item.participant.verified_speaker),
       isOfficial: Boolean(item.participant.verified_official),
       profileType: item.participant.profile_type || "user",
       profileId: item.participant.profile_id ? String(item.participant.profile_id) : id,

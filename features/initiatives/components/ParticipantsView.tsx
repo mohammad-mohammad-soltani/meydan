@@ -3,11 +3,11 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BadgeCheck, ChevronLeft, HandHeart } from "lucide-react";
+import { ArrowRight, ChevronLeft, HandHeart } from "lucide-react";
 import type { InitiativeParticipant } from "../types";
 import { participantProfileHref } from "../services/initiatives.service";
-import { OfficialBadge } from "@/components/shared/OfficialBadge";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 const typeLabels: Record<InitiativeParticipant["type"], string> = {
   user: "کاربر میدان",
@@ -43,10 +43,7 @@ function ParticipantRow({ participant }: { participant: InitiativeParticipant })
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
           <strong className="truncate text-sm font-black leading-6 text-foreground">{participant.name}</strong>
-          {participant.verified ? (
-            <BadgeCheck aria-label="حساب تأییدشده" className="h-4 w-4 shrink-0 fill-verified text-on-solid" />
-          ) : null}
-          <OfficialBadge official={participant.verifiedOfficial} />
+          <AccountBadges verified={participant.verified} speaker={participant.verifiedSpeaker} official={participant.verifiedOfficial} kind={participant.type} size="md" />
         </div>
         <p className="mt-0.5 text-[11px] text-foreground-subtle">{typeLabels[participant.type]}</p>
       </div>

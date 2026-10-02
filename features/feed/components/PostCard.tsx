@@ -4,8 +4,6 @@ import Link from "next/link";
 import type { Route } from "next";
 import { publicProfileHref } from "@/lib/profile-route";
 import { BadgeCheck, Trash2 } from "lucide-react";
-import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
-import { OfficialBadge } from "@/components/shared/OfficialBadge";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
@@ -18,6 +16,7 @@ import { MarkdownText } from "@/components/shared/MarkdownText";
 import { MediaGallery } from "@/features/media/components/MediaGallery";
 import { mediaItemsFromAttachments } from "@/features/media/media-utils";
 import type { FeedPost } from "../types";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 type PostCardProps = {
   post: FeedPost;
@@ -151,14 +150,7 @@ export function PostCard({
                 {post.squareName}
               </Link>
 
-              {post.author.verified ? (
-                <BadgeCheck
-                  aria-label="حساب تأییدشده"
-                  className="h-[18px] w-[18px] shrink-0 fill-verified text-on-solid"
-                />
-              ) : null}
-              <SpeakerBadge verified={post.author.verifiedSpeaker} size="md" />
-              <OfficialBadge official={post.author.verifiedOfficial} size="md" />
+              <AccountBadges verified={post.author.verified} speaker={post.author.verifiedSpeaker} official={post.author.verifiedOfficial} kind={post.author.type} size="md" />
             </div>
 
             <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground">
@@ -337,14 +329,7 @@ export function PostCard({
               {post.squareName}
             </Link>
 
-            {post.author.verified ? (
-              <BadgeCheck
-                aria-label="حساب تأییدشده"
-                className="h-[17px] w-[17px] shrink-0 fill-verified text-on-solid"
-              />
-            ) : null}
-            <SpeakerBadge verified={post.author.verifiedSpeaker} size="md" />
-              <OfficialBadge official={post.author.verifiedOfficial} size="md" />
+            <AccountBadges verified={post.author.verified} speaker={post.author.verifiedSpeaker} official={post.author.verifiedOfficial} kind={post.author.type} size="md" />
 
             {post.badge ? (
               <>

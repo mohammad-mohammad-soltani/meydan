@@ -1,11 +1,10 @@
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import Link from "next/link";
 import type { Route } from "next";
-import { BadgeCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import type { PostComment } from "../types";
-import { OfficialBadge } from "@/components/shared/OfficialBadge";
 import { publicProfileHref } from "@/lib/profile-route";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 
 export function CommentsList({
   comments,
@@ -84,13 +83,7 @@ export function CommentsList({
                       </span>
                     )}
 
-                    {comment.verified ? (
-                      <BadgeCheck
-                        className="h-4 w-4 shrink-0 fill-verified text-on-solid"
-                        aria-label="تأیید شده"
-                      />
-                    ) : null}
-                    <OfficialBadge official={comment.verifiedOfficial} size="sm" />
+                    <AccountBadges verified={comment.verified} speaker={comment.verifiedSpeaker} official={comment.verifiedOfficial} kind={comment.authorType} size="md" />
 
                     {comment.isAuthor ? (
                       <span className="rounded-full bg-brand-muted px-2 py-0.5 text-[10px] font-bold text-brand">

@@ -9,6 +9,7 @@ export type ChatUser = {
   avatarTone: "red" | "amber" | "blue" | "emerald" | "violet" | "slate";
   avatarUrl?: string;
   isVerified?: boolean;
+  isSpeaker?: boolean;
   isOfficial?: boolean;
   isOnline?: boolean;
   profileType?: ActorKind;

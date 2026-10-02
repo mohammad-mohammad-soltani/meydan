@@ -8,6 +8,7 @@ export type WorkUser = {
   avatar_url: string | null;
   verified?: boolean;
   verified_official?: boolean;
+  verified_speaker?: boolean;
   profile_type?: ActorKind;
   profile_id?: string;
   /** Attribute (صفت) the managers gave this person in the current work. */

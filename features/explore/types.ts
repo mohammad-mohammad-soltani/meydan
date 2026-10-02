@@ -21,6 +21,8 @@ export type ExploreResult = {
   avatarUrl?: string;
   imageUrl?: string;
   verified?: boolean;
+  speaker?: boolean;
+  official?: boolean;
   meta?: string;
 };
 
@@ -32,6 +34,9 @@ export type ExploreTrend = {
   authorName: string;
   authorAvatar?: string;
   verified?: boolean;
+  authorSpeaker?: boolean;
+  authorOfficial?: boolean;
+  authorKind?: string;
   tag?: string;
   meta?: string;
 };
