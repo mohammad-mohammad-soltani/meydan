@@ -28,6 +28,14 @@ const HINT: Record<RichKind, string> = {
   poll: "هر عضو یک رأی دارد.",
 };
 
+function dueDaysToISO(days: string): string {
+  const n = parseInt(days, 10);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d.toISOString();
+}
+
 export type ComposerSeed = { kind?: RichKind; assignee?: WorkUser; mention?: WorkUser };
 
 export type ComposerHandle = { apply: (seed: ComposerSeed) => void };
@@ -218,7 +226,7 @@ export const WorkComposer = forwardRef<
         title: title.trim(),
         priority,
         capacity: Math.max(0, parseInt(capacity.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))), 10) || 0),
-        due_at: due ? new Date(due).toISOString() : "",
+        due_at: dueDaysToISO(due),
         items,
         assignee_ids: assignees.map((u) => Number(u.id)),
       };
@@ -329,7 +337,16 @@ export const WorkComposer = forwardRef<
                 <div className="cmp-extra">
                   <label className="due-field">
                     <span>مهلت</span>
-                    <input type="datetime-local" aria-label="مهلت انجام وظیفه" value={due} onChange={(e) => setDue(e.target.value)} />
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      step={1}
+                      placeholder="تعداد روز"
+                      aria-label="مهلت انجام وظیفه (تعداد روز)"
+                      value={due}
+                      onChange={(e) => setDue(e.target.value.replace(/[^0-9]/g, ""))}
+                    />
                   </label>
                   <input inputMode="numeric" aria-label="جای داوطلب" placeholder="جای داوطلب (۰ = نامحدود)" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
                   <span className="seg">
