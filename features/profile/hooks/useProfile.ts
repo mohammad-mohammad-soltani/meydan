@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { compactFa, isAuthApiError, meydanApi, plainText } from "@/lib/meydan-api";
+import { invalidateMe } from "@/lib/me-client";
 import { getActorFollowing, setActorFollowing, type ActorType } from "@/lib/meydan-follow";
 import { actorKindOf, entityApiPath, isEntityKind } from "@/lib/profile-route";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
@@ -334,6 +335,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     setIsSavingManagement(true);
     setManagementError(null);
     try {
+      invalidateMe();
       await meydanApi("/me/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ full_name: input.name, headline: input.subtitle, about: input.about, skills: input.skills }) });
       window.location.reload();
     } catch (reason) {
@@ -347,6 +349,7 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     setIsSavingManagement(true);
     setManagementError(null);
     try {
+      invalidateMe();
       await meydanApi("/me/square", {
         method: "PATCH",
         headers: { "content-type": "application/json" },

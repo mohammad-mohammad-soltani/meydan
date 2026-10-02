@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { meydanApi } from "@/lib/meydan-api";
+import { getMe } from "@/lib/me-client";
 import {
   type ApiViewerRole,
   extractRoles,
@@ -54,7 +54,7 @@ export function useViewerRole(enabled: boolean): ViewerRole {
 
     let active = true;
 
-    void meydanApi<ApiViewerRole>("/me")
+    void getMe<ApiViewerRole>()
       .then((me) => {
         if (!active) return;
 

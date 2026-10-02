@@ -227,6 +227,11 @@ async function rawContent(): Promise<ApiContent[]> {
   return meydanApi<ApiContent[]>("/content");
 }
 
+/** The viewer's bookmarked content packages (`/me/bookmarks`). */
+export async function getBookmarkedContent(init?: RequestInit): Promise<ContentItem[]> {
+  return (await meydanApi<ApiContent[]>("/me/bookmarks", init)).map(toItem);
+}
+
 export async function getContentItems(): Promise<ContentItem[]> {
   return (await rawContent()).map(toItem);
 }

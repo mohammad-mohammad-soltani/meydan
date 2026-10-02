@@ -12,7 +12,7 @@ import { FollowingEmptyState } from "./FollowingEmptyState";
 import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
-import type { FeedPost, FeedTab, FollowSuggestion } from "../types";
+import type { FeedFilter, FeedPost, FeedTab, FollowSuggestion } from "../types";
 
 /** Right-to-left pane order: "برای شما" sits to the right of "دنبال‌شده‌ها". */
 const TAB_ORDER: FeedTab[] = ["for-you", "following"];
@@ -23,6 +23,7 @@ type FeedViewProps = {
   nextCursor?: string | null;
   postsUnavailable?: boolean;
   suggestionsUnavailable?: boolean;
+  initialFilter?: FeedFilter;
 };
 
 export function FeedView({
@@ -31,8 +32,9 @@ export function FeedView({
   nextCursor = null,
   postsUnavailable = false,
   suggestionsUnavailable = false,
+  initialFilter = "all",
 }: FeedViewProps) {
-  const feed = useFeed(posts, suggestions, nextCursor, !postsUnavailable);
+  const feed = useFeed(posts, suggestions, nextCursor, !postsUnavailable, initialFilter);
   const { requireAuth } = useAuthGate();
   const [deleteTarget, setDeleteTarget] = useState<FeedPost | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);

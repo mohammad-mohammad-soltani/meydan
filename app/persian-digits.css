@@ -15,6 +15,11 @@
     font-feature-settings: "kern" 1, "liga" 1, "ss02" 1;
   }
 
+  /* Handles, URLs and other Latin identifiers keep Latin digits. */
+  .latin-digits {
+    font-feature-settings: "kern" 1, "liga" 1, "ss02" 0;
+  }
+
   /* The phone submit button is RTL. Move only its arrow after the label. */
   form:has(input[autocomplete="tel"]) > button > .lucide-arrow-left {
     order: 2;

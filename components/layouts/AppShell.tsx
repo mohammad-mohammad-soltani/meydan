@@ -12,7 +12,8 @@ import {
   MessageCircle,
   Mic,
   Search,
-  UserCheck,
+  Sparkles,
+  UserRound,
 } from "lucide-react";
 import { MiniPlayer } from "@/features/audio/MiniPlayer";
 import { AdminNavLink } from "@/components/layouts/AdminNavLink";
@@ -27,7 +28,6 @@ import { DesktopNavIndicator } from "./DesktopNavIndicator";
 import { FloatingComposeButton } from "./FloatingComposeButton";
 import { MobileHeader } from "./MobileHeader";
 import { NavBadge } from "./NavBadge";
-import { SidebarComposeButton } from "./SidebarComposeButton";
 import { SidebarUserCard } from "./SidebarUserCard";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { usePathname } from "next/navigation";
@@ -39,14 +39,17 @@ type AppShellProps = {
 };
 
 const desktopLinkClass =
-  "relative z-10 flex items-center gap-3 rounded-2xl px-3.5 py-3 text-foreground-secondary transition-colors hover:bg-hover hover:text-foreground";
-const activeDesktopLinkClass = "text-brand hover:text-brand";
+  "relative z-10 flex items-center gap-3.5 rounded-2xl px-4 py-3 text-xs font-bold transition-colors";
+// One text color per state: with both in the class list the stylesheet order,
+// not the intent, decided which one won.
+const idleDesktopLinkClass = "text-foreground-secondary hover:bg-hover hover:text-foreground";
+const activeDesktopLinkClass = "text-emphasis-foreground";
 
 function desktopLink(pathname: string, href: string) {
   const active = pathname === href || pathname.startsWith(`${href}/`) ||
     (href === "/speakers" && pathname.startsWith("/speaker-invitations"));
   return {
-    className: `${desktopLinkClass} ${active ? activeDesktopLinkClass : ""}`,
+    className: `${desktopLinkClass} ${active ? activeDesktopLinkClass : idleDesktopLinkClass}`,
     "aria-current": active ? "page" as const : undefined,
   };
 }
@@ -86,17 +89,18 @@ export function AppShell({
   return (
     <UnreadProvider isAuthenticated={isAuthenticated}>
       <div
-        className={`mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground ${isAdminRoute ? "admin-route" : ""} ${isWorksRoute ? "works-route" : ""}`}
+        className={`mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground lg:bg-surface-sunken ${isAdminRoute ? "admin-route" : ""} ${isWorksRoute ? "works-route" : ""}`}
       >
         <PostLoginReturn />
         <PushEnrollment isAuthenticated={isAuthenticated} />
-        <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between overflow-y-auto border-l border-border bg-background p-4 lg:flex">
-          <div className="space-y-10">
+        <aside className="hidden h-screen w-72 shrink-0 flex-col justify-between overflow-y-auto border-l border-divider bg-background p-4 lg:flex">
+          <div className="space-y-6">
             <Link href="/home" className="flex items-center gap-3 px-2">
               <AppLogo priority />
               <span>
-                <span className="block text-base font-black text-foreground">
+                <span className="flex items-center gap-1.5 text-base font-black text-foreground">
                   نقش من
+                  <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
                 </span>
                 <span className="block text-[11px] text-muted-foreground">
                   شبکه سراسری میادین ایران
@@ -107,13 +111,24 @@ export function AppShell({
               <nav
                 ref={desktopNavRef}
                 aria-label="ناوبری دسکتاپ"
-                className="relative space-y-3 text-sm font-bold"
+                className="relative space-y-1.5"
               >
                 <DesktopNavIndicator containerRef={desktopNavRef} />
                 <Link href="/home" {...desktopLink(pathname, "/home")}>
                   <Home className="h-5 w-5" />
                   خانه و روایت‌ها
                 </Link>
+                {isAuthenticated ? (
+                  <Link href="/profile" {...desktopLink(pathname, "/profile")}>
+                    <UserRound className="h-5 w-5" />
+                    نمایه کاربری (پروفایل)
+                  </Link>
+                ) : (
+                  <Link href="/auth" {...desktopLink(pathname, "/auth")}>
+                    <LogIn className="h-5 w-5" />
+                    ورود
+                  </Link>
+                )}
                 <Link href="/content" {...desktopLink(pathname, "/content")}>
                   <FolderKanban className="h-5 w-5" />
                   بسته محتوا
@@ -141,29 +156,16 @@ export function AppShell({
                     {...desktopLink(pathname, "/admin")}
                   />
                 ) : null}
-                {isAuthenticated ? (
-                  <Link href="/profile" {...desktopLink(pathname, "/profile")}>
-                    <UserCheck className="h-5 w-5" />
-                    نمایه
-                  </Link>
-                ) : (
-                  <Link href="/auth" {...desktopLink(pathname, "/auth")}>
-                    <LogIn className="h-5 w-5" />
-                    ورود
-                  </Link>
-                )}
               </nav>
-              {/* X-style primary action: signed-in desktop viewers compose here. */}
-              {isAuthenticated ? <SidebarComposeButton /> : null}
             </div>
           </div>
-          <div className="border-t border-divider pt-4">
+          <div className="border-t border-divider pt-3">
             <SidebarUserCard isAuthenticated={isAuthenticated} />
           </div>
         </aside>
         <div
           id="mainAppShell"
-          className={`relative flex h-[100dvh] min-h-0 w-full flex-col border-x border-border bg-background transition-colors duration-150 ${isAdminRoute ? "max-w-none" : "max-w-xl pb-[var(--comment-composer-height)]"}`}
+          className={`relative flex h-[100dvh] min-h-0 w-full flex-col border-x border-divider bg-background transition-colors duration-150 ${isAdminRoute ? "max-w-none" : "max-w-xl pb-[var(--comment-composer-height)]"}`}
         >
           {!isWorksRoute && !isAdminRoute && !isComposePage && !isPublicProfilePage ? (
             pathname === "/home" ? null : <MobileHeader />
@@ -187,10 +189,21 @@ export function AppShell({
             <BottomNavigation isAuthenticated={isAuthenticated} />
           ) : null}
         </div>
-        <aside className="hidden h-screen w-72 shrink-0 flex-col justify-between gap-4 overflow-y-auto border-r border-border bg-background p-4 lg:flex">
-          <SilentBoundary label="trends-panel">
-            <HotTrendsPanel />
-          </SilentBoundary>
+        <aside className="hidden h-screen w-72 shrink-0 flex-col justify-between gap-4 overflow-y-auto border-r border-divider bg-background p-4 lg:flex">
+          <div className="space-y-3">
+            <SilentBoundary label="trends-panel">
+              <HotTrendsPanel />
+            </SilentBoundary>
+            <section className="rounded-3xl border border-border bg-surface p-4">
+              <h2 className="flex items-center gap-1.5 text-xs font-black text-foreground">
+                <Sparkles aria-hidden="true" className="h-4 w-4 text-icon" />
+                شبکه همبستگی ایران
+              </h2>
+              <p className="mt-2 text-[11px] leading-6 text-muted-foreground">
+                ثبت و روایت کنش‌های مردمی، پویش‌های محلی و رسانه‌ای در سراسر کشور.
+              </p>
+            </section>
+          </div>
           {/* Both sidebar footers share the same wrapper and a 3.375rem control,
               so the two columns end at exactly the same height. */}
           <div className="border-t border-divider pt-4">

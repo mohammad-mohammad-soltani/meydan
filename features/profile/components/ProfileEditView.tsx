@@ -7,6 +7,7 @@ import type { Route } from "next";
 import { CalendarDays, Camera, ChevronLeft, LoaderCircle, MapPin, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { MeydanApiError, fieldErrorMessage, meydanApi } from "@/lib/meydan-api";
+import { invalidateMe } from "@/lib/me-client";
 import { HandleInput } from "@/components/shared/HandleInput";
 import { getCityMap } from "@/features/map/services/map.service";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
@@ -129,6 +130,8 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           throw new Error("unresolved_location");
         }
 
+        invalidateMe();
+
         await meydanApi("/me/square", {
           method: "PATCH",
           headers: { "content-type": "application/json" },
@@ -157,6 +160,7 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
           });
         }
       } else {
+        invalidateMe();
         await meydanApi("/me/profile", {
           method: "PATCH",
           headers: { "content-type": "application/json" },

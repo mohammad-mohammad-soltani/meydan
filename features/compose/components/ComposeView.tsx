@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ImagePlus, LoaderCircle, Save, Trash2, UploadCloud, X } from "lucide-react";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
+import { getMe } from "@/lib/me-client";
 import { QuotedPostCard } from "@/features/feed/components/QuotedPostCard";
 import { mapQuotedNarrative, type ApiQuotedNarrative } from "@/features/feed/services/quote-mapper";
 import type { QuotedPost } from "@/features/feed/types";
@@ -104,7 +105,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   }, [quoteId]);
 
   useEffect(() => {
-    void meydanApi<{ account_type: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official"; media_outlet_id?: number | null }>("/me")
+    void getMe<{ account_type: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official"; media_outlet_id?: number | null }>()
       .then((me) => {
         setViewer({ accountType: me.account_type, mediaOutletId: me.media_outlet_id ?? null });
       })

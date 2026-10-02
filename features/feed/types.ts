@@ -1,6 +1,8 @@
 import type { ActorKind } from "@/lib/profile-route";
 export type FeedTab = "for-you" | "following";
-export type FeedFilter = "all" | "initiatives" | "reflected";
+export type FeedFilter = "all" | "narratives" | "initiatives" | "reflected";
+
+export const FEED_FILTERS: readonly FeedFilter[] = ["all", "narratives", "initiatives", "reflected"];
 export type PostKind = "ideas" | "media";
 
 export type FeedAttachment = {

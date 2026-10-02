@@ -22,7 +22,7 @@ export function ThemeSwitcher({ className = "" }: { className?: string }) {
     <div
       role="radiogroup"
       aria-label="انتخاب پوستهٔ نمایش"
-      className={`grid grid-cols-3 gap-1 rounded-pill border border-border bg-surface-muted p-1 ${className}`}
+      className={`grid grid-cols-3 gap-1 rounded-2xl border border-border bg-surface-muted p-1 ${className}`}
     >
       {options.map(({ value, label, icon: Icon }) => {
         const active = value === theme;
@@ -34,9 +34,9 @@ export function ThemeSwitcher({ className = "" }: { className?: string }) {
             aria-checked={active}
             title={label}
             onClick={() => applyTheme(value)}
-            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-pill px-1 text-[10px] font-black transition-colors ${
+            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-black transition-colors ${
               active
-                ? "bg-brand text-brand-foreground shadow-xs"
+                ? "bg-emphasis text-emphasis-foreground"
                 : "text-foreground-secondary hover:bg-hover hover:text-foreground"
             }`}
           >

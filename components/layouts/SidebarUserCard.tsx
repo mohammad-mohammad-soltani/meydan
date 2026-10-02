@@ -5,24 +5,24 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LoaderCircle, LogIn, LogOut, UserRound } from "lucide-react";
 import { closeRealtimeSession } from "@/lib/realtime/user-channel";
-import { meydanApi } from "@/lib/meydan-api";
+import { getMe } from "@/lib/me-client";
 
 type ApiMe = {
   account_type?: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official";
-  profile?: { id?: number; full_name?: string; avatar_url?: string };
+  profile?: { id?: number; full_name?: string; avatar_url?: string; handle?: string };
   /** Profile of an entity account of any kind. */
-  entity?: { id?: number; name?: string; avatar_url?: string } | null;
-  square?: { id?: number; name?: string; avatar_url?: string } | null;
+  entity?: { id?: number; name?: string; avatar_url?: string; handle?: string } | null;
+  square?: { id?: number; name?: string; avatar_url?: string; handle?: string } | null;
 };
 
-type Viewer = { name: string; avatarUrl?: string };
+type Viewer = { name: string; avatarUrl?: string; handle?: string };
 
 function identityFrom(me: ApiMe): Viewer {
   if (me.account_type === "square" || me.account_type === "media" || me.account_type === "collective" || me.account_type === "organization") {
     const entity = me.entity ?? me.square;
-    return { name: entity?.name || "حساب من", avatarUrl: entity?.avatar_url || undefined };
+    return { name: entity?.name || "حساب من", avatarUrl: entity?.avatar_url || undefined, handle: entity?.handle };
   }
-  return { name: me.profile?.full_name || "کاربر میدان", avatarUrl: me.profile?.avatar_url || undefined };
+  return { name: me.profile?.full_name || "کاربر میدان", avatarUrl: me.profile?.avatar_url || undefined, handle: me.profile?.handle };
 }
 
 /**
@@ -43,7 +43,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
   useEffect(() => {
     if (!isAuthenticated) return;
     let active = true;
-    void meydanApi<ApiMe>("/me")
+    void getMe<ApiMe>()
       .then((me) => {
         if (active) setViewer(identityFrom(me));
       })
@@ -82,7 +82,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
   }
 
   const rowClass =
-    "flex h-[3.375rem] items-center gap-2 rounded-pill border border-border bg-card p-1.5 text-card-foreground shadow-xs";
+    "flex h-[3.375rem] items-center gap-2 rounded-2xl border border-border bg-surface p-2 text-card-foreground";
 
   if (!isAuthenticated) {
     return (
@@ -140,7 +140,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
       <Link
         href="/profile"
         aria-label="مشاهدهٔ نمایه"
-        className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-pill transition-colors hover:bg-hover"
+        className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-xl transition-colors hover:bg-hover"
       >
         {viewer?.avatarUrl ? (
           <OptimizedAvatar
@@ -148,18 +148,21 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
             alt=""
             width={40}
             height={40}
-            className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border"
+            className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
           />
         ) : (
           <span
             aria-hidden="true"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-muted text-xs font-black text-brand"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-black text-foreground"
           >
             {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : viewer?.name.trim().slice(0, 1) || <UserRound className="h-5 w-5" />}
           </span>
         )}
-        <span className="min-w-0 flex-1 truncate pe-1 text-xs font-black text-foreground">
-          {loading ? "در حال دریافت…" : viewer?.name || "نمایهٔ من"}
+        <span className="min-w-0 flex-1 pe-1">
+          <span className="block truncate text-xs font-black text-foreground">
+            {loading ? "در حال دریافت…" : viewer?.name || "نمایهٔ من"}
+          </span>
+          {viewer?.handle ? <span className="block truncate text-[10px] text-muted-foreground latin-digits" dir="ltr">@{viewer.handle}</span> : null}
         </span>
       </Link>
 
@@ -171,7 +174,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
         }}
         title="خروج از حساب"
         aria-label="خروج از حساب"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-foreground-secondary transition-colors hover:border-danger-border hover:bg-danger-surface hover:text-danger-foreground"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:border-danger-border hover:bg-danger-surface hover:text-danger-foreground"
       >
         <LogOut aria-hidden="true" className="h-4 w-4" />
       </button>

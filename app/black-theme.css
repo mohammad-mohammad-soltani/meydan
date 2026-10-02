@@ -1,5 +1,7 @@
 html.black {
   color-scheme: dark;
+  --emphasis: #f5f5f7;
+  --emphasis-foreground: #000000;
 
   /* Pure-black canvas and surfaces. Separation comes from borders/opacity. */
   --background: #000000;

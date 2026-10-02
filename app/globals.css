@@ -17,7 +17,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-digits), var(--font-vazir-arabic), var(--font-vazir-latin), var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -27,6 +27,8 @@
   --color-on-light: var(--on-light);
   --color-solid-dark: var(--solid-dark);
   --color-solid-light: var(--solid-light);
+  --color-emphasis: var(--emphasis);
+  --color-emphasis-foreground: var(--emphasis-foreground);
 
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
@@ -175,6 +177,9 @@
   --link: #c81e1e;
   --link-hover: #991b1b;
 
+  /* Active/selected controls: an inverted pill (dark on light, light on dark). */
+  --emphasis: #101010;
+  --emphasis-foreground: #ffffff;
   --brand: #dc2626;
   --brand-hover: #b91c1c;
   --brand-active: #991b1b;
@@ -246,37 +251,37 @@ html.dark {
   color-scheme: dark;
 
   /* Requested LAB color resolves to #1F1F1F (opaque canvas). */
-  --background: #1f1f1f;
-  --foreground: #f5f5f5;
-  --foreground-secondary: #d4d4d4;
-  --foreground-subtle: #a3a3a3;
+  --background: #121212;
+  --foreground: #f3f4f6;
+  --foreground-secondary: #d1d5db;
+  --foreground-subtle: #9ca3af;
   --on-solid: #ffffff;
-  --on-light: #171717;
-  --solid-dark: #171717;
-  --solid-light: #ffffff;
+  --on-light: #0b0b0b;
+  --solid-dark: #0b0b0b;
+  --solid-light: #f5f5f7;
 
-  --surface: #262626;
-  --surface-muted: #2d2d2d;
-  --surface-elevated: #333333;
-  --surface-sunken: #1a1a1a;
-  --surface-glass: rgb(38 38 38 / 0.92);
+  --surface: #191919;
+  --surface-muted: #1c1c1c;
+  --surface-elevated: #202020;
+  --surface-sunken: #0d0d0d;
+  --surface-glass: rgb(18 18 18 / 0.88);
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --popover: var(--surface-elevated);
   --popover-foreground: var(--foreground);
 
-  --border: #3a3a3a;
-  --border-strong: #4a4a4a;
-  --divider: #343434;
-  --input: #262626;
-  --input-hover: #2d2d2d;
-  --input-border: #444444;
-  --input-border-hover: #5a5a5a;
-  --placeholder: #858585;
-  --muted: #2d2d2d;
-  --muted-foreground: #a3a3a3;
-  --icon: #d4d4d4;
-  --icon-muted: #8f8f8f;
+  --border: #2e2e2e;
+  --border-strong: #343434;
+  --divider: #212121;
+  --input: #1c1c1c;
+  --input-hover: #202020;
+  --input-border: #2c2c2c;
+  --input-border-hover: #3a3a3a;
+  --placeholder: #6b7280;
+  --muted: #1c1c1c;
+  --muted-foreground: #9ca3af;
+  --icon: #d1d5db;
+  --icon-muted: #9ca3af;
 
   --hover: rgb(255 255 255 / 0.065);
   --active: rgb(255 255 255 / 0.105);
@@ -289,6 +294,8 @@ html.dark {
   --link: #f87171;
   --link-hover: #fca5a5;
 
+  --emphasis: #f5f5f7;
+  --emphasis-foreground: #0b0b0b;
   --brand: #ef4444;
   --brand-hover: #dc2626;
   --brand-active: #b91c1c;
@@ -362,7 +369,7 @@ html.dark {
     margin: 0;
     background: var(--background);
     color: var(--foreground);
-    font-family: var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-digits), var(--font-vazir-arabic), var(--font-vazir-latin), var(--font-iran-sans), ui-sans-serif, system-ui, sans-serif;
     font-feature-settings:
       "kern" 1,
       "liga" 1;

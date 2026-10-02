@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { meydanApi } from "@/lib/meydan-api";
+import { getMe } from "@/lib/me-client";
 
 type MeMedia = { media_outlet_id?: number | null; entity?: { id?: number | null } | null; square?: { id?: number | null } | null };
 
@@ -25,7 +25,7 @@ export function useMediaViewer(enabled: boolean): MediaViewer {
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    void meydanApi<MeMedia>("/me")
+    void getMe<MeMedia>()
       .then((me) => {
         if (!active) return;
         const outletId = Number(me.media_outlet_id ?? 0);

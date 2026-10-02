@@ -13,6 +13,8 @@ function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
   switch (filter) {
     case "all":
       return true;
+    case "narratives":
+      return !post.initiativeId;
     case "initiatives":
       return Boolean(post.initiativeId);
     case "reflected":
@@ -54,10 +56,12 @@ export function useFeed(
   initialSuggestions: FollowSuggestion[],
   initialNextCursor: string | null = null,
   initialPageReady = true,
+  /** Filter the server page was read with (the `?filter=` of /home). */
+  initialFilter: FeedFilter = "all",
 ) {
   const { isAuthenticated, requireAuth } = useAuthGate();
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
-  const [activeFilter, setActiveFilter] = useState<FeedFilter>("all");
+  const [activeFilter, setActiveFilter] = useState<FeedFilter>(initialFilter);
   const [remotePosts, setRemotePosts] = useState(initialPosts);
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.liked).map((post) => post.id)));
   const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(() => new Set(initialPosts.filter((post) => post.viewerState?.reposted).map((post) => post.id)));
@@ -211,7 +215,7 @@ export function useFeed(
   }, [isAuthenticated, followTargetKey]);
 
   useEffect(() => {
-    const isInitialTimeline = activeTab === "for-you" && activeFilter === "all";
+    const isInitialTimeline = activeTab === "for-you" && activeFilter === initialFilter;
     const canUseServerPage = !initialPageConsumedRef.current && isInitialTimeline && initialPageReady;
     initialPageConsumedRef.current = true;
 
@@ -264,7 +268,7 @@ export function useFeed(
       active = false;
       controller.abort();
     };
-  }, [activeFilter, activeTab, initialNextCursor, initialPageReady, initialPosts, replacePosts, timelineKey]);
+  }, [activeFilter, activeTab, initialFilter, initialNextCursor, initialPageReady, initialPosts, replacePosts, timelineKey]);
 
   const loadMore = useCallback(() => {
     if (isLoading || isLoadingMore || !nextCursor || loadMoreInFlightRef.current) return;
