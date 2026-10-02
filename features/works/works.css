@@ -2235,3 +2235,24 @@
 .works-feature .bwrap.menu-open .bub { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent) }
 @media (prefers-reduced-motion: reduce) { .works-feature .cm-menu { animation: none } }
 @media (max-width: 820px) { .works-feature .b-acts { display: none } }
+
+/* ---- members view: responsive cards (actions drop below the info on narrow screens) ---- */
+.works-feature .mlist { padding: 10px 12px }
+.works-feature .mrow { grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "av info" "acts acts"; row-gap: 8px; align-items: start }
+.works-feature .mrow > .av { grid-area: av; width: 44px; height: 44px }
+.works-feature .mrow > .minfo { grid-area: info; min-width: 0 }
+.works-feature .mrow-acts { grid-area: acts; display: flex; flex-wrap: wrap; gap: 6px }
+.works-feature .mrow-acts .qa { flex: 1 1 auto; min-height: 34px; padding: 4px 12px; white-space: nowrap }
+.works-feature .mname { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0 }
+.works-feature .mname b { min-width: 0; overflow-wrap: anywhere }
+.works-feature .mname .u-label, .works-feature .mname .role-b { margin: 0 }
+.works-feature .mhandle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100% }
+.works-feature .mload { display: flex; align-items: center; flex-wrap: nowrap; gap: 4px }
+.works-feature .mload .mcount { display: inline; margin-inline-start: 6px; font-size: 11px; white-space: nowrap }
+.works-feature .mrow .label-edit { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; margin-top: 6px }
+.works-feature .mrow .label-edit input { flex: 1 1 100%; min-width: 0 }
+@media (min-width: 821px) {
+  .works-feature .mrow { grid-template-columns: 44px minmax(0, 1fr) auto; grid-template-areas: "av info acts"; align-items: center }
+  .works-feature .mrow-acts { flex-wrap: nowrap; justify-content: flex-end }
+  .works-feature .mrow-acts .qa { flex: none }
+}

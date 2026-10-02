@@ -84,11 +84,13 @@ export function WorkMembers({
         return (
           <div className="mrow" key={m.user.id}>
             <Avatar user={m.user} />
-            <div style={{ minWidth: 0 }}>
-              <b>{m.user.name}</b>
-              {m.label ? <span className="u-label">{m.label}</span> : null}
-              {m.role === "owner" ? <span className="role-b admin">مدیر</span> : m.role === "admin" ? <span className="role-b lead">ادمین</span> : null}
-              <small dir="ltr" style={{ textAlign: "right" }}>
+            <div className="minfo">
+              <div className="mname">
+                <b>{m.user.name}</b>
+                {m.label ? <span className="u-label">{m.label}</span> : null}
+                {m.role === "owner" ? <span className="role-b admin">مدیر</span> : m.role === "admin" ? <span className="role-b lead">ادمین</span> : null}
+              </div>
+              <small className="mhandle" dir="ltr" style={{ textAlign: "right" }}>
                 {m.user.handle.startsWith("@") ? m.user.handle : "@" + m.user.handle}
               </small>
               {editing === m.user.id ? (
@@ -108,7 +110,7 @@ export function WorkMembers({
                   </button>
                 </form>
               ) : null}
-              <div className="load">
+              <div className="load mload">
                 {Array.from({ length: o }, (_, i) => (
                   <i className="f" key={"f" + i} />
                 ))}
@@ -118,7 +120,7 @@ export function WorkMembers({
                 {Array.from({ length: 5 - o - d }, (_, i) => (
                   <i key={"e" + i} />
                 ))}
-                <small style={{ display: "inline", marginInlineStart: 6 }}>
+                <small className="mcount">
                   {fa(open)} باز · {fa(done)} انجام‌شده
                 </small>
               </div>
