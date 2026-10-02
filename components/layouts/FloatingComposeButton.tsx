@@ -57,8 +57,8 @@ export function FloatingComposeButton() {
         disabled={loadingVideos}
         aria-label={videoError ? "ویدیویی پیدا نشد؛ دوباره تلاش کنید" : "مشاهده ویدیوها"}
         title={videoError ? "ویدیویی پیدا نشد" : "فید ویدیو"}
-        className={`group relative grid size-10 place-items-center rounded-full border border-white/15 text-on-solid shadow-floating transition-[transform,filter] duration-200 hover:scale-105 hover:brightness-110 active:scale-90 focus-visible:outline-none focus-visible:ring-4 disabled:cursor-wait ${
-          videoError ? "bg-warning" : "bg-info"
+        className={`group relative grid size-10 place-items-center rounded-full border text-brand shadow-floating transition-[transform,filter] duration-200 hover:scale-105 hover:brightness-110 active:scale-90 focus-visible:outline-none focus-visible:ring-4 disabled:cursor-wait ${
+          videoError ? "border-warning bg-warning-surface text-warning" : "border-brand-border bg-brand-muted backdrop-blur"
         }`}
       >
         {loadingVideos ? (
@@ -75,11 +75,11 @@ export function FloatingComposeButton() {
         }}
         aria-label="نوشتن روایت تازه"
         title="نوشتن روایت"
-        className="group relative grid size-12 place-items-center overflow-visible rounded-full border border-brand/20 bg-brand text-brand-foreground shadow-floating transition-[transform,box-shadow,filter] duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.04] hover:shadow-dialog hover:brightness-105 active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-4"
+        className="group relative grid size-[3.4rem] place-items-center overflow-visible rounded-full border border-brand/20 bg-brand text-brand-foreground shadow-floating transition-[transform,box-shadow,filter] duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.04] hover:shadow-dialog hover:brightness-105 active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-4"
       >
         <span aria-hidden="true" className="pointer-events-none absolute -inset-1 -z-10 rounded-full bg-brand/20 opacity-60 blur-md transition-all duration-300 group-hover:-inset-1.5 group-hover:opacity-80" />
         <span aria-hidden="true" className="pointer-events-none absolute inset-[2px] rounded-full border border-white/10" />
-        <PenLine aria-hidden="true" className="relative z-10 h-[1.2rem] w-[1.2rem] transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 group-active:rotate-0 group-active:scale-95" strokeWidth={2.35} />
+        <PenLine aria-hidden="true" className="relative z-10 h-[1.4rem] w-[1.4rem] transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110 group-active:rotate-0 group-active:scale-95" strokeWidth={2.35} />
       </Link>
     </div>
   );
