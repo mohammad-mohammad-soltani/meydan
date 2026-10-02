@@ -1,4 +1,4 @@
-import { Layers3, Radio, Sparkles, type LucideIcon } from "lucide-react";
+import { Sparkles, Video, type LucideIcon } from "lucide-react";
 import type { FeedFilter } from "../types";
 
 type FeedFiltersProps = {
@@ -9,25 +9,14 @@ type FeedFiltersProps = {
 type FilterItem = {
   id: FeedFilter;
   label: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
 };
 
 const filters: FilterItem[] = [
-  {
-    id: "all",
-    label: "همه روایت‌ها",
-    icon: Layers3,
-  },
-  {
-    id: "initiatives",
-    label: "کارها",
-    icon: Sparkles,
-  },
-  {
-    id: "reflected",
-    label: "بازنشر رسانه‌ای",
-    icon: Radio,
-  },
+  { id: "all", label: "همه" },
+  { id: "narratives", label: "روایت" },
+  { id: "initiatives", label: "کار", icon: Sparkles },
+  { id: "reflected", label: "پویش رسانه‌ای", icon: Video },
 ];
 
 export function FeedFilters({
@@ -37,7 +26,7 @@ export function FeedFilters({
   return (
     <div
       dir="rtl"
-      className="flex w-full gap-1.5 overflow-x-auto border-b border-divider bg-surface px-3 py-2 no-scrollbar"
+      className="flex w-full items-center gap-2 overflow-x-auto bg-background px-3 py-2.5 no-scrollbar"
       aria-label="فیلتر روایت‌ها"
     >
       {filters.map((filter) => {
@@ -50,37 +39,14 @@ export function FeedFilters({
             type="button"
             aria-pressed={active}
             onClick={() => onChange(filter.id)}
-            className={`
-              group inline-flex min-h-9 shrink-0 items-center justify-center
-              gap-1.5 rounded-full border px-3.5 py-1.5
-              text-[11px] font-bold
-              transition-[background-color,border-color,color,transform]
-              active:scale-[0.97]
-              ${
-                active
-                  ? "border-brand-border bg-brand text-white "
-                  : "border-border bg-surface text-muted-foreground hover:bg-hover hover:text-foreground"
-              }
-            `}
+            className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors active:scale-[0.97] ${
+              active
+                ? "border-transparent bg-emphasis text-emphasis-foreground"
+                : "border-input-border bg-surface-muted text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <Icon
-              aria-hidden="true"
-              strokeWidth={active ? 2.4 : 2}
-              className={`
-                h-[15px] w-[15px] shrink-0
-                transition-[color,transform]
-                group-hover:scale-105
-                ${
-                  active
-                    ? "text-white"
-                    : "text-icon-muted group-hover:text-icon"
-                }
-              `}
-            />
-
-            <span className="whitespace-nowrap">
-              {filter.label}
-            </span>
+            {Icon ? <Icon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /> : null}
+            {filter.label}
           </button>
         );
       })}

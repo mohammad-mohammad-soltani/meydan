@@ -15,7 +15,7 @@ import {
   Heart,
   MessageCircle,
   Repeat2,
-  ChartNoAxesColumn,
+  Eye,
   Send,
   ChevronLeft,
   ChevronRight,
@@ -435,7 +435,7 @@ export function ImmersivePostSlide({
               aria-label={`${state.stats.views} بازدید`}
               className="viewer-views"
             >
-              <ChartNoAxesColumn />
+              <Eye />
               <span>{count(state.stats.views)}</span>
             </span>
             <RepostMenu

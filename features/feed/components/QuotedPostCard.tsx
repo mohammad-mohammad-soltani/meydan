@@ -3,8 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import Image from "next/image";
-import { Play } from "lucide-react";
-import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
+import { Play, Quote } from "lucide-react";
 import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import type { QuotedPost } from "../types";
 import { AccountBadges } from "@/components/shared/AccountBadges";
@@ -18,7 +17,7 @@ type QuotedPostCardProps = {
 
 /** The post a quote embeds: author line, a short excerpt and a single thumbnail. */
 export function QuotedPostCard({ quote, preview = false, className = "" }: QuotedPostCardProps) {
-  const frame = `block w-full overflow-hidden rounded-[14px] border border-border bg-surface text-right ${className}`;
+  const frame = `block w-full overflow-hidden rounded-2xl border border-border bg-surface text-right ${className}`;
 
   if (quote.unavailable || !quote.author) {
     return (
@@ -35,30 +34,21 @@ export function QuotedPostCard({ quote, preview = false, className = "" }: Quote
 
   const content = (
     <>
-      <span className="flex min-w-0 items-center gap-1.5 px-3 pt-2.5">
-        {author.avatarUrl ? (
-          <OptimizedAvatar src={author.avatarUrl} alt="" width={20} height={20} className="h-5 w-5 shrink-0 rounded-full object-cover" />
-        ) : (
-          <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-[9px] font-black text-brand-foreground">
-            {author.name.slice(0, 1)}
-          </span>
-        )}
-        <span className="min-w-0 truncate text-[13px] font-black text-foreground">{author.name}</span>
-        <AccountBadges verified={author.verified} speaker={author.verifiedSpeaker} official={author.verifiedOfficial} kind={author.type} size="md" />
-        {quote.timeAgo ? (
-          <>
-            <span aria-hidden="true" className="shrink-0 text-[11px] text-foreground-subtle">·</span>
-            <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">{quote.timeAgo}</span>
-          </>
-        ) : null}
+      <span className="flex min-w-0 items-center gap-2 border-b border-divider bg-surface-elevated/90 px-3.5 py-2.5">
+        <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-surface-muted text-foreground">
+          <Quote className="h-3.5 w-3.5 fill-current" />
+        </span>
+        <span className="min-w-0 truncate text-[11px] font-bold text-foreground">نقل‌قول از: {author.name}</span>
+        <AccountBadges verified={author.verified} speaker={author.verifiedSpeaker} official={author.verifiedOfficial} kind={author.type} size="sm" />
+        {quote.timeAgo ? <span className="mr-auto shrink-0 whitespace-nowrap text-[10px] text-muted-foreground">{quote.timeAgo}</span> : null}
       </span>
 
       {quote.body ? (
-        <span className="mt-1 line-clamp-4 block whitespace-pre-line break-words px-3 text-[13px] leading-6 text-foreground">{quote.body}</span>
+        <span className="line-clamp-4 block whitespace-pre-line break-words px-3.5 py-2.5 text-[13px] leading-6 text-foreground">{quote.body}</span>
       ) : null}
 
       {thumb ? (
-        <span className="relative mt-2 block aspect-[16/9] w-full overflow-hidden bg-surface-muted">
+        <span className="relative block aspect-[16/9] w-full overflow-hidden bg-black/60">
           <Image
             src={thumb}
             alt={visual?.previewAlt || ""}
@@ -80,7 +70,6 @@ export function QuotedPostCard({ quote, preview = false, className = "" }: Quote
           ) : null}
         </span>
       ) : null}
-      <span className="block h-2.5" />
     </>
   );
 

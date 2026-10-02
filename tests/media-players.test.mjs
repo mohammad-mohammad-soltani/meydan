@@ -206,16 +206,15 @@ test("the lightbox keeps the X-style viewing controls", () => {
   }
 });
 
-test("view counts use the same chart icon across feed and content", () => {
+test("view counts use the same eye icon across feed and content (reference design)", () => {
   const feedActions = source("features/feed/components/PostActions.tsx");
   const contentDetail = source("features/content/components/ContentDetailView.tsx");
   const immersive = source("features/media/components/ImmersivePostSlide.tsx");
 
   for (const surface of [feedActions, contentDetail, immersive]) {
-    assert.match(surface, /ChartNoAxesColumn/);
+    assert.match(surface, /\bEye\b/);
+    assert.doesNotMatch(surface, /ChartNoAxesColumn/);
   }
-  assert.doesNotMatch(feedActions, /\bEye\b/);
-  assert.doesNotMatch(contentDetail, /\bEye\b/);
 });
 
 test("immersive image metadata fades over the photo instead of masking it with solid black", () => {

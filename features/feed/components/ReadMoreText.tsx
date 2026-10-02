@@ -131,7 +131,7 @@ export function ReadMoreText({
         }}
         aria-expanded={isExpanded}
         aria-controls={bodyId}
-        className="read-more-toggle pointer-events-auto relative z-10 mt-1 inline-flex items-center gap-1 rounded-pill px-1.5 py-0.5 text-[13px] font-black text-brand outline-none transition-colors hover:bg-brand-muted focus-visible:ring-2 focus-visible:ring-ring"
+        className="read-more-toggle pointer-events-auto relative z-10 mt-1 inline-flex items-center gap-1 rounded-pill py-0.5 text-xs font-bold text-foreground outline-none transition-colors hover:text-foreground-secondary focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span>{isExpanded ? "خواندن کمتر" : "خواندن بیشتر"}</span>
         <ChevronDown

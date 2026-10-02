@@ -42,3 +42,16 @@ export function useMe<T = Record<string, unknown>>(enabled: boolean): { me: T | 
 
   return enabled ? state : { me: null, loading: false };
 }
+
+const ENTITY_TYPES = new Set(["square", "media", "collective", "organization"]);
+
+/** `type:id` of the viewer's own actor, e.g. to hide «follow» on their own posts. */
+export function useOwnActorKey(enabled: boolean): string | null {
+  const { me } = useMe<{ account_type?: string; profile?: { id?: number }; entity?: { id?: number } | null; square?: { id?: number } | null }>(enabled);
+  if (!me?.account_type) return null;
+  if (ENTITY_TYPES.has(me.account_type)) {
+    const id = (me.entity ?? me.square)?.id;
+    return id ? `${me.account_type}:${id}` : null;
+  }
+  return me.profile?.id ? `user:${me.profile.id}` : null;
+}

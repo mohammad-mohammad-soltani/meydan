@@ -1,13 +1,16 @@
 "use client";
 
 import { BellRing, LoaderCircle, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
+import { actorKey } from "@/lib/meydan-follow";
+import { useOwnActorKey } from "@/lib/me-client";
 import { DeletePostDialog } from "./DeletePostDialog";
 import { FeedFilters } from "./FeedFilters";
 import { FeedSkeleton } from "./FeedSkeleton";
 import { FeedSwipePager } from "./FeedSwipePager";
 import { FeedTabs } from "./FeedTabs";
+import { FollowSuggestions } from "./FollowSuggestions";
 import { FollowingEmptyState } from "./FollowingEmptyState";
 import { PostCard } from "./PostCard";
 import { useFeed } from "../hooks/useFeed";
@@ -35,7 +38,8 @@ export function FeedView({
   initialFilter = "all",
 }: FeedViewProps) {
   const feed = useFeed(posts, suggestions, nextCursor, !postsUnavailable, initialFilter);
-  const { requireAuth } = useAuthGate();
+  const { requireAuth, isAuthenticated } = useAuthGate();
+  const ownActorKey = useOwnActorKey(isAuthenticated);
   const [deleteTarget, setDeleteTarget] = useState<FeedPost | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -77,10 +81,20 @@ export function FeedView({
     <FeedSkeleton />
   ) : (
     <div className="w-full">
-      <div className="w-full divide-y divide-divider">
-        {feed.posts.map((post) => (
+      <div className="w-full">
+        {feed.posts.map((post, index) => (
+          <Fragment key={post.id}>
+          {/* Reference design: the suggestion strip sits after the second post of «برای شما». */}
+          {index === 2 && feed.activeTab === "for-you" ? (
+            <FollowSuggestions
+              variant="strip"
+              suggestions={feed.suggestions}
+              followedActorKeys={feed.followedActorKeys}
+              pendingFollowKeys={feed.pendingFollowKeys}
+              onToggleFollow={(type, id) => void feed.toggleFollow(type, id)}
+            />
+          ) : null}
           <PostCard
-            key={post.id}
             post={post}
             videoPosts={feed.posts}
             liked={feed.likedPostIds.has(post.id)}
@@ -95,7 +109,10 @@ export function FeedView({
               setDeleteError(null);
               setDeleteTarget(post);
             }}
+            following={feed.followedActorKeys.has(actorKey(post.author.type, post.author.id))}
+            onFollow={ownActorKey === actorKey(post.author.type, post.author.id) ? undefined : () => void feed.toggleFollow(post.author.type, post.author.id)}
           />
+          </Fragment>
         ))}
       </div>
       {listFooter}

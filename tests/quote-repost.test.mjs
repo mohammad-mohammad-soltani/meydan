@@ -48,12 +48,15 @@ test("the repost button counts reposts and quotes together", () => {
   assert.equal(quoteComposeHref("15"), "/compose?quote=15");
 });
 
-test("share lives in the post header and the repost toggle in the action bar", () => {
+test("share ends the action bar on timeline cards (reference design) and the header on the post page", () => {
   const card = source("features/feed/components/PostCard.tsx");
   const actions = source("features/feed/components/PostActions.tsx");
 
+  // Post page header keeps its share button; the timeline passes onShare to the bar.
   assert.match(card, /<PostShareButton onShare=\{onShare\}/);
-  assert.doesNotMatch(actions, /Share2/);
+  assert.match(card, /onShare=\{onShare\}\n\s*\/> : null\}/);
+  assert.match(actions, /Share2/);
+  assert.match(actions, /اشتراک/);
   assert.match(actions, /<RepostMenu/);
   assert.match(actions, /quoteComposeHref\(postId\)/);
   assert.match(card, /<QuotedPostCard quote=\{post\.quote\}/);

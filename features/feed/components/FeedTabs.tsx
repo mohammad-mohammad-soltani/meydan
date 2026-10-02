@@ -19,10 +19,10 @@ export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedT
   ref,
 ) {
   const { requireAuth } = useAuthGate();
-  const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-4 text-xs font-black transition-colors duration-200 ${active ? "text-brand font-black" : "text-muted-foreground hover:bg-hover hover:text-foreground"}`;
+  const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-3 text-xs font-bold transition-colors duration-200 ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`;
 
   return (
-    <div ref={ref} role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="sticky top-0 z-30 flex w-full border-b border-border bg-surface-glass backdrop-blur">
+    <div ref={ref} role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="sticky top-0 z-30 flex w-full bg-background">
       <button role="tab" type="button" onClick={() => onChange("for-you")} aria-selected={activeTab === "for-you"} className={tabClass(activeTab === "for-you")}>
         برای شما
       </button>
@@ -32,7 +32,7 @@ export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedT
       <span
         ref={indicatorRef}
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 h-0.5 w-1/2 bg-brand transition-transform duration-300 ease-out"
+        className="pointer-events-none absolute bottom-0 right-0 h-[3px] w-1/2 transition-transform duration-300 ease-out after:absolute after:inset-x-1/4 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-emphasis after:content-['']"
         style={{ transform: `translateX(${activeTab === "following" ? -100 : 0}%)` }}
       />
     </div>

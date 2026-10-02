@@ -8,6 +8,8 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 
 import { ConnectedGoodActionCard } from "./ConnectedGoodActionCard";
 import { PostActions } from "./PostActions";
+import { FollowPill } from "./FollowPill";
+import { PostMoreMenu } from "./PostMoreMenu";
 import { PostShareButton } from "./PostShareButton";
 import { QuotedPostCard } from "./QuotedPostCard";
 import { repostTotal } from "../post-counts";
@@ -16,6 +18,7 @@ import { MarkdownText } from "@/components/shared/MarkdownText";
 import { MediaGallery } from "@/features/media/components/MediaGallery";
 import { mediaItemsFromAttachments } from "@/features/media/media-utils";
 import type { FeedPost } from "../types";
+import { splitPostTitle } from "../post-title";
 import { AccountBadges } from "@/components/shared/AccountBadges";
 
 type PostCardProps = {
@@ -33,6 +36,9 @@ type PostCardProps = {
   onDelete?: () => void;
   /** Report-day pages reuse the exact card without interactive action controls. */
   hideActions?: boolean;
+  /** Whether the viewer follows the author; the «دنبال کردن» pill shows when `onFollow` is set. */
+  following?: boolean;
+  onFollow?: () => void;
 };
 
 function TimelineMediaReflectionText({
@@ -97,6 +103,8 @@ export function PostCard({
   onOpenMedia,
   onDelete,
   hideActions = false,
+  following = false,
+  onFollow,
 }: PostCardProps) {
   void onJoin;
 
@@ -134,7 +142,7 @@ export function PostCard({
             ) : (
               <span
                 aria-hidden="true"
-                className="grid h-11 w-11 place-items-center rounded-full bg-brand text-xs font-black text-brand-foreground"
+                className="grid h-11 w-11 place-items-center rounded-full border border-border-strong bg-surface-elevated text-xs font-black text-foreground"
               >
                 {post.squareName.slice(0, 1)}
               </span>
@@ -282,162 +290,139 @@ export function PostCard({
   }
 
   /*
-   * Timeline
+   * Timeline (reference design): one header row, then full-width text, media
+   * and the rounded action bar.
    */
+  const { title: bodyTitle, rest: bodyRest } = splitPostTitle(post.body);
   return (
-    <article className="relative border-b border-divider bg-surface px-3 py-3 transition-colors duration-150 hover:bg-hover/20 sm:px-4">
+    <article className="relative border-b border-transparent px-4 py-4 transition-colors duration-150 hover:bg-surface/50">
       <Link
         href={(`/posts/${post.id}`) as Route}
         aria-label={`مشاهده روایت ${post.title}`}
         className="absolute inset-0 z-0"
       />
 
-      <div className="pointer-events-none relative z-10 flex items-start gap-2.5">
-        <Link
-          href={profileHref}
-          aria-label={`مشاهده پروفایل ${post.squareName}`}
-          className="pointer-events-auto relative z-10 shrink-0"
-        >
-          {post.author.avatarUrl ? (
-            <OptimizedAvatar
-              src={post.author.avatarUrl}
-              alt=""
-              width={40}
-              height={40}
-              className="h-10 w-10 rounded-full object-cover ring-1 ring-border/70 transition-opacity hover:opacity-90"
-            />
-          ) : (
-            <span
-              aria-hidden="true"
-              className="grid h-10 w-10 place-items-center rounded-full bg-brand text-xs font-black text-brand-foreground"
-            >
-              {post.squareName.slice(0, 1)}
-            </span>
-          )}
-        </Link>
-
-        {/* این ستون عرض تصویر، CTA و اکشن‌ها را یکی می‌کند */}
-        <div className="min-w-0 flex-1">
-          <div
-            dir="rtl"
-            className="flex min-w-0 items-center gap-1.5 leading-5"
-          >
+      <div className="pointer-events-none relative z-10">
+        <div dir="rtl" className="flex w-full min-w-0 items-center justify-between gap-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
             <Link
               href={profileHref}
-              className="pointer-events-auto relative z-10 min-w-0 truncate text-[14px] font-black text-foreground hover:underline"
+              aria-label={`مشاهده پروفایل ${post.squareName}`}
+              className="pointer-events-auto relative z-10 shrink-0"
             >
-              {post.squareName}
-            </Link>
-
-            <AccountBadges verified={post.author.verified} speaker={post.author.verifiedSpeaker} official={post.author.verifiedOfficial} kind={post.author.type} size="md" />
-
-            {post.badge ? (
-              <>
+              {post.author.avatarUrl ? (
+                <OptimizedAvatar
+                  src={post.author.avatarUrl}
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-full border border-border-strong object-cover transition-opacity hover:opacity-90"
+                />
+              ) : (
                 <span
                   aria-hidden="true"
-                  className="shrink-0 text-[11px] text-foreground-subtle lg:block hidden"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-border-strong bg-surface-elevated text-xs font-black text-foreground"
                 >
-                  ·
+                  {post.squareName.slice(0, 1)}
                 </span>
-
-                <span className="min-w-0 truncate text-[11px] text-muted-foreground lg:block hidden">
-                  {post.badge}
-                </span>
-              </>
-            ) : null}
-
-            <span
-              aria-hidden="true"
-              className="shrink-0 text-[11px] text-foreground-subtle"
-            >
-              ·
-            </span>
-
-            <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">
-              {post.timeAgo}
-            </span>
-            {/* mr-auto pushes the controls to the top-left in RTL; share is the outermost one. */}
-            <span className="mr-auto flex shrink-0 items-center gap-0.5">
-              {post.viewerState?.canDelete ? <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onDelete?.(); }} className="pointer-events-auto relative z-10 grid h-7 w-7 place-items-center rounded-full text-danger-foreground hover:bg-danger-surface" aria-label="حذف روایت"><Trash2 className="h-3.5 w-3.5" /></button> : null}
-              {!hideActions ? <PostShareButton onShare={onShare} /> : null}
-            </span>
+              )}
+            </Link>
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <Link
+                  href={profileHref}
+                  className="pointer-events-auto relative z-10 min-w-0 truncate text-sm font-bold text-foreground hover:underline"
+                >
+                  {post.squareName}
+                </Link>
+                <AccountBadges verified={post.author.verified} speaker={post.author.verifiedSpeaker} official={post.author.verifiedOfficial} kind={post.author.type} size="md" />
+              </div>
+              <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11px] font-medium text-muted-foreground">
+                {post.badge ? (
+                  <span className="shrink-0 rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-foreground">
+                    {post.badge}
+                  </span>
+                ) : null}
+                <span aria-hidden="true">·</span>
+                <span className="truncate">{post.timeAgo}</span>
+              </div>
+            </div>
           </div>
-
-          <div className="mt-0.5">
-            {post.title !== post.squareName ? (
-              <h2 className="text-[15px] font-bold leading-6 text-foreground">
-                {post.title}
-              </h2>
+          <div className="flex shrink-0 items-center gap-1.5">
+            {onFollow ? <FollowPill following={following} onToggle={onFollow} /> : null}
+            {!hideActions ? (
+              <PostMoreMenu postId={post.id} onDelete={post.viewerState?.canDelete ? onDelete : undefined} />
             ) : null}
-
-            <ReadMoreText
-              body={post.body}
-              className={`text-[14px] leading-[1.75] text-foreground ${
-                post.title !== post.squareName ? "mt-0.5" : ""
-              }`}
-              contentClassName="relative z-10"
-            />
           </div>
+        </div>
 
-          {post.attachments.length > 0 ? (
-            <MediaGallery
-              items={mediaItems}
+        <div dir="rtl" className="mt-2.5 text-[13.5px] leading-relaxed">
+          {bodyTitle ? <p className="mb-1 font-bold text-foreground">{bodyTitle}</p> : null}
+          <ReadMoreText
+            body={bodyRest}
+            className="text-foreground-secondary"
+            contentClassName="relative z-10"
+          />
+        </div>
+
+        {post.attachments.length > 0 ? (
+          <MediaGallery
+            items={mediaItems}
             videoPost={post}
             videoPosts={videoPosts}
-              scope={`post:${post.id}`}
-              artist={post.squareName}
-              cover={post.author.avatarUrl}
-              className="mt-2.5"
-            />
-          ) : null}
+            scope={`post:${post.id}`}
+            artist={post.squareName}
+            cover={post.author.avatarUrl}
+            className="mt-3"
+          />
+        ) : null}
 
-          {post.quote ? <QuotedPostCard quote={post.quote} className="mt-2.5" /> : null}
+        {post.quote ? <QuotedPostCard quote={post.quote} className="mt-3" /> : null}
 
-          {post.mediaReflection ? (
-            post.mediaReflection.url ? (
-              <a
-                href={post.mediaReflection.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="pointer-events-auto relative z-10 mt-2 block w-full rounded-[12px] border border-border px-2.5 py-2 text-right transition-colors hover:bg-hover"
-              >
-                <span className="block truncate text-[11px] text-foreground-secondary">
-                  <TimelineMediaReflectionText reflection={post.mediaReflection} />
-                </span>
-              </a>
-            ) : (
-              <div className="relative z-10 mt-2 block w-full rounded-[12px] border border-border px-2.5 py-2 text-right">
-                <span className="block truncate text-[11px] text-foreground-secondary">
-                  <TimelineMediaReflectionText reflection={post.mediaReflection} />
-                </span>
-              </div>
-            )
-          ) : null}
+        {post.mediaReflection ? (
+          post.mediaReflection.url ? (
+            <a
+              href={post.mediaReflection.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pointer-events-auto relative z-10 mt-3 block w-full rounded-2xl border border-border bg-surface px-3 py-2.5 text-right transition-colors hover:bg-hover"
+            >
+              <span className="block truncate text-[11px] text-foreground-secondary">
+                <TimelineMediaReflectionText reflection={post.mediaReflection} />
+              </span>
+            </a>
+          ) : (
+            <div className="relative z-10 mt-3 block w-full rounded-2xl border border-border bg-surface px-3 py-2.5 text-right">
+              <span className="block truncate text-[11px] text-foreground-secondary">
+                <TimelineMediaReflectionText reflection={post.mediaReflection} />
+              </span>
+            </div>
+          )
+        ) : null}
 
-          {post.initiativeId ? (
-            <ConnectedGoodActionCard
-              initiativeId={post.initiativeId}
+        {post.initiativeId ? (
+          <ConnectedGoodActionCard
+            initiativeId={post.initiativeId}
             initialWorkId={post.initiativeWorkId}
             initialClosed={post.initiativeClosed}
-              initialJoined={joined}
-              initialParticipantCount={post.initiativeParticipantCount}
-              label={post.callToAction ?? "پیوستن"}
-            />
-          ) : null}
+            initialJoined={joined}
+            initialParticipantCount={post.initiativeParticipantCount}
+            label={post.callToAction ?? "پیوستن"}
+          />
+        ) : null}
 
-          {!hideActions ? <PostActions
-            postId={post.id}
-            likes={post.stats.likes}
-            reposts={repostTotal(post.stats)}
-            comments={post.stats.comments}
-            views={post.stats.views}
-            liked={liked}
-            reposted={reposted}
-            onLike={onLike}
-            onRepost={onRepost}
-            className="mt-3"
-          /> : null}
-        </div>
+        {!hideActions ? <PostActions
+          postId={post.id}
+          likes={post.stats.likes}
+          reposts={repostTotal(post.stats)}
+          comments={post.stats.comments}
+          views={post.stats.views}
+          liked={liked}
+          reposted={reposted}
+          onLike={onLike}
+          onRepost={onRepost}
+          onShare={onShare}
+        /> : null}
       </div>
     </article>
   );
