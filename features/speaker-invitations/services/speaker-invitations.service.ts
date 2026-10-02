@@ -13,6 +13,7 @@ import { actorKindOf } from "@/lib/profile-route";
 type ApiActor = {
   id?: string | null;
   type?: string | null;
+  handle?: string | null;
   display_name?: string | null;
   avatar_url?: string | null;
   verified?: boolean | null;

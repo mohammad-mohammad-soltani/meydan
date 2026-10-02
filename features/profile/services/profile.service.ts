@@ -5,6 +5,7 @@ import type { FeedPost } from "@/features/feed/types";
 import type { ProfileDetails } from "../types";
 import type {
   ApiComment,
+  ApiEntityMe,
   ApiMe,
   ApiMediaReflectionCount,
   ApiNarrative,
@@ -134,8 +135,9 @@ async function authenticatedProfile(): Promise<ProfileDetails | null> {
       narrativePage = { data: [], nextCursor: null, count: null };
     }
 
-    const actorId =
-      isEntityKind(me.account_type) ? (me.entity ?? me.square)?.id : me.profile.id;
+    const actorId = isEntityKind(me.account_type)
+      ? ((me as ApiEntityMe).entity ?? (me as ApiEntityMe).square)?.id
+      : (me as Exclude<ApiMe, ApiEntityMe>).profile.id;
 
     // Speakers are `user` actors everywhere interactions and replies are keyed:
     // `/actors/{type}` accepts `user` and the entity kinds, never `speaker`.

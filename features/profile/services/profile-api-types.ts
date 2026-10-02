@@ -86,14 +86,16 @@ export type ApiSpeaker = {
   categories?: Array<{ slug?: string; name?: string }>;
 };
 
+/** An entity account: square, media, collective or organization. */
+export type ApiEntityMe = {
+  account_type: "square" | "media" | "collective" | "organization";
+  entity?: ApiSquare | null;
+  /** Same payload as `entity`; only sent for squares. */
+  square?: ApiSquare | null;
+};
+
 export type ApiMe =
-  | {
-      /** An entity account: square, media, collective or organization. */
-      account_type: "square" | "media" | "collective" | "organization";
-      entity?: ApiSquare | null;
-      /** Same payload as `entity`; only sent for squares. */
-      square?: ApiSquare | null;
-    }
+  | ApiEntityMe
   | {
       account_type: "speaker";
       profile: ApiUserProfile;

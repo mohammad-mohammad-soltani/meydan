@@ -12,6 +12,9 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 const typeLabels: Record<InitiativeParticipant["type"], string> = {
   user: "کاربر میدان",
   square: "میدان",
+  media: "رسانه",
+  collective: "مجموعه",
+  organization: "سازمان",
 };
 
 function ParticipantRow({ participant }: { participant: InitiativeParticipant }) {
