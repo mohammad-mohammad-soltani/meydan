@@ -45,3 +45,10 @@ test("approved media accounts can file a reflection from the post page", () => {
   assert.match(dialog, /یکی از پست‌های اکانت خودم را به‌عنوان بازتاب منتشر می‌کنم/);
   assert.match(read("features/posts/hooks/useMediaViewer.ts"), /media_outlet_id/);
 });
+
+test("quote compose lets media accounts opt out of filing a reflection (default on)", () => {
+  const compose = read("features/compose/components/ComposeView.tsx");
+  assert.match(compose, /useState\(true\)/);
+  assert.match(compose, /media_reflection: fileAsReflection/);
+  assert.match(compose, /این نقل‌قول به‌عنوان بازنشر رسانه‌ای ثبت شود/);
+});

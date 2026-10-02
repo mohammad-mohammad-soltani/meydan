@@ -18,6 +18,8 @@ const MEDIA_ACCEPT = "image/*,video/*,audio/*";
 type ViewerState = {
   /** `speaker` publishes as the user account behind it. */
   accountType: "user" | "square" | "speaker" | "";
+  /** Set for an approved media account (رسانه), which can file quotes as media reflections. */
+  mediaOutletId?: number | null;
 };
 
 type ComposeDraft = {
@@ -50,6 +52,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState("");
   const [viewer, setViewer] = useState<ViewerState>({ accountType: "" });
+  const [fileAsReflection, setFileAsReflection] = useState(true);
   const [draftLoaded, setDraftLoaded] = useState(false);
 
   const { media, notice, addFiles, remove, retry, reset, isUploading, hasUploadError, readyAttachments, isReady } =
@@ -101,9 +104,9 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   }, [quoteId]);
 
   useEffect(() => {
-    void meydanApi<{ account_type: "user" | "square" | "speaker" }>("/me")
+    void meydanApi<{ account_type: "user" | "square" | "speaker"; media_outlet_id?: number | null }>("/me")
       .then((me) => {
-        setViewer({ accountType: me.account_type });
+        setViewer({ accountType: me.account_type, mediaOutletId: me.media_outlet_id ?? null });
       })
       .catch(() => undefined);
   }, []);
@@ -154,6 +157,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           is_echo: isEcho,
           attachments: readyAttachments,
           ...(quoteId ? { quoted_narrative_id: Number(quoteId) } : {}),
+          ...(quoteId && viewer.mediaOutletId ? { media_reflection: fileAsReflection } : {}),
         }),
       });
       window.localStorage.removeItem(DRAFT_KEY);
@@ -269,6 +273,12 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
               <p role="alert" className="rounded-2xl border border-danger-border bg-danger-surface p-4 text-xs font-bold leading-6 text-danger">
                 روایت موردنظر در دسترس نیست و نقل‌قول آن ممکن نیست.
               </p>
+            ) : null}
+            {quote.status === "ready" && viewer.mediaOutletId ? (
+              <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 text-xs font-black text-foreground">
+                <input type="checkbox" checked={fileAsReflection} onChange={(event) => setFileAsReflection(event.target.checked)} />
+                این نقل‌قول به‌عنوان بازنشر رسانه‌ای ثبت شود
+              </label>
             ) : null}
           </div>
         ) : null}
