@@ -54,7 +54,7 @@ test("share ends the action bar on timeline cards (reference design) and the hea
 
   // Post page header keeps its share button; the timeline passes onShare to the bar.
   assert.match(card, /<PostShareButton onShare=\{onShare\}/);
-  assert.match(card, /onShare=\{onShare\}\n\s*\/> : null\}/);
+  assert.match(card, /onShare=\{onShare\}\n\s*bookmarked=\{Boolean\(post\.viewerState\?\.bookmarked\)\}\n\s*\/> : null\}/);
   assert.match(actions, /Share2/);
   assert.match(actions, /اشتراک/);
   assert.match(actions, /<RepostMenu/);
