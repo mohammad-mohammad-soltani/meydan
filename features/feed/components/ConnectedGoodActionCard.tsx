@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check, HandHeart, LoaderCircle, Plus, UsersRound } from "lucide-react";
+import { Check, Eye, HandHeart, LoaderCircle, Plus, UsersRound } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { loginHref, rememberReturnTo } from "@/lib/auth-navigation";
 import { MeydanApiError, isAuthApiError, meydanApi } from "@/lib/meydan-api";
@@ -100,7 +100,7 @@ export function ConnectedGoodActionCard({
 
           <div className="min-w-0 flex-1">
             <strong className="block text-[13px] font-black leading-6 text-foreground sm:text-xs">
-              {closed ? "این کار حذف شده است" : "شما هم به این کار بپیوندید"}
+              {closed ? "این کار حذف شده است" : joined ? "شما به این کار پیوسته‌اید" : "شما هم به این کار بپیوندید"}
             </strong>
 
             {closed ? (
@@ -126,24 +126,34 @@ export function ConnectedGoodActionCard({
           </div>
         </div>
 
-        <button
-          type="button"
-          disabled={loading || closed}
-          aria-pressed={joined}
-          onClick={() => void toggleJoin()}
-          className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-black outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70 sm:min-h-10 sm:w-auto ${
-            closed ? "cursor-not-allowed bg-surface-muted text-muted-foreground opacity-70" : joined ? "bg-success-surface text-success" : "bg-warning text-warning-solid-foreground hover:brightness-105"
-          }`}
-        >
-          {loading ? (
-            <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />
-          ) : joined && !closed ? (
-            <Check aria-hidden="true" className="h-4 w-4" />
-          ) : (
-            <Plus aria-hidden="true" className="h-4 w-4" />
-          )}
-          <span className="whitespace-nowrap">{closed ? "حذف شده" : joined ? "پیوسته‌اید" : label || "پیوستن"}</span>
-        </button>
+        {joined && !closed ? (
+          <Link
+            href={workId ? `/works/${workId}` : `/initiatives/${initiativeId}/participants`}
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-success-surface px-4 text-xs font-black text-success outline-none transition-colors hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:w-auto"
+          >
+            <Eye aria-hidden="true" className="h-4 w-4" />
+            <span className="whitespace-nowrap">مشاهده کار</span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            disabled={loading || closed}
+            aria-pressed={joined}
+            onClick={() => void toggleJoin()}
+            className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-black outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70 sm:min-h-10 sm:w-auto ${
+              closed ? "cursor-not-allowed bg-surface-muted text-muted-foreground opacity-70" : joined ? "bg-success-surface text-success" : "bg-warning text-warning-solid-foreground hover:brightness-105"
+            }`}
+          >
+            {loading ? (
+              <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+            ) : joined && !closed ? (
+              <Check aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <Plus aria-hidden="true" className="h-4 w-4" />
+            )}
+            <span className="whitespace-nowrap">{closed ? "حذف شده" : joined ? "پیوسته‌اید" : label || "پیوستن"}</span>
+          </button>
+        )}
       </div>
     </div>
   );
