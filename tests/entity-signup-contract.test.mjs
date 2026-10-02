@@ -58,3 +58,10 @@ test("admin lists can approve or suspend each account directly", () => {
   assert.match(view, /setSquareStatus\(String\(square\.id\), status, square\.adminNote\)/);
   assert.match(view, /تأیید و فعال‌سازی/);
 });
+
+test("own profile loads in one request with a fallback for older backends", () => {
+  const service = read("features/profile/services/profile.service.ts");
+  assert.match(service, /\/me\/profile-page\?limit=20/);
+  assert.match(service, /if \(single !== undefined\) return single;/);
+  assert.match(read("features/profile/services/square-profile-meta.service.ts"), /profile\.metaHydrated/);
+});

@@ -55,6 +55,8 @@ export type ProfileDetails = {
   narrativePosts: import("@/features/feed/types").FeedPost[];
   narrativeCount?: number | null;
   narrativesDeferred?: boolean;
+  /** Square stats and start date already came with the profile; no extra request is needed. */
+  metaHydrated?: boolean;
   nextNarrativeCursor?: string | null;
   replies: ProfileReply[];
   about: string;

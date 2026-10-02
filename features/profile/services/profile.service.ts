@@ -53,12 +53,59 @@ async function getPublicNarrativePage(path: string) {
   }
 }
 
+type ApiProfilePage = {
+  me: ApiMe;
+  narratives: ApiNarrative[];
+  replies: ApiComment[];
+  square_meta: { start_date?: string | null; media_reflections?: number } | null;
+};
+
+/**
+ * The whole own-profile page in one backend request (`/me/profile-page`).
+ * Returns `undefined` when the endpoint is unavailable (an older backend), so
+ * the caller falls back to the separate requests.
+ */
+async function profileFromSinglePage(
+  headers: Record<string, string>,
+): Promise<ProfileDetails | null | undefined> {
+  let page: { data: ApiProfilePage; nextCursor: string | null; count: number | null };
+  try {
+    page = await meydanApiPage<ApiProfilePage>("/me/profile-page?limit=20", { headers });
+  } catch {
+    return undefined;
+  }
+  const { me, narratives, replies, square_meta: squareMeta } = page.data;
+  if (!me) return undefined;
+  const narrativePage = { nextNarrativeCursor: page.nextCursor, narrativeCount: page.count };
+
+  if (me.account_type === "user" || me.account_type === "official") {
+    return { ...mapUser(me.profile, narratives, replies), ...narrativePage };
+  }
+  if (me.account_type === "speaker") {
+    return { ...mapUser(me.profile, narratives, replies, me.speaker || null), ...narrativePage };
+  }
+  if (!me.square) return null;
+  return {
+    ...mapSquare(
+      { ...me.square, start_date: squareMeta?.start_date ?? me.square.start_date },
+      narratives,
+      replies,
+      squareMeta?.media_reflections ?? 0,
+    ),
+    ...narrativePage,
+    metaHydrated: true,
+  };
+}
+
 async function authenticatedProfile(): Promise<ProfileDetails | null> {
   const headers = await accessTokenHeader();
 
   if (!headers.Authorization) {
     return null;
   }
+
+  const single = await profileFromSinglePage(headers);
+  if (single !== undefined) return single;
 
   try {
     const me = await meydanApi<ApiMe>("/me", {

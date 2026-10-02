@@ -16,7 +16,7 @@ type ApiMediaReflectionCount = {
 export async function hydrateSquareProfileMeta(
   profile: ProfileDetails,
 ): Promise<ProfileDetails> {
-  if (profile.accountType !== "square") return profile;
+  if (profile.accountType !== "square" || profile.metaHydrated) return profile;
 
   try {
     const [square, reflections] = await Promise.all([
