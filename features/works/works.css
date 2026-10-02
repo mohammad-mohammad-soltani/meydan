@@ -2103,3 +2103,47 @@
 .works-feature .wk-danger .btn { display: inline-flex; justify-content: center; align-items: center; gap: 6px; width: 100% }
 .works-feature .wk-danger .more-confirm small { display: block; color: var(--muted); font-size: 12px; line-height: 1.8; margin: 4px 0 }
 .works-feature .qa.danger { background: var(--accent); border-color: var(--accent); color: #fff }
+
+/* ---- focus polish: one soft ring on the visual container, never a double outline ---- */
+.works-feature.works-feature :is(input, textarea, select):focus-visible { outline: 0; box-shadow: none; border-radius: inherit }
+.works-feature .cinput,
+.works-feature .due-field,
+.works-feature .sp-search { transition: border-color .15s, box-shadow .15s, background-color .15s }
+.works-feature .cinput:focus-within,
+.works-feature .due-field:focus-within,
+.works-feature .sp-search:focus-within,
+.works-feature .field input:focus,
+.works-feature .field textarea:focus,
+.works-feature .opt-row input:focus,
+.works-feature .label-edit input:focus,
+.works-feature .edit-box textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+  background: var(--surface);
+}
+.works-feature .cinput { background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.04) }
+.works-feature .cinput textarea { color: var(--fg); font-weight: 500 }
+.works-feature .cinput textarea::placeholder { color: var(--faint); font-weight: 400 }
+
+/* numeric deadline (days) */
+.works-feature .due-field { min-height: 40px; gap: 8px; padding: 0 12px; border-radius: 12px; border-color: var(--line); background: var(--surface-2); font-weight: 700 }
+.works-feature .due-field input[type="number"] { -moz-appearance: textfield; appearance: textfield; text-align: center; font-weight: 800; font-size: 14px; max-width: 5.5em; padding: 8px 0 }
+.works-feature .due-field input[type="number"]::-webkit-outer-spin-button,
+.works-feature .due-field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0 }
+.works-feature .due-field input::placeholder { font-weight: 500; color: var(--faint); font-size: 12px }
+.works-feature .due-field::after { content: "روز"; color: var(--muted); font-size: 12.5px; font-weight: 700; margin-inline-start: auto }
+
+/* works list rows */
+.works-feature .w-groups { padding: 8px; display: flex; flex-direction: column; gap: 4px }
+.works-feature .wg { padding: 12px; border-radius: 16px; margin: 0; align-items: center; border: 1px solid transparent; transition: background-color .15s, border-color .15s, box-shadow .15s }
+.works-feature .wg:hover { background: var(--surface-2); border-color: var(--line-soft) }
+.works-feature .wg.on { background: var(--surface); border-color: var(--line); box-shadow: 0 4px 14px rgba(0,0,0,.08) }
+.works-feature .wg.on::before { content: ""; position: absolute; inset-block: 14px; inset-inline-start: -1px; width: 3px; border-radius: 3px; background: var(--accent) }
+.works-feature .wg-ic { width: 46px; height: 46px; border-radius: 15px }
+.works-feature .wg-main { gap: 3px }
+.works-feature .wg-main b { font-size: 14px; font-weight: 900 }
+.works-feature .wg-main .last { font-size: 12px; line-height: 1.5 }
+.works-feature .wg-prog { margin-top: 4px; gap: 8px }
+.works-feature .wg-prog .tr { height: 5px; background: var(--line-soft) }
+.works-feature .wg-side { align-self: stretch; justify-content: space-between; align-items: flex-end; padding-block: 2px }
+.works-feature .wg-guest { border: 0; background: var(--surface-2); color: var(--muted); border-radius: 99px; padding: 2px 8px; font-size: 10.5px; font-weight: 700 }
