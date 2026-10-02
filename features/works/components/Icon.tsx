@@ -23,7 +23,7 @@ const PATHS = {
   send: '<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/>',
-  board: '<rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/>',
+  board: '<rect x="3" y="3" width="18" height="18" rx="3.5"/><path d="M8 7.5v7"/><path d="M12 7.5v3.5"/><path d="M16 7.5v9"/>',
   at: '<circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/>',
