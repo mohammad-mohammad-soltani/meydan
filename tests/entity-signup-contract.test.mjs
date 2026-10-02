@@ -36,3 +36,12 @@ test("admin has a list page per kind and media linking", () => {
   // The squares page keeps listing squares only.
   assert.match(read("app/(app)/admin/squares/page.tsx"), /kind: "square"/);
 });
+
+test("approved media accounts can file a reflection from the post page", () => {
+  const view = read("features/posts/components/PostView.tsx");
+  assert.match(view, /AddReflectionButton/);
+  const dialog = read("features/posts/components/AddReflectionButton.tsx");
+  assert.match(dialog, /own_narrative_id/);
+  assert.match(dialog, /یکی از پست‌های اکانت خودم را به‌عنوان بازتاب منتشر می‌کنم/);
+  assert.match(read("features/posts/hooks/useMediaViewer.ts"), /media_outlet_id/);
+});

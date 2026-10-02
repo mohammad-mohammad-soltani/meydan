@@ -11,7 +11,10 @@ import { ChevronLeft } from "lucide-react";
 
 import { CommentsList } from "./CommentsList";
 import { CommentInput } from "./CommentInput";
+import { AddReflectionButton } from "./AddReflectionButton";
 import { MediaReflections } from "./MediaReflections";
+import { useMediaViewer } from "../hooks/useMediaViewer";
+import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { PostAdminActions } from "./PostAdminActions";
 import { PostHeader } from "./PostHeader";
 import { DeletePostDialog } from "@/features/feed/components/DeletePostDialog";
@@ -168,6 +171,10 @@ export function PostView({
   const state =
     usePost(post);
   const router = useRouter();
+  const { isAuthenticated } = useAuthGate();
+  const mediaViewer = useMediaViewer(isAuthenticated);
+  const isOwnPost =
+    state.post.author.type === "square" && Number(state.post.author.id) === mediaViewer.squareId;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -392,6 +399,14 @@ export function PostView({
               state.post.reflections
             }
           />
+
+          {mediaViewer.outletId && !isOwnPost ? (
+            <AddReflectionButton
+              postId={state.post.id}
+              squareId={mediaViewer.squareId}
+              onAdded={() => router.refresh()}
+            />
+          ) : null}
 
           {state.counts.quotes > 0 ? (
             <Link
