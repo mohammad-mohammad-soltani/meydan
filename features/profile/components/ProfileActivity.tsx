@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { FileText, Heart, Image as ImageIcon, LoaderCircle, MessageCircle, Pin, Repeat2, Sparkles, Star } from "lucide-react";
+import { FileText, Heart, Image as ImageIcon, MessageCircle, Pin, Repeat2, Sparkles, Star } from "lucide-react";
 import { Fragment, useState } from "react";
 import { PostCard } from "@/features/feed/components/PostCard";
 import type { FeedPost } from "@/features/feed/types";
@@ -10,6 +10,8 @@ import type { ProfileReply } from "../types";
 import { useInfiniteScroll } from "@/features/feed/hooks/useInfiniteScroll";
 import { profilePrefetchIndex } from "../profile-pagination";
 import { getNarrativeList } from "@/features/feed/services/feed.service";
+import { ProfileTabBar } from "./ProfileTabBar";
+import { FeedSkeleton, PostCardSkeleton } from "@/features/feed/components/FeedSkeleton";
 
 type ProfileActivityProps = { actorType: string; actorId: number; postCount?: number | null; pinnedPost?: FeedPost | null; onTogglePin?: (post: FeedPost) => void; posts: FeedPost[]; latestPageStart: number; replies: ProfileReply[]; likedPostIds: Set<string>; repostedPostIds: Set<string>; onLike: (postId: string) => void; onRepost: (postId: string) => void; onShare: (post: FeedPost) => void; onDelete: (post: FeedPost) => void; hasMore: boolean; isLoadingMore: boolean; initialLoading: boolean; loadMoreFailed: boolean; onLoadMore: () => void };
 type ProfileFeedTab = "posts" | "replies" | "highlights" | "media" | "likes";
@@ -30,7 +32,11 @@ export function ProfileActivity({ actorType, actorId, postCount, pinnedPost, onT
   // «برجسته‌ها» and «پسندها» load on first open only, so the profile itself costs nothing extra.
   const [remote, setRemote] = useState<Record<"highlights" | "likes", RemoteList>>({ highlights: IDLE, likes: IDLE });
   const remoteTab = activeTab === "highlights" || activeTab === "likes" ? activeTab : null;
+  // Tabs sit right to left: a later tab is to the left, so its pane arrives from the left.
+  const [direction, setDirection] = useState<"next" | "prev" | null>(null);
   const openTab = (tab: ProfileFeedTab) => {
+    if (tab === activeTab) return;
+    setDirection(tabs.findIndex((item) => item.id === tab) > tabs.findIndex((item) => item.id === activeTab) ? "next" : "prev");
     setActiveTab(tab);
     if ((tab !== "highlights" && tab !== "likes") || (remote[tab].status !== "idle" && remote[tab].status !== "error")) return;
     setRemote((current) => ({ ...current, [tab]: { ...current[tab], status: "loading" } }));
@@ -51,19 +57,9 @@ export function ProfileActivity({ actorType, actorId, postCount, pinnedPost, onT
   const prefetchIndex = profilePrefetchIndex(visiblePosts.length, previousVisibleCount);
   const emptyLabel = activeTab === "media" ? "هنوز رسانه‌ای منتشر نشده" : "هنوز روایتی منتشر نشده";
   return <section>
-    <div role="tablist" aria-label="محتوای پروفایل" className="sticky top-0 z-20 flex h-12 overflow-x-auto border-b border-divider bg-background/95 backdrop-blur no-scrollbar">
-      {tabs.map((tab) => {
-        const Icon = tab.icon;
-        const active = activeTab === tab.id;
-        return (
-          <button key={tab.id} role="tab" aria-selected={active} onClick={() => openTab(tab.id)} className={`relative flex shrink-0 items-center gap-1.5 px-4 text-xs transition-colors ${active ? "font-black text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-emphasis" : "font-bold text-muted-foreground hover:text-foreground"}`}>
-            <Icon aria-hidden="true" className="h-4 w-4" />
-            {tab.label}
-            {counts[tab.id] ? <sup className="text-[9px] font-bold text-muted-foreground">{counts[tab.id]!.toLocaleString("fa-IR")}</sup> : null}
-          </button>
-        );
-      })}
-    </div>
+    <ProfileTabBar label="محتوای پروفایل" active={activeTab} onChange={openTab} tabs={tabs.map((tab) => ({ ...tab, count: counts[tab.id] }))} />
+    {/* Keyed by the tab, so each switch plays the slide from the side the tab sits on. */}
+    <div key={activeTab} className={direction === "next" ? "profile-pane-next" : direction === "prev" ? "profile-pane-prev" : undefined}>
     {activeTab === "posts" && pinnedPost ? (
       <div className="border-b border-divider">
         <p className="flex items-center gap-1.5 px-4 pt-3 text-[11px] font-bold text-muted-foreground"><Pin aria-hidden="true" className="h-3.5 w-3.5" />پست سنجاق‌شده در نمایه</p>
@@ -71,7 +67,7 @@ export function ProfileActivity({ actorType, actorId, postCount, pinnedPost, onT
       </div>
     ) : null}
     {remoteTab ? <RemotePosts list={remote[remoteTab]} label={remoteTab === "likes" ? "هنوز پستی پسندیده نشده" : "هنوز پست برجسته‌ای ندارد"} /> : activeTab === "replies" ? <Replies items={replies} /> : <>
-      {initialLoading && !isLoadingMore && !loadMoreFailed ? <p role="status" className="px-4 py-10 text-center text-xs text-foreground-subtle">در حال بارگذاری روایت‌ها…</p> : null}
+      {initialLoading && !isLoadingMore && !loadMoreFailed ? <FeedSkeleton items={2} /> : null}
       {visiblePosts.length === 0 && !hasMore && !initialLoading ? <EmptyState label={emptyLabel} /> : visiblePosts.map((post, index) => <Fragment key={post.id}>
         {post.repostedAt ? <p className="flex items-center gap-1.5 px-4 pt-3 -mb-1 text-xs font-bold text-foreground-subtle"><Repeat2 aria-hidden="true" className="h-4 w-4" />بازنشر شده</p> : null}
         <PostCard post={post} liked={likedPostIds.has(post.id)} reposted={repostedPostIds.has(post.id)} joined={Boolean(post.viewerState?.joined)} onLike={() => onLike(post.id)} onRepost={() => onRepost(post.id)} onShare={() => void onShare(post)} onJoin={() => undefined} onOpenMedia={() => undefined} onDelete={() => onDelete(post)} pinned={pinnedPost?.id === post.id} onTogglePin={onTogglePin && !post.repostedAt ? () => onTogglePin(post) : undefined} />
@@ -79,15 +75,16 @@ export function ProfileActivity({ actorType, actorId, postCount, pinnedPost, onT
       </Fragment>)}
       {visiblePosts.length === 0 && hasMore ? <div ref={sentinelRef} className="h-px" aria-hidden="true" /> : null}
       <div className="min-h-px px-4 py-5">
-        {isLoadingMore ? <p role="status" className="flex items-center justify-center gap-2 text-xs text-foreground-subtle"><LoaderCircle className="h-4 w-4 animate-spin" />در حال بارگذاری روایت‌های بیشتر…</p> : loadMoreFailed ? <div className="flex flex-col items-center gap-3 text-xs text-foreground-subtle"><p>بارگذاری روایت‌های بیشتر ناموفق بود.</p><button type="button" onClick={onLoadMore} className="rounded-pill border border-border px-4 py-2 font-black">تلاش دوباره</button></div> : hasMore ? <button type="button" onClick={onLoadMore} className="mx-auto block rounded-pill border border-border px-4 py-2 text-xs font-black">بارگذاری بیشتر</button> : posts.length > 0 ? <p className="text-center text-xs text-foreground-subtle">به پایان روایت‌ها رسیدید.</p> : null}
+        {isLoadingMore ? <div role="status" aria-label="در حال بارگذاری روایت‌های بیشتر" className="-mx-4 -my-5"><PostCardSkeleton lines={2} /></div> : loadMoreFailed ? <div className="flex flex-col items-center gap-3 text-xs text-foreground-subtle"><p>بارگذاری روایت‌های بیشتر ناموفق بود.</p><button type="button" onClick={onLoadMore} className="rounded-pill border border-border px-4 py-2 font-black">تلاش دوباره</button></div> : hasMore ? <button type="button" onClick={onLoadMore} className="mx-auto block rounded-pill border border-border px-4 py-2 text-xs font-black">بارگذاری بیشتر</button> : posts.length > 0 ? <p className="text-center text-xs text-foreground-subtle">به پایان روایت‌ها رسیدید.</p> : null}
       </div>
     </>}
+    </div>
   </section>;
 }
 
 /** «برجسته‌ها» / «پسندها»: read-only cards (actions live on the post page). */
 function RemotePosts({ list, label }: { list: RemoteList; label: string }) {
-  if (list.status === "loading" || list.status === "idle") return <p role="status" className="flex items-center justify-center gap-2 px-4 py-10 text-xs text-foreground-subtle"><LoaderCircle className="h-4 w-4 animate-spin" />در حال بارگذاری…</p>;
+  if (list.status === "loading" || list.status === "idle") return <FeedSkeleton items={2} />;
   if (list.status === "error") return <p role="alert" className="px-4 py-10 text-center text-xs text-foreground-subtle">دریافت این بخش ممکن نشد.</p>;
   if (list.posts.length === 0) return <EmptyState label={label} />;
   return <div>{list.posts.map((post) => <PostCard key={post.id} post={post} liked={Boolean(post.viewerState?.liked)} reposted={Boolean(post.viewerState?.reposted)} joined={Boolean(post.viewerState?.joined)} onLike={() => undefined} onRepost={() => undefined} onShare={() => undefined} onJoin={() => undefined} onOpenMedia={() => undefined} hideActions />)}</div>;

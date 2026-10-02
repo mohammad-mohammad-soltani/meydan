@@ -339,8 +339,8 @@ html.dark {
 
   --overlay: rgb(0 0 0 / 0.52);
   --scrim: rgb(0 0 0 / 0.7);
-  --skeleton: #343434;
-  --skeleton-highlight: #414141;
+  --skeleton: #262626;
+  --skeleton-highlight: #303030;
 
   --elevation-xs: 0 1px 2px rgb(var(--shadow-color) / 0.22);
   --elevation-sm: 0 3px 10px rgb(var(--shadow-color) / 0.26);
@@ -465,6 +465,36 @@ html.dark {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+@keyframes profile-pane-next-keyframes {
+  from {
+    opacity: 0;
+    transform: translate3d(-1.75rem, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes profile-pane-prev-keyframes {
+  from {
+    opacity: 0;
+    transform: translate3d(1.75rem, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes profile-tab-icon {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
   }
 }
 @keyframes ui-exit-keyframes {
@@ -610,6 +640,12 @@ html.dark {
     opacity var(--motion-normal) var(--motion-ease-standard);
 }
 
+@utility profile-pane-next {
+  animation: profile-pane-next-keyframes 280ms var(--motion-ease-emphasized) both;
+}
+@utility profile-pane-prev {
+  animation: profile-pane-prev-keyframes 280ms var(--motion-ease-emphasized) both;
+}
 @utility ui-enter {
   animation: ui-enter-keyframes var(--motion-slow) var(--motion-ease-standard)
     both;

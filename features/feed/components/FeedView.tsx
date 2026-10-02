@@ -1,13 +1,13 @@
 "use client";
 
-import { BellRing, LoaderCircle, X } from "lucide-react";
+import { BellRing, X } from "lucide-react";
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { actorKey } from "@/lib/meydan-follow";
 import { useOwnActorKey } from "@/lib/me-client";
 import { DeletePostDialog } from "./DeletePostDialog";
 import { FeedFilters } from "./FeedFilters";
-import { FeedSkeleton } from "./FeedSkeleton";
+import { FeedSkeleton, PostCardSkeleton } from "./FeedSkeleton";
 import { FeedSwipePager } from "./FeedSwipePager";
 import { FeedTabs } from "./FeedTabs";
 import { FollowSuggestions } from "./FollowSuggestions";
@@ -60,10 +60,9 @@ export function FeedView({
   const listFooter = (
     <div ref={sentinelRef} className="min-h-px w-full px-4 py-5" data-feed-sentinel>
       {feed.isLoadingMore ? (
-        <p role="status" aria-live="polite" className="flex items-center justify-center gap-2 text-xs font-bold text-foreground-subtle">
-          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-          در حال بارگذاری روایت‌های بیشتر…
-        </p>
+        <div role="status" aria-live="polite" aria-label="در حال بارگذاری روایت‌های بیشتر" className="-mx-4 -my-5">
+          <PostCardSkeleton lines={2} />
+        </div>
       ) : feed.loadMoreFailed ? (
         <div className="flex flex-col items-center gap-3">
           <p className="text-xs font-bold text-foreground-subtle">بارگذاری روایت‌های بیشتر ناموفق بود.</p>

@@ -149,3 +149,24 @@ test("the profile cover bell subscribes to an account's new posts from the follo
   assert.match(read("features/profile/hooks/useProfile.ts"), /getActorFollowState\(/);
   assert.match(read("features/profile/components/ProfileHeader.tsx"), /aria-label="اعلان‌های نمایه"/);
 });
+
+test("the mobile drawer follows the finger and the profile tabs animate like the reference", () => {
+  const drawer = read("components/layouts/MobileDrawer.tsx");
+  assert.match(drawer, /onPointerMove=\{onPointerMove\}/);
+  assert.match(drawer, /paint\(dx > 0 \? dx : dx \* RUBBER, drag\.width\)/);
+  assert.match(drawer, /FLICK_VELOCITY/);
+  assert.doesNotMatch(drawer, /onTouchEnd/, "the all-at-once swipe close is gone");
+
+  const bar = read("features/profile/components/ProfileTabBar.tsx");
+  assert.match(bar, /scale-x-100/);
+  assert.match(bar, /duration-\[250ms\]/);
+  assert.match(read("features/profile/components/ProfileActivity.tsx"), /profile-pane-next/);
+  assert.match(read("app/globals.css"), /@keyframes profile-pane-next-keyframes/);
+});
+
+test("route skeletons mirror the new designs", () => {
+  const skeletons = read("components/layouts/RouteSkeletons.tsx");
+  for (const name of ["FeedRouteSkeleton", "ProfileRouteSkeleton", "PostRouteSkeleton", "ComposeRouteSkeleton", "BookmarksRouteSkeleton", "ProfileHeaderSkeleton"]) assert.ok(skeletons.includes(`function ${name}`), name);
+  assert.match(read("features/feed/components/FeedSkeleton.tsx"), /export function PostCardSkeleton/);
+  assert.match(read("app/(app)/bookmarks/loading.tsx"), /BookmarksRouteSkeleton/);
+});

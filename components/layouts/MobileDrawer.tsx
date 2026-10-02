@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import {
   Bookmark,
@@ -36,6 +36,27 @@ const ITEMS: Item[] = [
 
 const subscribeNothing = () => () => {};
 
+/** Drag distance (px) before the gesture picks an axis. */
+const AXIS_LOCK_PX = 8;
+/** Share of the panel width a slow release has to travel to close. */
+const CLOSE_RATIO = 0.32;
+/** px/ms past which a short flick closes anyway. */
+const FLICK_VELOCITY = 0.45;
+/** Pull felt when dragging against the open position. */
+const RUBBER = 0.12;
+const SETTLE_EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+
+type Drag = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastTime: number;
+  velocity: number;
+  axis: "unknown" | "x" | "y";
+  width: number;
+};
+
 const compact = new Intl.NumberFormat("fa-IR", { notation: "compact", maximumFractionDigits: 1 });
 
 /**
@@ -56,8 +77,12 @@ export function MobileDrawer({
 }) {
   const pathname = usePathname();
   const filter = useSearchParams().get("filter");
+  const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const touchStart = useRef<number | null>(null);
+  const backdropRef = useRef<HTMLButtonElement>(null);
+  const dragRef = useRef<Drag | null>(null);
+  const suppressClickRef = useRef(false);
+  const settleRef = useRef<number | null>(null);
   const hydrated = useSyncExternalStore(subscribeNothing, () => true, () => false);
 
   // Close on navigation, Escape, and lock the page behind it while open.
@@ -81,17 +106,139 @@ export function MobileDrawer({
     };
   }, [open, onClose]);
 
+  /** Hands the panel and backdrop back to their classes once a drag has settled. */
+  const clearInline = useCallback(() => {
+    for (const node of [panelRef.current, backdropRef.current]) {
+      if (!node) continue;
+      node.style.transition = "";
+      node.style.transform = "";
+      node.style.opacity = "";
+      node.style.willChange = "";
+    }
+  }, []);
+
+  /** Every frame of the drag is a direct style write; React only hears about the final close. */
+  const paint = (offset: number, width: number) => {
+    const panel = panelRef.current;
+    const backdrop = backdropRef.current;
+    if (panel) panel.style.transform = `translate3d(${offset}px, 0, 0)`;
+    if (backdrop) backdrop.style.opacity = String(Math.max(0, 1 - offset / width));
+  };
+
+  const settle = (to: number, from: number, velocity: number, closing: boolean) => {
+    const panel = panelRef.current;
+    const backdrop = backdropRef.current;
+    if (!panel) return;
+    const distance = Math.abs(to - from);
+    // Keep the speed the finger had; never slower than a quick ease, never longer than the class animation.
+    const ms = Math.round(Math.min(320, Math.max(140, velocity > 0.2 ? distance / velocity : distance * 1.1)));
+    panel.style.transition = `transform ${ms}ms ${SETTLE_EASING}`;
+    if (backdrop) backdrop.style.transition = `opacity ${ms}ms ${SETTLE_EASING}`;
+    panel.style.transform = `translate3d(${to}px, 0, 0)`;
+    if (backdrop) backdrop.style.opacity = closing ? "0" : "1";
+    if (settleRef.current) window.clearTimeout(settleRef.current);
+    settleRef.current = window.setTimeout(() => {
+      settleRef.current = null;
+      if (closing) {
+        onClose();
+        // The closed class lands at the same spot (fully off-screen), so releasing the inline styles is invisible.
+        window.requestAnimationFrame(() => window.requestAnimationFrame(clearInline));
+      } else {
+        clearInline();
+      }
+    }, ms + 20);
+  };
+
+  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!open || dragRef.current || (event.pointerType === "mouse" && event.button !== 0)) return;
+    if (settleRef.current) {
+      window.clearTimeout(settleRef.current);
+      settleRef.current = null;
+    }
+    const width = panelRef.current?.getBoundingClientRect().width ?? 320;
+    dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, lastX: event.clientX, lastTime: event.timeStamp, velocity: 0, axis: "unknown", width };
+  };
+
+  const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    if (drag.axis === "unknown") {
+      if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return;
+      // Vertical belongs to the menu's own scrolling.
+      if (Math.abs(dy) > Math.abs(dx)) {
+        drag.axis = "y";
+        return;
+      }
+      drag.axis = "x";
+      rootRef.current?.setPointerCapture(event.pointerId);
+      const panel = panelRef.current;
+      const backdrop = backdropRef.current;
+      if (panel) {
+        panel.style.transition = "none";
+        panel.style.willChange = "transform";
+      }
+      if (backdrop) {
+        backdrop.style.transition = "none";
+        backdrop.style.willChange = "opacity";
+      }
+    }
+    if (drag.axis !== "x") return;
+    const dt = event.timeStamp - drag.lastTime;
+    if (dt >= 8) {
+      // Smoothed so one noisy sample cannot decide a flick.
+      drag.velocity = drag.velocity * 0.6 + ((event.clientX - drag.lastX) / dt) * 0.4;
+      drag.lastX = event.clientX;
+      drag.lastTime = event.timeStamp;
+    }
+    paint(dx > 0 ? dx : dx * RUBBER, drag.width);
+  };
+
+  const endDrag = (event: ReactPointerEvent<HTMLDivElement>, cancelled: boolean) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    if (drag.axis !== "x") return;
+    // The release of a drag must not also click the link or button under the finger.
+    suppressClickRef.current = true;
+    window.setTimeout(() => {
+      suppressClickRef.current = false;
+    }, 0);
+    rootRef.current?.releasePointerCapture?.(event.pointerId);
+    const dx = Math.max(0, event.clientX - drag.startX);
+    const close = !cancelled && (dx > drag.width * CLOSE_RATIO || (drag.velocity > FLICK_VELOCITY && dx > 12));
+    settle(close ? drag.width : 0, dx, Math.abs(drag.velocity), close);
+  };
+
   // Portals only after hydration: the server has no document.body to render into.
   if (!hydrated) return null;
 
   return createPortal(
-    <div className={`fixed inset-0 z-[70] lg:hidden ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
+    <div
+      ref={rootRef}
+      className={`fixed inset-0 z-[70] lg:hidden ${open ? "" : "pointer-events-none"}`}
+      aria-hidden={!open}
+      onPointerDown={onPointerDown}
+      // A dragged link would start the browser's native drag-and-drop and cancel the pointer stream.
+      onDragStart={(event) => event.preventDefault()}
+      onPointerMove={onPointerMove}
+      onPointerUp={(event) => endDrag(event, false)}
+      onPointerCancel={(event) => endDrag(event, true)}
+      onClickCapture={(event) => {
+        if (suppressClickRef.current) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+    >
       <button
+        ref={backdropRef}
         type="button"
         tabIndex={-1}
         aria-label="بستن منو"
         onClick={onClose}
-        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 touch-none bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
       />
       <div
         ref={panelRef}
@@ -99,17 +246,7 @@ export function MobileDrawer({
         aria-modal="true"
         aria-label="منوی اصلی"
         tabIndex={-1}
-        onTouchStart={(event) => {
-          touchStart.current = event.touches[0]?.clientX ?? null;
-        }}
-        onTouchEnd={(event) => {
-          // RTL panel on the right: a swipe toward the edge closes it.
-          const start = touchStart.current;
-          const end = event.changedTouches[0]?.clientX;
-          touchStart.current = null;
-          if (start !== null && end !== undefined && end - start > 70) onClose();
-        }}
-        className={`absolute inset-y-0 right-0 flex w-[88%] max-w-sm flex-col overflow-hidden rounded-l-3xl border-l border-border bg-background outline-none transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
+        className={`absolute inset-y-0 right-0 flex w-[88%] max-w-sm touch-pan-y flex-col overflow-hidden rounded-l-3xl border-l border-border bg-background outline-none transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="relative h-36 shrink-0 overflow-hidden bg-gradient-to-b from-surface-elevated to-background">
           {viewer?.coverUrl ? (
@@ -128,7 +265,14 @@ export function MobileDrawer({
         </div>
 
         <div className="-mt-14 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
-          {isAuthenticated && viewer ? (
+          {isAuthenticated && !viewer ? (
+            <div aria-hidden="true" className="animate-pulse">
+              <span className="block h-20 w-20 rounded-full border-4 border-background bg-skeleton" />
+              <span className="mt-3 block h-5 w-36 rounded-md bg-skeleton" />
+              <span className="mt-2 block h-3 w-24 rounded-md bg-skeleton-highlight" />
+              <div className="mt-4 grid grid-cols-2 gap-2"><span className="h-[3.25rem] rounded-2xl bg-skeleton" /><span className="h-[3.25rem] rounded-2xl bg-skeleton" /></div>
+            </div>
+          ) : isAuthenticated && viewer ? (
             <>
               <span className="relative block h-20 w-20 overflow-hidden rounded-full border-4 border-background bg-surface-muted">
                 {viewer.avatarUrl ? (

@@ -39,7 +39,7 @@ export function MobileHeader() {
           <OptimizedAvatar src={viewer.avatarUrl} alt="" width={32} className="h-8 w-8 rounded-full border border-border object-cover" />
         ) : (
           <span className="grid h-8 w-8 place-items-center rounded-full border border-border bg-surface-muted text-icon">
-            {viewer ? <span className="text-xs font-black text-foreground">{viewer.name.charAt(0)}</span> : <UserRound aria-hidden="true" className="h-4 w-4" />}
+            {viewer ? <span className="text-xs font-black text-foreground">{viewer.name.charAt(0)}</span> : isAuthenticated ? <span aria-hidden="true" className="h-8 w-8 animate-pulse rounded-full bg-skeleton" /> : <UserRound aria-hidden="true" className="h-4 w-4" />}
           </span>
         )}
       </button>
