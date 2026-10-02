@@ -13,12 +13,14 @@ import { TitleBody } from "./TitleBody";
 type Seen = { user: WorkUser; seen_at: string };
 
 export function AnnouncementKeyboard({ m, onToggleSeen, seenOpen }: { m: WorkMessage; onToggleSeen: () => void; seenOpen: boolean }) {
-  const { manager, act, guard } = useRoom();
+  const { manager, act, guard, viewerId } = useRoom();
   const a = m.announcement!;
+  // The author does not acknowledge their own announcement.
+  const isAuthor = !!viewerId && m.sender?.id === viewerId;
   const unseen = Math.max(0, a.member_total - a.seen_count);
   return (
     <div className="kb">
-      {a.seen_by_me ? (
+      {isAuthor ? null : a.seen_by_me ? (
         <button className="ok" disabled>
           ✓ دیدم
         </button>
