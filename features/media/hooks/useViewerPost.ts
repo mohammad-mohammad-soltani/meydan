@@ -141,6 +141,13 @@ export function useViewerPost(post: FeedPost | undefined) {
       setBusy(false);
     }
   };
+  /** The comments panel posted (or removed) comments: keep the counter on the slide and in the feed in step. */
+  const bumpComments = (delta: number) => {
+    if (!post || delta === 0) return;
+    const next = { ...stats, comments: Math.max(0, stats.comments + delta) };
+    setStats(next);
+    publishMediaPost({ id: post.id, stats: next, viewerState });
+  };
   const { openShare } = useShare();
   const share = async () => {
     if (!post) return;
@@ -158,6 +165,7 @@ export function useViewerPost(post: FeedPost | undefined) {
     toggle,
     follow,
     reply,
+    bumpComments,
     share,
   };
 }

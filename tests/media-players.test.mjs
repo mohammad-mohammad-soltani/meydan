@@ -343,13 +343,12 @@ test("immersive viewer author identity links to the public profile in both layou
   assert.match(slide, /\{!portrait && author\}/);
 });
 
-test("immersive viewer actions stay balanced and comments open the post detail", () => {
+test("immersive viewer actions stay balanced and comments open the comments panel", () => {
   const slide = source("features/media/components/ImmersivePostSlide.tsx");
   const css = (source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css"));
 
-  assert.match(slide, /href=\{\(`\/posts\/\$\{entry\.post\.id\}#comment-composer`\) as Route\}/);
-  assert.match(slide, /aria-label="مشاهده نظرها"/);
-  assert.match(slide, /onClick=\{onClose\}/);
+  assert.match(slide, /aria-label="مشاهده نظرها" onClick=\{\(\) => setCommentsOpen\(true\)\}/);
+  assert.match(slide, /<ReelComments postId=\{entry\.post\.id\}/);
   assert.doesNotMatch(slide, /setReplying/);
   assert.match(css, /grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
   assert.match(

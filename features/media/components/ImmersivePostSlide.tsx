@@ -29,6 +29,7 @@ import { RepostMenu } from "@/features/feed/components/RepostMenu";
 import { quoteComposeHref, repostTotal } from "@/features/feed/post-counts";
 import { useRouter } from "next/navigation";
 import { useDragPager } from "../use-drag-pager";
+import { ReelComments } from "./ReelComments";
 import { MarkdownText } from "@/components/shared/MarkdownText";
 import { AccountBadges } from "@/components/shared/AccountBadges";
 
@@ -87,6 +88,7 @@ export function ImmersivePostSlide({
   const item = media[mediaIndex];
   const [visible, setVisible] = useState(true);
   const [captionOpen, setCaptionOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [ratio, setRatio] = useState(
     item.width && item.height ? item.width / item.height : 9 / 16,
   );
@@ -412,14 +414,10 @@ export function ImmersivePostSlide({
         )}
         {entry.post && (
           <div className="viewer-actions" dir="ltr">
-            <Link
-              href={(`/posts/${entry.post.id}#comment-composer`) as Route}
-              aria-label="مشاهده نظرها"
-              onClick={onClose}
-            >
+            <button type="button" aria-label="مشاهده نظرها" onClick={() => setCommentsOpen(true)}>
               <MessageCircle />
               <span>{count(state.stats.comments)}</span>
-            </Link>
+            </button>
             <button
               type="button"
               aria-label="پسندیدن"
@@ -485,6 +483,9 @@ export function ImmersivePostSlide({
           </p>
         )}
         {footer}
+        {commentsOpen && entry.post ? (
+          <ReelComments postId={entry.post.id} count={state.stats.comments} onClose={() => setCommentsOpen(false)} onPosted={state.bumpComments} />
+        ) : null}
       </div>
       {media.length > 1 && (
         <div
