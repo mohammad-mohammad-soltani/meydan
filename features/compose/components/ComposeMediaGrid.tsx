@@ -101,7 +101,7 @@ export function ComposeMediaGrid({
             <div className="absolute inset-0 grid place-items-center bg-scrim/55 backdrop-blur-[1px]">
               <span className="flex items-center gap-2 rounded-pill bg-scrim/70 px-3 py-1.5 text-[10px] font-black text-on-solid">
                 <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
-                {Math.round(item.progress * 100).toLocaleString("fa-IR")}٪
+                {item.processing ? "در حال پردازش…" : `${Math.round(item.progress * 100).toLocaleString("fa-IR")}٪`}
               </span>
               <span
                 aria-hidden="true"
@@ -114,6 +114,7 @@ export function ComposeMediaGrid({
           {item.status === "error" ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-scrim/75 p-3 text-center">
               <AlertCircle aria-hidden="true" className="h-5 w-5 text-danger" />
+              {item.error ? <p className="line-clamp-3 text-[10px] font-bold leading-4 text-on-solid">{item.error}</p> : null}
               <button
                 type="button"
                 onClick={() => onRetry(item.id)}

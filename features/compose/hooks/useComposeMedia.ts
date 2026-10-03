@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { MeydanApiError } from "@/lib/meydan-api";
 import { uploadNarrativeFile } from "@/lib/meydan-upload";
 
 /** Up to five attachments; images, video and audio can be mixed freely. */
@@ -18,6 +19,8 @@ export type ComposeMedia = {
   status: ComposeMediaStatus;
   /** Upload fraction, 0‥1. */
   progress: number;
+  /** After the last byte the server still finishes the file (video remux, storage copy). */
+  processing?: boolean;
   mediaId?: number;
   error?: string;
 };
@@ -77,20 +80,27 @@ export function useComposeMedia() {
       void uploadNarrativeFile(file, "narrative", (fraction) => {
         if (disposed.current) return;
         update((current) => current.map((item) => (item.id === id ? { ...item, progress: fraction } : item)));
+      }, (phase) => {
+        if (disposed.current) return;
+        update((current) => current.map((item) => (item.id === id ? { ...item, processing: phase === "processing" } : item)));
       })
         .then((mediaId) => {
           if (disposed.current) return;
           update((current) =>
             current.map((item) =>
-              item.id === id ? { ...item, status: "ready", progress: 1, mediaId, error: undefined } : item,
+              item.id === id ? { ...item, status: "ready", progress: 1, processing: false, mediaId, error: undefined } : item,
             ),
           );
         })
         .catch((reason: unknown) => {
           if (disposed.current) return;
-          const message = reason instanceof Error ? reason.message : "بارگذاری انجام نشد.";
+          // Gateway errors and dropped connections carry developer text; show something a person can act on.
+          const message =
+            reason instanceof MeydanApiError && reason.status > 0 && reason.status < 500 && reason.code
+              ? reason.message
+              : "بارگذاری کامل نشد؛ اتصال را بررسی کنید و «تلاش دوباره» را بزنید.";
           update((current) =>
-            current.map((item) => (item.id === id ? { ...item, status: "error", error: message } : item)),
+            current.map((item) => (item.id === id ? { ...item, status: "error", processing: false, error: message } : item)),
           );
         });
     },
@@ -165,7 +175,7 @@ export function useComposeMedia() {
       const item = mediaRef.current.find((entry) => entry.id === id);
       if (!item) return;
       update((current) =>
-        current.map((entry) => (entry.id === id ? { ...entry, status: "uploading", progress: 0, error: undefined } : entry)),
+        current.map((entry) => (entry.id === id ? { ...entry, status: "uploading", progress: 0, processing: false, error: undefined } : entry)),
       );
       upload(id, item.file);
     },
