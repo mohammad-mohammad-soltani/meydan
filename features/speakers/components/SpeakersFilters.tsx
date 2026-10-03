@@ -27,8 +27,8 @@ export function SpeakersFilters({ activeFilter, onChange, options }: SpeakersFil
             onClick={() => onChange(chip.id)}
             className={`inline-flex min-h-9 shrink-0 items-center rounded-pill border px-3.5 py-1.5 text-[11px] font-black transition-colors ${
               active
-                ? "border-brand bg-brand text-brand-foreground shadow-xs"
-                : "border-border bg-surface text-muted-foreground hover:border-brand-border hover:bg-hover hover:text-foreground"
+                ? "border-transparent bg-foreground text-background"
+                : "border-transparent bg-surface-muted text-foreground-secondary hover:bg-hover hover:text-foreground"
             }`}
           >
             {chip.label}

@@ -63,6 +63,10 @@ export type ProfileDetails = {
   replies: ProfileReply[];
   about: string;
   skills: string[];
+  /** Personal link shown in the edit form. */
+  website?: string;
+  /** When the handle may be changed again (ISO), or null when it may be changed now. */
+  handleLockedUntil?: string | null;
   /** Follower/following counts and join date (reference-design header). */
   social?: ProfileSocial;
   /** The account's pinned narrative, shown above its posts. */

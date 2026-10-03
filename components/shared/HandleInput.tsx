@@ -39,6 +39,8 @@ type Props = {
   serverError?: string | null;
   /** Admin forms: the account being edited, so its own handle counts as free. */
   exceptUserId?: number | null;
+  /** The handle cannot be changed right now (the 30-day lock). */
+  disabled?: boolean;
 };
 
 /**
@@ -57,6 +59,7 @@ export function HandleInput({
   required = true,
   serverError,
   exceptUserId,
+  disabled = false,
 }: Props) {
   const [remote, setRemote] = useState<{ value: string; available: boolean | null; message: string } | null>(null);
   const [suggestion, setSuggestion] = useState<string | null>(null);
@@ -145,6 +148,7 @@ export function HandleInput({
           spellCheck={false}
           maxLength={30}
           required={required}
+          disabled={disabled}
           placeholder="reza_salehi"
           value={value}
           aria-invalid={shownError ? true : undefined}

@@ -5,13 +5,13 @@ type SpeakersSearchProps = { value: string; onChange: (value: string) => void };
 export function SpeakersSearch({ value, onChange }: SpeakersSearchProps) {
   return (
     <div className="relative">
-      <Search aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon-muted" />
+      <Search aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-icon-muted" />
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder="جستجوی نام استاد، موضوع سخنرانی یا شهر…"
         aria-label="جستجوی سخنران"
-        className="h-10 w-full rounded-pill border border-input-border bg-input pl-10 pr-9 text-xs text-foreground outline-none transition-colors placeholder:text-placeholder hover:border-input-border-hover focus:border-ring focus-visible:ring-2 focus-visible:ring-ring"
+        className="h-12 w-full rounded-pill border border-input-border bg-input pl-10 pr-10 text-sm text-foreground outline-none transition-colors placeholder:text-placeholder hover:border-input-border-hover focus:border-ring focus-visible:ring-2 focus-visible:ring-ring"
       />
       {value ? (
         <button

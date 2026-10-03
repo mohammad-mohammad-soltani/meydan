@@ -141,6 +141,7 @@ export function mapSquare(
     replies: replies.map(mapReply),
 
     about: plainText(square.profile_about || square.description || ""),
+    handleLockedUntil: square.handle_locked_until ?? null,
 
     skills: square.profile_skills || [],
   };

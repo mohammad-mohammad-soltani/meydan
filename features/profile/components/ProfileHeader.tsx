@@ -1,5 +1,6 @@
 "use client";
 
+import { FollowListSheet } from "./FollowListSheet";
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
@@ -11,7 +12,7 @@ import { SpeakerInviteButton } from "@/features/speaker-invitations/components/S
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { ProfileActionsMenu, shareProfile } from "./ProfileActionsMenu";
 import { meydanApi } from "@/lib/meydan-api";
-import { ENTITY_KIND_LABELS, isEntityKind } from "@/lib/profile-route";
+import { ENTITY_KIND_LABELS, actorKindOf, isEntityKind } from "@/lib/profile-route";
 import { AdminNavLink } from "@/components/layouts/AdminNavLink";
 import type { ProfileDetails } from "../types";
 import { AccountBadges } from "@/components/shared/AccountBadges";
@@ -60,6 +61,7 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
     return () => window.clearTimeout(timer);
   }, [notice]);
   const [followedBy, setFollowedBy] = useState<FollowedBy | null>(null);
+  const [listOpen, setListOpen] = useState(false);
   const { identity, accountType, narratives } = profile;
   const kind = accountType === "square" ? profile.kind ?? "square" : "user";
   const canBeInvited = !canEdit && accountType !== "square" && Boolean(identity.isSpeaker || identity.verifiedSpeaker);
@@ -135,10 +137,10 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
 
       <div className="px-4 pb-5">
         <div className="-mt-14 grid grid-cols-[1fr_auto_1fr] items-end">
-          <div className="pb-2 text-center">
+          <button type="button" onClick={() => setListOpen(true)} aria-label="فهرست دنبال‌کننده‌ها و دنبال‌شده‌ها" className="pb-2 text-center">
             <strong className="block text-lg font-black text-foreground">{followers === undefined ? "—" : followers >= 100_000 ? compact.format(followers) : number.format(followers)}</strong>
             <span className="text-[11px] text-muted-foreground">دنبال‌کننده</span>
-          </div>
+          </button>
           <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-background bg-surface-muted text-3xl font-black text-foreground">
             {identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}
           </div>
@@ -237,6 +239,7 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
           {notice || "انجام شد"}
         </span>
       </p>
+      {listOpen ? <FollowListSheet type={actorKindOf(kind)} id={Number(profile.actorId)} name={identity.name} handle={identity.handle} onClose={() => setListOpen(false)} /> : null}
     </>
   );
 }

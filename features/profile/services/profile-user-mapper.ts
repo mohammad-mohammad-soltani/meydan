@@ -124,6 +124,8 @@ export function mapUser(
     replies: replies.map(mapReply),
 
     about: plainText(speaker?.bio || profile.about || ""),
+    website: profile.website || undefined,
+    handleLockedUntil: profile.handle_locked_until ?? null,
 
     skills: skills.length
       ? skills

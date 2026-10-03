@@ -30,6 +30,10 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
   const [handleError, setHandleError] = useState<string | null>(null);
   const [bio, setBio] = useState(profile.about);
   const [headline, setHeadline] = useState(profile.identity.subtitle);
+  const [place, setPlace] = useState(isEntity ? "" : profile.identity.location);
+  const [website, setWebsite] = useState(profile.website ?? "");
+  const [openedAt] = useState(() => Date.now());
+  const lockedUntil = profile.handleLockedUntil && new Date(profile.handleLockedUntil).getTime() > openedAt ? new Date(profile.handleLockedUntil) : null;
   const [skills, setSkills] = useState(profile.skills.join("، "));
   const initialLocation = useMemo<SelectedLocation | null>(() => {
     if (
@@ -169,6 +173,8 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
             handle,
             headline,
             about: bio,
+            location_label: place,
+            website,
             skills: skillList,
             ...(avatarId !== undefined ? { avatar_media_id: avatarId } : {}),
             ...(coverId !== undefined ? { cover_media_id: coverId } : {}),
@@ -286,16 +292,33 @@ export function ProfileEditView({ profile }: { profile: ProfileDetails }) {
               nameHint={initialHandle ? "" : name}
               autoSuggest={!initialHandle}
               onValidityChange={setHandleValid}
+              disabled={Boolean(lockedUntil)}
               serverError={handleError}
               inputClassName="min-h-12 w-full rounded-control border border-input-border bg-input px-3 text-sm text-foreground"
             />
           </div>
-          <Field label="معرفی کوتاه">
-            <input value={headline} onChange={(e) => setHeadline(e.target.value)} />
+          <p className="-mt-2 px-1 text-[11px] leading-5 text-muted-foreground">
+            {lockedUntil
+              ? `شناسه را تا ${lockedUntil.toLocaleDateString("fa-IR")} نمی‌توانید عوض کنید.`
+              : "پس از تغییر شناسه، پیوند قبلی نمایهٔ شما دیگر کار نمی‌کند و تا ۳۰ روز نمی‌توانید دوباره آن را عوض کنید."}
+          </p>
+          <Field label="عنوان یا وابستگی">
+            <input value={headline} maxLength={60} onChange={(e) => setHeadline(e.target.value)} />
           </Field>
-          <Field label="بیو">
-            <textarea rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
+          <Field label="درباره من">
+            <textarea rows={5} maxLength={280} value={bio} onChange={(e) => setBio(e.target.value)} />
+            <span className="mt-1 block px-1 text-left text-[10px] text-muted-foreground" dir="ltr">{bio.length}/280</span>
           </Field>
+          {!isEntity ? (
+            <>
+              <Field label="محل فعالیت">
+                <input value={place} maxLength={50} onChange={(e) => setPlace(e.target.value)} />
+              </Field>
+              <Field label="وب‌سایت یا لینک">
+                <input value={website} dir="ltr" maxLength={80} inputMode="url" autoCapitalize="off" placeholder="example.ir" onChange={(e) => setWebsite(e.target.value)} />
+              </Field>
+            </>
+          ) : null}
           {isSquare ? (
             <div>
               <span className="mb-1.5 block px-1 text-xs text-foreground-subtle">

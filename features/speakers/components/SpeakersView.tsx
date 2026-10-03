@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowRight, Inbox, Mic } from "lucide-react";
+import { ChevronRight, Clock, Inbox, Mic } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { SpeakerCard } from "./SpeakerCard";
 import { SpeakerCardSkeleton } from "./SpeakerCardSkeleton";
@@ -44,28 +44,23 @@ export function SpeakersView({
 
   return (
     <section id="view-speakers" className="min-h-full bg-background text-foreground">
-      <header className="bg-gradient-to-l from-brand-muted via-surface to-surface px-4 py-3.5">
-        <div className="flex items-start gap-2.5">
+      <header className="px-4 pb-1 pt-5">
+        <div className="flex items-center gap-3">
           <Link
             href="/content"
             aria-label="بازگشت به محتوا"
-            className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface-muted text-icon transition-colors hover:bg-hover"
           >
-            <ArrowRight className="h-5 w-5" />
+            <ChevronRight className="h-5 w-5" />
           </Link>
           <div className="min-w-0 flex-1">
-            <h1 className="flex items-center gap-1.5 text-sm font-black text-foreground">
-              <Mic aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" />
-              فهرست خطبا و سخنرانان جهاد تبیین
-            </h1>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {initialSpeakers.total.toLocaleString("fa-IR")} سخنران در فهرست · جستجو بر اساس نام، موضوع یا شهر
-            </p>
+            <h1 className="text-xl font-black text-foreground">اعزام سخنران</h1>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{initialSpeakers.total.toLocaleString("fa-IR")} سخنران در فهرست</p>
           </div>
           {isAuthenticated ? (
             <Link
               href={"/speaker-invitations" as Route}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-brand-border bg-surface px-3 py-1.5 text-[10px] font-black text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-border bg-surface-muted px-3.5 py-2 text-[11px] font-black text-foreground transition-colors hover:bg-hover"
             >
               <Inbox aria-hidden="true" className="h-3.5 w-3.5" />
               دعوت‌های من
@@ -80,6 +75,18 @@ export function SpeakersView({
       </div>
 
       <main className="space-y-3 p-4 pb-24">
+        <div className="flex items-center gap-3 rounded-3xl border border-border bg-surface p-4">
+          <div className="min-w-0 flex-1">
+            <b className="block text-sm font-black text-foreground">سخنران هستید؟</b>
+            <small className="mt-0.5 block text-[11px] leading-5 text-muted-foreground">برای حضور در فهرست سخنرانان درخواست ثبت‌نام بدهید.</small>
+          </div>
+          {/* The registration page is designed but not open yet. */}
+          <span aria-disabled="true" className="inline-flex shrink-0 cursor-default items-center gap-1.5 rounded-pill bg-surface-muted px-4 py-2 text-xs font-black text-muted-foreground">
+            ثبت‌نام سخنران
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-background/60 px-1.5 py-0.5 text-[9px]"><Clock aria-hidden="true" className="h-2.5 w-2.5" />به‌زودی</span>
+          </span>
+        </div>
+
         {!speakers.isLoading && speakers.total > 0 ? (
           <p className="px-1 text-[10px] font-bold text-foreground-subtle">
             نمایش {shown.toLocaleString("fa-IR")} از {speakers.total.toLocaleString("fa-IR")} سخنران

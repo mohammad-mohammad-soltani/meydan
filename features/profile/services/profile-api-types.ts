@@ -41,6 +41,7 @@ export type ApiSquare = {
   location?: ApiSquareLocation | null;
   schedule?: ApiSchedule[];
   start_date?: string | null;
+  handle_locked_until?: string | null;
   stats?: { active_nights?: number; narratives?: number };
 };
 
@@ -57,6 +58,8 @@ export type ApiUserProfile = {
   is_speaker?: boolean;
   verified_official?: boolean;
   location_label?: string;
+  website?: string;
+  handle_locked_until?: string | null;
   province_id?: number;
   city_id?: number;
   about?: string;

@@ -4,6 +4,7 @@ import type { Route } from "next";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { publicProfileHref } from "@/lib/profile-route";
+import { hueOf } from "@/lib/relative-fa";
 import { SpeakerInviteButton } from "@/features/speaker-invitations/components/SpeakerInviteButton";
 import type { Speaker } from "../types";
 
@@ -36,7 +37,8 @@ export function SpeakerCard({
   ) : (
     <span
       aria-hidden="true"
-      className="grid h-12 w-12 place-items-center rounded-full bg-brand-muted text-sm font-black text-brand ring-1 ring-brand-border"
+      className="grid h-12 w-12 place-items-center rounded-full text-sm font-black"
+      style={{ background: `hsl(${hueOf(speaker.name)} 45% 36%)`, color: "#fff" }}
     >
       {letter}
     </span>
@@ -61,24 +63,20 @@ export function SpeakerCard({
           <div className="shrink-0">{avatar}</div>
         )}
 
-        <div className="flex min-w-0 items-center gap-1.5">
-          {profileHref ? (
-            <Link
-              href={profileHref}
-              className="truncate text-sm font-black text-foreground transition-colors hover:text-brand"
-            >
-              {speaker.name}
-            </Link>
-          ) : (
-            <span className="truncate text-sm font-black text-foreground">
-              {speaker.name}
-            </span>
-          )}
-
-          <SpeakerBadge
-            verified={speaker.verified}
-            size="md"
-          />
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
+            {profileHref ? (
+              <Link href={profileHref} className="truncate text-sm font-black text-foreground transition-colors hover:text-brand">
+                {speaker.name}
+              </Link>
+            ) : (
+              <span className="truncate text-sm font-black text-foreground">{speaker.name}</span>
+            )}
+            <SpeakerBadge verified={speaker.verified} size="md" />
+          </div>
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+            {[speaker.categories[0]?.name, speaker.cities[0]].filter(Boolean).join(" · ") || speaker.expertise}
+          </p>
         </div>
       </div>
 
