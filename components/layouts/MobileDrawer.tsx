@@ -264,7 +264,7 @@ export function MobileDrawer({
           </button>
         </div>
 
-        <div className="-mt-14 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
+        <div className="-mt-14 flex min-h-0 flex-1 touch-pan-y flex-col overflow-y-auto overscroll-contain px-5 pb-4">
           {isAuthenticated && !viewer ? (
             <div aria-hidden="true" className="animate-pulse">
               <span className="block h-20 w-20 rounded-full border-4 border-background bg-skeleton" />
