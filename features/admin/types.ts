@@ -280,10 +280,10 @@ export const CONTENT_FORMATS = [
   "mixed",
 ] as const;
 export type ContentFormat = (typeof CONTENT_FORMATS)[number];
-export const CONTENT_TYPES = ["placard", "speech", "music_video", "video", "report"] as const;
+export const CONTENT_TYPES = ["placard", "speech", "music_video", "video", "report", "note"] as const;
 export type ContentType = (typeof CONTENT_TYPES)[number];
 export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  placard: "پلاکارد", speech: "سخنرانی", music_video: "نماهنگ", video: "ویدیو", report: "گزارش",
+  placard: "پلاکارد", speech: "سخنرانی", music_video: "نماهنگ", video: "ویدیو", report: "گزارش", note: "یادداشت",
 };
 
 export const CONTENT_FORMAT_LABELS: Record<ContentFormat, string> = {
@@ -346,6 +346,7 @@ export type ContentItem = {
   badge: string;
   locationLabel: string;
   mediaDuration: string;
+  series: string;
   usageNote: string;
   attachments: ContentAttachment[];
   files: string[];
@@ -370,6 +371,7 @@ export type ContentInput = {
   badge: string;
   locationLabel: string;
   mediaDuration: string;
+  series: string;
   featured: boolean;
   attachments: Array<{ mediaId: number; mediaTitle: string; mediaSubtitle: string; mimeType?: string; size?: number }>;
   tags: string[];

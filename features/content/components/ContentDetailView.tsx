@@ -27,6 +27,7 @@ import { meydanApi } from "@/lib/meydan-api";
 import { MediaLightbox } from "@/features/media/components/MediaLightbox";
 import { VideoPlayer } from "@/features/media/components/VideoPlayer";
 import { AudioMediaStage } from "./AudioMediaStage";
+import { NoteReader } from "./NoteReader";
 
 type ContentDetailViewProps = {
   item: ContentDetailItem;
@@ -53,6 +54,7 @@ const contentTypeLabels: Record<string, string> = {
   music_video: "نماهنگ",
   video: "ویدیو",
   report: "گزارش",
+  note: "یادداشت",
 };
 
 function contentLabel(item: ContentDetailItem): string {
@@ -197,7 +199,7 @@ function MediaStage({
   );
 }
 
-export function ContentDetailView({
+function ContentDetailBody({
   item,
   relatedItems,
 }: ContentDetailViewProps) {
@@ -694,4 +696,10 @@ export function ContentDetailView({
       </p>
     </article>
   );
+}
+
+
+export function ContentDetailView(props: ContentDetailViewProps) {
+  // Notes read as articles; every other kind keeps the media-first layout.
+  return props.item.contentType === "note" ? <NoteReader item={props.item} /> : <ContentDetailBody {...props} />;
 }

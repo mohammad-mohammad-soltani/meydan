@@ -47,6 +47,14 @@ export type ContentItem = {
   author?: string;
   authorAvatar?: string;
   coverUrl?: string;
+  /** «سلسله سخنرانی» the audio belongs to. */
+  series?: string;
+  /** Minutes to read a note, from its word count. */
+  readingMinutes?: number;
+  publishedAt?: string;
+  categoryName?: string;
+  categorySlug?: string;
+  bookmarked?: boolean;
   sourceNarrativeId?: number | null;
   media: ContentMedia;
 };
@@ -63,7 +71,8 @@ export type ContentDetailItem = Omit<ContentItem, "category" | "media"> & {
   tags: string[];
   files: ContentFile[];
   usageNote: string;
-  viewerState?: { bookmarked: boolean };
+  viewerState?: { bookmarked: boolean; liked?: boolean };
+  likeCount?: number;
 };
 
 export type ScheduleItem = {

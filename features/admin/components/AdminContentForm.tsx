@@ -56,6 +56,7 @@ function toInput(content?: ContentItem): ContentInput {
     badge: content?.badge ?? "",
     locationLabel: content?.locationLabel ?? "",
     mediaDuration: content?.mediaDuration ?? "",
+    series: content?.series ?? "",
     featured: content?.featured ?? false,
     attachments: (content?.attachments ?? []).map((attachment) => ({
       mediaId: attachment.mediaId,
@@ -363,7 +364,7 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
         )}
       </section>
 
-      <AdminDisclosureSection title="جزئیات کارت و برچسب‌ها" className="admin-form-side" hasError={Boolean(fieldErrors.tags || fieldErrors.badge || fieldErrors.subtitle || fieldErrors.location_label || fieldErrors.media_duration)}>
+      <AdminDisclosureSection title="جزئیات کارت و برچسب‌ها" className="admin-form-side" hasError={Boolean(fieldErrors.tags || fieldErrors.badge || fieldErrors.subtitle || fieldErrors.location_label || fieldErrors.media_duration || fieldErrors.series)}>
         <div className="space-y-3">
           <AdminField label="برچسب‌ها" htmlFor="content-tags" error={fieldErrors.tags} hint="با ویرگول یا خط جدید جدا کنید.">
             <textarea id="content-tags" value={tagText} rows={2} onChange={(event) => setTagText(event.target.value)} className={`${fieldClass} resize-none`} />
@@ -376,6 +377,9 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
           </AdminField>
           <AdminField label="محل" htmlFor="content-location" error={fieldErrors.location_label}>
             <input id="content-location" value={form.locationLabel} onChange={(event) => patch({ locationLabel: event.target.value })} className={fieldClass} />
+          </AdminField>
+          <AdminField label="سلسله (برای صوت‌های چندجلسه‌ای)" htmlFor="content-series" error={fieldErrors.series}>
+            <input id="content-series" value={form.series} onChange={(event) => patch({ series: event.target.value })} className={fieldClass} />
           </AdminField>
           <AdminField label="مدت رسانه" htmlFor="content-duration" error={fieldErrors.media_duration}>
             <input id="content-duration" value={form.mediaDuration} dir="ltr" placeholder="12:30" onChange={(event) => patch({ mediaDuration: event.target.value })} className={`${fieldClass} text-left`} />

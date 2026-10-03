@@ -23,7 +23,7 @@ type ApiCreator = LegacyContentCreator & {
   id: number;
 };
 
-type ApiContent = {
+export type ApiContent = {
   id: number;
   slug?: string;
   title: string;
@@ -45,12 +45,14 @@ type ApiContent = {
   usage_note?: string;
   featured?: boolean;
   published_at?: string | null;
-  stats?: { views?: number; downloads?: number };
-  viewer_state?: { bookmarked?: boolean } | null;
+  stats?: { views?: number; downloads?: number; likes?: number };
+  viewer_state?: { bookmarked?: boolean; liked?: boolean } | null;
   subtitle?: string;
   badge?: string;
   location_label?: string;
   media_duration?: string;
+  series?: string | null;
+  reading_minutes?: number | null;
   primary_attachment_id?: number;
   files?: Array<{
     id: string | number;
@@ -106,7 +108,7 @@ function audioOf(item: ApiContent): string | undefined {
   return contentAudioSource(item.primary_attachment_id, item.attachments);
 }
 
-function toItem(item: ApiContent): ContentItem {
+export function toItem(item: ApiContent): ContentItem {
   const kind = kindOf(item.format);
   const producer = contentProducer(item.producer, item.creators);
   const video = contentVideo(item.id, item.primary_attachment_id, item.attachments);
@@ -123,6 +125,12 @@ function toItem(item: ApiContent): ContentItem {
     author: producer.name,
     authorAvatar: producer.avatar,
     coverUrl: item.media_cover_url || undefined,
+    series: item.series || undefined,
+    readingMinutes: item.reading_minutes || undefined,
+    publishedAt: item.published_at || undefined,
+    categoryName: item.category?.name || undefined,
+    categorySlug: item.category?.slug || undefined,
+    bookmarked: Boolean(item.viewer_state?.bookmarked),
     media: {
       kind: kind === "video" ? "image" : kind,
       duration: item.media_duration || undefined,
@@ -207,7 +215,11 @@ function toDetail(item: ApiContent): ContentDetailItem {
     tags: item.tags || [],
     files: fileList(item),
     usageNote: item.usage_note || "",
-    viewerState: { bookmarked: Boolean(item.viewer_state?.bookmarked) },
+    viewerState: { bookmarked: Boolean(item.viewer_state?.bookmarked), liked: Boolean(item.viewer_state?.liked) },
+    readingMinutes: item.reading_minutes || undefined,
+    categoryName: item.category?.name || undefined,
+    categorySlug: item.category?.slug || undefined,
+    likeCount: item.stats?.likes || 0,
   };
 }
 

@@ -59,6 +59,7 @@ type ApiContent = {
   badge?: string | null;
   location_label?: string | null;
   media_duration?: string | null;
+  series?: string | null;
   usage_note?: string | null;
   attachments?: ApiAttachment[] | null;
   files?: unknown[] | null;
@@ -118,6 +119,7 @@ export function mapContent(row: ApiContent): ContentItem {
     badge: String(row.badge ?? ""),
     locationLabel: String(row.location_label ?? ""),
     mediaDuration: String(row.media_duration ?? ""),
+    series: String(row.series ?? ""),
     usageNote: String(row.usage_note ?? ""),
     attachments,
     files: (row.files ?? []).map((file) =>
@@ -218,6 +220,7 @@ export function contentBody(input: ContentInput): Record<string, unknown> {
     badge: input.badge,
     location_label: input.locationLabel,
     media_duration: input.mediaDuration,
+    series: input.series,
     featured: input.featured,
     attached_media: input.attachments.map((attachment) => ({
       media_id: attachment.mediaId,
