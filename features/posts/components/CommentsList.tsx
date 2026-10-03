@@ -5,15 +5,18 @@ import type { ReactNode } from "react";
 import type { PostComment } from "../types";
 import { publicProfileHref } from "@/lib/profile-route";
 import { AccountBadges } from "@/components/shared/AccountBadges";
+import { CommentLikeButton } from "./CommentLikeButton";
 
 export function CommentsList({
   comments,
   composer,
   total,
+  postId,
 }: {
   comments: PostComment[];
   composer: ReactNode;
   total: number;
+  postId: string;
   children?: ReactNode;
 }) {
   return (
@@ -100,6 +103,7 @@ export function CommentsList({
                     {comment.content}
                   </p>
                 </div>
+                <CommentLikeButton commentId={comment.id} postId={postId} likes={comment.likes ?? 0} liked={Boolean(comment.liked)} />
               </article>
             );
           })}

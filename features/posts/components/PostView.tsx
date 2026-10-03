@@ -426,6 +426,7 @@ export function PostView({
           ) : null}
 
           <CommentsList
+            postId={state.post.id}
             comments={
               state.comments
             }

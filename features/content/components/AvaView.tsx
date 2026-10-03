@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { Clock, LoaderCircle, Pause, Play, Search } from "lucide-react";
+import { LoaderCircle, Pause, Play, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAudio } from "@/features/audio/AudioProvider";
 import type { AudioTrack } from "@/features/audio/types";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { hueOf, relativeFa } from "@/lib/relative-fa";
-import { publicProfileHref, actorKindOf } from "@/lib/profile-route";
 import { getAudioHub, type AudioHub, type HubProducer } from "../services/hub.service";
 import type { ContentItem } from "../types";
 
@@ -16,6 +15,7 @@ const faNumber = new Intl.NumberFormat("fa-IR");
 const CHIPS = [
   { id: "all", label: "همه" },
   { id: "featured", label: "ویژه‌ها" },
+  { id: "series", label: "سلسله‌ها" },
   { id: "faces", label: "چهره‌ها" },
   { id: "squares", label: "میادین" },
   { id: "latest", label: "آخرین صوت‌ها" },
@@ -60,18 +60,13 @@ function SectionHead({ title, hint, href }: { title: string; hint?: string; href
       {hint ? <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">{hint}</span> : <span className="flex-1" />}
       {href ? (
         <Link href={href as Route} className="shrink-0 text-[11px] font-bold text-brand hover:underline">مشاهده همه ‹</Link>
-      ) : (
-        <span aria-disabled="true" className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-muted-foreground">
-          مشاهده همه
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-surface-muted px-1.5 py-0.5 text-[9px]"><Clock aria-hidden="true" className="h-2.5 w-2.5" />به‌زودی</span>
-        </span>
-      )}
+      ) : null}
     </div>
   );
 }
 
 function Face({ person }: { person: HubProducer }) {
-  const href = publicProfileHref(actorKindOf(person.type), person.id, person.handle);
+  const href = `/content/audio/${person.type}/${person.id}`;
   return (
     <Link href={href as Route} className="flex w-[84px] shrink-0 flex-col items-center gap-2 text-center">
       <span className="grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full border-2 border-foreground/80 bg-surface-muted text-sm font-black text-foreground">
@@ -84,7 +79,7 @@ function Face({ person }: { person: HubProducer }) {
 }
 
 function SquareTile({ place }: { place: HubProducer }) {
-  const href = publicProfileHref(actorKindOf(place.type), place.id, place.handle);
+  const href = `/content/audio/${place.type}/${place.id}`;
   return (
     <Link href={href as Route} className="group w-[172px] shrink-0">
       <span className="relative block aspect-square overflow-hidden rounded-3xl" style={{ background: tint(place.name, 50, 24) }}>
@@ -204,30 +199,47 @@ export function AvaView({ initial }: { initial: AudioHub }) {
       <div className="space-y-7">
         {show("featured") && hub.featured.length ? (
           <section aria-label="ویژه‌ها">
-            <SectionHead title="ویژه‌ها" hint="منتخب سردبیران این هفته" />
+            <SectionHead title="ویژه‌ها" hint="منتخب سردبیران این هفته" href="/content/audio?shelf=featured" />
             <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-4">
               {hub.featured.map((item) => <FeaturedCard key={item.apiId} item={item} queue={featuredQueue} badge={seriesBadge(item)} />)}
             </div>
           </section>
         ) : null}
 
+        {show("series") && hub.series.length ? (
+          <section aria-label="سلسله‌ها">
+            <SectionHead title="سلسله‌ها" hint="سخنرانی‌های چندجلسه‌ای" />
+            <div className="no-scrollbar flex gap-3 overflow-x-auto px-4">
+              {hub.series.map((entry) => (
+                <Link key={entry.title} href={`/content/audio?series=${encodeURIComponent(entry.title)}` as Route} className="w-[150px] shrink-0">
+                  <span className="relative block aspect-square overflow-hidden rounded-3xl" style={{ background: entry.coverUrl ? `url(${entry.coverUrl}) center/cover` : tint(entry.title, 48, 18) }}>
+                    <span className="absolute inset-x-2.5 bottom-2.5 rounded-full bg-black/50 px-2.5 py-1 text-center text-[10px] font-bold text-white backdrop-blur">{faNumber.format(entry.sessions)} جلسه</span>
+                  </span>
+                  <b className="mt-2 line-clamp-2 block text-xs font-black text-foreground">{entry.title}</b>
+                  {entry.author ? <small className="block truncate text-[10px] text-muted-foreground">{entry.author}</small> : null}
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {show("faces") && hub.faces.length ? (
           <section aria-label="سخنرانان و چهره‌ها">
-            <SectionHead title="سخنرانان و چهره‌ها" />
+            <SectionHead title="سخنرانان و چهره‌ها" href="/content/audio?shelf=faces" />
             <div className="no-scrollbar flex gap-4 overflow-x-auto px-4">{hub.faces.map((person) => <Face key={`${person.type}:${person.id}`} person={person} />)}</div>
           </section>
         ) : null}
 
         {show("squares") && hub.squares.length ? (
           <section aria-label="میادین">
-            <SectionHead title="میادین" hint="مربع‌های صوتی هر میدان" />
+            <SectionHead title="میادین" hint="مربع‌های صوتی هر میدان" href="/content/audio?shelf=squares" />
             <div className="no-scrollbar flex gap-3.5 overflow-x-auto px-4">{hub.squares.map((place) => <SquareTile key={`${place.type}:${place.id}`} place={place} />)}</div>
           </section>
         ) : null}
 
         {(show("latest") || searching) && hub.latest.length ? (
           <section aria-label="آخرین صوت‌ها">
-            {searching ? null : <SectionHead title="آخرین صوت‌ها" href="/podcasts" />}
+            {searching ? null : <SectionHead title="آخرین صوت‌ها" href="/content/audio?shelf=latest" />}
             <div className="divide-y divide-divider">{hub.latest.map((item) => <LatestRow key={item.apiId} item={item} queue={hub.latest} />)}</div>
           </section>
         ) : null}

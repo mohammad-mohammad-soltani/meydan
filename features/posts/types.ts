@@ -56,6 +56,8 @@ export type PostComment = {
   content: string;
   isAuthor?: boolean;
   avatarUrl?: string;
+  likes?: number;
+  liked?: boolean;
 };
 
 export type PostDetail = {

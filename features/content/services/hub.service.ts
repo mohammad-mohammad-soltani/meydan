@@ -1,4 +1,4 @@
-import { meydanApi } from "@/lib/meydan-api";
+import { meydanApi, meydanApiPage } from "@/lib/meydan-api";
 import type { ContentItem } from "../types";
 import { toItem, type ApiContent } from "./content.service";
 
@@ -70,4 +70,30 @@ export async function getNotesHub(q = "", category = ""): Promise<NotesHub> {
   const suffix = params.size ? `?${params}` : "";
   const hub = await meydanApi<{ categories: NoteCategory[]; featured: ApiContent[]; latest: ApiContent[] }>(`/content/hub/notes${suffix}`);
   return { categories: hub.categories ?? [], featured: (hub.featured ?? []).map(toItem), latest: (hub.latest ?? []).map(toItem) };
+}
+
+export type ProducerPage = { items: HubProducer[]; nextOffset: number | null };
+
+/** A page of the people or squares that publish audio, busiest first. */
+export async function getProducerPage(kind: "faces" | "squares", offset = 0): Promise<ProducerPage> {
+  const page = await meydanApiPage<ApiProducerStat[]>(`/content/hub/producers?kind=${kind}&offset=${offset}`);
+  const next = page.meta?.next_offset;
+  return { items: (page.data ?? []).map(producer), nextOffset: typeof next === "number" ? next : null };
+}
+
+export type AudioListQuery = { featured?: boolean; series?: string; producer?: { type: string; id: number } };
+export type AudioListPage = { items: ContentItem[]; nextCursor: string | null };
+
+/** Audio content, newest first, narrowed by shelf, series or producer. */
+export async function getAudioList(query: AudioListQuery = {}, cursor?: string | null): Promise<AudioListPage> {
+  const params = new URLSearchParams({ format: "audio" });
+  if (query.featured) params.set("featured", "1");
+  if (query.series) params.set("series", query.series);
+  if (query.producer) {
+    params.set("producer_type", query.producer.type);
+    params.set("producer_id", String(query.producer.id));
+  }
+  if (cursor) params.set("cursor", cursor);
+  const page = await meydanApiPage<ApiContent[]>(`/content?${params}`);
+  return { items: (page.data ?? []).map(toItem), nextCursor: page.nextCursor };
 }
