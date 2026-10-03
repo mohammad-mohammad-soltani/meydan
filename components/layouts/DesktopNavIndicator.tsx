@@ -53,7 +53,7 @@ export function DesktopNavIndicator({ containerRef }: { containerRef: React.RefO
   return (
     <span
       aria-hidden
-      className="nav-indicator-pill pointer-events-none absolute start-0 z-0 w-full rounded-2xl bg-emphasis"
+      className="nav-indicator-pill pointer-events-none absolute start-0 z-0 w-full rounded-2xl bg-brand-muted"
       style={{ insetBlockStart: style.top, height: style.height, opacity: style.opacity }}
     />
   );

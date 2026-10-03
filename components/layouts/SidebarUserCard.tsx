@@ -82,7 +82,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
   }
 
   const rowClass =
-    "flex h-[3.375rem] items-center gap-2 rounded-2xl border border-border bg-surface p-2 text-card-foreground";
+    "flex h-[3.375rem] items-center gap-2 rounded-pill border border-border bg-card p-1.5 text-card-foreground shadow-xs";
 
   if (!isAuthenticated) {
     return (
@@ -140,7 +140,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
       <Link
         href="/profile"
         aria-label="مشاهدهٔ نمایه"
-        className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-xl transition-colors hover:bg-hover"
+        className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-pill transition-colors hover:bg-hover"
       >
         {viewer?.avatarUrl ? (
           <OptimizedAvatar
@@ -148,12 +148,12 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
             alt=""
             width={40}
             height={40}
-            className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
+            className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border"
           />
         ) : (
           <span
             aria-hidden="true"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-black text-foreground"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-muted text-xs font-black text-brand"
           >
             {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : viewer?.name.trim().slice(0, 1) || <UserRound className="h-5 w-5" />}
           </span>
@@ -174,7 +174,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
         }}
         title="خروج از حساب"
         aria-label="خروج از حساب"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:border-danger-border hover:bg-danger-surface hover:text-danger-foreground"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-foreground-secondary transition-colors hover:border-danger-border hover:bg-danger-surface hover:text-danger-foreground"
       >
         <LogOut aria-hidden="true" className="h-4 w-4" />
       </button>
