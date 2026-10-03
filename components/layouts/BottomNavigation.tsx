@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { FolderKanban, Home, LogIn, Map, MessageCircle, UserCheck } from "lucide-react";
+import { Compass, FolderKanban, Home, LogIn, MessageCircle, UserCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { NavBadge } from "./NavBadge";
 
@@ -18,8 +18,8 @@ type NavLink = {
 // Explore moved to the mobile header, so chat takes its slot here.
 const items: NavLink[] = [
   { href: "/home", label: "خانه", icon: Home, match: (path: string) => path === "/home" },
+  { href: "/map", label: "نقشه زنده", icon: Compass, match: (path: string) => path === "/map" },
   { href: "/content", label: "محتوا", icon: FolderKanban, match: (path: string) => path === "/content" },
-  { href: "/map", label: "نقشه زنده", icon: Map, match: (path: string) => path === "/map" },
   {
     href: "/chat",
     label: "گفتگو",

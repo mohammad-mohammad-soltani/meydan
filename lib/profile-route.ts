@@ -13,7 +13,7 @@ export const RESERVED_HANDLES: readonly string[] = [
   "home", "explore", "chat", "compose", "content", "initiatives", "map", "podcasts", "posts", "post",
   "profile", "speakers", "auth", "direct", "login", "logout", "register", "signup", "settings",
   "notifications", "search", "images", "maps", "fonts", "static", "assets", "offline", "favicon",
-  "icon", "manifest", "robots", "sitemap", "sw", "terms", "privacy", "about", "contact", "bookmarks",
+  "icon", "manifest", "robots", "sitemap", "sw", "terms", "privacy", "about", "contact", "bookmarks", "videos", "drafts", "bistcall", "screening",
 ];
 
 /** Every kind of public actor. Media, collectives and organizations are entities of their own. */

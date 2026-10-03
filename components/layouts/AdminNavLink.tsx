@@ -29,7 +29,7 @@ export function AdminNavLink({
 
   return (
     <Link href={"/admin" as Route} className={className} aria-current={ariaCurrent}>
-      <ShieldCheck className="h-5 w-5" />
+      <ShieldCheck className="h-[22px] w-[22px] shrink-0 stroke-[1.8]" />
       پنل مدیریت
     </Link>
   );

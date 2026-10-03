@@ -34,9 +34,10 @@ test("the sidebar panel owns its loading, empty, error and ready states", () => 
   assert.match(panel, /ترندهای داغ میادین/);
   assert.match(panel, /هنوز ترندی در ۲۴ ساعت گذشته ثبت نشده است/);
   assert.match(panel, /تلاش دوباره/);
-  assert.match(panel, /divide-y divide-divider/);
-  // Tabular copy must not be hardcoded: metrics and ranks use Persian numerals.
-  assert.match(panel, /compactFa\(trend\.rank\)/);
+  // Reference design: a bordered header row, then title, metric and a chevron per trend.
+  assert.match(panel, /border-b border-divider pb-3/);
+  assert.match(panel, /trend\.metric/);
+  assert.match(panel, /ChevronLeft/);
 });
 
 test("the desktop breakpoint hook matches Tailwind's lg and is hydration safe", () => {

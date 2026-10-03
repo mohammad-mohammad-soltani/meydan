@@ -1,3 +1,4 @@
+import { VideosGridSkeleton } from "@/features/media/components/VideosGridSkeleton";
 import type { ReactNode } from "react";
 import { Bone, PostCardSkeleton } from "@/features/feed/components/FeedSkeleton";
 
@@ -126,4 +127,8 @@ export function ParticipantsRouteSkeleton() {
 
 export function PodcastsRouteSkeleton() {
   return <SkeletonShell><div className="space-y-2"><Block className="h-5 w-32" /><Block className="h-3 w-52 bg-skeleton-highlight" /></div><div className="space-y-3">{[0, 1, 2, 3].map((index) => <article key={index} className="flex gap-3 rounded-card border border-border p-3"><Block className="h-16 w-16 shrink-0 rounded-xl" /><div className="flex-1 space-y-2 pt-1"><Block className="h-3 w-4/5" /><Block className="h-2.5 w-2/5 bg-skeleton-highlight" /><Block className="h-2.5 w-16 bg-skeleton-highlight" /></div></article>)}</div></SkeletonShell>;
+}
+
+export function VideosRouteSkeleton() {
+  return <VideosGridSkeleton />;
 }

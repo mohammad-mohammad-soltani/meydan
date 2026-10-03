@@ -17,9 +17,9 @@ export function SidebarComposeButton() {
       href="/compose"
       title="نوشتن روایت تازه"
       className="
-        group flex min-h-12 w-full items-center justify-center gap-2.5
+        group flex min-h-[54px] w-full items-center justify-center gap-2.5
         rounded-pill bg-brand px-5
-        text-base font-black text-brand-foreground
+        text-[16.5px] font-semibold text-brand-foreground
         shadow-xs
         outline-none
 

@@ -8,11 +8,8 @@ import { createPortal } from "react-dom";
 import {
   Bookmark,
   FileText,
-  Home,
+  Clock,
   LogIn,
-  Newspaper,
-  Plus,
-  Sparkles,
   UserRound,
   X,
   type LucideIcon,
@@ -22,16 +19,13 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { DrawerViewer } from "./useDrawerViewer";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
-type Item = { href: string; label: string; icon: LucideIcon; active: (path: string, filter: string | null) => boolean };
+type Item = { href: string; label: string; icon: LucideIcon; active: (path: string, filter: string | null) => boolean; soon?: boolean };
 
 const ITEMS: Item[] = [
-  { href: "/home", label: "خانه", icon: Home, active: (p, f) => p === "/home" && !f },
   { href: "/profile", label: "نمایه", icon: UserRound, active: (p) => p === "/profile" },
-  { href: "/home?filter=narratives", label: "روایت‌های مردمی", icon: FileText, active: (p, f) => p === "/home" && f === "narratives" },
-  { href: "/home?filter=initiatives", label: "کار و اقدام میدانی", icon: Sparkles, active: (p, f) => p === "/home" && f === "initiatives" },
-  { href: "/home?filter=reflected", label: "پویش‌های رسانه‌ای", icon: Newspaper, active: (p, f) => p === "/home" && f === "reflected" },
   { href: "/bookmarks", label: "نشان‌شده‌ها", icon: Bookmark, active: (p) => p === "/bookmarks" },
-  { href: "/compose", label: "ثبت روایت یا پویش جدید", icon: Plus, active: () => false },
+  // The drafts page is designed but not open yet.
+  { href: "/drafts", label: "پیش‌نویس‌ها", icon: FileText, active: (p) => p === "/drafts", soon: true },
 ];
 
 const subscribeNothing = () => () => {};
@@ -311,9 +305,23 @@ export function MobileDrawer({
           )}
 
           <nav aria-label="منوی اصلی" className="mt-5 space-y-1">
-            {ITEMS.filter((item) => isAuthenticated || (item.href !== "/profile" && item.href !== "/bookmarks" && item.href !== "/compose")).map(
-              ({ href, label, icon: Icon, active }) => {
+            {ITEMS.filter(() => isAuthenticated).map(
+              ({ href, label, icon: Icon, active, soon }) => {
                 const isActive = active(pathname, filter);
+                if (soon) {
+                  return (
+                    <div key={href} aria-disabled="true" className="flex cursor-default items-center gap-3 rounded-2xl px-1 py-1.5 text-sm font-black text-foreground">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-surface-muted text-icon">
+                        <Icon aria-hidden="true" className="h-[18px] w-[18px]" />
+                      </span>
+                      {label}
+                      <span className="ms-auto inline-flex items-center gap-1 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                        <Clock aria-hidden="true" className="h-3 w-3" />
+                        به‌زودی
+                      </span>
+                    </div>
+                  );
+                }
                 return (
                   <Link
                     key={href}

@@ -6,6 +6,7 @@ import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import {
   FolderKanban,
+  SquarePlay,
   Home,
   LogIn,
   Map,
@@ -27,6 +28,7 @@ import { DesktopNavIndicator } from "./DesktopNavIndicator";
 import { FloatingComposeButton } from "./FloatingComposeButton";
 import { MobileHeader } from "./MobileHeader";
 import { NavBadge } from "./NavBadge";
+import { SidebarBanners } from "./SidebarBanners";
 import { SidebarComposeButton } from "./SidebarComposeButton";
 import { SidebarUserCard } from "./SidebarUserCard";
 import { ThemeSwitcher } from "./ThemeSwitcher";
@@ -38,8 +40,10 @@ type AppShellProps = {
   isNativeClient?: boolean;
 };
 
+// Sizes follow the reference: 16.5px / weight 500 labels, 22px icons with a thin stroke.
+const navIcon = "h-[22px] w-[22px] shrink-0 stroke-[1.8]";
 const desktopLinkClass =
-  "relative z-10 flex items-center gap-3 rounded-2xl px-3.5 py-3 transition-colors";
+  "relative z-10 flex items-center gap-3 rounded-[18px] px-3.5 py-[13px] text-[16.5px] font-medium transition-colors";
 // One text color per state: with both in the class list the stylesheet order,
 // not the intent, decided which one won.
 const idleDesktopLinkClass = "text-foreground-secondary hover:bg-hover hover:text-foreground";
@@ -96,9 +100,9 @@ export function AppShell({
         <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between overflow-y-auto border-l border-border bg-background p-4 lg:flex">
           <div className="space-y-10">
             <Link href="/home" className="flex items-center gap-3 px-2">
-              <AppLogo priority />
+              <AppLogo priority className="h-12 w-12 rounded-[15px]" />
               <span>
-                <span className="block text-base font-black text-foreground">
+                <span className="block text-lg font-black text-foreground">
                   نقش من
                 </span>
                 <span className="block text-[11px] text-muted-foreground">
@@ -106,36 +110,40 @@ export function AppShell({
                 </span>
               </span>
             </Link>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <nav
                 ref={desktopNavRef}
                 aria-label="ناوبری دسکتاپ"
-                className="relative space-y-3 text-sm font-bold"
+                className="relative space-y-1"
               >
                 <DesktopNavIndicator containerRef={desktopNavRef} />
                 <Link href="/home" {...desktopLink(pathname, "/home")}>
-                  <Home className="h-5 w-5" />
+                  <Home className={navIcon} />
                   خانه و روایت‌ها
                 </Link>
                 <Link href="/content" {...desktopLink(pathname, "/content")}>
-                  <FolderKanban className="h-5 w-5" />
+                  <FolderKanban className={navIcon} />
                   بسته محتوا
                 </Link>
+                <Link href="/videos" {...desktopLink(pathname, "/videos")}>
+                  <SquarePlay className={navIcon} />
+                  چندرسانه‌ای
+                </Link>
                 <Link href="/speakers" {...desktopLink(pathname, "/speakers")}>
-                  <Mic className="h-5 w-5" />
+                  <Mic className={navIcon} />
                   اعزام سخنران
                 </Link>
                 <Link href="/map" {...desktopLink(pathname, "/map")}>
-                  <Map className="h-5 w-5" />
+                  <Map className={navIcon} />
                   نقشه زنده
                 </Link>
                 <Link href="/chat" {...desktopLink(pathname, "/chat")}>
-                  <MessageCircle className="h-5 w-5" />
+                  <MessageCircle className={navIcon} />
                   گفتگو
                   <NavBadge className="ms-auto" />
                 </Link>
                 <Link href="/explore" {...desktopLink(pathname, "/explore")}>
-                  <Search className="h-5 w-5" />
+                  <Search className={navIcon} />
                   کاوش و جستجو
                 </Link>
                 {isAuthenticated ? (
@@ -146,12 +154,12 @@ export function AppShell({
                 ) : null}
                 {isAuthenticated ? (
                   <Link href="/profile" {...desktopLink(pathname, "/profile")}>
-                    <UserCheck className="h-5 w-5" />
+                    <UserCheck className={navIcon} />
                     نمایه
                   </Link>
                 ) : (
                   <Link href="/auth" {...desktopLink(pathname, "/auth")}>
-                    <LogIn className="h-5 w-5" />
+                    <LogIn className={navIcon} />
                     ورود
                   </Link>
                 )}
@@ -191,9 +199,12 @@ export function AppShell({
           ) : null}
         </div>
         <aside className="hidden h-screen w-72 shrink-0 flex-col justify-between gap-4 overflow-y-auto border-r border-border bg-background p-4 lg:flex">
-          <SilentBoundary label="trends-panel">
-            <HotTrendsPanel />
-          </SilentBoundary>
+          <div className="space-y-4">
+            <SidebarBanners />
+            <SilentBoundary label="trends-panel">
+              <HotTrendsPanel />
+            </SilentBoundary>
+          </div>
           {/* Both sidebar footers share the same wrapper and a 3.375rem control,
               so the two columns end at exactly the same height. */}
           <div className="border-t border-divider pt-4">
