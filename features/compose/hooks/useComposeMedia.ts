@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MeydanApiError } from "@/lib/meydan-api";
-import { uploadNarrativeFile } from "@/lib/meydan-upload";
+import { isUploadAbort, uploadFile, type UploadStats } from "@/lib/meydan-upload";
 
 /** Up to five attachments; images, video and audio can be mixed freely. */
 export const MAX_COMPOSE_MEDIA = 5;
@@ -21,9 +21,17 @@ export type ComposeMedia = {
   progress: number;
   /** After the last byte the server still finishes the file (video remux, storage copy). */
   processing?: boolean;
+  live: UploadLive;
   mediaId?: number;
   error?: string;
 };
+
+/**
+ * Live transfer numbers, written on every progress event and read by the ring's
+ * animation loop. They live outside React state so a fast upload never causes
+ * a render per event.
+ */
+export type UploadLive = UploadStats & { at: number };
 
 export type ComposeAttachment = { media_id: number; label: string; order: number };
 
@@ -46,6 +54,7 @@ export function useComposeMedia() {
   const previewUrls = useRef<Set<string>>(new Set());
   const noticeTimer = useRef<number | null>(null);
   const disposed = useRef(false);
+  const controllers = useRef<Map<string, AbortController>>(new Map());
 
   // Single writer so the ref and the state can never drift apart.
   const update = useCallback((updater: (current: ComposeMedia[]) => ComposeMedia[]) => {
@@ -63,12 +72,14 @@ export function useComposeMedia() {
     // `previewUrls` is created once and only ever mutated, so capturing it here
     // (instead of reading `.current` in the cleanup) keeps the lint rule happy.
     const urls = previewUrls.current;
+    const running = controllers.current;
     // React re-runs effects on mount in development (StrictMode), so this must
     // be reset here — otherwise the first cleanup would disable every upload
     // callback for the rest of the session.
     disposed.current = false;
     return () => {
       disposed.current = true;
+      for (const controller of running.values()) controller.abort();
       if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
       for (const url of urls) URL.revokeObjectURL(url);
       urls.clear();
@@ -77,14 +88,22 @@ export function useComposeMedia() {
 
   const upload = useCallback(
     (id: string, file: File) => {
-      void uploadNarrativeFile(file, "narrative", (fraction) => {
-        if (disposed.current) return;
-        update((current) => current.map((item) => (item.id === id ? { ...item, progress: fraction } : item)));
-      }, (phase) => {
-        if (disposed.current) return;
-        update((current) => current.map((item) => (item.id === id ? { ...item, processing: phase === "processing" } : item)));
+      const controller = new AbortController();
+      controllers.current.set(id, controller);
+      const live = () => mediaRef.current.find((item) => item.id === id)?.live;
+      void uploadFile(file, {
+        purpose: "narrative",
+        signal: controller.signal,
+        onStats: (stats) => {
+          const target = live();
+          if (target) Object.assign(target, stats, { at: performance.now() });
+          if (disposed.current) return;
+          if (stats.phase === "processing") {
+            update((current) => current.map((item) => (item.id === id && !item.processing ? { ...item, processing: true } : item)));
+          }
+        },
       })
-        .then((mediaId) => {
+        .then(({ media_id: mediaId }) => {
           if (disposed.current) return;
           update((current) =>
             current.map((item) =>
@@ -93,7 +112,8 @@ export function useComposeMedia() {
           );
         })
         .catch((reason: unknown) => {
-          if (disposed.current) return;
+          // Removing a tile cancels its upload on purpose; that is not an error.
+          if (disposed.current || isUploadAbort(reason)) return;
           // Gateway errors and dropped connections carry developer text; show something a person can act on.
           const message =
             reason instanceof MeydanApiError && reason.status > 0 && reason.status < 500 && reason.code
@@ -102,6 +122,9 @@ export function useComposeMedia() {
           update((current) =>
             current.map((item) => (item.id === id ? { ...item, status: "error", processing: false, error: message } : item)),
           );
+        })
+        .finally(() => {
+          if (controllers.current.get(id) === controller) controllers.current.delete(id);
         });
     },
     [update],
@@ -141,6 +164,7 @@ export function useComposeMedia() {
           kind,
           status: "uploading",
           progress: 0,
+          live: { phase: "uploading", loaded: 0, total: file.size, speed: 0, at: performance.now() },
         });
       }
 
@@ -160,6 +184,7 @@ export function useComposeMedia() {
 
   const remove = useCallback(
     (id: string) => {
+      controllers.current.get(id)?.abort();
       const item = mediaRef.current.find((entry) => entry.id === id);
       if (item) {
         URL.revokeObjectURL(item.previewUrl);
@@ -175,7 +200,7 @@ export function useComposeMedia() {
       const item = mediaRef.current.find((entry) => entry.id === id);
       if (!item) return;
       update((current) =>
-        current.map((entry) => (entry.id === id ? { ...entry, status: "uploading", progress: 0, processing: false, error: undefined } : entry)),
+        current.map((entry) => (entry.id === id ? { ...entry, status: "uploading", progress: 0, processing: false, error: undefined, live: { phase: "uploading", loaded: 0, total: entry.file.size, speed: 0, at: performance.now() } } : entry)),
       );
       upload(id, item.file);
     },
@@ -183,6 +208,7 @@ export function useComposeMedia() {
   );
 
   const reset = useCallback(() => {
+    for (const controller of controllers.current.values()) controller.abort();
     for (const url of previewUrls.current) URL.revokeObjectURL(url);
     previewUrls.current.clear();
     update(() => []);

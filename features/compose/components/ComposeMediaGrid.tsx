@@ -1,10 +1,11 @@
 "use client";
 
-import { AlertCircle, LoaderCircle, Mic, Play, RefreshCw, X } from "lucide-react";
+import { AlertCircle, Mic, Play, RefreshCw, X } from "lucide-react";
 import { useState } from "react";
 import { MediaLightbox } from "@/features/media/components/MediaLightbox";
 import type { MediaItem } from "@/features/media/types";
 import type { ComposeMedia } from "../hooks/useComposeMedia";
+import { UploadRing } from "./UploadRing";
 
 type TileLayout = {
   /** Classes for the grid element itself. */
@@ -98,17 +99,7 @@ export function ComposeMediaGrid({
           ) : null}
 
           {item.status === "uploading" ? (
-            <div className="absolute inset-0 grid place-items-center bg-scrim/55 backdrop-blur-[1px]">
-              <span className="flex items-center gap-2 rounded-pill bg-scrim/70 px-3 py-1.5 text-[10px] font-black text-on-solid">
-                <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
-                {item.processing ? "در حال پردازش…" : `${Math.round(item.progress * 100).toLocaleString("fa-IR")}٪`}
-              </span>
-              <span
-                aria-hidden="true"
-                className="absolute bottom-0 left-0 h-1 rounded-full bg-brand transition-[width]"
-                style={{ width: `${Math.max(4, Math.round(item.progress * 100))}%` }}
-              />
-            </div>
+            <UploadRing live={item.live} processing={Boolean(item.processing)} label={item.file.name} onCancel={() => onRemove(item.id)} />
           ) : null}
 
           {item.status === "error" ? (

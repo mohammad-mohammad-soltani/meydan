@@ -1,4 +1,5 @@
 import { meydanApi } from "@/lib/meydan-api";
+import { uploadFile } from "@/lib/meydan-upload";
 import { chatUploadKey, emitChatUploadProgress } from "../chat-upload-progress";
 import type { ChatAttachment, ChatMessage, Conversation } from "../types";
 import type { ActorKind } from "@/lib/profile-route";
@@ -254,52 +255,6 @@ export async function getShareableSquare(preferredSquareId?: number): Promise<Sh
   };
 }
 
-function uploadChunk(
-  uploadId: string,
-  index: number,
-  chunk: Blob,
-  uploadedBefore: number,
-  totalSize: number,
-  onProgress?: (progress: ChatUploadProgress) => void,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", `/api/meydan/uploads/${encodeURIComponent(uploadId)}/chunks/${index}`);
-    xhr.withCredentials = true;
-    xhr.setRequestHeader("content-type", "application/octet-stream");
-
-    xhr.upload.onprogress = (event) => {
-      const loaded = event.lengthComputable ? event.loaded : 0;
-      const transferred = Math.min(totalSize, uploadedBefore + loaded);
-      const percentage = totalSize > 0 ? (transferred / totalSize) * 100 : 0;
-      onProgress?.({ phase: "uploading", progress: Math.min(100, Math.max(0, percentage)) });
-    };
-
-    xhr.onerror = () => reject(new Error("upload_network_error"));
-    xhr.onabort = () => reject(new DOMException("Upload aborted", "AbortError"));
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        const transferred = Math.min(totalSize, uploadedBefore + chunk.size);
-        const percentage = totalSize > 0 ? (transferred / totalSize) * 100 : 100;
-        onProgress?.({ phase: "uploading", progress: Math.min(100, percentage) });
-        resolve();
-        return;
-      }
-
-      let message = `upload_chunk_${xhr.status}`;
-      try {
-        const payload = JSON.parse(xhr.responseText) as { error?: { message?: string } };
-        if (payload.error?.message) message = payload.error.message;
-      } catch {
-        // Keep the status-based fallback.
-      }
-      reject(new Error(message));
-    };
-
-    xhr.send(chunk);
-  });
-}
-
 export async function uploadChatAttachment(
   file: File,
   onProgress?: (progress: ChatUploadProgress) => void,
@@ -312,53 +267,30 @@ export async function uploadChatAttachment(
 
   notify({ phase: "uploading", progress: 0 });
 
-  const started = await meydanApi<{ upload_id: string; chunk_size: number }>("/uploads", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      filename: file.name,
-      mime_type: file.type || "application/octet-stream",
-      size: file.size,
-      purpose: "chat",
-    }),
+  // Chunking, parallelism, per-chunk retry and the long "finish" call live in the shared uploader.
+  const completed = await uploadFile(file, {
+    purpose: "chat",
+    mimeFallback: "application/octet-stream",
+    onStats: (stats) =>
+      notify(
+        stats.phase === "processing"
+          ? { phase: "processing", progress: 100 }
+          : { phase: "uploading", progress: stats.total > 0 ? Math.min(100, (stats.loaded / stats.total) * 100) : 0 },
+      ),
   });
 
-  const chunkSize = Math.max(1, Number(started.chunk_size || 5 * 1024 * 1024));
-  try {
-    for (let offset = 0, index = 0; offset < file.size; offset += chunkSize, index += 1) {
-      const chunk = file.slice(offset, Math.min(file.size, offset + chunkSize));
-      await uploadChunk(started.upload_id, index, chunk, offset, file.size, notify);
-    }
-
-    notify({ phase: "processing", progress: 100 });
-
-    const completed = await meydanApi<{
-      media_id: number;
-      url: string;
-      size: number;
-      width?: number | null;
-      height?: number | null;
-      duration?: number | null;
-      poster_url?: string | null;
-      thumbnail_url?: string | null;
-    }>(`/uploads/${started.upload_id}/complete`, { method: "POST" });
-
-    return {
-      id: String(completed.media_id),
-      name: file.name,
-      mimeType: file.type || "application/octet-stream",
-      size: Number(completed.size || file.size),
-      url: completed.url,
-      previewUrl: completed.url,
-      posterSrc: completed.poster_url || completed.thumbnail_url || undefined,
-      width: Number(completed.width || 0) || undefined,
-      height: Number(completed.height || 0) || undefined,
-      duration: Number(completed.duration || 0) || undefined,
-    };
-  } catch (error) {
-    await meydanApi(`/uploads/${started.upload_id}`, { method: "DELETE" }).catch(() => undefined);
-    throw error;
-  }
+  return {
+    id: String(completed.media_id),
+    name: file.name,
+    mimeType: file.type || "application/octet-stream",
+    size: Number(completed.size || file.size),
+    url: completed.url ?? "",
+    previewUrl: completed.url ?? "",
+    posterSrc: completed.poster_url || completed.thumbnail_url || undefined,
+    width: Number(completed.width || 0) || undefined,
+    height: Number(completed.height || 0) || undefined,
+    duration: Number(completed.duration || 0) || undefined,
+  };
 }
 
 export async function sendMessage(
