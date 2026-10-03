@@ -163,6 +163,11 @@ export function FeedView({
         indicatorRef={indicatorRef}
         activeTab={feed.activeTab}
         onChange={feed.setActiveTab}
+        activeFilter={feed.activeFilter}
+        onPinnedSelect={(filter) => {
+          feed.setActiveTab("for-you");
+          feed.setActiveFilter(filter);
+        }}
       />
 
       <FeedSwipePager

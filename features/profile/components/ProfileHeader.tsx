@@ -101,7 +101,7 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
           {identity.cover ? (
             <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" className="object-cover" />
           ) : (
-            <Image src="/images/header.jpg" alt={`کاور ${identity.name}`} fill className="object-cover" />
+            <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(135deg,#e4152e,#f5525f)]" />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30" />
         </div>

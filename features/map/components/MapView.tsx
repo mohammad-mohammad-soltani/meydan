@@ -98,64 +98,9 @@ export function MapView() {
       id="view-map"
       className="min-h-full bg-background pb-24 text-foreground"
     >
-      <div className="border-b border-divider bg-surface px-3 py-3 sm:px-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="flex items-center gap-2 text-sm font-black text-foreground">
-              <MapPinned className="h-[18px] w-[18px] shrink-0 text-brand" />
-              نقشه میدان‌ها
-            </h1>
-            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-              استان و شهر را انتخاب کنید تا میدان‌های فعال همان محدوده را
-              ببینید.
-            </p>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={map.refresh}
-              disabled={map.status === "loading"}
-              aria-label="به‌روزرسانی میدان‌ها"
-              title="به‌روزرسانی میدان‌ها"
-              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-hover disabled:opacity-40"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${map.status === "loading" ? "animate-spin" : ""}`}
-              />
-            </button>
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-danger-surface px-2.5 py-1 text-[10px] font-black text-danger">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger opacity-40" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-danger" />
-              </span>
-              لایو
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-2">
-          <MapSelector
-            provinces={map.visibleProvinces}
-            selectedProvinceId={map.selectedProvinceId}
-            query={map.provinceQuery}
-            onQueryChange={map.setProvinceQuery}
-            onSelect={handleSelectProvince}
-          />
-
-          <CitySelector
-            cities={map.visibleCities}
-            selectedCityId={map.selectedCityId}
-            query={map.cityQuery}
-            onQueryChange={map.setCityQuery}
-            onSelect={handleSelectCity}
-          />
-        </div>
-      </div>
-
-      <div className="pt-3 sm:px-4">
+      <div className="sm:px-4 sm:pt-3">
         <div className="relative overflow-hidden border-y border-border bg-[#171a1b] shadow-sm sm:rounded-[22px] sm:border">
-          <div className="min-h-[430px] sm:min-h-[500px] [&>*]:min-h-[430px] sm:[&>*]:min-h-[500px]">
+          <div className="min-h-[62dvh] sm:min-h-[500px] [&>*]:min-h-[62dvh] sm:[&>*]:min-h-[500px]">
             <MapFrame
               squares={mapMarkers.squares}
               aggregates={mapMarkers.aggregates}
@@ -191,6 +136,28 @@ export function MapView() {
               </button>
             </div>
           ) : null}
+        </div>
+      </div>
+
+      <div className="mx-3 mt-3 rounded-3xl border border-border bg-surface p-3 sm:mx-4">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="flex items-center gap-2 text-sm font-black text-foreground">
+            <MapPinned className="h-[18px] w-[18px] shrink-0 text-brand" />
+            انتخاب استان یا شهر
+          </h1>
+          <div className="flex shrink-0 items-center gap-2">
+            <button type="button" onClick={map.refresh} disabled={map.status === "loading"} aria-label="به‌روزرسانی میدان‌ها" title="به‌روزرسانی میدان‌ها" className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-hover disabled:opacity-40">
+              <RefreshCw className={`h-4 w-4 ${map.status === "loading" ? "animate-spin" : ""}`} />
+            </button>
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-danger-surface px-2.5 py-1 text-[10px] font-black text-danger">
+              <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger opacity-40" /><span className="relative inline-flex h-2 w-2 rounded-full bg-danger" /></span>
+              زنده
+            </span>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <MapSelector provinces={map.visibleProvinces} selectedProvinceId={map.selectedProvinceId} query={map.provinceQuery} onQueryChange={map.setProvinceQuery} onSelect={handleSelectProvince} />
+          <CitySelector cities={map.visibleCities} selectedCityId={map.selectedCityId} query={map.cityQuery} onQueryChange={map.setCityQuery} onSelect={handleSelectCity} />
         </div>
       </div>
 
