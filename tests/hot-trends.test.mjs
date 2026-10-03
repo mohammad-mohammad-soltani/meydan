@@ -7,17 +7,15 @@ import path from "node:path";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const source = (relative) => readFileSync(path.join(root, relative), "utf8");
 
-test("the trends service targets the curated endpoint and degrades safely", () => {
+test("the trends service reads the cached explore tags first and degrades safely", () => {
   const service = source("features/trends/services/trends.service.ts");
-  assert.match(service, /\/trends\/hot\?window=\$\{TREND_WINDOW\}&limit=\$\{TREND_LIMIT\}/);
-  // Until the backend ships /trends/hot the widget falls back to real data.
+  // One cached read shared with the explore page; the old curated /trends/hot route never existed.
+  assert.match(service, /"\/explore\/home"/);
+  assert.doesNotMatch(service, /\/trends\/hot/);
   assert.match(service, /\/explore\/trends\?window=\$\{TREND_WINDOW\}/);
-  // ...and when the trends feeds are empty, to the most engaging timeline rows.
   assert.match(service, /\/timeline\?mode=for_you&filter=all/);
   assert.match(service, /engagementScore/);
   assert.match(service, /signal/);
-  // Only app-relative destinations may reach next/link.
-  assert.match(service, /href\.startsWith\("\/"\) && !href\.startsWith\("\/\/"\)/);
   const types = source("features/trends/types.ts");
   for (const field of ["rank", "context", "title", "metric", "href"]) {
     assert.match(types, new RegExp(`\\b${field}[?]?:`), `HotTrend must expose ${field}`);

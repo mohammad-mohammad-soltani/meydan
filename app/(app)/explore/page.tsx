@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description: "جست‌وجوی روایت‌ها، میدان‌ها، کاربران، سخنران‌ها و محتوای میدان.",
 };
 
-export default function ExplorePage() {
-  return <ExploreView />;
+export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
+  return <ExploreView initialQuery={(q ?? "").slice(0, 80)} />;
 }

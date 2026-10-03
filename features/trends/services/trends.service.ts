@@ -27,26 +27,6 @@ type TrendsResponse = {
   items?: ApiNarrative[];
 };
 
-/** Target contract of `GET /trends/hot` — see docs/backend-prompts. */
-type CuratedMetric = {
-  value?: number;
-  label?: string;
-};
-
-type CuratedItem = {
-  id?: string | number;
-  rank?: number;
-  context?: string;
-  title?: string;
-  href?: string;
-  metric?: CuratedMetric;
-};
-
-type CuratedResponse = {
-  window?: string;
-  items?: CuratedItem[];
-};
-
 /**
  * The trends feeds are advisory: a backend that answers with an object, a
  * single row or `null` must never take the sidebar down with it.
@@ -74,12 +54,6 @@ function excerpt(value?: string): string {
   return text.length > 72 ? `${text.slice(0, 72).trimEnd()}…` : text;
 }
 
-/** Only in-app destinations are safe to hand to `next/link`. */
-function appHref(value?: string): string {
-  const href = (value || "").trim();
-  return href.startsWith("/") && !href.startsWith("//") ? href : "/explore";
-}
-
 function narrativeMetric(item: ApiNarrative): string {
   const views = Number(item.stats?.views || 0);
   if (views > 0) return `${compactFa(views)} بازدید`;
@@ -88,24 +62,6 @@ function narrativeMetric(item: ApiNarrative): string {
   if (reactions > 0) return `${compactFa(reactions)} واکنش`;
 
   return "روایت تازه";
-}
-
-function mapCurated(item: CuratedItem, index: number): HotTrend | null {
-  const title = (item.title || "").trim();
-  if (!title) return null;
-
-  const value = Number(item.metric?.value || 0);
-  const label = (item.metric?.label || "").trim();
-  const rank = Number(item.rank);
-
-  return {
-    id: String(item.id ?? `trend-${index}`),
-    rank: rank > 0 ? rank : index + 1,
-    context: (item.context || "").trim() || "ترند میدانی",
-    title,
-    metric: value > 0 ? `${compactFa(value)}${label ? ` ${label}` : ""}` : label || "در حال رشد",
-    href: appHref(item.href),
-  };
 }
 
 function mapNarrative(item: ApiNarrative, index: number): HotTrend {
@@ -119,28 +75,6 @@ function mapNarrative(item: ApiNarrative, index: number): HotTrend {
     metric: narrativeMetric(item),
     href: `/posts/${item.id}`,
   };
-}
-
-/**
- * Curated aggregate board from `GET /trends/hot`. Until the backend ships that
- * route the call fails (or answers empty) and we fall through to the narrative
- * trends the app already serves — never to invented data.
- */
-async function curatedTrends(signal?: AbortSignal): Promise<HotTrend[] | null> {
-  try {
-    const data = await meydanApi<CuratedResponse>(
-      `/trends/hot?window=${TREND_WINDOW}&limit=${TREND_LIMIT}`,
-      { signal },
-    );
-    const items = asList<CuratedItem>(data?.items)
-      .map(mapCurated)
-      .filter((item): item is HotTrend => item !== null)
-      .slice(0, TREND_LIMIT);
-    return items.length ? items : null;
-  } catch (reason) {
-    if (isAbortError(reason)) throw reason;
-    return null;
-  }
 }
 
 /** Reactions are far rarer than views, so they dominate this score. */
@@ -157,7 +91,7 @@ function engagementScore(item: ApiNarrative): number {
  * Last resort while the backend trends feeds are empty: the most engaging
  * narratives already in the public timeline. This keeps the board populated
  * with real content instead of an apology, and disappears on its own once
- * `/trends/hot` or `/explore/trends` answers with rows.
+ * `/explore/trends` answers with rows.
  */
 async function timelineTrends(signal?: AbortSignal): Promise<HotTrend[]> {
   const data = await meydanApi<ApiNarrative[] | { items?: ApiNarrative[] }>(
@@ -171,9 +105,30 @@ async function timelineTrends(signal?: AbortSignal): Promise<HotTrend[]> {
     .map(mapNarrative);
 }
 
+/**
+ * The hot hashtags of the last week, from the one cached explore read (the same
+ * request the explore page makes), shown as «#tag · N روایت» like the reference.
+ */
+async function tagTrends(signal?: AbortSignal): Promise<HotTrend[]> {
+  const home = await meydanApi<{ tags?: Array<{ tag: string; count: number; hot: boolean }> }>("/explore/home", { signal });
+  return (home?.tags ?? []).slice(0, 6).map((entry, index) => ({
+    id: `tag-${entry.tag}`,
+    rank: index + 1,
+    context: entry.hot ? "داغ" : "ترند",
+    title: `#${entry.tag}`,
+    metric: `${compactFa(entry.count)} روایت`,
+    href: `/explore?q=${encodeURIComponent(`#${entry.tag}`)}`,
+  }));
+}
+
 export async function getHotTrends(signal?: AbortSignal): Promise<HotTrend[]> {
-  const curated = await curatedTrends(signal);
-  if (curated) return curated;
+  try {
+    const tags = await tagTrends(signal);
+    if (tags.length) return tags;
+  } catch (reason) {
+    if (isAbortError(reason)) throw reason;
+  }
+  // Older backends without /explore/home: the narrative-based board as before.
 
   const hot = await meydanApi<TrendsResponse>(
     `/explore/trends?window=${TREND_WINDOW}`,

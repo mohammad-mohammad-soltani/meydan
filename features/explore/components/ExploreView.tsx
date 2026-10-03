@@ -167,8 +167,8 @@ function SearchSkeleton() {
   );
 }
 
-export function ExploreView() {
-  const [query, setQuery] = useState("");
+export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [activeFilter, setActiveFilter] = useState<ExploreFilter>("all");
   const [results, setResults] = useState<ExploreResult[]>([]);
   const [searchStatus, setSearchStatus] = useState<

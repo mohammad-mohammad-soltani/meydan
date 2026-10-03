@@ -49,7 +49,6 @@ test("the trends feeds tolerate any payload shape", () => {
   // A backend answering with an object, a single row or null must not throw.
   assert.match(service, /function asList<T>\(value: unknown\): T\[\]/);
   assert.match(service, /const hotTrends = asList<ApiNarrative>\(hot\?\.items\)/);
-  assert.match(service, /const items = asList<CuratedItem>\(data\?\.items\)/);
   assert.match(service, /return asList<ApiNarrative>\(data\)/);
   // The panel itself never throws into the route: state, not exceptions.
   assert.match(source("features/trends/components/HotTrendsPanel.tsx"), /setStatus\("error"\)/);

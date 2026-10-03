@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   FolderKanban,
   SquarePlay,
+  Sparkles,
   Home,
   LogIn,
   Map,
@@ -206,6 +207,13 @@ export function AppShell({
             <SilentBoundary label="trends-panel">
               <HotTrendsPanel />
             </SilentBoundary>
+            <section className="rounded-2xl border border-border bg-surface/60 p-3.5">
+              <h2 className="flex items-center gap-1.5 text-xs font-black text-foreground">
+                <Sparkles aria-hidden="true" className="h-4 w-4 text-icon" />
+                شبکه همبستگی ایران
+              </h2>
+              <p className="mt-1.5 text-[11px] leading-6 text-muted-foreground">ثبت و روایت کنش‌های مردمی، پویش‌های محلی و رسانه‌ای در سراسر کشور.</p>
+            </section>
           </div>
           {/* Both sidebar footers share the same wrapper and a 3.375rem control,
               so the two columns end at exactly the same height. */}
