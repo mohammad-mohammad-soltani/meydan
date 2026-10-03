@@ -1,5 +1,6 @@
 "use client";
 
+import { IRAN_ISLANDS } from "../data/iran-islands";
 import {
   Layers3,
   MapPinned,
@@ -123,6 +124,15 @@ export function MapFrame({
         key: `square:${item.id}`,
         label: "میدان",
         zoom: 15,
+      })),
+      ...IRAN_ISLANDS.map((island) => ({
+        id: island.name,
+        name: `جزیرهٔ ${island.name}`,
+        latitude: island.latitude,
+        longitude: island.longitude,
+        key: `island:${island.name}`,
+        label: `جزیره · ${island.province}`,
+        zoom: 11,
       })),
     ]
       .filter((item) => normalizePlace(item.name).includes(normalized))

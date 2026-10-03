@@ -77,6 +77,8 @@ export function AppShell({
   // Chat is the two-pane workspace (conversations + work groups), laid out like the old «کارها» page.
   const isWorksRoute = pathname === "/chat" || pathname.startsWith("/chat/");
   const isChatRoute = isWorksRoute;
+  // Explore and the video grid use the wide centre column and drop the trends column, like chat.
+  const isWideRoute = pathname === "/explore" || pathname === "/videos";
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
   // The app scrolls inside <main>, not window. Next.js cannot restore/reset this
@@ -93,7 +95,7 @@ export function AppShell({
   return (
     <UnreadProvider isAuthenticated={isAuthenticated}>
       <div
-        className={`mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground ${isAdminRoute ? "admin-route" : ""} ${isWorksRoute ? "works-route" : ""}`}
+        className={`mx-auto flex h-[100dvh] w-full justify-center overflow-hidden bg-background text-foreground ${isAdminRoute ? "admin-route" : ""} ${isWorksRoute ? "works-route" : ""} ${isWideRoute ? "wide-route" : ""}`}
       >
         <PostLoginReturn />
         <PushEnrollment isAuthenticated={isAuthenticated} />

@@ -709,3 +709,13 @@ html.dark {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Explore and «چندرسانه‌ای»: the trends column goes away and the centre column widens (as on chat). */
+@media (min-width: 1024px) {
+  .wide-route > aside:last-of-type {
+    display: none;
+  }
+  .wide-route #mainAppShell {
+    max-width: 980px;
+  }
+}

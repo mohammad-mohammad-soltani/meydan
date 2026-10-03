@@ -70,7 +70,7 @@ export function VideosView() {
           {error ? "دریافت ویدیوها ممکن نشد. دوباره تلاش کنید." : "هنوز ویدیویی منتشر نشده است."}
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-1.5 p-1.5 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-1.5 p-1.5 sm:grid-cols-3 lg:grid-cols-4">
           {entries.map((entry, index) => (
             <button
               key={entry.key}
