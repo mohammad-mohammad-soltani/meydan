@@ -180,8 +180,8 @@
   /* Active/selected controls: an inverted pill (dark on light, light on dark). */
   --emphasis: #101010;
   --emphasis-foreground: #ffffff;
-  --brand: #dc2626;
-  --brand-hover: #b91c1c;
+  --brand: #e4152e;
+  --brand-hover: #c40f25;
   --brand-active: #991b1b;
   --brand-muted: #fef2f2;
   --brand-border: #fecaca;
@@ -296,7 +296,7 @@ html.dark {
 
   --emphasis: #f5f5f7;
   --emphasis-foreground: #0b0b0b;
-  --brand: #ef4444;
+  --brand: #e4152e;
   --brand-hover: #dc2626;
   --brand-active: #b91c1c;
   --brand-muted: rgb(239 68 68 / 0.13);

@@ -142,12 +142,12 @@ export function PostCard({
                 alt=""
                 width={44}
                 height={44}
-                className="h-11 w-11 rounded-full object-cover ring-1 ring-border/70 transition-opacity hover:opacity-90"
+                className="h-10 w-10 rounded-full object-cover ring-1 ring-border/70 transition-opacity hover:opacity-90"
               />
             ) : (
               <span
                 aria-hidden="true"
-                className="grid h-11 w-11 place-items-center rounded-full border border-border-strong bg-surface-elevated text-xs font-black text-foreground"
+                className="grid h-10 w-10 place-items-center rounded-full border border-border-strong bg-surface-elevated text-xs font-black text-foreground"
               >
                 {post.squareName.slice(0, 1)}
               </span>
@@ -366,7 +366,7 @@ export function PostCard({
           {bodyTitle ? <p className="mb-1 font-bold text-foreground">{bodyTitle}</p> : null}
           <ReadMoreText
             body={bodyRest}
-            limit={200}
+            limit={165}
             className="text-foreground-secondary"
             contentClassName="relative z-10"
           />

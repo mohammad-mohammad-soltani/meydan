@@ -13,14 +13,14 @@ export function DirectRow({ conversation, selected }: { conversation: Conversati
   const unread = conversation.unreadCount;
   return (
     <Link className={`wg dg ${selected ? "on" : ""}`} href={`/chat/${conversation.id}` as Route} aria-current={selected ? "page" : undefined}>
-      <ChatAvatar participant={participant} className="h-11 w-11 shadow-inset" textClassName="text-base" />
+      <ChatAvatar participant={participant} className="h-[52px] w-[52px] shadow-inset" textClassName="text-xl" />
       <span className="wg-main">
         <b>
           <span className="wk-title">{participant.name}</span>
           <AccountBadges verified={participant.isVerified} speaker={participant.isSpeaker} official={participant.isOfficial} kind={participant.profileType} size="md" />
         </b>
         <span className="last">
-          {unread === 0 ? <CheckCheck className="ml-1 inline h-3.5 w-3.5 text-verified" /> : null}
+          {unread === 0 ? <CheckCheck className="ml-1 inline h-3.5 w-3.5 opacity-70" /> : null}
           {conversation.preview}
         </span>
       </span>

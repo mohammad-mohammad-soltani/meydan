@@ -15,8 +15,40 @@ const options: Array<{ value: ThemeName; label: string; icon: typeof Sun }> = [
  * segmented radiogroup so the current theme and the alternatives are visible
  * without opening a menu.
  */
-export function ThemeSwitcher({ className = "" }: { className?: string }) {
+const MODE_LABEL: Record<ThemeName, string> = { light: "حالت روز", dark: "حالت شب", black: "حالت آمولد" };
+
+export function ThemeSwitcher({ className = "", variant = "sidebar" }: { className?: string; variant?: "sidebar" | "drawer" }) {
   const theme = useTheme();
+
+  if (variant === "drawer") {
+    // The mobile drawer: a caption row, then one pill with the three modes side by side.
+    return (
+      <>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold">پوسته و رنگ برنامه:</span>
+          <span className="text-[10px] font-bold">{MODE_LABEL[theme] ?? ""}</span>
+        </div>
+        <div role="radiogroup" aria-label="انتخاب پوستهٔ نمایش" className={`grid grid-cols-3 gap-1.5 rounded-full bg-surface-muted p-1 ${className}`}>
+          {options.map(({ value, label, icon: Icon }) => {
+            const active = value === theme;
+            return (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => applyTheme(value)}
+                className={`flex items-center justify-center gap-1 rounded-full px-1 py-2 text-xs transition active:scale-95 ${active ? "bg-foreground font-black text-background" : "font-bold text-muted-foreground hover:text-foreground"}`}
+              >
+                {value === "black" ? <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-current" /> : <Icon aria-hidden="true" className="h-3.5 w-3.5" />}
+                <span>{value === "black" ? "آمولد" : label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </>
+    );
+  }
 
   return (
     <div
@@ -36,7 +68,7 @@ export function ThemeSwitcher({ className = "" }: { className?: string }) {
             onClick={() => applyTheme(value)}
             className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-black transition-colors ${
               active
-                ? "bg-brand text-brand-foreground shadow-xs"
+                ? "bg-foreground text-background shadow-xs"
                 : "text-foreground-secondary hover:bg-hover hover:text-foreground"
             }`}
           >

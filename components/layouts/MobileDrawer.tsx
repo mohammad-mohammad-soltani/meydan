@@ -24,8 +24,7 @@ type Item = { href: string; label: string; icon: LucideIcon; active: (path: stri
 const ITEMS: Item[] = [
   { href: "/profile", label: "نمایه", icon: UserRound, active: (p) => p === "/profile" },
   { href: "/bookmarks", label: "نشان‌شده‌ها", icon: Bookmark, active: (p) => p === "/bookmarks" },
-  // The drafts page is designed but not open yet.
-  { href: "/drafts", label: "پیش‌نویس‌ها", icon: FileText, active: (p) => p === "/drafts", soon: true },
+  { href: "/drafts", label: "پیش‌نویس‌ها", icon: FileText, active: (p) => p === "/drafts" },
 ];
 
 const subscribeNothing = () => () => {};
@@ -51,7 +50,9 @@ type Drag = {
   width: number;
 };
 
-const compact = new Intl.NumberFormat("fa-IR", { notation: "compact", maximumFractionDigits: 1 });
+const fa = new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 1 });
+/** «۳٫۸k» like the reference. */
+const compact = { format: (value: number) => (value >= 1000 ? `${fa.format(Math.floor(value / 100) / 10)}k` : fa.format(value)) };
 
 /**
  * The mobile side menu opened from the header avatar: identity, follower
@@ -240,25 +241,26 @@ export function MobileDrawer({
         aria-modal="true"
         aria-label="منوی اصلی"
         tabIndex={-1}
-        className={`absolute inset-y-0 right-0 flex w-[88%] max-w-sm touch-pan-y flex-col overflow-hidden rounded-l-3xl border-l border-border bg-background outline-none transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
+        className={`absolute inset-y-0 right-0 flex w-[310px] max-w-[86vw] touch-pan-y flex-col overflow-hidden rounded-l-[32px] bg-background text-foreground shadow-[-20px_0_80px_rgba(0,0,0,.4)] outline-none transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
       >
-        <div className="relative h-36 shrink-0 overflow-hidden bg-gradient-to-b from-surface-elevated to-background">
-          {viewer?.coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- remote cover of any size
-            <img src={viewer.coverUrl} alt="" className="h-full w-full object-cover opacity-70" />
-          ) : null}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="بستن"
-            className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-border bg-surface-glass text-foreground backdrop-blur"
-          >
-            <X aria-hidden="true" className="h-4 w-4" />
-          </button>
-        </div>
+        <div className="flex min-h-0 flex-1 touch-pan-y flex-col overflow-y-auto overscroll-contain pb-2">
+          <div className="relative h-[118px] shrink-0 overflow-hidden bg-[linear-gradient(135deg,#3b3b3b,#161616)]">
+            {viewer?.coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- remote cover of any size
+              <img src={viewer.coverUrl} alt="" className="h-full w-full object-cover grayscale contrast-[1.05]" />
+            ) : null}
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.25),transparent_50%,var(--background))]" />
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="بستن"
+              className="absolute left-3.5 top-3.5 z-[2] grid h-9 w-9 place-items-center rounded-full bg-black/35 text-white backdrop-blur-md"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
 
-        <div className="-mt-14 flex min-h-0 flex-1 touch-pan-y flex-col overflow-y-auto overscroll-contain px-5 pb-4">
+          <div className="relative z-[2] px-[22px] pb-4">
           {isAuthenticated && !viewer ? (
             <div aria-hidden="true" className="animate-pulse">
               <span className="block h-20 w-20 rounded-full border-4 border-background bg-skeleton" />
@@ -268,26 +270,28 @@ export function MobileDrawer({
             </div>
           ) : isAuthenticated && viewer ? (
             <>
-              <span className="relative block h-20 w-20 overflow-hidden rounded-full border-4 border-background bg-surface-muted">
-                {viewer.avatarUrl ? (
-                  <OptimizedAvatar src={viewer.avatarUrl} alt="" width={80} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="grid h-full w-full place-items-center text-2xl font-black text-foreground">{viewer.name.charAt(0)}</span>
-                )}
-              </span>
-              <p className="mt-3 flex items-center gap-1.5 text-lg font-black text-foreground">
+              <Link href="/profile" className="-mt-14 block h-[104px] w-[104px] rounded-full bg-background p-1 shadow-[0_12px_30px_-12px_rgba(0,0,0,.5)]">
+                <span className="block h-full w-full overflow-hidden rounded-full bg-surface-muted">
+                  {viewer.avatarUrl ? (
+                    <OptimizedAvatar src={viewer.avatarUrl} alt="" width={96} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="grid h-full w-full place-items-center text-3xl font-black text-foreground">{viewer.name.charAt(0)}</span>
+                  )}
+                </span>
+              </Link>
+              <p className="mt-3 flex items-center gap-1.5 whitespace-nowrap text-[21px] font-black tracking-[-.2px] text-foreground">
                 {viewer.name}
                 <AccountBadges verified={viewer.verified} kind={viewer.kind} size="md" />
               </p>
-              {viewer.handle ? <p className="mt-0.5 text-xs text-muted-foreground latin-digits" dir="ltr">@{viewer.handle}</p> : null}
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              {viewer.handle ? <p className="mt-px text-right text-[13px] text-muted-foreground latin-digits" dir="ltr">@{viewer.handle}</p> : null}
+              <div className="mt-3.5 flex gap-2">
                 {[
                   { value: viewer.followers, label: "دنبال‌کننده" },
                   { value: viewer.following, label: "دنبال‌شده" },
                 ].map((stat) => (
-                  <div key={stat.label} className="rounded-2xl border border-border bg-surface-muted px-3 py-2.5 text-center">
-                    <strong className="block text-base font-black text-foreground">{compact.format(stat.value)}</strong>
-                    <span className="block text-[10px] text-muted-foreground">{stat.label}</span>
+                  <div key={stat.label} className="flex flex-1 flex-col items-center gap-px rounded-2xl bg-surface-muted px-1 py-[9px] text-[10.5px] text-muted-foreground">
+                    <strong className="text-base font-extrabold text-foreground">{compact.format(stat.value)}</strong>
+                    {stat.label}
                   </div>
                 ))}
               </div>
@@ -304,7 +308,8 @@ export function MobileDrawer({
             </div>
           )}
 
-          <nav aria-label="منوی اصلی" className="mt-5 space-y-1">
+          </div>
+          <nav aria-label="منوی اصلی" className="flex flex-col gap-0.5 px-3 pb-2 pt-1">
             {ITEMS.filter(() => isAuthenticated).map(
               ({ href, label, icon: Icon, active, soon }) => {
                 const isActive = active(pathname, filter);
@@ -327,11 +332,11 @@ export function MobileDrawer({
                     key={href}
                     href={href as Route}
                     aria-current={isActive ? "page" : undefined}
-                    className="flex items-center gap-3 rounded-2xl px-1 py-1.5 text-sm font-black text-foreground transition-colors hover:bg-hover"
+                    className={`flex items-center gap-3.5 rounded-[18px] px-2.5 py-1.5 text-[15px] text-foreground transition hover:bg-surface-muted active:scale-[.98] ${isActive ? "font-extrabold" : "font-semibold"}`}
                   >
                     <span
-                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border ${
-                        isActive ? "border-transparent bg-emphasis text-emphasis-foreground" : "border-border bg-surface-muted text-icon"
+                      className={`grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[13px] transition-colors ${
+                        isActive ? "bg-foreground text-background" : "bg-surface-muted text-foreground"
                       }`}
                     >
                       <Icon aria-hidden="true" className="h-[18px] w-[18px]" />
@@ -344,9 +349,8 @@ export function MobileDrawer({
           </nav>
         </div>
 
-        <div className="shrink-0 border-t border-divider px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-          <p className="mb-2 text-[11px] font-bold text-muted-foreground">پوسته و رنگ برنامه</p>
-          <ThemeSwitcher />
+        <div className="shrink-0 space-y-2.5 border-t border-border px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3.5 text-muted-foreground">
+          <ThemeSwitcher variant="drawer" />
         </div>
       </div>
     </div>,

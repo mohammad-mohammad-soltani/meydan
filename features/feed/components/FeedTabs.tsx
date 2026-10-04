@@ -30,11 +30,10 @@ export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedT
   const pinnedActive = Boolean(pinned) && activeTab === "for-you" && activeFilter === pinned;
   const columns = pinned ? 3 : 2;
   const slot = pinnedActive ? 2 : activeTab === "following" ? 1 : 0;
-  const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-3 text-xs font-bold transition-colors duration-200 ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`;
+  const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-3.5 text-[15px] font-bold transition-colors duration-200 ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`;
 
   return (
     <div ref={ref} role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="sticky top-0 z-30 flex w-full bg-background">
-      <button type="button" aria-label="سنجاق کردن یک دسته" onClick={() => setPickerOpen(true)} className="grid w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"><Plus aria-hidden="true" className="h-[18px] w-[18px]" /></button>
       <button role="tab" type="button" onClick={() => onChange("for-you")} aria-selected={activeTab === "for-you" && !pinnedActive} className={tabClass(activeTab === "for-you" && !pinnedActive)}>
         برای شما
       </button>
@@ -46,10 +45,11 @@ export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedT
           {pinnedLabel(pinned)}
         </button>
       ) : null}
+      <button type="button" aria-label="سنجاق کردن یک دسته" onClick={() => setPickerOpen(true)} className="grid w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"><Plus aria-hidden="true" className="h-5 w-5" /></button>
       <span
         ref={indicatorRef}
         aria-hidden="true"
-        className={`pointer-events-none absolute bottom-0 right-11 h-[3px] transition-transform duration-300 ease-out after:absolute after:inset-x-1/4 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-brand after:content-['']`}
+        className={`pointer-events-none absolute bottom-0 right-0 h-[3px] transition-transform duration-300 ease-out after:absolute after:inset-x-1/4 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-foreground after:content-[''] lg:after:bg-brand`}
         style={{ width: `calc((100% - 2.75rem) / ${columns})`, transform: `translateX(${-slot * 100}%)` }}
       />
       {pickerOpen ? (

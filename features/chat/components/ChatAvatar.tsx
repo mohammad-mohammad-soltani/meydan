@@ -2,8 +2,10 @@
 
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { ChatUser } from "../types";
+import { hueOf } from "@/lib/relative-fa";
 
-const toneClasses: Record<ChatUser["avatarTone"], string> = {
+// Kept for callers that still pass a tone; the initial uses the name hue.
+export const toneClasses: Record<ChatUser["avatarTone"], string> = {
   red: "bg-brand-muted text-brand",
   amber: "bg-warning-surface text-warning",
   blue: "bg-info-surface text-info",
@@ -52,7 +54,9 @@ export function ChatAvatar({
   return (
     <span
       aria-hidden="true"
-      className={`grid shrink-0 place-items-center rounded-full font-black ${toneClasses[participant.avatarTone]} ${className} ${textClassName}`}
+      // The reference's pastel initial: a light tint of the name's hue with a dark letter of the same hue.
+      style={{ background: `hsl(${hueOf(participant.name)} 85% 82%)`, color: `hsl(${hueOf(participant.name)} 50% 27%)` }}
+      className={`grid shrink-0 place-items-center rounded-full font-extrabold ${className} ${textClassName}`}
     >
       {initial}
     </span>

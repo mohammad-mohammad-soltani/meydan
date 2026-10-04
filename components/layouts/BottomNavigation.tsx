@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { Compass, FolderKanban, Home, LogIn, MessageCircle, UserCheck } from "lucide-react";
+import { Compass, FolderKanban, Home, LogIn, MessageCircle, UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { NavBadge } from "./NavBadge";
 
@@ -38,7 +38,7 @@ export function BottomNavigation({ isAuthenticated = false }: BottomNavigationPr
   if (isConversationRoute) return null;
 
   const links: NavLink[] = isAuthenticated
-    ? [...items, { href: "/profile", label: "نمایه", icon: UserCheck, match: (path: string) => path === "/profile" }]
+    ? [...items, { href: "/profile", label: "نمایه", icon: UserRound, match: (path: string) => path === "/profile" }]
     : [
         ...items,
         {
@@ -68,7 +68,7 @@ export function BottomNavigation({ isAuthenticated = false }: BottomNavigationPr
               <Icon className={`h-5 w-5 shrink-0 ${active && Icon === Home ? "fill-current" : ""}`} />
               {badge ? <NavBadge dot className="absolute -right-1.5 -top-0.5" /> : null}
             </span>
-            <span className="whitespace-nowrap text-[10px] font-bold">{label}</span>
+            <span className="whitespace-nowrap text-[10.5px]">{label}</span>
           </Link>
         );
       })}
