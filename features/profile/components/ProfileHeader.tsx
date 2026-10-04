@@ -182,7 +182,7 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
                 <Pencil aria-hidden="true" className="h-4 w-4" />
                 ویرایش نمایه
               </Link>
-              <button type="button" onClick={() => void shareProfile(profile, setNotice)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface-sunken text-sm font-black text-foreground transition hover:bg-hover">
+              <button type="button" onClick={() => void shareProfile(profile, setNotice)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-transparent text-sm font-black text-foreground transition hover:bg-hover">
                 <Share2 aria-hidden="true" className="h-4 w-4" />
                 اشتراک نمایه
               </button>
@@ -193,7 +193,7 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
                 {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
                 {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
               </button>
-              <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-surface-sunken text-sm font-black text-foreground transition hover:bg-hover disabled:cursor-wait disabled:opacity-70">
+              <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-transparent text-sm font-black text-foreground transition hover:bg-hover disabled:cursor-wait disabled:opacity-70">
                 {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                 پیام
               </button>

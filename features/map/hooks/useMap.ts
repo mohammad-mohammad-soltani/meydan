@@ -274,6 +274,15 @@ export function useMap() {
     },
     [provinceAggregates],
   );
+  /** «همهٔ ایران»: back to the whole country. */
+  const clearSelection = useCallback(() => {
+    setSelectedProvinceId(0);
+    setSelectedProvinceName(null);
+    setSelectedCityId(0);
+    setSelectedCityName(null);
+    setCityQuery("");
+    setLevel("country");
+  }, []);
   const selectProvinceAggregate = useCallback(
     (key: string) => {
       const province = provinceAggregates.find((item) => item.id === key);
@@ -364,6 +373,7 @@ export function useMap() {
     activeCount: allSquares.length,
     selectProvince,
     selectCity,
+    clearSelection,
     selectProvinceAggregate,
     selectCityAggregate,
     setViewport,

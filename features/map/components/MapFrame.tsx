@@ -2,8 +2,6 @@
 
 import { IRAN_ISLANDS } from "../data/iran-islands";
 import {
-  Layers3,
-  MapPinned,
   LoaderCircle,
   LocateFixed,
   Minus,
@@ -83,8 +81,6 @@ export function MapFrame({
   const onSelectAggregateRef = useRef(onSelectAggregate);
   const onViewportLevelRef = useRef(onViewportLevel);
   const [ready, setReady] = useState(false);
-  const [provincesVisible, setProvincesVisible] = useState(true);
-  const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [zoom, setZoom] = useState(initialZoom);
   const [query, setQuery] = useState("");
@@ -351,17 +347,6 @@ export function MapFrame({
     map.current.setZoom(map.current.getZoom() + delta, { animate: true });
   }
 
-  function toggleProvinceLayer() {
-    const visible = !provincesVisibleRef.current;
-    provincesVisibleRef.current = visible;
-    setProvincesVisible(visible);
-    const instance = map.current;
-    const layer = provinceLayerRef.current;
-    if (!instance || !layer) return;
-    if (visible) layer.addTo(instance);
-    else layer.removeFrom(instance);
-  }
-
   function selectSearchResult(aggregate: {
     latitude: number;
     longitude: number;
@@ -379,50 +364,6 @@ export function MapFrame({
     );
   }
 
-  function locateUser() {
-    if (!map.current || locating) return;
-    setLocationError(null);
-    if (!navigator.geolocation) {
-      setLocationError("مرورگر شما از موقعیت‌یابی پشتیبانی نمی‌کند.");
-      return;
-    }
-    setLocating(true);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (!map.current) return;
-        setLocating(false);
-        const point: [number, number] = [
-          position.coords.latitude,
-          position.coords.longitude,
-        ];
-        map.current?.flyTo(point, 12, { animate: true, duration: 0.8 });
-
-        void import("leaflet").then((L) => {
-          if (!map.current) return;
-          userLocationRef.current?.remove();
-          userLocationRef.current = L.circleMarker(point, {
-            radius: 7,
-            color: "#ffffff",
-            weight: 2,
-            fillColor: "#e5544b",
-            fillOpacity: 1,
-          }).addTo(map.current);
-        });
-      },
-      (error) => {
-        if (!map.current) return;
-        setLocating(false);
-        setLocationError(
-          error.code === 1
-            ? "اجازهٔ دسترسی به موقعیت داده نشده است."
-            : "موقعیت شما پیدا نشد؛ دوباره تلاش کنید.",
-        );
-      },
-      { enableHighAccuracy: true, timeout: 8000 },
-    );
-  }
-
   const scaleUnit = scale.distanceKm >= 1 ? "km" : "m";
 
   return (
@@ -434,22 +375,26 @@ export function MapFrame({
         className="absolute inset-0 h-full w-full bg-[#171a1b]"
       />
 
-      <div className="absolute left-3 top-3 z-[500] w-[min(58vw,230px)] sm:left-4 sm:top-4">
-        <div className="flex h-12 items-center gap-2 rounded-[16px] border border-white/10 bg-[#2a2b2c]/90 px-3.5 text-white shadow-[0_8px_24px_rgba(0,0,0,.28)] backdrop-blur-xl">
+      <div className="absolute inset-x-3 top-3 z-[500]">
+        <div className="flex h-[46px] items-center gap-2 rounded-full border border-white/10 bg-[#1c1c1c]/80 px-3.5 text-white/60 shadow-[0_10px_30px_-14px_rgba(0,0,0,.5)] backdrop-blur-xl">
           <Search
-            className="h-5 w-5 shrink-0 text-white/95"
-            strokeWidth={2.1}
+            className="h-[18px] w-[18px] shrink-0"
+            strokeWidth={2}
           />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
-            placeholder="استان، شهر یا میدان…"
-            className="min-w-0 flex-1 border-0 bg-transparent text-xs font-bold text-white outline-none placeholder:text-white/35"
+            placeholder="جستجوی زندهٔ میادین…"
+            className="min-w-0 flex-1 border-0 bg-transparent text-[13.5px] text-white outline-none placeholder:text-white/55"
             dir="rtl"
             aria-label="جست‌وجوی استان، شهر یا میدان روی نقشه"
           />
+          <span title="به‌روزرسانی زنده" className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white">
+            <i aria-hidden="true" className="h-[7px] w-[7px] animate-pulse rounded-full bg-[#e4152e]" />
+            زنده
+          </span>
         </div>
 
         {searchFocused && query.trim() ? (
@@ -479,66 +424,25 @@ export function MapFrame({
         ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={toggleProvinceLayer}
-        aria-label="نمایش یا پنهان کردن مرز استان‌ها"
-        aria-pressed={provincesVisible}
-        className={`absolute right-3 top-3 z-[500] grid h-12 w-12 place-items-center rounded-[16px] border text-white shadow-[0_8px_24px_rgba(0,0,0,.28)] backdrop-blur-xl transition sm:right-4 sm:top-4 ${
-          provincesVisible
-            ? "border-white/15 bg-[#303132]/92"
-            : "border-white/8 bg-[#242526]/80 text-white/55"
-        }`}
-      >
-        <Layers3 className="h-[22px] w-[22px]" strokeWidth={2} />
-      </button>
-
-      <button
-        type="button"
-        onClick={() => {
-          map.current?.closePopup();
-          map.current?.flyTo(iranCenter, initialZoom, { duration: 0.7 });
-        }}
-        aria-label="نمایش کل ایران"
-        title="نمایش کل ایران"
-        className="absolute right-3 top-[72px] z-[500] grid h-10 w-12 place-items-center rounded-[14px] border border-white/10 bg-[#2a2b2c]/90 text-white shadow-lg transition hover:bg-[#343536] sm:right-4 sm:top-[76px]"
-      >
-        <MapPinned className="h-5 w-5" />
-      </button>
-
-      <div className="absolute bottom-3 right-3 z-[500] flex w-12 flex-col items-center gap-1 rounded-[18px] border border-white/10 bg-[#242627]/92 p-1.5 text-white shadow-[0_10px_30px_rgba(0,0,0,.36)] backdrop-blur-xl sm:bottom-4 sm:right-4">
-        <button
-          type="button"
-          disabled={!ready || zoom >= 18}
-          onClick={() => changeZoom(1)}
-          aria-label="بزرگ‌نمایی نقشه"
-          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14] disabled:opacity-35"
-        >
-          <Plus className="h-5 w-5" strokeWidth={2.2} />
+      {/* Reference controls (.mp-ctl): three separate glass squares at the bottom-left. */}
+      <div className="absolute bottom-3.5 left-3 z-[500] flex flex-col gap-2 text-white">
+        <button type="button" disabled={!ready || zoom >= 18} onClick={() => changeZoom(1)} aria-label="بزرگ‌نمایی نقشه" title="بزرگ‌نمایی" className="grid h-10 w-10 place-items-center rounded-[14px] border border-white/10 bg-[#1c1c1c]/80 backdrop-blur-md transition active:scale-90 disabled:opacity-35">
+          <Plus className="h-5 w-5" strokeWidth={2} />
         </button>
-        <span className="h-px w-7 bg-white/[0.08]" />
-        <button
-          type="button"
-          disabled={!ready || zoom <= 4}
-          onClick={() => changeZoom(-1)}
-          aria-label="کوچک‌نمایی نقشه"
-          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14] disabled:opacity-35"
-        >
-          <Minus className="h-5 w-5" strokeWidth={2.2} />
+        <button type="button" disabled={!ready || zoom <= 4} onClick={() => changeZoom(-1)} aria-label="کوچک‌نمایی نقشه" title="کوچک‌نمایی" className="grid h-10 w-10 place-items-center rounded-[14px] border border-white/10 bg-[#1c1c1c]/80 backdrop-blur-md transition active:scale-90 disabled:opacity-35">
+          <Minus className="h-5 w-5" strokeWidth={2} />
         </button>
-        <span className="h-px w-7 bg-white/[0.08]" />
         <button
           type="button"
-          disabled={!ready || locating}
-          onClick={locateUser}
-          aria-label="تمرکز روی موقعیت من"
-          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.08] transition hover:bg-white/[0.14] disabled:opacity-35"
+          onClick={() => {
+            map.current?.closePopup();
+            map.current?.flyTo(iranCenter, initialZoom, { duration: 0.7 });
+          }}
+          aria-label="نمایش کل ایران"
+          title="کل ایران"
+          className="grid h-10 w-10 place-items-center rounded-[14px] border border-white/10 bg-[#1c1c1c]/80 backdrop-blur-md transition active:scale-90"
         >
-          {locating ? (
-            <LoaderCircle className="h-[19px] w-[19px] animate-spin" />
-          ) : (
-            <LocateFixed className="h-[19px] w-[19px]" strokeWidth={2} />
-          )}
+          <LocateFixed className="h-[18px] w-[18px]" strokeWidth={2} />
         </button>
       </div>
 

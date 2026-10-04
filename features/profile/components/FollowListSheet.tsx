@@ -10,7 +10,6 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { useFollowSet } from "@/features/explore/hooks/useFollowSet";
 import { meydanApi } from "@/lib/meydan-api";
 import { actorKindOf, publicProfileHref, type ActorKind } from "@/lib/profile-route";
-import { hueOf } from "@/lib/relative-fa";
 
 type ApiActor = { id: string; type?: string; handle?: string; display_name?: string; avatar_url?: string | null; verified?: boolean; verified_speaker?: boolean; verified_official?: boolean; headline?: string };
 type Row = { key: string; type: ActorKind; id: number; name: string; handle?: string; href: string; avatarUrl?: string; verified: boolean; speaker: boolean; official: boolean; headline: string };
@@ -105,16 +104,16 @@ export function FollowListSheet({ type, id, name, handle, initialTab = "follower
               return (
                 <li key={row.key} className="flex items-center gap-3 px-4 py-3">
                   <Link href={row.href as Route} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-3">
-                    <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full text-sm font-black text-white" style={{ background: `hsl(${hueOf(row.name)} 45% 36%)` }}>
-                      {row.avatarUrl ? <OptimizedAvatar src={row.avatarUrl} alt="" width={48} className="h-full w-full object-cover" /> : row.name.charAt(0)}
+                    <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-sm font-extrabold text-foreground">
+                      {row.avatarUrl ? <OptimizedAvatar src={row.avatarUrl} alt="" width={48} className="h-full w-full object-cover" /> : row.name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word.charAt(0)).join("")}
                     </span>
                     <span className="min-w-0">
-                      <b className="flex items-center gap-1 text-sm font-black"><span className="truncate">{row.name}</span><AccountBadges verified={row.verified} speaker={row.speaker} official={row.official} kind={row.type} size="sm" /></b>
+                      <b className="flex items-center gap-1 text-sm font-bold"><span className="truncate">{row.name}</span><AccountBadges verified={row.verified} speaker={row.speaker} official={row.official} kind={row.type} size="sm" /></b>
                       {row.handle ? <small className="latin-digits block truncate text-[11px] text-muted-foreground" dir="ltr">@{row.handle}</small> : null}
-                      {row.headline ? <p className="mt-0.5 line-clamp-1 text-[11px] text-foreground-secondary">{row.headline}</p> : null}
+                      {row.headline ? <p className="mt-1 line-clamp-1 text-[12.5px] text-muted-foreground">{row.headline}</p> : null}
                     </span>
                   </Link>
-                  <button type="button" aria-pressed={on} onClick={() => follow.toggle(row.type, row.id)} className={`shrink-0 rounded-full border px-4 py-1.5 text-[11px] font-bold ${on ? "border-border bg-surface-muted text-muted-foreground" : "border-transparent bg-foreground text-background"}`}>
+                  <button type="button" aria-pressed={on} onClick={() => follow.toggle(row.type, row.id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold ${on ? "border-border bg-transparent text-foreground" : "border-transparent bg-foreground text-background"}`}>
                     {on ? "دنبال می‌کنید" : "دنبال کردن"}
                   </button>
                 </li>
