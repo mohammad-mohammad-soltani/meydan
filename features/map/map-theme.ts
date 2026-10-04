@@ -19,18 +19,18 @@ export const LIVE_MAP_THEME = {
    * The name must match the glyphsUrl {fontstack} directory.
    */
   labelFontStack: ["IRANSansXV"],
-  background: "#171a1b",
-  provinceStroke: "#e5483f",
-  provinceFill: "#272a2b",
-  pin: "#e5544b",
+  background: "#1c1c1c",
+  provinceStroke: "#9a9aa3",
+  provinceFill: "#242424",
+  pin: "#e4152e",
   /**
    * Label colors are set here because the upstream style targets a light
    * basemap; its near-black text would be invisible on this dark background.
    */
-  placeLabel: "#d8d4cf",
-  roadLabel: "#a8a29c",
-  waterLabel: "#8fb6c9",
-  labelHalo: "rgba(16,18,19,.85)",
+  placeLabel: "#f1f1f3",
+  roadLabel: "#9a9aa3",
+  waterLabel: "#9a9aa3",
+  labelHalo: "rgba(28,28,28,.85)",
 } as const;
 
 export function makeProvinceStyle() {

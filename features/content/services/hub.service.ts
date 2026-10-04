@@ -32,7 +32,8 @@ export type NotesHub = { categories: NoteCategory[]; featured: ContentItem[]; la
 
 function producer(row: ApiProducerStat): HubProducer {
   return {
-    id: String(row.actor.id),
+    // Actor ids come prefixed («usr_6», «sq_54»); the audio pages and APIs take the number.
+    id: String(row.actor.id).replace(/\D/g, ""),
     type: row.actor.type ?? "user",
     name: row.actor.display_name || "حساب",
     handle: row.actor.handle,
@@ -86,13 +87,16 @@ export type AudioListPage = { items: ContentItem[]; nextCursor: string | null };
 
 /** Audio content, newest first, narrowed by shelf, series or producer. */
 export async function getAudioList(query: AudioListQuery = {}, cursor?: string | null): Promise<AudioListPage> {
+  // One actor's recordings: audio content they produced plus audio in their own posts (paged by offset).
+  if (query.producer) {
+    const params = new URLSearchParams({ type: query.producer.type, id: String(query.producer.id), offset: cursor ?? "0" });
+    const page = await meydanApiPage<ApiContent[]>(`/content/hub/producer?${params}`);
+    const next = page.meta?.next_offset;
+    return { items: (page.data ?? []).map(toItem), nextCursor: typeof next === "number" ? String(next) : null };
+  }
   const params = new URLSearchParams({ format: "audio" });
   if (query.featured) params.set("featured", "1");
   if (query.series) params.set("series", query.series);
-  if (query.producer) {
-    params.set("producer_type", query.producer.type);
-    params.set("producer_id", String(query.producer.id));
-  }
   if (cursor) params.set("cursor", cursor);
   const page = await meydanApiPage<ApiContent[]>(`/content?${params}`);
   return { items: (page.data ?? []).map(toItem), nextCursor: page.nextCursor };

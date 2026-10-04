@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bookmark, Hash, Image as ImageIcon, LoaderCircle, Plus, Save, Send, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
@@ -12,7 +14,7 @@ import type { QuotedPost } from "@/features/feed/types";
 import { ComposeMediaGrid } from "./ComposeMediaGrid";
 import { MAX_COMPOSE_MEDIA, useComposeMedia } from "../hooks/useComposeMedia";
 
-const MAX_CHARACTERS = 280;
+const MAX_CHARACTERS = 500;
 const BASE_DRAFT_KEY = "meydan-compose-draft";
 /** One picker for everything; the composer sorts the files by type. */
 const MEDIA_ACCEPT = "image/*,video/*,audio/*";
@@ -210,7 +212,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
     <section
       dir="rtl"
       aria-label={quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}
-      className="relative flex min-h-full flex-1 flex-col bg-background text-foreground"
+      className={`${styles.composer} relative flex flex-1 flex-col text-foreground`}
       onDragEnter={(event) => {
         if (event.dataTransfer?.types?.includes("Files")) setDragging(true);
       }}
@@ -224,7 +226,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
         if (event.dataTransfer?.files?.length) addFiles(event.dataTransfer.files);
       }}
     >
-      <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-divider bg-background/95 px-4 py-2.5 backdrop-blur">
+      <div className={`${styles.header} z-20 flex items-center justify-between gap-3 border-b`}>
         <button type="button" onClick={requestClose} className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground transition-colors hover:text-foreground-secondary">
           <X aria-hidden="true" className="h-5 w-5" />
           انصراف
@@ -234,7 +236,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           {/* The draft is saved automatically on this device; this keeps it and leaves. */}
           <button type="button" onClick={goBack} disabled={!hasContent} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3.5 py-2 text-xs font-bold text-foreground-secondary transition-colors hover:text-foreground disabled:opacity-50">
             <Bookmark aria-hidden="true" className="h-3.5 w-3.5" />
-            پیش‌نویس
+            <span className={styles.draftLabel}>پیش‌نویس</span>
           </button>
           <button
             type="button"
@@ -248,8 +250,8 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-4 pb-28 pt-4">
-        {!quoteId ? <div role="tablist" aria-label="نوع روایت" className="grid grid-cols-4 gap-1 rounded-[18px] border border-border bg-surface-muted p-1">
+      <div className={`${styles.body} flex flex-col`}>
+        {!quoteId ? <div role="tablist" aria-label="نوع روایت" className={`${styles.types} grid grid-cols-4 gap-1 border`}>
           {([[false, "روایت", null], [true, "کار", Sparkles]] as const).map(([echo, label, Icon]) => (
             <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`inline-flex items-center justify-center gap-1.5 rounded-[14px] px-2 py-2.5 text-xs font-bold transition-all ${isEcho === echo ? "bg-emphasis text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {Icon ? <Icon aria-hidden="true" className="h-4 w-4" /> : null}
@@ -265,10 +267,10 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           ))}
         </div> : null}
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-[#a9c4f9] text-sm font-extrabold text-[#223967]">
-              {viewer.avatarUrl ? <OptimizedAvatar src={viewer.avatarUrl} alt="" width={44} className="h-full w-full object-cover" /> : null}
+        <div className={`${styles.author} mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2`}>
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span className={`${styles.avatar} grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full text-sm font-extrabold`}>
+              {viewer.avatarUrl ? <OptimizedAvatar src={viewer.avatarUrl} alt="" width={44} className="h-full w-full object-cover" /> : "من"}
             </span>
             <span className="min-w-0">
               <strong className="block truncate text-xs font-black text-foreground">{quoteId ? "نقل‌قول روایت" : isEcho ? "ثبت کار یا ایده" : "ارسال مطلب جدید"}</strong>
@@ -284,7 +286,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
         </div>
 
         <div className="pt-3">
-          {!quoteId && showTitle ? <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="عنوان (اختیاری)" aria-label="تیتر روایت" className="w-full border-0 bg-transparent py-2 text-base font-black text-foreground shadow-none outline-none ring-0 placeholder:font-medium placeholder:text-placeholder focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0" /> : null}
+          {!quoteId && showTitle ? <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="عنوان (اختیاری)" aria-label="تیتر روایت" className={`${styles.title} w-full text-foreground shadow-none outline-none ring-0 placeholder:text-placeholder focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`} /> : null}
           <textarea
             ref={textRef}
             value={text}
@@ -297,9 +299,9 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
             }}
             maxLength={MAX_CHARACTERS}
             placeholder={quoteId ? "نظر خودت را دربارهٔ این روایت بنویس..." : "چه خبر؟ ماجرا یا شرح حال را بنویسید..."}
-            rows={8}
+            rows={7}
             aria-label="شرح روایت"
-            className="min-h-56 w-full resize-none border-0 bg-transparent py-2 text-[15px] leading-8 text-foreground shadow-none outline-none ring-0 placeholder:text-placeholder focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+            className={`${styles.textarea} w-full resize-none border-0 bg-transparent text-foreground shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`}
           />
         </div>
 
@@ -366,7 +368,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
       </div>
 
       {/* Bottom toolbar of the reference: media pickers, hashtag, emoji and the character ring. */}
-      <div className="sticky bottom-0 z-20 mt-auto border-t border-divider bg-background/95 px-4 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+      <div className={`${styles.toolbar} z-20 mt-auto border-t`}>
         {emojiOpen ? (
           <div className="mb-3 grid grid-cols-8 gap-1 rounded-2xl border border-border bg-surface p-2">
             {["🙂", "😍", "🙏", "👏", "❤️", "🔥", "💪", "🌹", "🇮🇷", "✌️", "🤲", "😢", "😂", "👍", "🎉", "✨"].map((emoji) => (
@@ -375,21 +377,18 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           </div>
         ) : null}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-foreground">
+          <div className={`${styles.tools} flex items-center`}>
             <button type="button" disabled={atCapacity} onClick={() => openPicker("image/*")} aria-label="افزودن عکس" className="transition-opacity hover:opacity-70 disabled:opacity-30"><ImageIcon className="h-[22px] w-[22px]" /></button>
             <button type="button" disabled={atCapacity} onClick={() => openPicker("video/*")} aria-label="افزودن ویدیو" className="transition-opacity hover:opacity-70 disabled:opacity-30"><Video className="h-[22px] w-[22px]" /></button>
             <button type="button" disabled={atCapacity} onClick={() => openPicker("audio/*")} aria-label="افزودن صوت" className="transition-opacity hover:opacity-70 disabled:opacity-30"><Volume2 className="h-[22px] w-[22px]" /></button>
             <button type="button" onClick={() => insertText("#")} aria-label="افزودن هشتگ" className="transition-opacity hover:opacity-70"><Hash className="h-[22px] w-[22px]" /></button>
             <button type="button" onClick={() => setEmojiOpen((value) => !value)} aria-label="شکلک" aria-expanded={emojiOpen} className="transition-opacity hover:opacity-70"><Smile className="h-[22px] w-[22px]" /></button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className={`${styles.meter} flex items-center gap-2`}>
             {isUploading ? <LoaderCircle aria-label="در حال بارگذاری" className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
             {media.length ? <span className="text-[11px] font-bold text-muted-foreground">{media.length.toLocaleString("fa-IR")}/{MAX_COMPOSE_MEDIA.toLocaleString("fa-IR")} پیوست</span> : null}
             <span dir="ltr" className={`latin-digits text-[11px] tabular-nums ${text.length > MAX_CHARACTERS - 20 ? "text-danger" : "text-muted-foreground"}`}>{text.length} / {MAX_CHARACTERS}</span>
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 -rotate-90">
-              <circle cx="12" cy="12" r="9" fill="none" strokeWidth="2.5" className="stroke-border-strong" />
-              <circle cx="12" cy="12" r="9" fill="none" strokeWidth="2.5" strokeLinecap="round" className={text.length > MAX_CHARACTERS - 20 ? "stroke-danger" : "stroke-foreground"} strokeDasharray={`${(Math.min(text.length, MAX_CHARACTERS) / MAX_CHARACTERS) * 56.55} 56.55`} />
-            </svg>
+            <span aria-hidden="true" className={styles.ring}><span style={{ transform: `scale(${Math.min(1.2, text.length / MAX_CHARACTERS)})` }} /></span>
           </div>
         </div>
       </div>

@@ -113,6 +113,8 @@ export function RepostMenu({ reposted, onRepost, onQuote, children, className = 
         disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={open}
+        data-action="repost"
+        data-reposted={reposted}
         aria-pressed={reposted}
         aria-label="بازنشر یا نقل‌قول روایت"
         onClick={(event) => {

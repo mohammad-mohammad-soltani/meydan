@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import { AlertCircle, Mic, Play, RefreshCw, X } from "lucide-react";
 import { useState } from "react";
 import { MediaLightbox } from "@/features/media/components/MediaLightbox";
@@ -61,7 +63,8 @@ export function ComposeMediaGrid({
 
   return (
     <div
-      className={`ui-enter mt-3 grid gap-1.5 overflow-hidden rounded-2xl ${layout.grid} ${layout.container ?? ""}`}
+      data-count={count}
+      className={`${styles.media} ui-enter mt-3 grid gap-1.5 overflow-hidden rounded-2xl ${layout.grid} ${layout.container ?? ""}`}
     >
       {media.map((item, index) => (
         <div

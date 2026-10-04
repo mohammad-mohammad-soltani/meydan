@@ -25,10 +25,10 @@ export function SpeakersFilters({ activeFilter, onChange, options }: SpeakersFil
             type="button"
             aria-pressed={active}
             onClick={() => onChange(chip.id)}
-            className={`inline-flex min-h-9 shrink-0 items-center rounded-pill border px-3.5 py-1.5 text-[11px] font-black transition-colors ${
+            className={`inline-flex h-[34px] shrink-0 items-center rounded-pill border px-4 text-[12.5px] font-bold transition-colors ${
               active
                 ? "border-transparent bg-foreground text-background"
-                : "border-transparent bg-surface-muted text-foreground-secondary hover:bg-hover hover:text-foreground"
+                : "border-border bg-surface-muted text-foreground-secondary hover:bg-hover hover:text-foreground"
             }`}
           >
             {chip.label}

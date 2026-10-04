@@ -5,6 +5,7 @@ import "./globals.css";
 import "@/features/admin/admin-workspace.css";
 import "@/features/media/viewer.css";
 import "./black-theme.css";
+import "./reference-tokens.css";
 import "./persian-digits.css";
 import "leaflet/dist/leaflet.css";
 

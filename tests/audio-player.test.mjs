@@ -43,23 +43,18 @@ test("the full-screen player keeps the immersive controls", () => {
   assert.match(mini, /setExpanded\(true\)/);
 });
 
-test("the mini player stays legible on a phone", () => {
+test("the mini player floats within the shell and keeps actual transport and seek", () => {
   const mini = source("features/audio/MiniPlayer.tsx");
-
-  // Phones get tighter padding, a smaller cover and a compact transport.
-  assert.match(mini, /px-2\.5 py-2[\s\S]*?sm:px-3 sm:py-2\.5/);
-  assert.match(mini, /h-10 w-10 shrink-0[\s\S]*?sm:h-11 sm:w-11/);
-  assert.match(mini, /h-8 w-8 place-items-center rounded-full[\s\S]*?sm:h-9 sm:w-9/);
-  assert.match(mini, /h-10 w-10 place-items-center rounded-full bg-brand[\s\S]*?sm:h-11 sm:w-11/);
-
-  // The artwork already opens the full-screen sheet, so the extra chevron is
-  // desktop-only instead of stealing width from the title.
-  assert.match(mini, /hidden h-9 w-9 place-items-center[\s\S]*?sm:grid/);
-
-  // Title and the time/artist line each stay on one line.
-  assert.match(mini, /block truncate text-\[13px\][\s\S]*?sm:text-\[12px\]/);
-  assert.match(mini, /shrink-0 whitespace-nowrap tabular-nums/);
-  assert.match(mini, /min-w-0 truncate" dir="rtl"/);
+  const css = source("features/audio/audio.module.css");
+  assert.match(css, /position:absolute/);
+  assert.match(css, /left:12px;right:12px;bottom:76px/);
+  assert.match(css, /border-radius:22px/);
+  assert.match(css, /min-width:1024px.*bottom:20px/);
+  assert.match(mini, /<AudioProgressBar compact showTimes=\{false\}/);
+  for (const transport of [/void previous\(\)/, /void next\(\)/, /void toggle\(\)/, /onClick=\{clear\}/, /setExpanded\(true\)/]) {
+    assert.match(mini, transport);
+  }
+  assert.doesNotMatch(source("features/audio/AudioProvider.tsx"), /Math\.sin|LEVEL_BAR_COUNT/);
 });
 
 

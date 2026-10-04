@@ -1,5 +1,6 @@
 "use client";
 
+import { analysisPaused, attachAnalyser, peekCors, probeCors } from "./audio-analysis";
 import {
   createContext,
   useCallback,
@@ -12,9 +13,6 @@ import {
 import type { ReactNode } from "react";
 import type { AudioState, AudioTrack, PlayTrackOptions } from "./types";
 import { POSITION_WRITE_INTERVAL_MS, bufferedEnd, effectiveDuration, nativeAudioBridgeAvailable, postNativeAudio, readStoredPositions, writeStoredPosition, type NativeAudioStateDetail } from "./audio-runtime";
-
-const LEVEL_BAR_COUNT = 24;
-const LEVEL_FRAME_INTERVAL_MS = 110;
 
 const initialState: AudioState = {
   currentTrack: null,
@@ -47,8 +45,6 @@ const GlobalAudioContext = createContext<AudioContextValue | null>(null);
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const levelsFrameRef = useRef<number | null>(null);
-  const levelsStartedAtRef = useRef(0);
   const trackRef = useRef<AudioTrack | null>(null);
   const queueRef = useRef<AudioTrack[]>([]);
   const playTrackRef = useRef<
@@ -64,58 +60,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
-
-  const stopLevels = useCallback(() => {
-    if (levelsFrameRef.current !== null) {
-      cancelAnimationFrame(levelsFrameRef.current);
-      levelsFrameRef.current = null;
-    }
-  }, []);
-
-  /**
-   * Visualiser levels for the equalizer UIs.
-   *
-   * These are generated, not measured. Routing the <audio> element through a
-   * Web Audio `MediaElementAudioSourceNode` would give real spectrum data, but
-   * the API serves uploads from another origin without CORS headers, and the
-   * spec makes that node output **silence** for cross-origin sources — which
-   * muted the player and froze the equalizer at zero. Playing the element
-   * directly keeps full volume everywhere, so the bars are animated instead.
-   */
-  const startLevels = useCallback(() => {
-    if (levelsFrameRef.current !== null) return;
-    levelsStartedAtRef.current = performance.now();
-    let lastFrame = 0;
-
-    const tick = (now: number) => {
-      const audio = audioRef.current;
-      if (
-        nativePlaybackRef.current
-          ? !nativePlayingRef.current
-          : !audio || audio.paused || audio.ended
-      ) {
-        levelsFrameRef.current = null;
-        return;
-      }
-
-      if (now - lastFrame >= LEVEL_FRAME_INTERVAL_MS) {
-        lastFrame = now;
-        const elapsed = (now - levelsStartedAtRef.current) / 1000;
-        const levels = Array.from({ length: LEVEL_BAR_COUNT }, (_, index) => {
-          const wave =
-            Math.sin(elapsed * 3.1 + index * 0.55) * 0.45 +
-            Math.sin(elapsed * 1.7 + index * 1.15) * 0.3 +
-            Math.sin(elapsed * 5.3 + index * 0.23) * 0.25;
-          return Math.round(26 + Math.abs(wave) * 64);
-        });
-        setState((current) => ({ ...current, levels }));
-      }
-
-      levelsFrameRef.current = requestAnimationFrame(tick);
-    };
-
-    levelsFrameRef.current = requestAnimationFrame(tick);
-  }, []);
 
   const play = useCallback(async () => {
     if (!trackRef.current) return;
@@ -134,7 +78,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
     try {
       await audio.play();
-      startLevels();
+
     } catch {
       setState((current) => ({
         ...current,
@@ -142,7 +86,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         error: "مرورگر نتوانست پخش صوت را شروع کند. دوباره تلاش کنید.",
       }));
     }
-  }, [startLevels]);
+  }, []);
 
   const pause = useCallback(() => {
     if (
@@ -263,6 +207,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           queue: queueRef.current,
         }));
 
+        // Spectrum data needs the host's CORS answer; without a "yes" the element is loaded exactly as before.
+        const cors = peekCors(track.url);
+        if (cors === undefined) void probeCors(track.url);
+        if (cors) audio.crossOrigin = "anonymous";
+        else if (!audio.crossOrigin) audio.removeAttribute("crossorigin");
         audio.src = track.url;
         audio.load();
       } else if (options.restart) {
@@ -390,9 +339,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     nativePlaybackRef.current = false;
     nativePlayingRef.current = false;
     nativeFinishHandledRef.current = null;
-    stopLevels();
+
     setState(initialState);
-  }, [stopLevels]);
+  }, []);
 
   useEffect(() => {
     const handleNativeAudioState = (event: Event) => {
@@ -426,7 +375,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           typeof detail.error === "string" && detail.error
             ? "پخش صوت در اپ با خطا روبه‌رو شد. دوباره تلاش کنید."
             : null,
-        levels: isPlaying ? current.levels : [],
+        levels: [],
       }));
 
       const now = Date.now();
@@ -438,8 +387,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         writeStoredPosition(track, currentTime);
       }
 
-      if (isPlaying) startLevels();
-      else stopLevels();
 
       if (
         didJustFinish &&
@@ -468,7 +415,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         "naghshman:native-audio-state",
         handleNativeAudioState as EventListener,
       );
-  }, [startLevels, stopLevels]);
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -523,22 +470,25 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       }));
     };
 
-    const handleCanPlay = () =>
+    const handleCanPlay = () => {
       setState((current) => ({ ...current, isReady: true, error: null }));
+      attachAnalyser(audio);
+    };
     const handleWaiting = () =>
       setState((current) => ({ ...current, isReady: false }));
     const handlePlay = () => {
       setState((current) => ({ ...current, isPlaying: true, error: null }));
-      startLevels();
+      attachAnalyser(audio);
     };
     const handlePause = () => {
       setState((current) => ({ ...current, isPlaying: false, levels: [] }));
-      stopLevels();
+      analysisPaused();
     };
     const handleEnded = () => {
+      analysisPaused();
       const track = trackRef.current;
       if (track) writeStoredPosition(track, 0);
-      stopLevels();
+
       setState((current) => ({
         ...current,
         isPlaying: false,
@@ -552,7 +502,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       if (nextTrack) void playTrackRef.current?.(nextTrack, { queue });
     };
     const handleError = () => {
-      stopLevels();
+      analysisPaused();
       setState((current) => ({
         ...current,
         isPlaying: false,
@@ -595,7 +545,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("error", handleError);
       audio.removeEventListener("emptied", handleEmptied);
     };
-  }, [startLevels, stopLevels]);
+  }, []);
 
   useEffect(() => {
     const persistPosition = () => {
@@ -679,9 +629,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const audio = audioRef.current;
     return () => {
       audio?.pause();
-      stopLevels();
+
     };
-  }, [stopLevels]);
+  }, []);
 
   const currentIndex = state.currentTrack
     ? state.queue.findIndex((track) => track.id === state.currentTrack?.id)

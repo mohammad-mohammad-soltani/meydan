@@ -13,6 +13,7 @@ import {
   type StoryFormat,
 } from "../story-canvas";
 import type { SharePost } from "../types";
+import styles from "../share.module.css";
 
 const FONT_SIZES: Array<{ id: StoryFontSize; label: string }> = [
   { id: "sm", label: "کوچک" },
@@ -137,43 +138,40 @@ export function StoryStudio({ post, onClose, onShared }: { post: SharePost; onCl
     }
   };
 
-  const previewWidth = format === "story" ? 310 : 330;
-
   return (
-    <div role="dialog" aria-modal="true" aria-label="استودیو ساخت عکس‌نوشت" className="fixed inset-0 z-[260] flex flex-col overflow-y-auto bg-background/95 backdrop-blur-xl">
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-divider bg-background/90 px-4 py-3 backdrop-blur">
+    <div role="dialog" aria-modal="true" aria-label="استودیو ساخت عکس‌نوشت" className={styles.studio} dir="rtl">
+      <div className={styles.studioHeader}>
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-surface-muted text-foreground">
+          <span className={styles.studioMark}>
             <FileImage aria-hidden="true" className="h-4 w-4" />
           </span>
-          <h2 className="text-sm font-black leading-5 text-foreground">استودیو ساخت عکس‌نوشت (Story Maker)</h2>
+          <h2 className={styles.studioTitle}>استودیو ساخت عکس‌نوشت (Story Maker)</h2>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button type="button" onClick={onClose} aria-label="بستن" className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface-muted text-foreground hover:bg-hover">
+        <div className="flex shrink-0 items-center gap-2" dir="ltr">
+          <button type="button" onClick={onClose} aria-label="بستن" className={styles.studioClose}>
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
-          <button type="button" disabled={busy || !assets} onClick={() => void download()} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-emphasis px-4 text-xs font-black text-emphasis-foreground disabled:opacity-50">
+          <button type="button" disabled={busy || !assets} onClick={() => void download()} className={`${styles.studioDownload} disabled:opacity-50`}>
             {busy ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Download aria-hidden="true" className="h-4 w-4" />}
             دانلود عکس ({format === "story" ? "۹:۱۶ استوری" : "۱:۱ مربع"})
           </button>
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-4xl gap-6 px-4 py-6 md:grid-cols-2 md:items-start">
-        <div className="flex flex-col items-center">
+      <div className={styles.studioBody}>
+        <div className={styles.previewColumn}>
           <canvas
             ref={canvasRef}
             aria-label="پیش‌نمایش عکس‌نوشت"
-            className="h-auto rounded-[32px] shadow-dialog"
-            style={{ width: previewWidth, aspectRatio: format === "story" ? "9 / 16" : "1 / 1" }}
+            className={`${styles.preview} ${format === "story" ? styles.previewStory : styles.previewSquare} ${!theme.dark ? styles.previewLight : ""}`}
           />
           {!assets ? <LoaderCircle aria-label="در حال آماده‌سازی" className="mt-3 h-5 w-5 animate-spin text-muted-foreground" /> : null}
           {truncated ? (
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-[11px] font-semibold text-foreground">
+            <p className={`${styles.lengthNotice} ${styles.truncated}`}>
               <AlertCircle aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
               حجم مطلب بیش از یک توییت ({STORY_TEXT_LIMIT.toLocaleString("fa-IR")} کاراکتر) است: همراه با «{STORY_MORE_LABEL}» کوتاه شد.
             </p>
-          ) : null}
+          ) : <p className={styles.lengthNotice}>طول مطلب: {text.trim().length.toLocaleString("fa-IR")} کاراکتر (در محدوده مجاز توییت)</p>}
           {error ? <p role="alert" className="mt-2 text-xs font-bold text-danger">{error}</p> : null}
           {canShareFile ? (
             <button type="button" disabled={busy || !assets} onClick={() => void shareImage()} className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-full border border-border bg-surface-muted px-4 text-xs font-black text-foreground disabled:opacity-50">
@@ -183,12 +181,12 @@ export function StoryStudio({ post, onClose, onShared }: { post: SharePost; onCl
           ) : null}
         </div>
 
-        <div className="space-y-5 rounded-3xl border border-border bg-surface p-4">
+        <div className={styles.settings}>
           <section>
-            <h3 className="mb-2 text-xs font-black text-foreground">۱. انتخاب اندازه و کادر عکس‌نوشت:</h3>
-            <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-surface-muted p-1">
+            <h3 className={styles.settingLabel}>۱. انتخاب اندازه و کادر عکس‌نوشت:</h3>
+            <div className={`${styles.choices} ${styles.formats}`}>
               {([["story", "استوری (۹:۱۶)", RectangleVertical], ["square", "مربع (۱:۱)", Square]] as const).map(([id, label, Icon]) => (
-                <button key={id} type="button" aria-pressed={format === id} onClick={() => setFormat(id)} className={`inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-black transition ${format === id ? "bg-emphasis text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                <button key={id} type="button" aria-pressed={format === id} onClick={() => setFormat(id)} className={styles.choice}>
                   <Icon aria-hidden="true" className="h-4 w-4" />
                   {label}
                 </button>
@@ -196,18 +194,18 @@ export function StoryStudio({ post, onClose, onShared }: { post: SharePost; onCl
             </div>
           </section>
           <section>
-            <h3 className="mb-2 text-xs font-black text-foreground">۲. انتخاب اندازه قلم (سایز فونت):</h3>
-            <div className="grid grid-cols-4 gap-1 rounded-2xl border border-border bg-surface-muted p-1">
+            <h3 className={styles.settingLabel}>۲. انتخاب اندازه قلم (سایز فونت):</h3>
+            <div className={`${styles.choices} ${styles.fonts}`}>
               {FONT_SIZES.map((size) => (
-                <button key={size.id} type="button" aria-pressed={fontSize === size.id} onClick={() => setFontSize(size.id)} className={`rounded-xl py-2.5 text-xs font-black transition ${fontSize === size.id ? "bg-emphasis text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                <button key={size.id} type="button" aria-pressed={fontSize === size.id} onClick={() => setFontSize(size.id)} className={styles.choice}>
                   {size.label}
                 </button>
               ))}
             </div>
           </section>
           <section>
-            <h3 className="mb-2 text-xs font-black text-foreground">۳. انتخاب رنگ و قالب:</h3>
-            <div className="grid grid-cols-5 gap-2">
+            <h3 className={styles.settingLabel}>۳. انتخاب رنگ و قالب:</h3>
+            <div className={styles.themes}>
               {STORY_THEMES.map((item) => (
                 <button
                   key={item.id}
@@ -216,18 +214,18 @@ export function StoryStudio({ post, onClose, onShared }: { post: SharePost; onCl
                   aria-label={item.label}
                   aria-pressed={themeId === item.id}
                   onClick={() => setThemeId(item.id)}
-                  className={`h-12 rounded-2xl border-2 transition ${themeId === item.id ? "border-emphasis" : "border-transparent"}`}
-                  style={{ backgroundImage: `linear-gradient(135deg, ${item.stops[0]} 0%, ${item.stops[1]} 50%, ${item.stops[2]} 100%)` }}
+                  className={`${styles.theme} ${!item.dark ? styles.themeLight : ""}`}
+                  style={{ backgroundImage: `linear-gradient(135deg, ${item.stops[0]} 0%, ${item.stops[1]} ${item.middleStop ?? 50}%, ${item.stops[2]} 100%)` }}
                 />
               ))}
             </div>
           </section>
-          <section className="rounded-2xl border border-border bg-surface-muted p-3 text-xs">
-            <p className="text-muted-foreground">
-              نویسنده: <strong className="text-foreground">{post.authorName}</strong>
+          <section className={styles.sourceNote}>
+            <p className="">
+              نویسنده: <strong className="">{post.authorName}</strong>
               {post.authorVerified ? " · تیک تأیید دارد" : ""}
             </p>
-            <p className="mt-2 leading-6 text-muted-foreground">متن دقیقاً برگرفته از روایت اصلی است و با بالاترین کیفیت ۱۰۸۰px دانلود می‌شود.</p>
+            <p className="mt-2 leading-6">متن از روایت اصلی است؛ خروجی با عرض ۱۰۸۰ پیکسل و کادر انتخاب‌شده دانلود می‌شود.</p>
           </section>
         </div>
       </div>

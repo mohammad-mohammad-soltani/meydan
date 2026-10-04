@@ -1,3 +1,4 @@
+import styles from "../reference.module.css";
 import { Send, Sparkles, Video, type LucideIcon } from "lucide-react";
 import type { FeedFilter } from "../types";
 
@@ -27,7 +28,7 @@ export function FeedFilters({
   return (
     <div
       dir="rtl"
-      className="flex w-full items-center gap-2 overflow-x-auto bg-background px-3 py-2.5 no-scrollbar"
+      className={`${styles.filters} flex w-full items-center gap-2 overflow-x-auto bg-background px-3 py-2.5 no-scrollbar`}
       aria-label="فیلتر روایت‌ها"
     >
       {filters.map((filter) => {

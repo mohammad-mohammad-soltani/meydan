@@ -58,6 +58,7 @@ export type ExploreHotNarrative = {
   body: string;
   views: number;
   growth: number | null;
+  bookmarked: boolean;
 };
 
 export type ExploreHome = {
@@ -107,6 +108,7 @@ export async function getExploreHome(): Promise<ExploreHome> {
       body: plainText(item.body || "").replace(/\s+/g, " ").trim().slice(0, 160),
       views: Number(item.stats?.views ?? 0),
       growth: item.growth_pct ?? null,
+      bookmarked: Boolean(item.viewer_state?.bookmarked),
     })),
     active: (home.active ?? []).map((row) => {
       const base = account(row.actor, row.members, "");

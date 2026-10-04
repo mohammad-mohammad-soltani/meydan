@@ -30,7 +30,7 @@ export function mapUser(
   replies: ApiComment[] = [],
   speaker: ApiSpeaker | null = null,
 ): ProfileDetails {
-  const narratives = profile.stats?.narratives || narrativeItems.length || 0;
+  const narratives = profile.stats?.narratives;
 
   const identity = {
     name: speaker?.name || profile.full_name || "کاربر میدان",
@@ -90,18 +90,10 @@ export function mapUser(
             : stat,
         )
       : [
-          {
+          ...(narratives == null ? [] : [{
             value: compactFa(narratives),
-
             label: "روایت منتشرشده",
-          },
-          {
-            value: "فعال",
-
-            label: "وضعیت عضویت",
-
-            tone: "success",
-          },
+          }]),
           {
             value: profile.verified_speaker ? "سخنران" : "غیر رسمی",
 

@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import { ChevronDown, ChevronLeft, ChevronRight, MapPin, Search } from "lucide-react";
 import { useState } from "react";
 import type { useMap } from "../hooks/useMap";
@@ -44,16 +46,21 @@ export function MapBelow({
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "fa"))
     .filter((item) => !needle || item.name.includes(needle));
 
-  const squares = map.selectedProvince ? map.citySquares : map.resolvedSquares;
+  // A province shows all its squares; picking a city narrows to that city.
+  const squares = map.selectedProvince
+    ? map.selectedCity
+      ? map.citySquares
+      : map.resolvedSquares.filter((square) => square.displayProvinceName === map.selectedProvince?.name)
+    : map.resolvedSquares;
   const title = map.selectedCity?.name ?? map.selectedProvince?.name ?? "میادین سراسر کشور";
-  const total = map.selectedProvince ? map.citySquares.length : map.activeCount;
+  const total = squares.length;
 
   const rowClass = (on: boolean) =>
     `flex w-full items-center gap-2 rounded-[14px] px-3 py-[11px] text-right text-[13.5px] font-semibold transition-colors ${on ? "bg-brand text-white" : "text-foreground hover:bg-surface-muted"}`;
   const countClass = (on: boolean) => `text-[11px] font-extrabold ${on ? "text-white/90" : "text-brand"}`;
 
   return (
-    <div className="flex flex-col gap-2.5 px-3.5 pt-3.5 lg:px-[22px] lg:pt-4">
+    <div className={`${styles.below} flex flex-col gap-2.5 px-3.5 pt-3.5 lg:px-[22px] lg:pt-4`}>
       <button
         type="button"
         aria-expanded={open}

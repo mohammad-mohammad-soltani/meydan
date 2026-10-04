@@ -68,7 +68,7 @@ export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useCha
               همه را خوانده کن
             </button>
           </div>
-          <div className="w-groups tw-scope" style={{ padding: 12 }}>
+          <div className="w-groups tw-scope" style={{ padding: 0 }}>
             {chat.isNotificationsLoading && !chat.notifications.length ? (
               <div className="w-empty">
                 <span className="spin" aria-label="در حال دریافت" />

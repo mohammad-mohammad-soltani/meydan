@@ -14,8 +14,10 @@ import type { ContentItem } from "../types";
 const fa = new Intl.NumberFormat("fa-IR");
 
 function trackOf(item: ContentItem): AudioTrack | null {
-  if (!item.media.audioSrc) return null;
-  return { id: `ava:${item.apiId}`, title: item.title, artist: item.author, cover: item.coverUrl, url: item.media.audioSrc, sourceHref: `/content/${item.id}` };
+  // A music video that has no separate audio plays through its video file, sound only.
+  const url = item.media.audioSrc ?? item.media.videoSrc;
+  if (!url) return null;
+  return { id: `ava:${item.apiId}`, title: item.title, artist: item.author, cover: item.coverUrl ?? item.media.coverImage, url, sourceHref: item.href ?? `/content/${item.id}` };
 }
 
 function Shell({ title, subtitle, action, children }: { title: string; subtitle?: string; action?: ReactNode; children: ReactNode }) {
@@ -36,7 +38,7 @@ function Row({ item, queue }: { item: ContentItem; queue: ContentItem[] }) {
   const track = trackOf(item);
   const current = Boolean(track && currentTrack?.id === track.id);
   return (
-    <Link href={`/content/${item.id}` as Route} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-hover">
+    <Link href={(item.href ?? `/content/${item.id}`) as Route} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-hover">
       <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl text-lg font-black text-white" style={{ background: item.coverUrl ? `url(${item.coverUrl}) center/cover` : `linear-gradient(145deg,hsl(${hueOf(item.title)} 55% 46%),hsl(${(hueOf(item.title) + 40) % 360} 50% 20%))` }}>
         {item.coverUrl ? null : (item.author || item.title).charAt(0)}
       </span>

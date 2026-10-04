@@ -57,10 +57,10 @@ export function mapSquare(
   const mappedActivity = mappedNarratives[0];
 
   const squareStats: ProfileStat[] = [
-    {
-      value: compactFa(square.stats?.narratives ?? narratives.length),
+    ...(square.stats?.narratives == null ? [] : [{
+      value: compactFa(square.stats.narratives),
       label: "روایت منتشرشده",
-    },
+    }]),
     ...(mediaReflectionCount === undefined
       ? []
       : [

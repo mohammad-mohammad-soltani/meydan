@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { LoaderCircle, Plus, SquarePlay } from "lucide-react";
+import styles from "./shell.module.css";
+import { LoaderCircle, Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAudio } from "@/features/audio/AudioProvider";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
@@ -47,7 +48,7 @@ export function FloatingComposeButton() {
 
   return (
     <div
-      className={`absolute left-3 z-40 flex flex-col items-center gap-2.5 lg:hidden transition-[bottom] duration-300 ease-out ${
+      className={`${!currentTrack ? styles.floating : ""} absolute left-4 z-40 flex flex-col items-center gap-2.5 lg:hidden transition-[bottom] duration-300 ease-out ${
         currentTrack ? "bottom-[calc(11rem+env(safe-area-inset-bottom))]" : "bottom-[calc(4.75rem+env(safe-area-inset-bottom))]"
       }`}
     >
@@ -58,13 +59,17 @@ export function FloatingComposeButton() {
         aria-label={videoError ? "ویدیویی پیدا نشد؛ دوباره تلاش کنید" : "مشاهده ویدیوها"}
         title={videoError ? "ویدیویی پیدا نشد" : "فید ویدیو"}
         className={`group relative grid size-10 place-items-center rounded-full text-foreground shadow-[0_8px_24px_-8px_rgba(0,0,0,.5)] transition-transform duration-200 active:scale-90 focus-visible:outline-none focus-visible:ring-4 disabled:cursor-wait ${
-          videoError ? "bg-warning-surface text-warning" : "bg-surface-muted"
+          videoError ? "bg-warning-surface text-warning" : "border border-border bg-surface-muted"
         }`}
       >
+        {/* The reference's glyph while idle: a rounded screen with a filled play triangle. */}
         {loadingVideos ? (
           <LoaderCircle aria-hidden="true" className="h-[1.15rem] w-[1.15rem] animate-spin motion-reduce:animate-none" />
         ) : (
-          <SquarePlay aria-hidden="true" className="h-5 w-5" strokeWidth={2} />
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="4" />
+            <path d="M10 9.5v5l4.5-2.5z" fill="currentColor" />
+          </svg>
         )}
       </button>
 

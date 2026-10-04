@@ -45,9 +45,9 @@ html.dark .admin-shell {
   --admin-panel-quiet: #222428;
 }
 html.black .admin-shell {
-  --admin-page: #000000;
-  --admin-panel: #080808;
-  --admin-panel-quiet: #050505;
+  --admin-page: var(--background);
+  --admin-panel: var(--surface-elevated);
+  --admin-panel-quiet: var(--surface-muted);
 }
 .admin-route > aside {
   display: none !important;

@@ -1,5 +1,6 @@
 "use client";
 
+import "../reference-content.css";
 import Link from "next/link";
 import type { Route } from "next";
 import { Bookmark, Clock, LoaderCircle, Search } from "lucide-react";
@@ -73,16 +74,16 @@ function SaveButton({ item }: { item: ContentItem }) {
 function NoteRow({ item }: { item: ContentItem }) {
   return (
     <article className="relative">
-      <Link href={`/content/${item.id}` as Route} className="flex gap-3.5 px-4 py-4 transition-colors hover:bg-hover">
+      <Link href={`/content/${item.id}` as Route} className="flex gap-3.5 px-[18px] py-[18px] transition-colors hover:bg-hover">
         <span className="min-w-0 flex-1">
           {item.categoryName ? <span className="inline-block rounded-full bg-surface-muted px-2.5 py-0.5 text-[10px] font-bold text-foreground-secondary">{item.categoryName}</span> : null}
-          <h3 className="mt-1.5 line-clamp-2 text-[15px] font-black leading-7 text-foreground">{item.title}</h3>
-          {item.description ? <p className="mt-1 line-clamp-2 text-xs leading-6 text-muted-foreground">{item.description}</p> : null}
+          <h3 className="mt-1.5 line-clamp-2 text-[15.5px] font-black leading-[1.7] text-foreground">{item.title}</h3>
+          {item.description ? <p className="mt-1 line-clamp-2 text-[12.5px] leading-[1.9] text-muted-foreground">{item.description}</p> : null}
           <span className="mt-2.5 flex items-center"><Meta item={item} /></span>
         </span>
         <span
           aria-hidden="true"
-          className="h-24 w-24 shrink-0 self-start rounded-2xl"
+          className="h-24 w-24 shrink-0 self-center rounded-2xl"
           style={{ background: item.coverUrl ? `url(${item.coverUrl}) center/cover` : `linear-gradient(140deg,hsl(${hueOf(item.title)} 65% 94%),hsl(${(hueOf(item.title) + 50) % 360} 60% 88%))` }}
         />
       </Link>
@@ -117,9 +118,9 @@ export function NotesView({ initial }: { initial: NotesHub }) {
   }, [text]);
 
   return (
-    <div className="pb-24" dir="rtl">
-      <div className="px-4 pt-4">
-        <label className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface-muted px-4 py-3">
+    <div className="reference-notes pb-24" dir="rtl">
+      <div className="px-[18px] pt-4">
+        <label className="flex items-center gap-2.5 rounded-full border border-border bg-surface-muted px-[18px] py-3">
           <Search aria-hidden="true" className="h-[18px] w-[18px] shrink-0 text-icon-muted" />
           <input
             type="search"
@@ -135,17 +136,17 @@ export function NotesView({ initial }: { initial: NotesHub }) {
 
       {!searching && hub.featured.length ? (
         <section aria-label="برگزیده‌ها" className="pt-5">
-          <h2 className="mb-3 px-4 text-base font-black text-foreground">برگزیده‌ها</h2>
-          <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-4">
+          <h2 className="mb-3 px-[18px] text-base font-black text-foreground">برگزیده‌ها</h2>
+          <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-[18px]">
             {hub.featured.map((item) => (
               <Link
                 key={item.apiId}
                 href={`/content/${item.id}` as Route}
-                className="relative flex aspect-[1.65/1] w-[86%] max-w-[360px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-3xl p-4 text-white"
+                className="relative flex aspect-[1.5/1] w-[78%] max-w-[340px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[22px] p-3.5 text-white"
                 style={{ background: cover(item) }}
               >
                 {item.categoryName ? <span className="absolute right-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold backdrop-blur">{item.categoryName}</span> : null}
-                <b className="line-clamp-2 text-lg font-black leading-8">{item.title}</b>
+                <b className="line-clamp-2 text-base font-black leading-[1.7]">{item.title}</b>
                 <small className="mt-1 text-[11px] text-white/80">{[item.author, item.readingMinutes ? `${faNumber.format(item.readingMinutes)} دقیقه` : ""].filter(Boolean).join(" · ")}</small>
               </Link>
             ))}
@@ -154,7 +155,7 @@ export function NotesView({ initial }: { initial: NotesHub }) {
       ) : null}
 
       {!searching && hub.categories.length ? (
-        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-4" role="tablist" aria-label="دسته‌های یادداشت">
+        <div className="sticky top-[50px] z-15 mt-2 no-scrollbar flex gap-2 overflow-x-auto border-b border-divider bg-background px-[18px] py-3" role="tablist" aria-label="دسته‌های یادداشت">
           {[{ slug: "", name: "همه" }, ...hub.categories].map((entry) => (
             <button
               key={entry.slug || "all"}
@@ -162,7 +163,7 @@ export function NotesView({ initial }: { initial: NotesHub }) {
               role="tab"
               aria-selected={category === entry.slug}
               onClick={() => setCategory(entry.slug)}
-              className={`shrink-0 rounded-full px-4 py-2 text-xs font-black transition-colors ${category === entry.slug ? "bg-foreground text-background" : "bg-surface-muted text-foreground-secondary hover:bg-hover"}`}
+              className={`shrink-0 rounded-full px-[18px] py-2 text-xs font-black transition-colors ${category === entry.slug ? "bg-foreground text-background" : "bg-surface-muted text-foreground-secondary hover:bg-hover"}`}
             >
               {entry.name}
             </button>
@@ -171,7 +172,7 @@ export function NotesView({ initial }: { initial: NotesHub }) {
       ) : null}
 
       <section aria-label="تازه‌ترین‌ها" className={searching || !hub.categories.length ? "pt-4" : ""}>
-        <h2 className="border-b border-divider px-4 pb-3 text-base font-black text-foreground">{searching ? `نتایج «${text}»` : "تازه‌ترین‌ها"}</h2>
+        <h2 className="border-b border-divider px-[18px] pb-3 text-base font-black text-foreground">{searching ? `نتایج «${text}»` : "تازه‌ترین‌ها"}</h2>
         {list.length ? (
           <div className="divide-y divide-divider">{list.map((item) => <NoteRow key={item.apiId} item={item} />)}</div>
         ) : busy ? null : (

@@ -1,5 +1,6 @@
 "use client";
 
+import "../reference-profile.css";
 import Link from "next/link";
 import type { Route } from "next";
 import { LoaderCircle, Search, X } from "lucide-react";
@@ -73,24 +74,24 @@ export function FollowListSheet({ type, id, name, handle, initialTab = "follower
   if (!mounted) return null;
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label="فهرست دنبال‌کننده‌ها" dir="rtl" className="fixed inset-0 z-[220] flex flex-col bg-background text-foreground">
-      <header className="flex items-center gap-3 border-b border-divider px-4 py-3">
-        <button type="button" onClick={onClose} aria-label="بازگشت" className="grid h-10 w-10 place-items-center rounded-full bg-surface-muted hover:bg-hover"><X aria-hidden="true" className="h-5 w-5" /></button>
-        <div className="min-w-0"><b className="block truncate text-sm font-black">{name}</b>{handle ? <small className="latin-digits block text-[11px] text-muted-foreground" dir="ltr">@{handle}</small> : null}</div>
+    <div role="dialog" aria-modal="true" aria-label="فهرست دنبال‌کننده‌ها" dir="rtl" className="reference-follow-sheet fixed inset-0 z-[220] flex flex-col bg-background text-foreground">
+      <header className="flex items-center gap-3.5 px-3.5 py-2.5">
+        <button type="button" onClick={onClose} aria-label="بازگشت" className="grid h-[38px] w-[38px] place-items-center rounded-full bg-surface-muted hover:bg-hover"><X aria-hidden="true" className="h-5 w-5" /></button>
+        <div className="min-w-0"><b className="block truncate text-base font-black">{name}</b>{handle ? <small className="latin-digits block text-xs text-muted-foreground" dir="ltr">@{handle}</small> : null}</div>
       </header>
       <nav className="grid grid-cols-2 border-b border-divider" aria-label="فهرست">
         {([["followers", "دنبال‌کننده‌ها"], ["following", "دنبال‌شده‌ها"]] as const).map(([value, label]) => (
-          <button key={value} type="button" aria-current={tab === value ? "page" : undefined} onClick={() => setTab(value)} className={`relative py-3.5 text-sm font-black ${tab === value ? "text-foreground" : "text-muted-foreground"}`}>
+          <button key={value} type="button" aria-current={tab === value ? "page" : undefined} onClick={() => setTab(value)} className={`relative h-[50px] text-sm font-bold ${tab === value ? "text-foreground" : "text-muted-foreground"}`}>
             {label}
-            <span aria-hidden="true" className={`absolute inset-x-[28%] bottom-0 h-[3px] rounded-full bg-brand transition-opacity ${tab === value ? "opacity-100" : "opacity-0"}`} />
+            <span aria-hidden="true" className={`absolute inset-x-[25%] bottom-0 h-[3px] rounded-full bg-brand transition-opacity ${tab === value ? "opacity-100" : "opacity-0"}`} />
           </button>
         ))}
       </nav>
-      <label className="mx-4 mt-3 flex items-center gap-2.5 rounded-2xl border border-border bg-surface-muted px-4 py-2.5">
+      <label className="mx-4 my-3 flex h-11 items-center gap-2.5 rounded-full border border-border bg-surface-muted px-4">
         <Search aria-hidden="true" className="h-[17px] w-[17px] shrink-0 text-icon-muted" />
         <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="جستجو در فهرست" autoComplete="off" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-placeholder" />
       </label>
-      <div className="mt-2 min-h-0 flex-1 overflow-y-auto pb-8">
+      <div className="min-h-0 flex-1 overflow-y-auto pb-10">
         {current === undefined ? (
           <LoaderCircle aria-label="در حال دریافت" className="mx-auto mt-12 h-5 w-5 animate-spin text-muted-foreground" />
         ) : current === "error" ? (
@@ -102,18 +103,18 @@ export function FollowListSheet({ type, id, name, handle, initialTab = "follower
             {visible.map((row) => {
               const on = follow.isFollowing(row.type, row.id);
               return (
-                <li key={row.key} className="flex items-center gap-3 px-4 py-3">
+                <li key={row.key} className="flex items-start gap-3 px-4 py-3.5">
                   <Link href={row.href as Route} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-3">
                     <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-sm font-extrabold text-foreground">
                       {row.avatarUrl ? <OptimizedAvatar src={row.avatarUrl} alt="" width={48} className="h-full w-full object-cover" /> : row.name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word.charAt(0)).join("")}
                     </span>
                     <span className="min-w-0">
-                      <b className="flex items-center gap-1 text-sm font-bold"><span className="truncate">{row.name}</span><AccountBadges verified={row.verified} speaker={row.speaker} official={row.official} kind={row.type} size="sm" /></b>
-                      {row.handle ? <small className="latin-digits block truncate text-[11px] text-muted-foreground" dir="ltr">@{row.handle}</small> : null}
-                      {row.headline ? <p className="mt-1 line-clamp-1 text-[12.5px] text-muted-foreground">{row.headline}</p> : null}
+                      <b className="flex items-center gap-1 text-[14.5px] font-extrabold"><span className="truncate">{row.name}</span><AccountBadges verified={row.verified} speaker={row.speaker} official={row.official} kind={row.type} size="sm" /></b>
+                      {row.handle ? <small className="latin-digits block truncate text-xs text-muted-foreground" dir="ltr">@{row.handle}</small> : null}
+                      {row.headline ? <p className="mt-1 line-clamp-1 text-[13px] leading-[1.8] text-foreground-secondary">{row.headline}</p> : null}
                     </span>
                   </Link>
-                  <button type="button" aria-pressed={on} onClick={() => follow.toggle(row.type, row.id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold ${on ? "border-border bg-transparent text-foreground" : "border-transparent bg-foreground text-background"}`}>
+                  <button type="button" aria-pressed={on} onClick={() => follow.toggle(row.type, row.id)} className={`h-[34px] shrink-0 rounded-full border px-4 text-[12.5px] font-extrabold ${on ? "border-border bg-transparent text-foreground" : "border-transparent bg-foreground text-background"}`}>
                     {on ? "دنبال می‌کنید" : "دنبال کردن"}
                   </button>
                 </li>

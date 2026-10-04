@@ -11,7 +11,7 @@ export function SpeakersSearch({ value, onChange }: SpeakersSearchProps) {
         onChange={(event) => onChange(event.target.value)}
         placeholder="جستجوی نام استاد، موضوع سخنرانی یا شهر…"
         aria-label="جستجوی سخنران"
-        className="h-12 w-full rounded-pill border border-input-border bg-input pl-10 pr-10 text-sm text-foreground outline-none transition-colors placeholder:text-placeholder hover:border-input-border-hover focus:border-ring focus-visible:ring-2 focus-visible:ring-ring"
+        className="h-[46px] w-full rounded-pill border border-input-border bg-input pl-10 pr-10 text-[14.5px] text-foreground outline-none transition-colors placeholder:text-placeholder hover:border-input-border-hover focus:border-ring focus-visible:ring-2 focus-visible:ring-ring"
       />
       {value ? (
         <button

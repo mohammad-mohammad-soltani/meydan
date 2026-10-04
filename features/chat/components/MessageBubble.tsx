@@ -340,10 +340,10 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
       <div
         className={`group relative ${
           isVisualAttachment
-            ? "w-[min(78vw,20rem)] max-w-[84%]"
+            ? "w-[min(78vw,20rem)] max-w-[min(78%,520px)]"
             : hasAttachment
-              ? "w-[min(74vw,18rem)] max-w-[84%]"
-              : "max-w-[84%]"
+              ? "w-[min(74vw,18rem)] max-w-[min(78%,520px)]"
+              : "max-w-[min(78%,520px)]"
         }`}
         onContextMenu={handleContextMenu}
         onPointerDown={longPressStart}
@@ -361,7 +361,7 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
             <p className={`whitespace-pre-wrap ${hasAttachment ? "px-1 pt-1" : ""}`}>{message.body}</p>
           ) : null}
           {message.reactions?.length ? <div className="mt-1 flex flex-wrap gap-1">{message.reactions.map((reaction) => <button key={reaction} type="button" aria-label={`حذف واکنش ${reaction}`} onClick={() => onReact(message.id, reaction)} className="rounded-full bg-surface-glass px-1.5 py-0.5 text-xs shadow-xs">{reaction}</button>)}</div> : null}
-          <footer className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] leading-4 text-message-meta ${hasAttachment ? "px-1" : ""}`}><time>{message.sentAt}</time>{message.editedAt ? <span>ویرایش‌شده</span> : null}{isOwn ? <StatusIcon className="h-3.5 w-3.5" aria-label={message.status} /> : null}</footer>
+          <footer className={`mt-px flex items-center justify-end gap-1 text-[10.5px] leading-4 text-inherit opacity-[.65] ${hasAttachment ? "px-1" : ""}`}><time>{message.sentAt}</time>{message.editedAt ? <span>ویرایش‌شده</span> : null}{isOwn ? <StatusIcon className="h-3.5 w-3.5" aria-label={message.status} /> : null}</footer>
         </article>
 
         <button

@@ -22,7 +22,8 @@ import { ThemeSwitcher } from "./ThemeSwitcher";
 type Item = { href: string; label: string; icon: LucideIcon; active: (path: string, filter: string | null) => boolean; soon?: boolean };
 
 const ITEMS: Item[] = [
-  { href: "/profile", label: "نمایه", icon: UserRound, active: (p) => p === "/profile" },
+  // Like the reference, «نمایه» always carries the filled square.
+  { href: "/profile", label: "نمایه", icon: UserRound, active: () => true },
   { href: "/bookmarks", label: "نشان‌شده‌ها", icon: Bookmark, active: (p) => p === "/bookmarks" },
   { href: "/drafts", label: "پیش‌نویس‌ها", icon: FileText, active: (p) => p === "/drafts" },
 ];
@@ -245,10 +246,9 @@ export function MobileDrawer({
       >
         <div className="flex min-h-0 flex-1 touch-pan-y flex-col overflow-y-auto overscroll-contain pb-2">
           <div className="relative h-[118px] shrink-0 overflow-hidden bg-[linear-gradient(135deg,#3b3b3b,#161616)]">
-            {viewer?.coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- remote cover of any size
-              <img src={viewer.coverUrl} alt="" className="h-full w-full object-cover grayscale contrast-[1.05]" />
-            ) : null}
+            {/* Without a cover of their own, people get the app's default one, as on the profile. */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- remote cover of any size */}
+            <img src={viewer?.coverUrl || "/images/header.jpg"} alt="" className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.25),transparent_50%,var(--background))]" />
             <button
               type="button"
@@ -266,7 +266,7 @@ export function MobileDrawer({
               <span className="block h-20 w-20 rounded-full border-4 border-background bg-skeleton" />
               <span className="mt-3 block h-5 w-36 rounded-md bg-skeleton" />
               <span className="mt-2 block h-3 w-24 rounded-md bg-skeleton-highlight" />
-              <div className="mt-4 grid grid-cols-2 gap-2"><span className="h-[3.25rem] rounded-2xl bg-skeleton" /><span className="h-[3.25rem] rounded-2xl bg-skeleton" /></div>
+              <div className="mt-4 grid grid-cols-3 gap-2"><span className="h-[3.25rem] rounded-2xl bg-skeleton" /><span className="h-[3.25rem] rounded-2xl bg-skeleton" /><span className="h-[3.25rem] rounded-2xl bg-skeleton" /></div>
             </div>
           ) : isAuthenticated && viewer ? (
             <>
@@ -288,9 +288,15 @@ export function MobileDrawer({
                 {[
                   { value: viewer.followers, label: "دنبال‌کننده" },
                   { value: viewer.following, label: "دنبال‌شده" },
+                  // Signatures don't exist yet.
+                  { value: null, label: "امضا" },
                 ].map((stat) => (
                   <div key={stat.label} className="flex flex-1 flex-col items-center gap-px rounded-2xl bg-surface-muted px-1 py-[9px] text-[10.5px] text-muted-foreground">
-                    <strong className="text-base font-extrabold text-foreground">{compact.format(stat.value)}</strong>
+                    {stat.value === null ? (
+                      <strong className="text-[13px] font-extrabold leading-6 text-foreground">به‌زودی</strong>
+                    ) : (
+                      <strong className="text-base font-extrabold text-foreground">{compact.format(stat.value)}</strong>
+                    )}
                     {stat.label}
                   </div>
                 ))}

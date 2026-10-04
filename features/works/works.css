@@ -3,78 +3,19 @@
  * Most of this file is generated from the reference's own CSS; the sections marked
  * "adaptation" integrate it with the app shell and add the few states the real data needs.
  */
-@font-face {
-  font-family: "Vazirmatn";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(/fonts/Vazirmatn-400.ttf) format("truetype");
-}
-@font-face {
-  font-family: "Vazirmatn";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url(/fonts/Vazirmatn-500.ttf) format("truetype");
-}
-@font-face {
-  font-family: "Vazirmatn";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url(/fonts/Vazirmatn-700.ttf) format("truetype");
-}
-@font-face {
-  font-family: "Vazirmatn";
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url(/fonts/Vazirmatn-800.ttf) format("truetype");
-}
-@font-face {
-  font-family: "Vazirmatn";
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url(/fonts/Vazirmatn-900.ttf) format("truetype");
-}
-
-/* ---------- palette (light default; dark / black follow the app theme classes on <html>) ---------- */
-.works-feature,
-.works-route {
-  --font:"Vazirmatn",Tahoma,"Segoe UI",sans-serif;
-  --bg:#f4f3f2; --surface:#ffffff; --surface-2:#f6f5f4; --line:#e4e2df; --line-soft:#eeece9;
-  --fg:#1d1d20; --muted:#66666e; --faint:#94949b;
-  --accent:#e23434; --accent-ink:#fff; --accent-soft:rgba(226,52,52,.09);
-  --s1:#e23434; --s2:#d98a06; --s3:#139c83;
-  --ok:#0f9d6b; --shadow:0 10px 30px rgba(30,20,10,.08);
-  --chat-bg:#e6e3de; --bub:#ffffff; --bub-me:#dcf5ea; --pill-bg:rgba(70,70,80,.32); --pill-fg:#fff; --kb-bg:rgba(255,255,255,.78);
-  --doodle:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22220%22%20height=%22220%22%20viewBox=%220%200%20220%20220%22%20fill=%22none%22%20stroke=%22rgba%280,0,0,0.07%29%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M28%2018l4%209%2010%201-7%207%202%2010-9-5-9%205%202-10-7-7%2010-1z%22/%3E%3Ccircle%20cx=%22120%22%20cy=%2230%22%20r=%229%22/%3E%3Ccircle%20cx=%22120%22%20cy=%2230%22%20r=%223%22/%3E%3Cpath%20d=%22M180%2014v28M180%2014h18l-4%206%204%206h-18%22/%3E%3Cpath%20d=%22M60%2080l8%208%2016-16%22/%3E%3Crect%20x=%22150%22%20y=%2270%22%20width=%2234%22%20height=%2230%22%20rx=%225%22/%3E%3Cpath%20d=%22M150%2080h34M160%2064v10M174%2064v10%22/%3E%3Cpath%20d=%22M20%20120c8-14%2030-14%2030%204%200%2014-30%2024-30%2024s-30-10-30-24%22%20transform=%22translate%2830%200%29%22/%3E%3Cpath%20d=%22M110%20120h18l14-10v34l-14-10h-18z%22/%3E%3Cpath%20d=%22M148%20122a8%208%200%200%201%200%2012%22/%3E%3Cpath%20d=%22M190%20140a14%2014%200%201%201-12-20%2011%2011%200%200%200%2012%2020z%22/%3E%3Cpath%20d=%22M30%20186l6%206%2012-12%22/%3E%3Ccircle%20cx=%2239%22%20cy=%22186%22%20r=%2214%22/%3E%3Cpath%20d=%22M96%20176l4%209M104%20172l-9%204M100%20190v-6%22/%3E%3Ccircle%20cx=%22100%22%20cy=%22180%22%20r=%222%22/%3E%3Cpath%20d=%22M140%20186h40M140%20196h28M140%20176h34%22/%3E%3Cpath%20d=%22M8%2066h10M13%2061v10%22/%3E%3Cpath%20d=%22M200%20196h10M205%20191v10%22/%3E%3Cpath%20d=%22M90%2052h8M94%2048v8%22/%3E%3C/svg%3E");
-  color-scheme:light;
-}
-.dark .works-feature,
-.dark .works-route {
-  --bg:#1b1b1d; --surface:#232326; --surface-2:#2b2b2f; --line:#38383d; --line-soft:#2f2f34;
-  --fg:#f2f2f3; --muted:#a3a3ab; --faint:#74747c;
-  --accent:#ef4444; --accent-ink:#fff; --accent-soft:rgba(239,68,68,.14);
-  --s1:#ef4444; --s2:#f5a524; --s3:#2dc6a8;
-  --ok:#34d399; --shadow:0 10px 30px rgba(0,0,0,.35);
-  --chat-bg:#121214; --bub:#26262b; --bub-me:#1c3a33; --pill-bg:rgba(255,255,255,.09); --pill-fg:#c9c9cf; --kb-bg:rgba(255,255,255,.07);
-  --doodle:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22220%22%20height=%22220%22%20viewBox=%220%200%20220%20220%22%20fill=%22none%22%20stroke=%22rgba%28255,255,255,0.045%29%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M28%2018l4%209%2010%201-7%207%202%2010-9-5-9%205%202-10-7-7%2010-1z%22/%3E%3Ccircle%20cx=%22120%22%20cy=%2230%22%20r=%229%22/%3E%3Ccircle%20cx=%22120%22%20cy=%2230%22%20r=%223%22/%3E%3Cpath%20d=%22M180%2014v28M180%2014h18l-4%206%204%206h-18%22/%3E%3Cpath%20d=%22M60%2080l8%208%2016-16%22/%3E%3Crect%20x=%22150%22%20y=%2270%22%20width=%2234%22%20height=%2230%22%20rx=%225%22/%3E%3Cpath%20d=%22M150%2080h34M160%2064v10M174%2064v10%22/%3E%3Cpath%20d=%22M20%20120c8-14%2030-14%2030%204%200%2014-30%2024-30%2024s-30-10-30-24%22%20transform=%22translate%2830%200%29%22/%3E%3Cpath%20d=%22M110%20120h18l14-10v34l-14-10h-18z%22/%3E%3Cpath%20d=%22M148%20122a8%208%200%200%201%200%2012%22/%3E%3Cpath%20d=%22M190%20140a14%2014%200%201%201-12-20%2011%2011%200%200%200%2012%2020z%22/%3E%3Cpath%20d=%22M30%20186l6%206%2012-12%22/%3E%3Ccircle%20cx=%2239%22%20cy=%22186%22%20r=%2214%22/%3E%3Cpath%20d=%22M96%20176l4%209M104%20172l-9%204M100%20190v-6%22/%3E%3Ccircle%20cx=%22100%22%20cy=%22180%22%20r=%222%22/%3E%3Cpath%20d=%22M140%20186h40M140%20196h28M140%20176h34%22/%3E%3Cpath%20d=%22M8%2066h10M13%2061v10%22/%3E%3Cpath%20d=%22M200%20196h10M205%20191v10%22/%3E%3Cpath%20d=%22M90%2052h8M94%2048v8%22/%3E%3C/svg%3E");
-  color-scheme:dark;
-}
-.black .works-feature,
-.black .works-route {
-  --bg:#1b1b1d; --surface:#232326; --surface-2:#2b2b2f; --line:#38383d; --line-soft:#2f2f34;
-  --fg:#f2f2f3; --muted:#a3a3ab; --faint:#74747c;
-  --accent:#ef4444; --accent-ink:#fff; --accent-soft:rgba(239,68,68,.14);
-  --s1:#ef4444; --s2:#f5a524; --s3:#2dc6a8;
-  --ok:#34d399; --shadow:0 10px 30px rgba(0,0,0,.35);
-  --chat-bg:#121214; --bub:#26262b; --bub-me:#1c3a33; --pill-bg:rgba(255,255,255,.09); --pill-fg:#c9c9cf; --kb-bg:rgba(255,255,255,.07);
-  --doodle:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22220%22%20height=%22220%22%20viewBox=%220%200%20220%20220%22%20fill=%22none%22%20stroke=%22rgba%28255,255,255,0.045%29%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M28%2018l4%209%2010%201-7%207%202%2010-9-5-9%205%202-10-7-7%2010-1z%22/%3E%3Ccircle%20cx=%22120%22%20cy=%2230%22%20r=%229%22/%3E%3Ccircle%20cx=%22120%22%20cy=%2230%22%20r=%223%22/%3E%3Cpath%20d=%22M180%2014v28M180%2014h18l-4%206%204%206h-18%22/%3E%3Cpath%20d=%22M60%2080l8%208%2016-16%22/%3E%3Crect%20x=%22150%22%20y=%2270%22%20width=%2234%22%20height=%2230%22%20rx=%225%22/%3E%3Cpath%20d=%22M150%2080h34M160%2064v10M174%2064v10%22/%3E%3Cpath%20d=%22M20%20120c8-14%2030-14%2030%204%200%2014-30%2024-30%2024s-30-10-30-24%22%20transform=%22translate%2830%200%29%22/%3E%3Cpath%20d=%22M110%20120h18l14-10v34l-14-10h-18z%22/%3E%3Cpath%20d=%22M148%20122a8%208%200%200%201%200%2012%22/%3E%3Cpath%20d=%22M190%20140a14%2014%200%201%201-12-20%2011%2011%200%200%200%2012%2020z%22/%3E%3Cpath%20d=%22M30%20186l6%206%2012-12%22/%3E%3Ccircle%20cx=%2239%22%20cy=%22186%22%20r=%2214%22/%3E%3Cpath%20d=%22M96%20176l4%209M104%20172l-9%204M100%20190v-6%22/%3E%3Ccircle%20cx=%22100%22%20cy=%22180%22%20r=%222%22/%3E%3Cpath%20d=%22M140%20186h40M140%20196h28M140%20176h34%22/%3E%3Cpath%20d=%22M8%2066h10M13%2061v10%22/%3E%3Cpath%20d=%22M200%20196h10M205%20191v10%22/%3E%3Cpath%20d=%22M90%2052h8M94%2048v8%22/%3E%3C/svg%3E");
-  color-scheme:dark;
-  --bg:#000; --surface:#0b0b0c; --surface-2:#141416; --line:#26262a; --line-soft:#1b1b1e;
-  --chat-bg:#000; --bub:#17171a; --bub-me:#12302a;
+/* Shared reference palette; route styles must not override app theme tokens. */
+.works-feature {
+  --font:var(--font-iran-sans),ui-sans-serif,system-ui,sans-serif;
+  --bg:var(--m-bg); --surface:var(--m-bg); --surface-2:var(--m-soft);
+  --line:var(--m-line); --line-soft:var(--m-line);
+  --fg:var(--m-tx); --muted:var(--m-mu); --faint:var(--m-mu);
+  --accent:#e4152e; --accent-ink:#fff;
+  --accent-soft:color-mix(in srgb,#e4152e 14%,transparent);
+  --s1:var(--m-mu); --s2:var(--m-tx); --s3:var(--m-tx); --ok:var(--m-tx);
+  --shadow:0 14px 34px -14px rgba(0,0,0,.55);
+  --chat-bg:var(--m-bg); --bub:var(--m-soft); --bub-me:var(--m-tx);
+  --pill-bg:var(--m-soft); --pill-fg:var(--m-mu); --kb-bg:var(--m-glass);
+  --doodle:none;
 }
 
 /* ---------- scoped base (replaces the reference's global reset) ---------- */
@@ -1861,7 +1802,7 @@
   padding:4px 14px;
   font-size:12px
 }
-@media (max-width:820px) {
+@media (max-width:1023px) {
   .works-feature .works {
     grid-template-columns:minmax(0,1fr);
     height:calc(100vh - 66px);
@@ -1923,44 +1864,7 @@
   }
 }
 
-/* ===================== adaptation: shell integration ===================== */
-/* The reference hides the side column on this page and widens the centre; mirror that, only on /works. */
-.works-route {
-  gap: 20px;
-  padding: 16px;
-  background: var(--bg);
-}
-.works-route > aside:first-of-type {
-  width: 240px;
-  height: calc(100dvh - 32px);
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-.works-route > aside:last-of-type {
-  display: none;
-}
-.works-route #mainAppShell {
-  max-width: 1060px;
-  height: calc(100dvh - 32px);
-  padding: 0;
-  border: 1px solid var(--line-soft);
-  border-radius: 18px;
-  overflow: hidden;
-  background: var(--surface);
-}
-@media (max-width: 1023px) {
-  .works-route {
-    gap: 0;
-    padding: 0;
-  }
-  .works-route #mainAppShell {
-    max-width: none;
-    height: 100dvh;
-    border: 0;
-    border-radius: 0;
-  }
-}
+/* The shared AppShell owns route geometry. */
 .works-fill {
   flex: 1;
   min-height: 0;
@@ -1970,7 +1874,7 @@
   height: 100%;
   min-height: 0;
 }
-@media (max-width: 820px) {
+@media (max-width: 1023px) {
   .works-fill .works {
     height: 100%;
   }
@@ -2145,7 +2049,7 @@
 .works-feature .row.mine .b-acts { right: calc(100% + 40px) }
 .works-feature .swipe-ic { position: absolute; left: -40px; top: 50%; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--pill-bg); color: var(--pill-fg); opacity: 0; transform: translateY(-50%) scale(.6); pointer-events: none; transition: background-color .12s, color .12s }
 .works-feature .swipe-ic[data-ready="1"] { background: var(--accent); color: #fff }
-@media (max-width: 820px) {
+@media (max-width: 1023px) {
   .works-feature .bub { max-width: 76vw }
   .works-feature .bub.rich { width: 76vw }
 }
@@ -2181,7 +2085,7 @@
 .works-feature .view-menu-list button:hover { background: var(--surface-2) }
 .works-feature .view-menu-list button.on { background: var(--accent-soft); color: var(--accent) }
 
-@media (max-width: 820px) {
+@media (max-width: 1023px) {
   .works-feature .r-views { display: none }
   .works-feature .r-more { display: grid }
 }
@@ -2190,7 +2094,7 @@
 /* Direct-chat panes use the app's Tailwind tokens; the works palette reuses three of those names, so restore them there. */
 .works-feature .tw-scope { --surface: #ffffff; --muted: #f0f0f0; --accent: #7c3aed; color-scheme: inherit }
 .dark .works-feature .tw-scope { --surface: #262626; --muted: #2d2d2d; --accent: #a78bfa }
-.black .works-feature .tw-scope { --surface: #000000; --muted: #000000; --accent: #a78bfa }
+.black .works-feature .tw-scope { --surface: var(--background); --muted: var(--surface-muted); --accent: #a78bfa }
 .works-feature .w-room.tw-scope { background: var(--surface-2, transparent) }
 
 /* sidebar header: title + notifications/conversations switch */
@@ -2226,7 +2130,7 @@
 .works-feature .cm-btn.danger { background: var(--accent); color: #fff }
 .works-feature .bwrap.menu-open .bub { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent) }
 @media (prefers-reduced-motion: reduce) { .works-feature .cm-menu { animation: none } }
-@media (max-width: 820px) { .works-feature .b-acts { display: none } }
+@media (max-width: 1023px) { .works-feature .b-acts { display: none } }
 
 /* ---- members view: responsive cards (actions drop below the info on narrow screens) ---- */
 .works-feature .mlist { padding: 10px 12px }
@@ -2243,7 +2147,7 @@
 .works-feature .mload .mcount { display: inline; margin-inline-start: 6px; font-size: 11px; white-space: nowrap }
 .works-feature .mrow .label-edit { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; margin-top: 6px }
 .works-feature .mrow .label-edit input { flex: 1 1 100%; min-width: 0 }
-@media (min-width: 821px) {
+@media (min-width: 1024px) {
   .works-feature .mrow { grid-template-columns: 44px minmax(0, 1fr) auto; grid-template-areas: "av info acts"; align-items: center }
   .works-feature .mrow-acts { flex-wrap: nowrap; justify-content: flex-end }
   .works-feature .mrow-acts .qa { flex: none }

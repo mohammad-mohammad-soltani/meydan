@@ -11,6 +11,7 @@ import { getActorFollowState, setActorFollowing, setActorNotify, type ActorType 
 import { actorKindOf, entityApiPath, isEntityKind } from "@/lib/profile-route";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
 import type { FeedPost } from "@/features/feed/types";
+import { narrativeTotal, upsertProfileStat } from "../profile-stats";
 import type { ProfileDetails, ProfileSection } from "../types";
 
 function redirectToLogin() {
@@ -72,12 +73,12 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
                 : "",
             }))
           : current.replies,
-        squareStats: countResult.status === "fulfilled" && countResult.value
-          ? [...current.squareStats.slice(0, 1), {
+        squareStats: countResult.status === "fulfilled" && countResult.value && narrativeTotal(countResult.value.count) !== null
+          ? upsertProfileStat(current.squareStats, {
               value: `${compactFa(countResult.value.count)} روایت`,
               label: "بازتاب رسانه‌ای",
               tone: "success" as const,
-            }]
+            })
           : current.squareStats,
       }));
     });
@@ -336,13 +337,11 @@ export function useProfile(profile: ProfileDetails, canManage = false) {
     let active = true;
     void meydanApi<{ stats?: { narratives?: number } }>(isEntityKind(targetActorType) ? entityApiPath(targetActorType, profile.actorId) : `/squares/${profile.actorId}`)
       .then((square) => {
-        if (!active || typeof square.stats?.narratives !== "number") return;
+        if (!active || narrativeTotal(square.stats?.narratives) === null) return;
         setDisplayProfile((current) => ({
           ...current,
           narrativeCount: square.stats!.narratives!,
-          squareStats: current.squareStats.map((stat, index) => index === 0
-            ? { ...stat, value: compactFa(square.stats!.narratives!) }
-            : stat),
+          squareStats: upsertProfileStat(current.squareStats, { label: "روایت منتشرشده", value: compactFa(square.stats!.narratives!) }),
         }));
       })
       .catch(() => undefined);

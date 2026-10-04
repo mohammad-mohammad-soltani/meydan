@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import { IRAN_ISLANDS } from "../data/iran-islands";
 import {
   LoaderCircle,
@@ -367,16 +369,16 @@ export function MapFrame({
   const scaleUnit = scale.distanceKm >= 1 ? "km" : "m";
 
   return (
-    <div className="live-map relative h-full min-h-[430px] w-full overflow-hidden bg-[#171a1b] sm:min-h-[500px]">
+    <div className={`${styles.frame} live-map relative h-full w-full overflow-hidden`}>
       <div
         ref={element}
         dir="ltr"
         aria-label="نقشه میدان‌های ایران"
-        className="absolute inset-0 h-full w-full bg-[#171a1b]"
+        className={`${styles.canvas} absolute inset-0 h-full w-full`}
       />
 
       <div className="absolute inset-x-3 top-3 z-[500]">
-        <div className="flex h-[46px] items-center gap-2 rounded-full border border-white/10 bg-[#1c1c1c]/80 px-3.5 text-white/60 shadow-[0_10px_30px_-14px_rgba(0,0,0,.5)] backdrop-blur-xl">
+        <div className={styles.search}>
           <Search
             className="h-[18px] w-[18px] shrink-0"
             strokeWidth={2}
@@ -391,14 +393,14 @@ export function MapFrame({
             dir="rtl"
             aria-label="جست‌وجوی استان، شهر یا میدان روی نقشه"
           />
-          <span title="به‌روزرسانی زنده" className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white">
+          <span title="به‌روزرسانی زنده" className={styles.live}>
             <i aria-hidden="true" className="h-[7px] w-[7px] animate-pulse rounded-full bg-[#e4152e]" />
             زنده
           </span>
         </div>
 
         {searchFocused && query.trim() ? (
-          <div className="mt-2 overflow-hidden rounded-[14px] border border-white/10 bg-[#232526]/95 py-1 shadow-[0_12px_28px_rgba(0,0,0,.42)] backdrop-blur-xl">
+          <div className={styles.results}>
             {searchResults.length ? (
               searchResults.map((aggregate) => (
                 <button
@@ -425,7 +427,7 @@ export function MapFrame({
       </div>
 
       {/* Reference controls (.mp-ctl): three separate glass squares at the bottom-left. */}
-      <div className="absolute bottom-3.5 left-3 z-[500] flex flex-col gap-2 text-white">
+      <div className={styles.controls}>
         <button type="button" disabled={!ready || zoom >= 18} onClick={() => changeZoom(1)} aria-label="بزرگ‌نمایی نقشه" title="بزرگ‌نمایی" className="grid h-10 w-10 place-items-center rounded-[14px] border border-white/10 bg-[#1c1c1c]/80 backdrop-blur-md transition active:scale-90 disabled:opacity-35">
           <Plus className="h-5 w-5" strokeWidth={2} />
         </button>
@@ -470,15 +472,15 @@ export function MapFrame({
           type="button"
           role="status"
           onClick={() => setLocationError(null)}
-          className="absolute bottom-16 left-3 right-20 z-[700] rounded-xl border border-white/15 bg-[#282b2d] p-3 text-right text-[11px] leading-6 text-white shadow-lg"
+          className={`${styles.error} absolute bottom-16 left-3 right-20 z-[700] p-3 text-right text-[11px] leading-6 shadow-lg`}
         >
           {locationError}
         </button>
       ) : null}
 
       {!ready ? (
-        <div className="absolute inset-0 z-[600] grid place-items-center bg-[#171a1b]">
-          <LoaderCircle className="h-6 w-6 animate-spin text-[#e5544b]" />
+        <div className={`${styles.canvas} absolute inset-0 z-[600] grid place-items-center`}>
+          <LoaderCircle className="h-6 w-6 animate-spin text-brand" />
         </div>
       ) : null}
     </div>

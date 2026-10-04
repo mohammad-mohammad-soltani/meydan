@@ -1,5 +1,6 @@
 "use client";
 
+import "../reference-explore.css";
 import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -262,19 +263,19 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
 
   return (
     <section
-      className="min-h-full bg-background pb-24 text-foreground"
+      className="reference-explore min-h-full bg-background pb-[110px] text-foreground"
       aria-label="کاوش و جست‌وجو"
     >
-      <header className="px-4 pb-1 pt-6">
-        <div className="flex items-start justify-between gap-3">
+      <header className="reference-explore-header">
+        <div className="reference-explore-identity flex items-start justify-between gap-3.5">
           <div>
-            <h1 className="text-[28px] font-black leading-tight text-foreground">کاوش</h1>
-            <p className="mt-1.5 text-xs leading-6 text-muted-foreground">میان روایت‌ها، میدان‌ها، کاربران و محتوای منتشرشده بگردید.</p>
+            <h1 className="text-[30px] lg:text-[34px] font-extrabold leading-tight text-foreground">کاوش</h1>
+            <p className="mt-1.5 text-[13px] leading-[1.9] text-muted-foreground">میان روایت‌ها، میدان‌ها، کاربران و محتوای منتشرشده بگردید.</p>
           </div>
-          <span aria-hidden="true" className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-brand text-brand-foreground shadow-card"><Globe2 className="h-7 w-7" /></span>
+          <span aria-hidden="true" className="reference-explore-emblem grid h-[54px] w-[54px] shrink-0 place-items-center rounded-[18px] text-white"><Globe2 className="h-7 w-7" /></span>
         </div>
 
-        <label className="mt-5 flex min-h-[54px] items-center gap-3 rounded-full border border-border bg-surface-muted px-5 text-icon-muted ring-1 ring-transparent transition focus-within:bg-surface focus-within:ring-ring">
+        <label className="reference-explore-search flex h-[54px] items-center gap-2.5 rounded-full border border-border bg-surface-muted px-[18px] text-icon-muted transition">
           <Search className="h-5 w-5 shrink-0" />
           <input
             ref={inputRef}
@@ -285,7 +286,7 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
             autoComplete="off"
             placeholder="جست‌وجوی روایت، میدان، محتوا و کاربر…"
             aria-label="جست‌وجو در میدان"
-            className="h-11 min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-placeholder"
+            className="h-11 min-w-0 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-placeholder"
             dir="rtl"
           />
           {query ? (
@@ -296,7 +297,7 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
         </label>
 
         {hasQuery ? (
-          <div className="no-scrollbar -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4 pb-2.5" dir="rtl">
+          <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto px-[18px] pb-2.5" dir="rtl">
             {filters.map((filter) => {
               const Icon = filter.icon;
               const active = activeFilter === filter.id;
@@ -315,17 +316,17 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
             })}
           </div>
         ) : (
-          <nav className="-mx-4 mt-4 grid grid-cols-4 border-b border-divider" aria-label="بخش‌های کاوش">
+          <nav className="reference-explore-tabs grid grid-cols-4 border-b border-divider" aria-label="بخش‌های کاوش">
             {TABS.map((entry) => (
               <button
                 key={entry.id}
                 type="button"
                 aria-current={tab === entry.id ? "page" : undefined}
                 onClick={() => setTab(entry.id)}
-                className={`relative py-3.5 text-sm font-black transition-colors ${tab === entry.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                className={`relative h-[50px] text-sm font-bold transition-colors ${tab === entry.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {entry.label}
-                <span aria-hidden="true" className={`absolute inset-x-[24%] bottom-0 h-[3px] rounded-full bg-brand transition-opacity ${tab === entry.id ? "opacity-100" : "opacity-0"}`} />
+                <span aria-hidden="true" className={`absolute inset-x-[25%] bottom-0 h-[3px] rounded-full bg-brand transition-opacity ${tab === entry.id ? "opacity-100" : "opacity-0"}`} />
               </button>
             ))}
           </nav>
@@ -357,13 +358,13 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
 
           {searchStatus === "ready" && !results.length ? (
             <div className="mx-auto flex max-w-sm flex-col items-center px-6 py-16 text-center">
-              <span className="grid h-14 w-14 place-items-center rounded-full bg-surface-muted text-icon-muted">
+              <span className="grid h-[76px] w-[76px] place-items-center rounded-full border border-border bg-surface-muted text-icon-muted">
                 <SearchX className="h-6 w-6" />
               </span>
-              <h2 className="mt-4 text-sm font-black text-foreground">
+              <h2 className="mt-4 text-base font-extrabold text-foreground">
                 نتیجه‌ای پیدا نشد
               </h2>
-              <p className="mt-2 text-[11px] leading-6 text-muted-foreground">
+              <p className="mt-2 text-[13px] leading-[1.9] text-muted-foreground">
                 عبارت کوتاه‌تر یا نوع دیگری از نتیجه را امتحان کنید.
               </p>
             </div>
@@ -374,10 +375,10 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
               <span className="grid h-14 w-14 place-items-center rounded-full bg-danger-surface text-danger">
                 <SearchX className="h-6 w-6" />
               </span>
-              <h2 className="mt-4 text-sm font-black text-foreground">
+              <h2 className="mt-4 text-base font-extrabold text-foreground">
                 جست‌وجو در دسترس نیست
               </h2>
-              <p className="mt-2 text-[11px] leading-6 text-muted-foreground">
+              <p className="mt-2 text-[13px] leading-[1.9] text-muted-foreground">
                 {searchError || "ارتباط با سرویس جست‌وجو برقرار نشد."}
               </p>
               <button

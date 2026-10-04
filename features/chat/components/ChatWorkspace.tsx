@@ -7,7 +7,7 @@ import { useChat } from "../hooks/useChat";
 import { ChatSidebar, type Selected } from "./ChatSidebar";
 import { ConversationView } from "./ConversationView";
 
-const DESKTOP = "(min-width: 821px)";
+const DESKTOP = "(min-width: 1024px)";
 const subscribe = (cb: () => void) => {
   const mq = window.matchMedia(DESKTOP);
   mq.addEventListener("change", cb);
@@ -31,7 +31,7 @@ function parse(pathname: string): Selected {
 
 /**
  * Two-pane chat: one list (direct chats + work groups) on the right, the open room on the left.
- * Below 820px a single pane shows at a time (`room-open` swaps list ↔ room).
+ * Below 1024px a single pane shows at a time (`room-open` swaps list ↔ room).
  */
 export function ChatWorkspace({ children }: { children: ReactNode }) {
   const pathname = usePathname();

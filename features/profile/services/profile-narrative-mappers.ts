@@ -233,7 +233,7 @@ export function mapNarrativePost(
 
     city: identity.location,
 
-    badge: item.tags?.[0] || "روایت میدان",
+    badge: item.tags?.[0] || "روایت",
 
     title: item.author?.display_name || identity.name,
 

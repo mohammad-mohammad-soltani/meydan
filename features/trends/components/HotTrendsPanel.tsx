@@ -52,17 +52,17 @@ export function HotTrendsPanel() {
     <section
       aria-labelledby="hot-trends-title"
       aria-busy={status === "loading"}
-      className="rounded-3xl border border-border bg-surface p-4 text-xs text-card-foreground"
+      className="rounded-3xl border border-[var(--rail-card-border)] bg-[var(--rail-card)] p-5 text-xs text-card-foreground"
     >
-      <div className="flex items-center justify-between gap-2 border-b border-divider pb-3">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--rail-card-divider)] pb-3">
         <h2 id="hot-trends-title" className="flex items-center gap-1.5 font-black text-foreground">
           <TrendingUp aria-hidden="true" className="h-4 w-4 shrink-0 text-icon" />
           ترندهای داغ میادین
         </h2>
-        <span className="flex shrink-0 items-center gap-1 rounded-full border border-success-border bg-success-surface px-2 py-0.5 text-[10px] font-bold text-success">
+        <span className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[10px] font-bold leading-[15px] text-foreground">
           <span
             aria-hidden="true"
-            className="size-1.5 rounded-full bg-success motion-safe:animate-pulse"
+            className="size-1.5 rounded-full bg-muted-foreground motion-safe:animate-pulse"
           />
           زنده
         </span>
@@ -107,19 +107,19 @@ export function HotTrendsPanel() {
       ) : null}
 
       {status === "ready" && trends.length ? (
-        <ol className="mt-1">
+        <ol className="mt-3 space-y-2.5">
           {trends.map((trend) => (
             <li key={trend.id}>
               <Link
                 href={trend.href as Route}
                 title={trend.context}
-                className="-mx-1.5 flex items-center gap-2 rounded-control px-1.5 py-3 outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex w-full items-center justify-between gap-2 rounded-xl p-2 outline-none transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-black text-foreground">{trend.title}</span>
-                  <span className="mt-0.5 block text-[10px] text-muted-foreground">{trend.metric}</span>
+                  <span className="block truncate font-bold text-[var(--rail-title)]">{trend.title}</span>
+                  <span className="mt-0.5 block text-[10px] leading-[15px] text-[var(--rail-meta)]">{trend.metric}</span>
                 </span>
-                <ChevronLeft aria-hidden="true" className="h-4 w-4 shrink-0 text-icon-muted" />
+                <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--rail-meta)]" />
               </Link>
             </li>
           ))}

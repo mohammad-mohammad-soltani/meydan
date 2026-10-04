@@ -1,0 +1,31 @@
+.mini{position:absolute;z-index:50;left:12px;right:12px;bottom:76px;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:22px;background:var(--m-glass,var(--surface-glass));backdrop-filter:blur(18px);border:1px solid var(--m-line,var(--border));box-shadow:0 14px 34px -14px rgba(0,0,0,.6);color:var(--m-tx,var(--foreground));transition:transform .28s ease}
+.track{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.title{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:800;line-height:18px}
+.subtitle{display:flex;align-items:center;gap:8px;font-size:10.5px;line-height:15px;color:var(--m-mu,var(--muted-foreground));min-width:0}
+.artist{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.time{flex-shrink:0;white-space:nowrap;font-variant-numeric:tabular-nums}
+.controls{display:flex;align-items:center;gap:4px}
+.play{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--m-tx,var(--foreground));color:var(--m-bg,var(--background));flex-shrink:0}
+.close,.extra{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--m-soft,var(--surface-muted));color:var(--m-tx,var(--foreground));flex-shrink:0}
+.controls button:disabled{opacity:.4;cursor:not-allowed}
+.progress{height:7px;margin-top:2px}
+.progress [role="slider"]{height:7px}
+.progress [role="slider"]>span:first-child{height:3px;background:var(--m-line,var(--border))}
+.progress [role="slider"]>span:first-child>span{background:var(--m-tx,var(--foreground))}
+.error{font-size:10px;line-height:15px;color:var(--danger)}
+@media(max-width:430px){.queueControl{display:none}.subtitle{gap:4px}.time{font-size:9px}}
+@media(min-width:1024px){.mini{bottom:20px}}
+
+/* Full-screen player artwork: a moving gradient when a recording has no cover, and an equalizer over it. */
+.art{position:relative}
+.gradient{position:absolute;inset:0;background:linear-gradient(125deg,hsl(var(--h1) 78% 52%),hsl(var(--h2) 80% 34%),hsl(var(--h3) 85% 46%),hsl(var(--h1) 78% 52%));background-size:320% 320%;animation:npShift 11s ease-in-out infinite}
+.gradient::after{content:"";position:absolute;inset:-30%;background:radial-gradient(40% 40% at 28% 24%,rgba(255,255,255,.34),transparent 70%),radial-gradient(45% 45% at 78% 82%,rgba(0,0,0,.4),transparent 70%);animation:npDrift 14s ease-in-out infinite alternate}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.55))}
+.eq{position:absolute;left:14px;right:14px;bottom:14px;height:44%;display:flex;align-items:flex-end;justify-content:space-between;gap:3px;direction:ltr;pointer-events:none}
+.eq span{flex:1;min-width:2px;height:var(--base);border-radius:3px 3px 1px 1px;background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.45));transform-origin:bottom;animation:npEq var(--dur) ease-in-out var(--delay) infinite alternate;animation-play-state:paused;transition:opacity .3s;opacity:.55}
+.eq[data-playing="true"] span{animation-play-state:running;opacity:.95}
+@keyframes npEq{from{transform:scaleY(.18)}to{transform:scaleY(1)}}
+@keyframes npShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes npDrift{from{transform:translate3d(-6%,-4%,0) rotate(0deg)}to{transform:translate3d(8%,6%,0) rotate(24deg)}}
+@media(prefers-reduced-motion:reduce){.gradient,.gradient::after,.eq span{animation:none}.eq span{transform:scaleY(.6)}}
+.eq[data-live="true"] span{animation:none;transition:transform .08s linear;opacity:.95}

@@ -1,0 +1,22 @@
+.reference-explore-header { display:contents }
+.reference-explore-identity { position:relative;overflow:hidden;padding:22px 18px 8px }
+.reference-explore-identity::before { content:"";position:absolute;inset:-60px -20px auto auto;width:260px;height:200px;background:radial-gradient(closest-side,color-mix(in srgb,#e4152e 11%,transparent),transparent);pointer-events:none }
+.reference-explore-identity > * { position:relative }
+.reference-explore-emblem { background:linear-gradient(145deg,#f0243a,#b50d22);box-shadow:0 10px 26px color-mix(in srgb,#e4152e 38%,transparent) }
+.reference-explore-search { margin:12px 14px 14px }
+.reference-explore-search:focus-within { border-color:#e4152e;box-shadow:0 0 0 4px color-mix(in srgb,#e4152e 16%,transparent);color:var(--m-tx) }
+.reference-explore-tabs { position:sticky;top:0;z-index:15;background:var(--m-bg) }
+.reference-explore-sections > div { padding:22px 0 4px }
+.reference-explore-sections > div:last-child { padding:0 }
+.reference-explore-section-icon { background:color-mix(in srgb,#e4152e 10%,var(--m-bg));color:#e4152e;border:1px solid color-mix(in srgb,#e4152e 22%,transparent) }
+.reference-explore-tag-hot { background:color-mix(in srgb,#e4152e 6%,var(--m-bg));border-color:color-mix(in srgb,#e4152e 30%,transparent) }
+.reference-explore-tag-hot > svg { color:#e4152e }
+.reference-explore-tag > span b { font-size:14.5px;font-weight:700 }
+.reference-explore-tag > span small { font-size:11.5px }
+.reference-explore-speaker-callout { background:linear-gradient(135deg,#f0243a,#8f0a1c);color:#fff;box-shadow:0 14px 34px color-mix(in srgb,#e4152e 30%,transparent) }
+.reference-explore-speaker-callout:hover { filter:brightness(1.05) }
+.reference-explore-speaker-callout > span:nth-child(2) > small { color:rgba(255,255,255,.85);font-size:12.5px;line-height:1.8;margin-top:4px }
+.reference-explore-field > div:last-child { margin-top:10px }
+.reference-explore-follow[aria-pressed=true] { background:transparent;color:var(--m-tx) }
+.reference-explore-hot-row > button { height:38px;width:38px;flex-shrink:0 }
+.reference-explore [aria-label="میدان‌های فعال"] article small { font-size:12px }

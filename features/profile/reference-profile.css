@@ -1,0 +1,10 @@
+.reference-profile-controls { box-shadow:0 8px 24px -10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14);backdrop-filter:blur(18px) saturate(1.6) }
+.reference-profile-back { border-color:rgba(255,255,255,.2);background:rgba(18,18,18,.34);box-shadow:0 8px 24px -10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14);backdrop-filter:blur(18px) saturate(1.6) }
+.reference-profile-image-viewer { position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:rgba(8,8,10,.78);backdrop-filter:blur(18px);cursor:zoom-out }
+.reference-profile-image-close { position:absolute;top:18px;left:18px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.12) }
+.reference-profile-image-figure { display:flex;flex-direction:column;align-items:center;gap:16px;margin:0;max-height:94dvh }
+.reference-profile-image-frame { position:relative;width:auto;height:auto;border-radius:22px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.55);cursor:default }
+.reference-profile-image-figure:not(.round) .reference-profile-image-frame img { width:auto;height:auto;max-width:min(94vw,1100px);max-height:82vh }
+.reference-profile-image-figure.round .reference-profile-image-frame { width:min(84vw,460px);height:min(84vw,460px);border-radius:50%;border:3px solid rgba(255,255,255,.18) }
+.reference-profile-image-figure figcaption { color:#fff;font-weight:800;font-size:17px }
+@media(min-width:1024px) { .reference-follow-sheet { left:var(--col-l,0px);right:auto;width:var(--col-w,100vw);border-inline:1px solid var(--m-line) } }

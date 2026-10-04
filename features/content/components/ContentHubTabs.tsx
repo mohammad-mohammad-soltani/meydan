@@ -12,7 +12,7 @@ const TABS: Array<{ id: HubTab; label: string; href: string }> = [
 /** The three tabs of «بسته محتوا». Each is a link, so a tab survives refresh and sharing. */
 export function ContentHubTabs({ active }: { active: HubTab }) {
   return (
-    <nav aria-label="بخش‌های بسته محتوا" className="sticky top-0 z-20 grid grid-cols-3 border-b border-divider bg-surface-glass backdrop-blur-md">
+    <nav aria-label="بخش‌های بسته محتوا" className="sticky top-0 z-20 box-border grid h-[50px] grid-cols-3 border-b border-divider bg-background">
       {TABS.map((tab) => {
         const on = tab.id === active;
         return (
@@ -22,13 +22,18 @@ export function ContentHubTabs({ active }: { active: HubTab }) {
             replace
             scroll={false}
             aria-current={on ? "page" : undefined}
-            className={`relative py-3.5 text-center text-sm font-black transition-colors ${on ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            className={`relative flex h-[49px] items-center justify-center text-center text-sm font-bold transition-colors ${on ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
           >
             {tab.label}
-            <span aria-hidden="true" className={`absolute inset-x-[22%] bottom-0 h-[3px] rounded-full bg-brand transition-opacity ${on ? "opacity-100" : "opacity-0"}`} />
           </Link>
         );
       })}
+      {/* One underline that slides between the tabs (the strip reads right to left). */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 right-0 h-[3px] w-1/3 transition-transform duration-300 ease-out after:absolute after:inset-x-1/4 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-brand after:content-['']"
+        style={{ transform: `translateX(${-TABS.findIndex((tab) => tab.id === active) * 100}%)` }}
+      />
     </nav>
   );
 }

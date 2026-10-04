@@ -1,0 +1,4476 @@
+{
+  "results": [
+    {
+      "kind": "reference",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "filename": "reference-home-light-390x844.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 4314.65625,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 780,
+          "width": 375,
+          "height": 64,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0.06) oklch(0.928 0.006 264.531) oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 373,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 390,
+        "bodyWidth": 375,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "light",
+      "width": 430,
+      "height": 932,
+      "filename": "reference-home-light-430x932.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 415,
+          "height": 4395.828125,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 868,
+          "width": 415,
+          "height": 64,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0.06) oklch(0.928 0.006 264.531) oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 413,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 430,
+        "bodyWidth": 415,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "light",
+      "width": 768,
+      "height": 1024,
+      "filename": "reference-home-light-768x1024.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 753,
+          "height": 5135.265625,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 960,
+          "width": 753,
+          "height": 64,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0.06) oklch(0.928 0.006 264.531) oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 751,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 768,
+        "bodyWidth": 753,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "light",
+      "width": 1280,
+      "height": 800,
+      "filename": "reference-home-light-1280x800.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 330,
+          "y": 0,
+          "width": 635,
+          "height": 5079.28125,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 965,
+          "y": 0,
+          "width": 280,
+          "height": 800,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 20,
+          "y": 0,
+          "width": 310,
+          "height": 800,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0.06) oklch(0.928 0.006 264.531) oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 1280,
+        "bodyWidth": 1265,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "light",
+      "width": 1440,
+      "height": 900,
+      "filename": "reference-home-light-1440x900.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 410,
+          "y": 0,
+          "width": 635,
+          "height": 5079.28125,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 1045,
+          "y": 0,
+          "width": 280,
+          "height": 900,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 100,
+          "y": 0,
+          "width": 310,
+          "height": 900,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.278 0.033 256.848)",
+          "border": "oklch(0.928 0.006 264.531)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0.06) oklch(0.928 0.006 264.531) oklch(0.928 0.006 264.531)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "oklch(0.21 0.034 264.665)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 1440,
+        "bodyWidth": 1425,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "filename": "reference-home-dark-390x844.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 4313.65625,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 780,
+          "width": 375,
+          "height": 64,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 373,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 390,
+        "bodyWidth": 375,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "dark",
+      "width": 430,
+      "height": 932,
+      "filename": "reference-home-dark-430x932.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 415,
+          "height": 4394.828125,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 868,
+          "width": 415,
+          "height": 64,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 413,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 430,
+        "bodyWidth": 415,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "dark",
+      "width": 768,
+      "height": 1024,
+      "filename": "reference-home-dark-768x1024.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 753,
+          "height": 5134.265625,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 960,
+          "width": 753,
+          "height": 64,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 751,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 768,
+        "bodyWidth": 753,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "dark",
+      "width": 1280,
+      "height": 800,
+      "filename": "reference-home-dark-1280x800.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 330,
+          "y": 0,
+          "width": 635,
+          "height": 5078.28125,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 965,
+          "y": 0,
+          "width": 280,
+          "height": 800,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 20,
+          "y": 0,
+          "width": 310,
+          "height": 800,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 1280,
+        "bodyWidth": 1265,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "filename": "reference-home-dark-1440x900.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 410,
+          "y": 0,
+          "width": 635,
+          "height": 5078.28125,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 1045,
+          "y": 0,
+          "width": 280,
+          "height": 900,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 100,
+          "y": 0,
+          "width": 310,
+          "height": 900,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 1440,
+        "bodyWidth": 1425,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "black",
+      "width": 390,
+      "height": 844,
+      "filename": "reference-home-black-390x844.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 4313.65625,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 780,
+          "width": 375,
+          "height": 64,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 373,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 390,
+        "bodyWidth": 375,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "black",
+      "width": 430,
+      "height": 932,
+      "filename": "reference-home-black-430x932.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 415,
+          "height": 4394.828125,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 868,
+          "width": 415,
+          "height": 64,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 413,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 430,
+        "bodyWidth": 415,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "black",
+      "width": 768,
+      "height": 1024,
+      "filename": "reference-home-black-768x1024.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 753,
+          "height": 5134.265625,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 960,
+          "width": 753,
+          "height": 64,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 751,
+          "height": 57,
+          "background": "rgba(0, 0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 768,
+        "bodyWidth": 753,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "black",
+      "width": 1280,
+      "height": 800,
+      "filename": "reference-home-black-1280x800.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 330,
+          "y": 0,
+          "width": 635,
+          "height": 5078.28125,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 965,
+          "y": 0,
+          "width": 280,
+          "height": 800,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 20,
+          "y": 0,
+          "width": 310,
+          "height": 800,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 1280,
+        "bodyWidth": 1265,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "reference",
+      "theme": "black",
+      "width": 1440,
+      "height": 900,
+      "filename": "reference-home-black-1440x900.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(11, 11, 11)",
+          "soft": "rgb(24, 24, 24)",
+          "line": "rgb(39, 39, 39)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 410,
+          "y": 0,
+          "width": 635,
+          "height": 5078.28125,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 1045,
+          "y": 0,
+          "width": 280,
+          "height": 900,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 100,
+          "y": 0,
+          "width": 310,
+          "height": 900,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.928 0.006 264.531)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgb(27, 27, 27) rgb(39, 39, 39) rgb(39, 39, 39)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "oklch(0.967 0.003 264.542)",
+          "border": "rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "documentWidth": 1440,
+        "bodyWidth": 1425,
+        "font": "Vazirmatn, -apple-system, BlinkMacSystemFont, Tahoma, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "filename": "app-home-light-390x844.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 844,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 780,
+          "width": 373,
+          "height": 64,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgba(0, 0, 0, 0.06) rgb(16, 16, 16) rgb(16, 16, 16)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 373,
+          "height": 57,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236) rgb(232, 232, 236) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 390,
+        "bodyWidth": 375,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "light",
+      "width": 430,
+      "height": 932,
+      "filename": "app-home-light-430x932.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 415,
+          "height": 932,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 868,
+          "width": 413,
+          "height": 64,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgba(0, 0, 0, 0.06) rgb(16, 16, 16) rgb(16, 16, 16)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 413,
+          "height": 57,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236) rgb(232, 232, 236) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 430,
+        "bodyWidth": 415,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "light",
+      "width": 768,
+      "height": 1024,
+      "filename": "app-home-light-768x1024.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 753,
+          "height": 1024,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 960,
+          "width": 751,
+          "height": 64,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgba(0, 0, 0, 0.06) rgb(16, 16, 16) rgb(16, 16, 16)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 751,
+          "height": 57,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236) rgb(232, 232, 236) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 768,
+        "bodyWidth": 753,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "light",
+      "width": 1280,
+      "height": 800,
+      "filename": "app-home-light-1280x800.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 330,
+          "y": 0,
+          "width": 635,
+          "height": 800,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 965,
+          "y": 0,
+          "width": 280,
+          "height": 800,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 20,
+          "y": 0,
+          "width": 310,
+          "height": 800,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgba(0, 0, 0, 0.06) rgb(16, 16, 16) rgb(16, 16, 16)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236) rgb(232, 232, 236) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 1280,
+        "bodyWidth": 1265,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "light",
+      "width": 1440,
+      "height": 900,
+      "filename": "app-home-light-1440x900.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(255, 255, 255)",
+          "soft": "rgb(244, 244, 246)",
+          "line": "rgb(232, 232, 236)",
+          "tx": "rgb(16, 16, 16)",
+          "mu": "rgb(128, 131, 143)",
+          "glass": "rgba(255, 255, 255, 0.72)"
+        },
+        "center": {
+          "x": 410,
+          "y": 0,
+          "width": 635,
+          "height": 900,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 1045,
+          "y": 0,
+          "width": 280,
+          "height": 900,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 100,
+          "y": 0,
+          "width": 310,
+          "height": 900,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "color(srgb 1 1 1 / 0.9)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgba(0, 0, 0, 0.06) rgb(16, 16, 16) rgb(16, 16, 16)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.05) 0px -1px 0px 0px",
+          "blur": "blur(22px) saturate(1.3)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(255, 255, 255)",
+          "color": "rgb(16, 16, 16)",
+          "border": "rgb(232, 232, 236) rgb(232, 232, 236) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 1440,
+        "bodyWidth": 1425,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "filename": "app-home-dark-390x844.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(28, 28, 28)",
+          "soft": "rgb(36, 36, 36)",
+          "line": "rgb(43, 43, 43)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 844,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 780,
+          "width": 373,
+          "height": 64,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 373,
+          "height": 57,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43) rgb(43, 43, 43) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 390,
+        "bodyWidth": 375,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "dark",
+      "width": 430,
+      "height": 932,
+      "filename": "app-home-dark-430x932.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(28, 28, 28)",
+          "soft": "rgb(36, 36, 36)",
+          "line": "rgb(43, 43, 43)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 415,
+          "height": 932,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 868,
+          "width": 413,
+          "height": 64,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 413,
+          "height": 57,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43) rgb(43, 43, 43) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 430,
+        "bodyWidth": 415,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "dark",
+      "width": 768,
+      "height": 1024,
+      "filename": "app-home-dark-768x1024.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(28, 28, 28)",
+          "soft": "rgb(36, 36, 36)",
+          "line": "rgb(43, 43, 43)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 753,
+          "height": 1024,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 960,
+          "width": 751,
+          "height": 64,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 751,
+          "height": 57,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43) rgb(43, 43, 43) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 768,
+        "bodyWidth": 753,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "dark",
+      "width": 1280,
+      "height": 800,
+      "filename": "app-home-dark-1280x800.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(28, 28, 28)",
+          "soft": "rgb(36, 36, 36)",
+          "line": "rgb(43, 43, 43)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 330,
+          "y": 0,
+          "width": 635,
+          "height": 800,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 965,
+          "y": 0,
+          "width": 280,
+          "height": 800,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 20,
+          "y": 0,
+          "width": 310,
+          "height": 800,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43) rgb(43, 43, 43) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 1280,
+        "bodyWidth": 1265,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "filename": "app-home-dark-1440x900.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(28, 28, 28)",
+          "soft": "rgb(36, 36, 36)",
+          "line": "rgb(43, 43, 43)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 410,
+          "y": 0,
+          "width": 635,
+          "height": 900,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 1045,
+          "y": 0,
+          "width": 280,
+          "height": 900,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 100,
+          "y": 0,
+          "width": 310,
+          "height": 900,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "color(srgb 0.109804 0.109804 0.109804 / 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "color(srgb 0.960784 0.960784 0.968627 / 0.09) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(28, 28, 28)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(43, 43, 43) rgb(43, 43, 43) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 1440,
+        "bodyWidth": 1425,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "black",
+      "width": 390,
+      "height": 844,
+      "filename": "app-home-black-390x844.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(0, 0, 0)",
+          "soft": "rgb(11, 11, 11)",
+          "line": "rgb(27, 27, 27)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 844,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 780,
+          "width": 373,
+          "height": 64,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 373,
+          "height": 57,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(27, 27, 27) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 390,
+        "bodyWidth": 375,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "black",
+      "width": 430,
+      "height": 932,
+      "filename": "app-home-black-430x932.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(0, 0, 0)",
+          "soft": "rgb(11, 11, 11)",
+          "line": "rgb(27, 27, 27)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 415,
+          "height": 932,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 868,
+          "width": 413,
+          "height": 64,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 413,
+          "height": 57,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(27, 27, 27) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 430,
+        "bodyWidth": 415,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "black",
+      "width": 768,
+      "height": 1024,
+      "filename": "app-home-black-768x1024.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(0, 0, 0)",
+          "soft": "rgb(11, 11, 11)",
+          "line": "rgb(27, 27, 27)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 0,
+          "y": 0,
+          "width": 753,
+          "height": 1024,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 1,
+          "y": 960,
+          "width": 751,
+          "height": 64,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 1,
+          "y": 0,
+          "width": 751,
+          "height": 57,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(27, 27, 27) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 768,
+        "bodyWidth": 753,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "black",
+      "width": 1280,
+      "height": 800,
+      "filename": "app-home-black-1280x800.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(0, 0, 0)",
+          "soft": "rgb(11, 11, 11)",
+          "line": "rgb(27, 27, 27)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 330,
+          "y": 0,
+          "width": 635,
+          "height": 800,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 965,
+          "y": 0,
+          "width": 280,
+          "height": 800,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 20,
+          "y": 0,
+          "width": 310,
+          "height": 800,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(27, 27, 27) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 1280,
+        "bodyWidth": 1265,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    },
+    {
+      "kind": "app",
+      "theme": "black",
+      "width": 1440,
+      "height": 900,
+      "filename": "app-home-black-1440x900.png",
+      "computed": {
+        "palette": {
+          "bg": "rgb(0, 0, 0)",
+          "soft": "rgb(11, 11, 11)",
+          "line": "rgb(27, 27, 27)",
+          "tx": "rgb(245, 245, 247)",
+          "mu": "rgb(138, 141, 152)",
+          "glass": "rgba(11, 11, 14, 0.6)"
+        },
+        "center": {
+          "x": 410,
+          "y": 0,
+          "width": 635,
+          "height": 900,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+          "blur": "none"
+        },
+        "navigation": {
+          "x": 1045,
+          "y": 0,
+          "width": 280,
+          "height": 900,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px 20px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "trends": {
+          "x": 100,
+          "y": 0,
+          "width": 310,
+          "height": 900,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27)",
+          "padding": "16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "none"
+        },
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgba(0, 0, 0, 0.88)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(245, 245, 247) rgb(245, 245, 247)",
+          "padding": "0px",
+          "radius": "0px",
+          "shadow": "rgba(0, 0, 0, 0.45) 0px -10px 28px -14px, color(srgb 0.960784 0.960784 0.968627 / 0.07) 0px 1px 0px 0px inset",
+          "blur": "blur(24px) saturate(1.7)"
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "background": "rgb(0, 0, 0)",
+          "color": "rgb(245, 245, 247)",
+          "border": "rgb(27, 27, 27) rgb(27, 27, 27) rgba(0, 0, 0, 0)",
+          "padding": "10px 16px",
+          "radius": "0px",
+          "shadow": "none",
+          "blur": "blur(12px)"
+        },
+        "documentWidth": 1440,
+        "bodyWidth": 1425,
+        "font": "iranSans, \"iranSans Fallback\", sans-serif, ui-sans-serif, system-ui, sans-serif"
+      },
+      "errors": []
+    }
+  ],
+  "comparisons": [
+    {
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "palette": {
+        "bg": {
+          "reference": "rgb(255, 255, 255)",
+          "app": "rgb(255, 255, 255)",
+          "equal": true
+        },
+        "soft": {
+          "reference": "rgb(244, 244, 246)",
+          "app": "rgb(244, 244, 246)",
+          "equal": true
+        },
+        "line": {
+          "reference": "rgb(232, 232, 236)",
+          "app": "rgb(232, 232, 236)",
+          "equal": true
+        },
+        "tx": {
+          "reference": "rgb(16, 16, 16)",
+          "app": "rgb(16, 16, 16)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(128, 131, 143)",
+          "app": "rgb(128, 131, 143)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(255, 255, 255, 0.72)",
+          "app": "rgba(255, 255, 255, 0.72)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 4314.65625,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.21 0.034 264.665)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 844,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "light",
+      "width": 430,
+      "height": 932,
+      "palette": {
+        "bg": {
+          "reference": "rgb(255, 255, 255)",
+          "app": "rgb(255, 255, 255)",
+          "equal": true
+        },
+        "soft": {
+          "reference": "rgb(244, 244, 246)",
+          "app": "rgb(244, 244, 246)",
+          "equal": true
+        },
+        "line": {
+          "reference": "rgb(232, 232, 236)",
+          "app": "rgb(232, 232, 236)",
+          "equal": true
+        },
+        "tx": {
+          "reference": "rgb(16, 16, 16)",
+          "app": "rgb(16, 16, 16)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(128, 131, 143)",
+          "app": "rgb(128, 131, 143)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(255, 255, 255, 0.72)",
+          "app": "rgba(255, 255, 255, 0.72)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 415,
+            "height": 4395.828125,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.21 0.034 264.665)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 415,
+            "height": 932,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "height": 1024,
+      "palette": {
+        "bg": {
+          "reference": "rgb(255, 255, 255)",
+          "app": "rgb(255, 255, 255)",
+          "equal": true
+        },
+        "soft": {
+          "reference": "rgb(244, 244, 246)",
+          "app": "rgb(244, 244, 246)",
+          "equal": true
+        },
+        "line": {
+          "reference": "rgb(232, 232, 236)",
+          "app": "rgb(232, 232, 236)",
+          "equal": true
+        },
+        "tx": {
+          "reference": "rgb(16, 16, 16)",
+          "app": "rgb(16, 16, 16)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(128, 131, 143)",
+          "app": "rgb(128, 131, 143)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(255, 255, 255, 0.72)",
+          "app": "rgba(255, 255, 255, 0.72)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 753,
+            "height": 5135.265625,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.21 0.034 264.665)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 753,
+            "height": 1024,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "light",
+      "width": 1280,
+      "height": 800,
+      "palette": {
+        "bg": {
+          "reference": "rgb(255, 255, 255)",
+          "app": "rgb(255, 255, 255)",
+          "equal": true
+        },
+        "soft": {
+          "reference": "rgb(244, 244, 246)",
+          "app": "rgb(244, 244, 246)",
+          "equal": true
+        },
+        "line": {
+          "reference": "rgb(232, 232, 236)",
+          "app": "rgb(232, 232, 236)",
+          "equal": true
+        },
+        "tx": {
+          "reference": "rgb(16, 16, 16)",
+          "app": "rgb(16, 16, 16)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(128, 131, 143)",
+          "app": "rgb(128, 131, 143)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(255, 255, 255, 0.72)",
+          "app": "rgba(255, 255, 255, 0.72)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 330,
+            "y": 0,
+            "width": 635,
+            "height": 5079.28125,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.21 0.034 264.665)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 330,
+            "y": 0,
+            "width": 635,
+            "height": 800,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 965,
+            "y": 0,
+            "width": 280,
+            "height": 800,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 965,
+            "y": 0,
+            "width": 280,
+            "height": 800,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 20,
+            "y": 0,
+            "width": 310,
+            "height": 800,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 20,
+            "y": 0,
+            "width": 310,
+            "height": 800,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "height": 900,
+      "palette": {
+        "bg": {
+          "reference": "rgb(255, 255, 255)",
+          "app": "rgb(255, 255, 255)",
+          "equal": true
+        },
+        "soft": {
+          "reference": "rgb(244, 244, 246)",
+          "app": "rgb(244, 244, 246)",
+          "equal": true
+        },
+        "line": {
+          "reference": "rgb(232, 232, 236)",
+          "app": "rgb(232, 232, 236)",
+          "equal": true
+        },
+        "tx": {
+          "reference": "rgb(16, 16, 16)",
+          "app": "rgb(16, 16, 16)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(128, 131, 143)",
+          "app": "rgb(128, 131, 143)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(255, 255, 255, 0.72)",
+          "app": "rgba(255, 255, 255, 0.72)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 410,
+            "y": 0,
+            "width": 635,
+            "height": 5079.28125,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.21 0.034 264.665)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 410,
+            "y": 0,
+            "width": 635,
+            "height": 900,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 1045,
+            "y": 0,
+            "width": 280,
+            "height": 900,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 1045,
+            "y": 0,
+            "width": 280,
+            "height": 900,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 100,
+            "y": 0,
+            "width": 310,
+            "height": 900,
+            "background": "rgb(255, 255, 255)",
+            "color": "oklch(0.278 0.033 256.848)",
+            "border": "oklch(0.928 0.006 264.531)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 100,
+            "y": 0,
+            "width": 310,
+            "height": 900,
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(16, 16, 16)",
+            "border": "rgb(232, 232, 236)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(28, 28, 28)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(36, 36, 36)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(43, 43, 43)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 4313.65625,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 844,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 430,
+      "height": 932,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(28, 28, 28)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(36, 36, 36)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(43, 43, 43)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 415,
+            "height": 4394.828125,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 415,
+            "height": 932,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "height": 1024,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(28, 28, 28)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(36, 36, 36)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(43, 43, 43)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 753,
+            "height": 5134.265625,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 753,
+            "height": 1024,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 1280,
+      "height": 800,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(28, 28, 28)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(36, 36, 36)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(43, 43, 43)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 330,
+            "y": 0,
+            "width": 635,
+            "height": 5078.28125,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 330,
+            "y": 0,
+            "width": 635,
+            "height": 800,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 965,
+            "y": 0,
+            "width": 280,
+            "height": 800,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 965,
+            "y": 0,
+            "width": 280,
+            "height": 800,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 20,
+            "y": 0,
+            "width": 310,
+            "height": 800,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 20,
+            "y": 0,
+            "width": 310,
+            "height": 800,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(28, 28, 28)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(36, 36, 36)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(43, 43, 43)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 410,
+            "y": 0,
+            "width": 635,
+            "height": 5078.28125,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 410,
+            "y": 0,
+            "width": 635,
+            "height": 900,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 1045,
+            "y": 0,
+            "width": 280,
+            "height": 900,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 1045,
+            "y": 0,
+            "width": 280,
+            "height": 900,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 100,
+            "y": 0,
+            "width": 310,
+            "height": 900,
+            "background": "rgb(28, 28, 28)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 100,
+            "y": 0,
+            "width": 310,
+            "height": 900,
+            "background": "rgb(28, 28, 28)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "black",
+      "width": 390,
+      "height": 844,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(0, 0, 0)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(11, 11, 11)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(27, 27, 27)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 4313.65625,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 844,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "black",
+      "width": 430,
+      "height": 932,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(0, 0, 0)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(11, 11, 11)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(27, 27, 27)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 415,
+            "height": 4394.828125,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 415,
+            "height": 932,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "black",
+      "width": 768,
+      "height": 1024,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(0, 0, 0)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(11, 11, 11)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(27, 27, 27)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 753,
+            "height": 5134.265625,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 753,
+            "height": 1024,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "black",
+      "width": 1280,
+      "height": 800,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(0, 0, 0)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(11, 11, 11)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(27, 27, 27)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 330,
+            "y": 0,
+            "width": 635,
+            "height": 5078.28125,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 330,
+            "y": 0,
+            "width": 635,
+            "height": 800,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 965,
+            "y": 0,
+            "width": 280,
+            "height": 800,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 965,
+            "y": 0,
+            "width": 280,
+            "height": 800,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 20,
+            "y": 0,
+            "width": 310,
+            "height": 800,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 20,
+            "y": 0,
+            "width": 310,
+            "height": 800,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    },
+    {
+      "theme": "black",
+      "width": 1440,
+      "height": 900,
+      "palette": {
+        "bg": {
+          "reference": "rgb(11, 11, 11)",
+          "app": "rgb(0, 0, 0)",
+          "equal": false
+        },
+        "soft": {
+          "reference": "rgb(24, 24, 24)",
+          "app": "rgb(11, 11, 11)",
+          "equal": false
+        },
+        "line": {
+          "reference": "rgb(39, 39, 39)",
+          "app": "rgb(27, 27, 27)",
+          "equal": false
+        },
+        "tx": {
+          "reference": "rgb(245, 245, 247)",
+          "app": "rgb(245, 245, 247)",
+          "equal": true
+        },
+        "mu": {
+          "reference": "rgb(138, 141, 152)",
+          "app": "rgb(138, 141, 152)",
+          "equal": true
+        },
+        "glass": {
+          "reference": "rgba(11, 11, 14, 0.6)",
+          "app": "rgba(11, 11, 14, 0.6)",
+          "equal": true
+        }
+      },
+      "geometry": {
+        "center": {
+          "reference": {
+            "x": 410,
+            "y": 0,
+            "width": 635,
+            "height": 5078.28125,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.967 0.003 264.542)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "app": {
+            "x": 410,
+            "y": 0,
+            "width": 635,
+            "height": 900,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "0px",
+            "radius": "0px",
+            "shadow": "rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "navigation": {
+          "reference": {
+            "x": 1045,
+            "y": 0,
+            "width": 280,
+            "height": 900,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 1045,
+            "y": 0,
+            "width": 280,
+            "height": 900,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px 20px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        },
+        "trends": {
+          "reference": {
+            "x": 100,
+            "y": 0,
+            "width": 310,
+            "height": 900,
+            "background": "rgb(0, 0, 0)",
+            "color": "oklch(0.928 0.006 264.531)",
+            "border": "rgb(43, 43, 43)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "app": {
+            "x": 100,
+            "y": 0,
+            "width": 310,
+            "height": 900,
+            "background": "rgb(0, 0, 0)",
+            "color": "rgb(245, 245, 247)",
+            "border": "rgb(27, 27, 27)",
+            "padding": "16px",
+            "radius": "0px",
+            "shadow": "none",
+            "blur": "none"
+          },
+          "horizontalEqual": true
+        }
+      }
+    }
+  ]
+}

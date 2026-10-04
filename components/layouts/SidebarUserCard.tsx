@@ -82,7 +82,7 @@ export function SidebarUserCard({ isAuthenticated }: { isAuthenticated: boolean 
   }
 
   const rowClass =
-    "flex h-[3.375rem] items-center gap-2 rounded-2xl border border-border bg-surface p-2 text-card-foreground";
+    "flex h-[3.375rem] items-center gap-2 rounded-2xl border border-[var(--sidebar-card-border)] bg-[var(--sidebar-card)] p-2 text-card-foreground";
 
   if (!isAuthenticated) {
     return (

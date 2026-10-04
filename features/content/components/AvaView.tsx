@@ -1,39 +1,59 @@
 "use client";
 
+import "../reference-content.css";
+import "../ava.css";
 import Link from "next/link";
 import type { Route } from "next";
-import { LoaderCircle, Pause, Play, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { LoaderCircle } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useAudio } from "@/features/audio/AudioProvider";
+import { probeCors } from "@/features/audio/audio-analysis";
+import { NowPlayingSheet } from "@/features/audio/NowPlayingSheet";
 import type { AudioTrack } from "@/features/audio/types";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
-import { hueOf, relativeFa } from "@/lib/relative-fa";
-import { getAudioHub, type AudioHub, type HubProducer } from "../services/hub.service";
+import { relativeFa } from "@/lib/relative-fa";
+import { getAudioHub, getAudioList, type AudioHub, type HubProducer } from "../services/hub.service";
 import type { ContentItem } from "../types";
 
 const faNumber = new Intl.NumberFormat("fa-IR");
+/** The reference's five chips; each one scrolls to its shelf. */
 const CHIPS = [
-  { id: "all", label: "همه" },
-  { id: "featured", label: "ویژه‌ها" },
-  { id: "series", label: "سلسله‌ها" },
-  { id: "faces", label: "چهره‌ها" },
-  { id: "squares", label: "میادین" },
-  { id: "latest", label: "آخرین صوت‌ها" },
+  { id: "all", label: "همه", target: null },
+  { id: "featured", label: "ویژه‌ها", target: "av-s1" },
+  { id: "faces", label: "چهره‌ها", target: "av-s2" },
+  { id: "squares", label: "میادین", target: "av-s3" },
+  { id: "latest", label: "آخرین صوت‌ها", target: "av-s4" },
 ] as const;
-type Chip = (typeof CHIPS)[number]["id"];
 
-const tint = (seed: string, from = 52, to = 22) => `linear-gradient(145deg,hsl(${hueOf(seed)} 60% ${from}%),hsl(${(hueOf(seed) + 40) % 360} 55% ${to}%))`;
+const initials = (name: string) => {
+  const words = name.replace(/[()؛.…]/g, "").trim().split(/\s+/);
+  return (words[0] ?? "").charAt(0) + (words[1] ? "\u200c" + words[1].charAt(0) : "");
+};
+const hueOf = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return hash % 360;
+};
 
-/** The reference's monochrome cards: three greys, picked per title. */
-const GREYS = ["linear-gradient(135deg,#484848,#0e0e0e)", "linear-gradient(135deg,#242424,#050505)", "linear-gradient(135deg,#6a6a72,#2b2b2b)"];
+/** The reference's play and chevron glyphs. */
+const PlayGlyph = ({ size, pause = false }: { size: number; pause?: boolean }) => (
+  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {pause ? <path d="M8 5h3v14H8zM13 5h3v14h-3z" fill="currentColor" stroke="none" /> : <path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none" />}
+  </svg>
+);
+const Chevron = ({ size = 13 }: { size?: number }) => (
+  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 6-6 6 6 6" /></svg>
+);
 
 function trackOf(item: ContentItem): AudioTrack | null {
-  if (!item.media.audioSrc) return null;
-  return { id: `ava:${item.apiId}`, title: item.title, artist: item.author, cover: item.coverUrl, url: item.media.audioSrc, sourceHref: `/content/${item.id}` };
+  // A music video that has no separate audio plays through its video file, sound only.
+  const url = item.media.audioSrc ?? item.media.videoSrc;
+  if (!url) return null;
+  return { id: `ava:${item.apiId}`, title: item.title, artist: item.author, cover: item.coverUrl ?? item.media.coverImage, url, sourceHref: item.href ?? `/content/${item.id}` };
 }
 
 /** One play/pause control shared by every shelf; the bottom player owns playback. */
-function PlayButton({ item, queue, className = "" }: { item: ContentItem; queue: ContentItem[]; className?: string }) {
+function PlayButton({ item, queue, size, className = "" }: { item: ContentItem; queue: ContentItem[]; size: number; className?: string }) {
   const { currentTrack, isPlaying, playTrack, toggle } = useAudio();
   const track = trackOf(item);
   if (!track) return null;
@@ -42,6 +62,7 @@ function PlayButton({ item, queue, className = "" }: { item: ContentItem; queue:
   return (
     <button
       type="button"
+      className={`pl ${className}`}
       aria-label={playing ? `توقف ${item.title}` : `پخش ${item.title}`}
       onClick={(event) => {
         event.preventDefault();
@@ -49,91 +70,184 @@ function PlayButton({ item, queue, className = "" }: { item: ContentItem; queue:
         if (current) void toggle();
         else void playTrack(track, { queue: queue.map(trackOf).filter((value): value is AudioTrack => Boolean(value)) });
       }}
-      className={`grid place-items-center rounded-full bg-white text-black shadow-md transition-transform active:scale-90 ${className}`}
     >
-      {playing ? <Pause aria-hidden="true" className="h-4 w-4 fill-current" /> : <Play aria-hidden="true" className="h-4 w-4 translate-x-px fill-current" />}
+      <PlayGlyph size={size} pause={playing} />
     </button>
   );
 }
 
-function SectionHead({ title, hint, href }: { title: string; hint?: string; href?: string }) {
+function usePlayingId() {
+  const { currentTrack, isPlaying } = useAudio();
+  return isPlaying ? currentTrack?.id : undefined;
+}
+
+function SectionHead({ id, title, hint, href }: { id?: string; title: string; hint?: string; href?: string }) {
   return (
-    <div className="mb-3 flex items-baseline gap-2 px-4">
-      <h2 className="text-base font-black text-foreground">{title}</h2>
-      {hint ? <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">{hint}</span> : <span className="flex-1" />}
-      {href ? (
-        <Link href={href as Route} className="shrink-0 text-xs font-bold text-muted-foreground hover:text-foreground">مشاهده همه ‹</Link>
-      ) : null}
+    <div className="av-sh" id={id}>
+      <b>{title}</b>
+      {hint ? <span>{hint}</span> : null}
+      {href ? <Link href={href as Route} className="all">مشاهده همه<Chevron /></Link> : null}
     </div>
   );
 }
 
-function Face({ person }: { person: HubProducer }) {
-  const href = `/content/audio/${person.type}/${person.id}`;
+function Face({ person, onOpen }: { person: HubProducer; onOpen: (person: HubProducer) => void }) {
   return (
-    <Link href={href as Route} className="flex w-[84px] shrink-0 flex-col items-center gap-2 text-center">
-      <span className="grid h-[72px] w-[72px] place-items-center overflow-hidden rounded-full border-2 border-foreground/80 bg-surface-muted text-sm font-black text-foreground">
-        {person.avatarUrl ? <OptimizedAvatar src={person.avatarUrl} alt="" width={72} className="h-full w-full object-cover" /> : person.name.slice(0, 2)}
+    <button type="button" className="fc" onClick={() => onOpen(person)} aria-label={`صوت‌های ${person.name}`}>
+      <span className="ring">
+        <i>{initials(person.name)}</i>
+        {person.avatarUrl ? <OptimizedAvatar src={person.avatarUrl} alt="" width={78} className="absolute" /> : null}
       </span>
-      <b className="w-full truncate text-xs font-black text-foreground">{person.name}</b>
-      <small className="text-[10px] text-muted-foreground">{faNumber.format(person.audios)} صوت</small>
-    </Link>
+      <b>{person.name}</b>
+      <small>{faNumber.format(person.audios)} صوت</small>
+    </button>
   );
 }
 
-function SquareTile({ place }: { place: HubProducer }) {
-  const href = `/content/audio/${place.type}/${place.id}`;
+/**
+ * The full-screen player opened on a speaker: their portrait, «صوت‌های X», and every recording
+ * with endless scrolling. Nothing plays until a recording is chosen.
+ */
+function ProducerSheet({ person, onClose }: { person: HubProducer; onClose: () => void }) {
+  const [items, setItems] = useState<ContentItem[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [started, setStarted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const busy = useRef(false);
+  const alive = useRef(true);
+
+  const load = useCallback(async (next: string | null) => {
+    if (busy.current) return;
+    busy.current = true;
+    setLoading(true);
+    setFailed(false);
+    try {
+      const page = await getAudioList({ producer: { type: person.type, id: Number(person.id) } }, next);
+      if (!alive.current) return;
+      setItems((current) => [...current, ...page.items.filter((entry) => !current.some((known) => known.apiId === entry.apiId))]);
+      setCursor(page.nextCursor);
+      setStarted(true);
+    } catch {
+      if (alive.current) setFailed(true);
+    } finally {
+      busy.current = false;
+      if (alive.current) setLoading(false);
+    }
+  }, [person.type, person.id]);
+
+  useEffect(() => {
+    alive.current = true;
+    void load(null);
+    return () => { alive.current = false; };
+  }, [load]);
+
+  const tracks = items.map(trackOf).filter((value): value is AudioTrack => Boolean(value));
   return (
-    <Link href={href as Route} className="group w-[172px] shrink-0">
-      <span className="relative block aspect-square overflow-hidden rounded-3xl" style={{ background: tint(place.name, 50, 24) }}>
-        <i className="absolute right-3.5 top-2 text-[44px] font-black not-italic leading-none text-white/90">{place.name.replace(/^میدان\s*/, "").charAt(0)}</i>
-        <span aria-hidden="true" className="absolute inset-x-0 bottom-0 flex h-1/3 items-end justify-around gap-1 px-3 pb-3 opacity-40">
-          {[40, 70, 35, 85, 55, 75, 45].map((height, index) => <u key={index} className="w-1 rounded-full bg-white no-underline" style={{ height: `${height}%` }} />)}
+    <NowPlayingSheet
+      onClose={onClose}
+      collection={{
+        title: `صوت‌های ${person.name}`,
+        cover: person.avatarUrl,
+        initial: person.name.trim().charAt(0),
+        tracks,
+        loading,
+        hasMore: !started ? false : cursor !== null,
+        failed,
+        onLoadMore: () => void load(cursor),
+      }}
+    />
+  );
+}
+
+function SquareTile({ place, index, onOpen }: { place: HubProducer; index: number; onOpen: (place: HubProducer) => void }) {
+  const picture = place.avatarUrl ? `url("${place.avatarUrl.replace(/"/g, "%22")}")` : undefined;
+  return (
+    <button type="button" className="sqm" onClick={() => onOpen(place)} aria-label={`صوت‌های ${place.name}`}>
+      <div className={`art${picture ? " with-portrait" : ""}`} style={{ "--h": (index * 67 + 12) % 360 } as CSSProperties}>
+        {picture ? <span aria-hidden="true" className="art-blur" style={{ backgroundImage: picture }} /> : null}
+        {/* The square's picture sits in the middle of widening rings, like sound spreading from it. */}
+        <span aria-hidden="true" className="art-disc" style={picture ? { backgroundImage: picture } : undefined}>
+          {picture ? null : initials(place.name.replace(/^(میدان|محله)\s*/, ""))}
         </span>
-      </span>
-      <b className="mt-2 block truncate text-xs font-black text-foreground">{place.name}</b>
-      <small className="block truncate text-[10px] text-muted-foreground">{place.place || "میدان"} · {faNumber.format(place.audios)} صوت</small>
-    </Link>
+        <span className="art-count">{faNumber.format(place.audios)} صوت</span>
+        <u />
+        <span className="pl" aria-hidden="true"><PlayGlyph size={16} /></span>
+      </div>
+      <b>{place.name}</b>
+      <small>{place.place || "میدان"}</small>
+    </button>
   );
 }
 
-function FeaturedCard({ item, queue, badge }: { item: ContentItem; queue: ContentItem[]; badge: string }) {
+function FeaturedCard({ item, queue, badge, index }: { item: ContentItem; queue: ContentItem[]; badge: string; index: number }) {
+  // The post's own picture wins; without one, the publisher's portrait; without that, the plain grey card.
+  const picture = item.coverUrl ?? item.media.coverImage;
+  const portrait = !picture ? item.authorAvatar : undefined;
+  const cssUrl = (url: string) => `url("${url.replace(/"/g, "%22")}")`;
   return (
     <Link
       href={`/content/${item.id}` as Route}
-      className="relative flex aspect-[1.45/1] w-[78%] max-w-[300px] shrink-0 flex-col justify-end overflow-hidden rounded-[26px] p-3.5 text-white"
-      style={{ background: item.coverUrl ? `linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.78)), url(${item.coverUrl}) center/cover` : GREYS[hueOf(item.title) % GREYS.length] }}
+      className={`ft f${index % 3}${portrait ? " with-portrait" : ""}`}
+      style={picture ? { backgroundImage: `linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.78)), ${cssUrl(picture)}` } : undefined}
     >
-      <span className="absolute right-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold backdrop-blur">{badge}</span>
-      {item.media.duration ? <span className="absolute left-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold backdrop-blur" dir="ltr">{item.media.duration}</span> : null}
-      <b className="line-clamp-2 text-base font-black leading-7">{item.title}</b>
-      <small className="mt-0.5 text-[11px] text-white/80">{item.author}</small>
-      <PlayButton item={item} queue={queue} className="absolute bottom-3.5 left-3.5 h-10 w-10" />
+      {portrait ? (
+        <>
+          {/* A soft blur of the publisher's portrait fills the card; the sharp one sits beside their name. */}
+          <span aria-hidden="true" className="ft-blur" style={{ backgroundImage: cssUrl(portrait) }} />
+        </>
+      ) : null}
+      <span className="bd">{badge}</span>
+      {item.media.duration ? <span className="du">{item.media.duration}</span> : null}
+      <PlayButton item={item} queue={queue} size={18} />
+      <div className="tx">
+        <b>{item.title}</b>
+        <small>{portrait ? <i aria-hidden="true" className="ft-by" style={{ backgroundImage: cssUrl(portrait) }} /> : null}{item.author}</small>
+      </div>
     </Link>
   );
 }
 
-function LatestRow({ item, queue }: { item: ContentItem; queue: ContentItem[] }) {
+function LatestRow({ item, queue, playing }: { item: ContentItem; queue: ContentItem[]; playing: boolean }) {
   return (
-    <Link href={`/content/${item.id}` as Route} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-hover">
-      <span className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl text-lg font-black text-white" style={{ background: item.coverUrl ? `url(${item.coverUrl}) center/cover` : tint(item.title, 46, 20) }}>
-        {item.coverUrl ? null : (item.author || item.title).charAt(0)}
-      </span>
-      <span className="min-w-0 flex-1">
-        <b className="block truncate text-sm font-black text-foreground">{item.title}</b>
-        <small className="mt-0.5 block truncate text-[11px] text-muted-foreground">{[item.author, relativeFa(item.publishedAt)].filter(Boolean).join(" · ")}</small>
-      </span>
-      {item.media.duration ? <span className="text-[11px] text-muted-foreground" dir="ltr">{item.media.duration}</span> : null}
-      <PlayButton item={item} queue={queue} className="h-9 w-9 border border-border !bg-surface-muted !text-foreground" />
+    <Link href={(item.href ?? `/content/${item.id}`) as Route} className={`ls${playing ? " on" : ""}`}>
+      <PlayButton item={item} queue={queue} size={14} />
+      <span className="asq">{initials(item.author || item.title)}</span>
+      <div className="tx">
+        <b>{item.title}</b>
+        <small>{[item.author, item.series].filter(Boolean).join(" · ")}</small>
+      </div>
+      <span className="tm">{relativeFa(item.publishedAt)}</span>
+      {item.media.duration ? <span className="dur">{item.media.duration}</span> : null}
     </Link>
   );
+}
+
+/** Scrolls the page's own scroller (the app shell, not the window) so a shelf lands below the sticky bars. */
+function scrollToShelf(root: HTMLElement | null, target: string | null) {
+  if (!root) return;
+  let scroller: HTMLElement | null = root.parentElement;
+  while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement;
+  if (!scroller) return;
+  const node = target ? root.querySelector<HTMLElement>(`#${target}`) : null;
+  const top = node ? node.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 120 : 0;
+  scroller.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
 }
 
 /** «آوا»: featured series, speakers, squares and the newest audio, with live search. */
 export function AvaView({ initial }: { initial: AudioHub }) {
   const [found, setFound] = useState<{ query: string; hub: AudioHub } | null>(null);
   const [query, setQuery] = useState("");
-  const [chip, setChip] = useState<Chip>("all");
+  const [chip, setChip] = useState<(typeof CHIPS)[number]["id"]>("all");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const playingId = usePlayingId();
+  const [sheetFor, setSheetFor] = useState<HubProducer | null>(null);
+
+  // Ask the media host about CORS up front, so the very first play already drives a live equalizer.
+  useEffect(() => {
+    const sample = [...initial.latest, ...initial.featured].map(trackOf).find(Boolean);
+    if (sample) void probeCors(sample.url);
+  }, [initial]);
   const text = query.trim();
   const searching = text.length > 0;
   // Search results belong to the text they were fetched for; anything else is "still loading".
@@ -156,100 +270,95 @@ export function AvaView({ initial }: { initial: AudioHub }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `empty` is a constant shape
   }, [text]);
 
-  const show = (id: Chip) => !searching && (chip === "all" || chip === id);
-  const featuredQueue = hub.featured;
   const seriesBadge = (item: ContentItem) => {
     const series = hub.series.find((entry) => entry.title === item.series);
-    return series ? `سلسله سخنرانی · ${faNumber.format(series.sessions)} جلسه` : "ویژه هفته";
+    return series ? "سلسله سخنرانی" : "ویژه هفته";
+  };
+  const sessions = (item: ContentItem) => {
+    const series = hub.series.find((entry) => entry.title === item.series);
+    return series ? faNumber.format(series.sessions) + " جلسه" : item.media.duration;
   };
 
+  const nothing = !hub.latest.length && !hub.featured.length && !hub.faces.length && !hub.squares.length && !busy;
+  const body: ReactNode[] = [];
+  if (hub.featured.length) {
+    body.push(
+      <section key="featured" aria-label="ویژه‌ها">
+        <SectionHead id="av-s1" title="ویژه‌ها" hint="منتخب سردبیران این هفته" href="/content/audio?shelf=featured" />
+        <div className="av-feat">
+          {hub.featured.map((item, index) => (
+            <FeaturedCard key={item.apiId} item={{ ...item, media: { ...item.media, duration: sessions(item) } }} queue={hub.featured} badge={seriesBadge(item)} index={index} />
+          ))}
+        </div>
+      </section>,
+    );
+  }
+  if (hub.faces.length) {
+    body.push(
+      <section key="faces" aria-label="سخنرانان و چهره‌ها">
+        <SectionHead id="av-s2" title="سخنرانان و چهره‌ها" href="/content/audio?shelf=faces" />
+        <div className="av-faces">{hub.faces.map((person) => <Face key={`${person.type}:${person.id}`} person={person} onOpen={setSheetFor} />)}</div>
+      </section>,
+    );
+  }
+  if (hub.squares.length) {
+    body.push(
+      <section key="squares" aria-label="میادین">
+        <SectionHead id="av-s3" title="میادین" hint="مربع‌های صوتی هر میدان" href="/content/audio?shelf=squares" />
+        <div className="av-places">{hub.squares.map((place, index) => <SquareTile key={`${place.type}:${place.id}`} place={place} index={index} onOpen={setSheetFor} />)}</div>
+      </section>,
+    );
+  }
+  if (hub.latest.length) {
+    body.push(
+      <section key="latest" aria-label="آخرین صوت‌ها">
+        <SectionHead id="av-s4" title="آخرین صوت‌ها" href="/content/audio?shelf=latest" />
+        <div className="av-last">{hub.latest.map((item) => <LatestRow key={item.apiId} item={item} queue={hub.latest} playing={playingId === `ava:${item.apiId}`} />)}</div>
+      </section>,
+    );
+  }
+
   return (
-    <div className="pb-24" dir="rtl">
-      <div className="px-4 pt-4">
-        <label className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface-muted px-4 py-3">
-          <Search aria-hidden="true" className="h-[18px] w-[18px] shrink-0 text-icon-muted" />
+    <div ref={rootRef} className="ava-ref" dir="rtl">
+      <header className="av-h1 av-sq">
+        <label className="av-s">
+          <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="جستجوی زنده در صوت‌ها، چهره‌ها و میادین…"
             autoComplete="off"
-            className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-placeholder"
           />
-          {busy ? <LoaderCircle aria-label="در حال جستجو" className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
+          {busy ? <LoaderCircle aria-label="در حال جستجو" className="h-4 w-4 animate-spin" /> : null}
         </label>
-      </div>
+      </header>
 
-      {!searching ? (
-        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-3.5" role="tablist" aria-label="دسته‌های آوا">
+      <div className="av-h2">
+        <div className="av-chips" role="tablist" aria-label="دسته‌های آوا">
           {CHIPS.map((entry) => (
             <button
               key={entry.id}
               type="button"
               role="tab"
               aria-selected={chip === entry.id}
-              onClick={() => setChip(entry.id)}
-              className={`shrink-0 rounded-full px-4 py-2 text-xs font-black transition-colors ${chip === entry.id ? "bg-brand text-brand-foreground" : "bg-surface-muted text-foreground-secondary hover:bg-hover"}`}
+              className={chip === entry.id ? "on" : undefined}
+              onClick={() => {
+                setChip(entry.id);
+                scrollToShelf(rootRef.current, entry.target);
+              }}
             >
               {entry.label}
             </button>
           ))}
         </div>
-      ) : (
-        <p className="px-4 py-3 text-xs text-muted-foreground">نتایج «{query.trim()}»</p>
-      )}
+      </div>
 
-      <div className="space-y-7">
-        {show("featured") && hub.featured.length ? (
-          <section aria-label="ویژه‌ها">
-            <SectionHead title="ویژه‌ها" hint="منتخب سردبیران این هفته" href="/content/audio?shelf=featured" />
-            <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-4">
-              {hub.featured.map((item) => <FeaturedCard key={item.apiId} item={item} queue={featuredQueue} badge={seriesBadge(item)} />)}
-            </div>
-          </section>
-        ) : null}
+      {sheetFor ? <ProducerSheet person={sheetFor} onClose={() => setSheetFor(null)} /> : null}
 
-        {show("series") && hub.series.length ? (
-          <section aria-label="سلسله‌ها">
-            <SectionHead title="سلسله‌ها" hint="سخنرانی‌های چندجلسه‌ای" />
-            <div className="no-scrollbar flex gap-3 overflow-x-auto px-4">
-              {hub.series.map((entry) => (
-                <Link key={entry.title} href={`/content/audio?series=${encodeURIComponent(entry.title)}` as Route} className="w-[150px] shrink-0">
-                  <span className="relative block aspect-square overflow-hidden rounded-3xl" style={{ background: entry.coverUrl ? `url(${entry.coverUrl}) center/cover` : tint(entry.title, 48, 18) }}>
-                    <span className="absolute inset-x-2.5 bottom-2.5 rounded-full bg-black/50 px-2.5 py-1 text-center text-[10px] font-bold text-white backdrop-blur">{faNumber.format(entry.sessions)} جلسه</span>
-                  </span>
-                  <b className="mt-2 line-clamp-2 block text-xs font-black text-foreground">{entry.title}</b>
-                  {entry.author ? <small className="block truncate text-[10px] text-muted-foreground">{entry.author}</small> : null}
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {show("faces") && hub.faces.length ? (
-          <section aria-label="سخنرانان و چهره‌ها">
-            <SectionHead title="سخنرانان و چهره‌ها" href="/content/audio?shelf=faces" />
-            <div className="no-scrollbar flex gap-4 overflow-x-auto px-4">{hub.faces.map((person) => <Face key={`${person.type}:${person.id}`} person={person} />)}</div>
-          </section>
-        ) : null}
-
-        {show("squares") && hub.squares.length ? (
-          <section aria-label="میادین">
-            <SectionHead title="میادین" hint="مربع‌های صوتی هر میدان" href="/content/audio?shelf=squares" />
-            <div className="no-scrollbar flex gap-3.5 overflow-x-auto px-4">{hub.squares.map((place) => <SquareTile key={`${place.type}:${place.id}`} place={place} />)}</div>
-          </section>
-        ) : null}
-
-        {(show("latest") || searching) && hub.latest.length ? (
-          <section aria-label="آخرین صوت‌ها">
-            {searching ? null : <SectionHead title="آخرین صوت‌ها" href="/content/audio?shelf=latest" />}
-            <div className="divide-y divide-divider">{hub.latest.map((item) => <LatestRow key={item.apiId} item={item} queue={hub.latest} />)}</div>
-          </section>
-        ) : null}
-
-        {!hub.latest.length && !hub.featured.length && !hub.faces.length && !hub.squares.length && !busy ? (
-          <p className="px-6 py-14 text-center text-sm text-muted-foreground">{searching ? "موردی پیدا نشد." : "هنوز صوتی منتشر نشده است."}</p>
-        ) : null}
+      <div className="av-body">
+        {body}
+        {nothing ? <p className="px-6 py-14 text-center text-sm text-muted-foreground">{searching ? "موردی پیدا نشد." : "هنوز صوتی منتشر نشده است."}</p> : null}
       </div>
     </div>
   );

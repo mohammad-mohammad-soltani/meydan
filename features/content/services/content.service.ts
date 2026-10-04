@@ -52,6 +52,8 @@ export type ApiContent = {
   location_label?: string;
   media_duration?: string;
   series?: string | null;
+  /** Where the item opens when it is not a content page (audio attached to a post). */
+  href?: string;
   reading_minutes?: number | null;
   primary_attachment_id?: number;
   files?: Array<{
@@ -126,6 +128,7 @@ export function toItem(item: ApiContent): ContentItem {
     authorAvatar: producer.avatar,
     coverUrl: item.media_cover_url || undefined,
     series: item.series || undefined,
+    href: item.href || undefined,
     readingMinutes: item.reading_minutes || undefined,
     publishedAt: item.published_at || undefined,
     categoryName: item.category?.name || undefined,

@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { ChevronDown } from "lucide-react";
@@ -15,6 +17,8 @@ type ReadMoreTextProps = {
   body: string;
   /** Characters shown before the reveal. */
   limit?: number;
+  /** Timeline preview follows the reference’s three visible lines at every width. */
+  lines?: number;
   className?: string;
   /** Extra classes for the collapsible wrapper (spacing differs per surface). */
   contentClassName?: string;
@@ -66,18 +70,30 @@ function animateHeight(element: HTMLElement, from: number, to: number, onDone?: 
 export function ReadMoreText({
   body,
   limit = READ_MORE_LIMIT,
+  lines,
   className = "",
   contentClassName = "",
 }: ReadMoreTextProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [lineOverflow, setLineOverflow] = useState(false);
   const bodyId = useId();
   const bodyRef = useRef<HTMLDivElement>(null);
   /** Height of the folded preview, captured right before unfolding. */
   const collapsedHeight = useRef(0);
   const animation = useRef<Animation | null>(null);
 
-  const collapsible = needsReadMore(body, limit);
-  const preview = collapsible ? truncateAtWordBoundary(body, limit) : body;
+  const collapsible = lines ? lineOverflow : needsReadMore(body, limit);
+  const preview = !lines && collapsible ? truncateAtWordBoundary(body, limit) : body;
+
+  useLayoutEffect(() => {
+    const element = bodyRef.current;
+    if (!lines || !element || isExpanded) return;
+    const measure = () => setLineOverflow(element.scrollHeight > element.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [body, lines, isExpanded]);
 
   // The full text is already in the DOM here, so its real height is known
   // before the browser paints the jump.
@@ -90,7 +106,7 @@ export function ReadMoreText({
 
   useLayoutEffect(() => () => animation.current?.cancel(), []);
 
-  if (!collapsible) {
+  if (!collapsible && !lines) {
     return <MarkdownText body={body} className={className} />;
   }
 
@@ -114,13 +130,13 @@ export function ReadMoreText({
 
   return (
     <div data-read-more className={contentClassName}>
-      <div ref={bodyRef} id={bodyId} className={className}>
+      <div ref={bodyRef} id={bodyId} className={`${className} ${lines && !isExpanded ? styles.lineClamp : ""}`} style={lines && !isExpanded ? { WebkitLineClamp: lines } : undefined}>
         <span className="whitespace-pre-wrap wrap-break-word">
           <MarkdownText body={isExpanded ? body : preview} />
         </span>
       </div>
 
-      <button
+      {collapsible ? <button
         type="button"
         onClick={(event) => {
           // The whole timeline card is wrapped in a link, so the toggle has to
@@ -129,18 +145,19 @@ export function ReadMoreText({
           event.stopPropagation();
           toggle();
         }}
+        aria-label={isExpanded ? "خواندن کمتر" : "خواندن بیشتر"}
         aria-expanded={isExpanded}
         aria-controls={bodyId}
-        className="read-more-toggle pointer-events-auto relative z-10 mt-1 inline-flex items-center gap-1 rounded-pill py-0.5 text-xs font-bold text-foreground outline-none transition-colors hover:text-foreground-secondary focus-visible:ring-2 focus-visible:ring-ring"
+        className={`${styles.readMore} read-more-toggle pointer-events-auto relative z-10 mt-1 inline-flex items-center gap-1 rounded-pill py-0.5 text-xs font-bold text-foreground outline-none transition-colors hover:text-foreground-secondary focus-visible:ring-2 focus-visible:ring-ring`}
       >
-        <span>{isExpanded ? "خواندن کمتر" : "خواندن بیشتر"}</span>
+        <span>{isExpanded ? "بستن متن" : "خواندن بیشتر"}</span>
         <ChevronDown
           aria-hidden="true"
           className={`h-4 w-4 transition-transform duration-200 motion-reduce:transition-none ${
             isExpanded ? "rotate-180" : ""
           }`}
         />
-      </button>
+      </button> : null}
     </div>
   );
 }

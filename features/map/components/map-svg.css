@@ -1,0 +1,34 @@
+/* The live map drawn as plain SVG, from the reference: it needs no tile server, so it works offline. */
+.mapsvg { position:relative; height:100%; width:100%; overflow:hidden; background:var(--m-bg); background-image:radial-gradient(color-mix(in srgb,var(--m-mu) 35%,transparent) 1px,transparent 1.2px); background-size:18px 18px; touch-action:none; }
+.mapsvg-svg { position:absolute; inset:0; width:100%; height:100%; cursor:grab; user-select:none; -webkit-user-select:none; }
+.mapsvg-svg:active { cursor:grabbing; }
+.mapsvg-svg .pv { fill:var(--m-soft); stroke:color-mix(in srgb,var(--m-mu) 55%,transparent); stroke-width:1; vector-effect:non-scaling-stroke; stroke-linejoin:round; transition:fill .2s; }
+.mapsvg-svg .pv:hover { fill:color-mix(in srgb,var(--m-tx) 10%,var(--m-soft)); }
+.mapsvg-svg .pv.sel { fill:rgba(225,29,72,.16); stroke:#e4152e; stroke-width:1.6; }
+.mapsvg-svg .pl { fill:var(--m-mu); font-size:10.5px; font-weight:600; text-anchor:middle; pointer-events:none; paint-order:stroke; stroke:var(--m-soft); stroke-width:3px; transition:opacity .2s; }
+.mapsvg-svg .wt { fill:color-mix(in srgb,var(--m-tx) 11%,var(--m-bg)); stroke:none; }
+.mapsvg-svg .ld { fill:color-mix(in srgb,var(--m-tx) 2.5%,var(--m-bg)); stroke:color-mix(in srgb,var(--m-mu) 35%,transparent); stroke-width:1; vector-effect:non-scaling-stroke; stroke-linejoin:round; }
+.mapsvg-svg .nl { fill:var(--m-mu); font-size:10px; text-anchor:middle; opacity:.55; pointer-events:none; font-weight:500; }
+.mapsvg-svg .sea { fill:var(--m-mu); font-size:14px; font-style:italic; letter-spacing:.14em; text-anchor:middle; opacity:.75; pointer-events:none; font-weight:500; }
+.mapsvg-svg .mk { cursor:pointer; }
+.mapsvg-svg .mk.dim { opacity:.35; }
+.mapsvg-svg .cl circle { fill:#e4152e; stroke:var(--m-bg); stroke-width:3; }
+.mapsvg-svg .cl text { fill:#fff; font-size:12px; font-weight:800; text-anchor:middle; }
+.mapsvg-svg .sg circle { fill:var(--m-tx); stroke:var(--m-bg); stroke-width:2.5; }
+.mapsvg-svg .sg.on circle { fill:#e4152e; }
+.mapsvg-svg .sg .ring, .mapsvg-svg .is .ring { fill:rgba(225,29,72,.18); stroke:none; animation:mapsvgPulse 1.6s ease-out infinite; transform-box:fill-box; transform-origin:center; }
+.mapsvg-svg .is .hit { fill:transparent; }
+.mapsvg-svg .is .o { fill:var(--m-bg); stroke:var(--m-tx); stroke-width:2; }
+.mapsvg-svg .is.on .o { fill:#e4152e; stroke:var(--m-bg); }
+.mapsvg-svg .is text { fill:var(--m-tx); font-size:10.5px; font-weight:700; text-anchor:middle; paint-order:stroke; stroke:var(--m-bg); stroke-width:3px; pointer-events:none; }
+@keyframes mapsvgPulse { 0% { transform:scale(.6); opacity:1; } 100% { transform:scale(1.5); opacity:0; } }
+.mapsvg-card { position:absolute; z-index:4; right:12px; bottom:14px; max-width:calc(100% - 76px); display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-radius:20px; background:var(--m-glass); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid var(--m-line); box-shadow:0 14px 34px -14px rgba(0,0,0,.55); color:var(--m-tx); }
+.mapsvg-card > div { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.mapsvg-card b { font-size:13px; font-weight:800; }
+.mapsvg-card span { font-size:11px; color:var(--m-mu); }
+.mapsvg-card small { font-size:10.5px; color:var(--m-mu); text-align:right; }
+.mapsvg-card a { margin-top:4px; font-size:11px; font-weight:800; color:var(--m-tx); text-decoration:underline; text-underline-offset:3px; }
+.mapsvg-card .x { width:24px; height:24px; border-radius:50%; background:var(--m-soft); color:var(--m-tx); font-size:16px; line-height:1; flex-shrink:0; }
+.mapsvg-res mark { background:transparent; color:var(--m-tx); font-weight:900; text-decoration:underline; text-underline-offset:3px; }
+.mapsvg-spin { width:15px; height:15px; border-radius:50%; border:2px solid var(--m-line); border-top-color:var(--m-tx); animation:mapsvgSpin .7s linear infinite; }
+@keyframes mapsvgSpin { to { transform:rotate(360deg); } }

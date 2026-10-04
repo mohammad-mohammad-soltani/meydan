@@ -78,7 +78,7 @@ export function MessageInput({ value, attachment, replyingTo, editingMessage, no
   const iconButtonClass = "grid h-9 w-9 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-foreground";
 
   return (
-    <footer className="shrink-0 border-t border-border bg-background px-3 pb-[max(.625rem,env(safe-area-inset-bottom))] pt-2.5">
+    <footer className="shrink-0 border-t border-border bg-background px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2.5">
       {replyingTo || editingMessage ? (
         <div className={`mb-2 flex items-center gap-2 rounded-2xl px-3 py-2 ${glassPanelClass}`}>
           <span className="min-w-0 flex-1 border-r-2 border-info pr-2 text-right"><strong className="block text-[11px] text-info">{editingMessage ? "ویرایش پیام" : `پاسخ به ${replyingTo?.senderName}`}</strong><span className="block truncate text-[10px] text-muted-foreground">{editingMessage?.body ?? replyingTo?.body}</span></span>
@@ -95,9 +95,9 @@ export function MessageInput({ value, attachment, replyingTo, editingMessage, no
       ) : null}
 
       {/* Reference composer (.ch-cf): «+» and emoji outside, a pill input, a round send button. */}
-      <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); onSubmit(); }}>
-        <button type="button" aria-label="افزودن پیوست" aria-expanded={isAttachmentOpen} onClick={() => setIsAttachmentOpen(true)} className="grid h-[46px] w-10 shrink-0 place-items-center text-icon-muted transition-colors hover:text-foreground"><Plus className="h-[22px] w-[22px]" /></button>
-        <span className="relative flex h-[46px] w-10 shrink-0 items-center justify-center">
+      <form className="flex items-center gap-2" onSubmit={(event) => { event.preventDefault(); onSubmit(); }}>
+        <button type="button" aria-label="افزودن پیوست" aria-expanded={isAttachmentOpen} onClick={() => setIsAttachmentOpen(true)} className="grid h-10 w-10 shrink-0 place-items-center text-icon-muted transition-colors hover:text-foreground"><Plus className="h-[22px] w-[22px]" /></button>
+        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center">
           <button type="button" aria-label="انتخاب شکلک" aria-expanded={isEmojiPickerOpen} onClick={() => setIsEmojiPickerOpen((open) => !open)} className="grid h-10 w-10 place-items-center text-icon-muted transition-colors hover:text-foreground"><Smile className="h-[22px] w-[22px]" /></button>
           {isEmojiPickerOpen ? <div role="dialog" aria-label="انتخاب شکلک" className="absolute bottom-full right-0 z-20 mb-2 grid w-56 grid-cols-4 gap-1 rounded-panel border border-border bg-popover p-2 shadow-popover backdrop-blur-xl">{emojis.map((emoji) => <button key={emoji} type="button" aria-label={`افزودن ${emoji}`} onClick={() => addEmoji(emoji)} className="grid h-10 w-10 place-items-center rounded-xl text-xl transition-colors hover:bg-hover">{emoji}</button>)}</div> : null}
         </span>

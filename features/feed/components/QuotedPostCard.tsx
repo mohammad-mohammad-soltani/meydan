@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import Link from "next/link";
 import type { Route } from "next";
 import Image from "next/image";
@@ -17,7 +19,7 @@ type QuotedPostCardProps = {
 
 /** The post a quote embeds: author line, a short excerpt and a single thumbnail. */
 export function QuotedPostCard({ quote, preview = false, className = "" }: QuotedPostCardProps) {
-  const frame = `block w-full overflow-hidden rounded-2xl border border-border bg-surface text-right ${className}`;
+  const frame = `${styles.quote} block w-full overflow-hidden rounded-2xl border border-border bg-surface text-right ${className}`;
 
   if (quote.unavailable || !quote.author) {
     return (
@@ -34,7 +36,7 @@ export function QuotedPostCard({ quote, preview = false, className = "" }: Quote
 
   const content = (
     <>
-      <span className="flex min-w-0 items-center gap-2 border-b border-divider bg-surface-elevated/90 px-3.5 py-2.5">
+      <span className={`${styles.quoteHeader} flex min-w-0 items-center gap-2 border-b border-divider bg-surface-elevated/90 px-3.5 py-2.5`}>
         <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-surface-muted text-foreground">
           <Quote className="h-3.5 w-3.5 fill-current" />
         </span>
@@ -44,11 +46,11 @@ export function QuotedPostCard({ quote, preview = false, className = "" }: Quote
       </span>
 
       {quote.body ? (
-        <span className="line-clamp-4 block whitespace-pre-line break-words px-3.5 py-2.5 text-[13px] leading-6 text-foreground">{quote.body}</span>
+        <span className={`${styles.quoteBody} text-foreground`}><span className="whitespace-pre-line break-words">{quote.body}</span></span>
       ) : null}
 
       {thumb ? (
-        <span className="relative block aspect-[16/9] w-full overflow-hidden bg-black/60">
+        <span className={`${styles.quoteThumb} relative block overflow-hidden bg-black/60`}>
           <Image
             src={thumb}
             alt={visual?.previewAlt || ""}
@@ -74,12 +76,13 @@ export function QuotedPostCard({ quote, preview = false, className = "" }: Quote
   );
 
   if (preview) {
-    return <div dir="rtl" className={frame}>{content}</div>;
+    return <div dir="rtl" data-has-thumbnail={Boolean(thumb)} className={frame}>{content}</div>;
   }
 
   return (
     <Link
       dir="rtl"
+      data-has-thumbnail={Boolean(thumb)}
       href={`/posts/${quote.id}` as Route}
       aria-label={`مشاهده روایت ${author.name}`}
       className={`pointer-events-auto relative z-10 transition-colors hover:bg-hover ${frame}`}

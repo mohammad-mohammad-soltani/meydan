@@ -1,13 +1,15 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import Link from "next/link";
 import type { Route } from "next";
-import { Heart, LoaderCircle, Send, X } from "lucide-react";
+import { Heart, LoaderCircle, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
-import { hueOf, relativeFa } from "@/lib/relative-fa";
+import { relativeFa } from "@/lib/relative-fa";
 import { listComments, listReplies, postComment, setCommentLike, type ReelComment } from "../comments.service";
 
 const EMOJIS = ["❤️", "🙌", "🔥", "👏", "😍", "😮", "😂"];
@@ -17,7 +19,7 @@ const without = <T,>(record: Record<number, T>, id: number) => Object.fromEntrie
 
 function Avatar({ comment }: { comment: ReelComment }) {
   return (
-    <Link href={comment.profileHref as Route} className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full text-xs font-black text-neutral-900" style={{ background: `hsl(${hueOf(comment.name)} 80% 82%)` }}>
+    <Link href={comment.profileHref as Route} className={`${styles.commentAvatar} grid shrink-0 place-items-center overflow-hidden rounded-full text-xs font-black`}>
       {comment.avatarUrl ? <OptimizedAvatar src={comment.avatarUrl} alt="" width={36} className="h-full w-full object-cover" /> : comment.name.charAt(0)}
     </Link>
   );
@@ -38,22 +40,22 @@ function CommentRow({
 }) {
   return (
     <li className={nested ? "ps-0" : ""}>
-      <div className="flex gap-2.5">
+      <div className={`${styles.commentRow} flex gap-2.5`}>
         <Avatar comment={comment} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2 text-[11px]">
+          <div className={`${styles.commentMeta} flex items-baseline gap-2`}>
             <b className="truncate font-black text-white">{comment.name}</b>
             <span className="shrink-0 text-white/50">{comment.mine ? "همین الان · شما" : relativeFa(comment.createdAt)}</span>
           </div>
-          <p className="mt-0.5 whitespace-pre-wrap break-words text-[13px] leading-6 text-white/90">{comment.body}</p>
-          <button type="button" onClick={() => onReply(comment)} className="mt-0.5 text-[11px] font-bold text-white/55 hover:text-white">پاسخ</button>
+          <p className={`${styles.commentText} whitespace-pre-wrap break-words`}>{comment.body}</p>
+          <button type="button" onClick={() => onReply(comment)} className={`${styles.commentReply} mt-0.5 font-bold hover:text-white`}>پاسخ</button>
         </div>
         <button
           type="button"
           aria-pressed={comment.liked}
           aria-label={comment.liked ? "برداشتن پسند" : "پسندیدن"}
           onClick={() => onLike(comment)}
-          className={`flex shrink-0 flex-col items-center gap-0.5 self-start pt-1 text-[10px] ${comment.liked ? "text-pink-500" : "text-white/55"}`}
+          className={`${styles.commentLike} flex shrink-0 flex-col items-center gap-0.5 self-start pt-1 text-[10px] ${comment.liked ? "text-pink-500" : "text-white/55"}`}
         >
           <Heart aria-hidden="true" className={`h-[18px] w-[18px] ${comment.liked ? "fill-current" : ""}`} />
           {comment.likes > 0 ? fa.format(comment.likes) : null}
@@ -162,16 +164,16 @@ export function ReelComments({ postId, count, onClose, onPosted, intro, panel = 
       aria-modal={panel ? undefined : "true"}
       aria-label="نظرات"
       dir="rtl"
-      className={panel ? "relative flex h-full w-full flex-col overflow-hidden rounded-[22px] border border-white/10 bg-[#1b1b1b] text-white" : "relative flex h-[72dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#1b1b1b] text-white shadow-2xl lg:pointer-events-auto lg:h-full lg:w-[380px] lg:max-w-none lg:rounded-3xl"}
+      className={panel ? `${styles.commentPanel} relative flex h-full w-full flex-col overflow-hidden rounded-[22px] border border-white/10 bg-[#1b1b1b] text-white` : `${styles.commentSheet} relative flex h-[72dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#1b1b1b] text-white shadow-2xl lg:pointer-events-auto lg:h-full lg:w-[380px] lg:max-w-none lg:rounded-3xl`}
     >
       {intro}
-      <header className="flex items-center gap-2 border-b border-white/10 px-4 py-3.5">
+      <header className={`${styles.commentHeader} flex items-center gap-2 border-b`}>
         <h2 className="text-sm font-black">نظرات</h2>
         <span className="text-xs text-white/50">{fa.format(count)}</span>
         {panel ? null : <button type="button" onClick={onClose} aria-label="بستن" className="ms-auto grid h-8 w-8 place-items-center rounded-full bg-white/10"><X aria-hidden="true" className="h-4 w-4" /></button>}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+      <div className={`${styles.commentList} min-h-0 flex-1 overflow-y-auto`}>
         {items === null ? (
           <LoaderCircle aria-label="در حال دریافت" className="mx-auto mt-10 h-5 w-5 animate-spin text-white/50" />
         ) : items.length === 0 ? (
@@ -202,8 +204,8 @@ export function ReelComments({ postId, count, onClose, onPosted, intro, panel = 
         {cursor ? <button type="button" onClick={() => void more()} className="mx-auto mt-4 block text-xs font-bold text-white/60 hover:text-white">نظرهای بیشتر</button> : null}
       </div>
 
-      <footer className="border-t border-white/10 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5">
-        <div className="no-scrollbar mb-2 flex justify-between gap-1 overflow-x-auto" aria-label="واکنش سریع">
+      <footer className={styles.commentFooter}>
+        <div className={`${styles.emojis} no-scrollbar overflow-x-auto`} aria-label="واکنش سریع">
           {EMOJIS.map((emoji) => (
             <button key={emoji} type="button" onClick={() => { setDraft((current) => current + emoji); inputRef.current?.focus(); }} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-xl transition-transform active:scale-125">{emoji}</button>
           ))}
@@ -215,7 +217,8 @@ export function ReelComments({ postId, count, onClose, onPosted, intro, panel = 
           </p>
         ) : null}
         {error && items?.length ? <p role="alert" className="mb-1.5 px-1 text-[11px] text-red-400">{error}</p> : null}
-        <form onSubmit={(event) => { event.preventDefault(); void send(); }} className="flex items-center gap-2">
+        <form onSubmit={(event) => { event.preventDefault(); void send(); }} className={`${styles.commentForm} flex items-center`}>
+          <span className={styles.commentMe} aria-hidden="true">ش</span>
           <input
             ref={inputRef}
             value={draft}
@@ -225,7 +228,7 @@ export function ReelComments({ postId, count, onClose, onPosted, intro, panel = 
             className="min-h-11 min-w-0 flex-1 rounded-full bg-white/10 px-4 text-sm text-white outline-none placeholder:text-white/40 focus:bg-white/15"
           />
           <button type="submit" disabled={!draft.trim() || sending} aria-label="ارسال" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-brand-foreground disabled:opacity-40">
-            {sending ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Send aria-hidden="true" className="h-4 w-4 -scale-x-100" />}
+            {sending ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : "ارسال"}
           </button>
         </form>
       </footer>

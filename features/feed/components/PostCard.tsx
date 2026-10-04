@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import Link from "next/link";
 import type { Route } from "next";
 import { publicProfileHref } from "@/lib/profile-route";
@@ -301,7 +303,7 @@ export function PostCard({
    */
   const { title: bodyTitle, rest: bodyRest } = splitPostTitle(post.body);
   return (
-    <article className="relative border-b border-transparent px-4 py-4 transition-colors duration-150 hover:bg-surface/50">
+    <article className={`${styles.card} relative border-b border-transparent px-4 py-4 transition-colors duration-150`}>
       <Link
         href={(`/posts/${post.id}`) as Route}
         aria-label={`مشاهده روایت ${post.title}`}
@@ -337,36 +339,36 @@ export function PostCard({
               <div className="flex min-w-0 items-center gap-1.5">
                 <Link
                   href={profileHref}
-                  className="pointer-events-auto relative z-10 min-w-0 truncate text-sm font-bold text-foreground hover:underline"
+                  className={`${styles.name} pointer-events-auto relative z-10 min-w-0 truncate text-sm font-bold text-foreground hover:underline`}
                 >
                   {post.squareName}
                 </Link>
                 <AccountBadges verified={post.author.verified} speaker={post.author.verifiedSpeaker} official={post.author.verifiedOfficial} kind={post.author.type} size="md" />
               </div>
-              <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11px] font-medium text-muted-foreground">
+              <div className={`${styles.meta} mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11px] font-medium text-muted-foreground`}>
                 {post.badge ? (
                   <span className="shrink-0 rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-foreground">
                     {post.badge}
                   </span>
                 ) : null}
-                <span aria-hidden="true">·</span>
-                <span className="truncate">{post.timeAgo}</span>
+                <span aria-hidden="true" className="shrink-0">•</span>
+                <span className="shrink-0 truncate">{post.timeAgo}</span>
               </div>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {onFollow ? <FollowPill following={following} onToggle={onFollow} /> : null}
             {!hideActions ? (
-              <PostMoreMenu postId={post.id} onDelete={post.viewerState?.canDelete ? onDelete : undefined} pinned={pinned} onTogglePin={onTogglePin} />
+              <PostMoreMenu postId={post.id} onShare={onShare} onDelete={post.viewerState?.canDelete ? onDelete : undefined} pinned={pinned} onTogglePin={onTogglePin} />
             ) : null}
           </div>
         </div>
 
-        <div dir="rtl" className="mt-2.5 text-[13.5px] leading-relaxed">
-          {bodyTitle ? <p className="mb-1 font-bold text-foreground">{bodyTitle}</p> : null}
+        <div dir="rtl" className="mt-2.5 text-[15.5px] leading-relaxed">
+          {bodyTitle ? <p className={`${styles.title} mb-1 font-bold text-foreground`}>{bodyTitle}</p> : null}
           <ReadMoreText
             body={bodyRest}
-            limit={165}
+            lines={3}
             className="text-foreground-secondary"
             contentClassName="relative z-10"
           />
@@ -374,6 +376,7 @@ export function PostCard({
 
         {post.attachments.length > 0 ? (
           <MediaGallery
+            presentation="timeline"
             items={mediaItems}
             videoPost={post}
             videoPosts={videoPosts}

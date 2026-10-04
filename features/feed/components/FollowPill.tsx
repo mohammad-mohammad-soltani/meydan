@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import { UserCheck, UserPlus } from "lucide-react";
 
 /** The small «دنبال کردن» pill in a post header. */
@@ -7,6 +9,7 @@ export function FollowPill({ following, onToggle }: { following: boolean; onTogg
   return (
     <button
       type="button"
+      dir="ltr"
       aria-pressed={following}
       onClick={(event) => {
         // The timeline card is wrapped in a link.
@@ -14,7 +17,7 @@ export function FollowPill({ following, onToggle }: { following: boolean; onTogg
         event.stopPropagation();
         onToggle();
       }}
-      className={`pointer-events-auto relative z-10 flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-bold transition active:scale-95 ${
+      className={`${styles.follow} pointer-events-auto relative z-10 flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-bold transition active:scale-95 ${
         following ? "border-transparent bg-surface-elevated text-muted-foreground" : "border-border bg-surface-muted text-foreground hover:bg-hover"
       }`}
     >

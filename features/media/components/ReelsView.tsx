@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
@@ -16,7 +18,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { AccountBadges } from "@/components/shared/AccountBadges";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
@@ -59,7 +61,7 @@ function AuthorRow({ entry, state }: { entry: VideoFeedEntry; state: ReturnType<
   const name = (
     <>
       <Avatar entry={entry} size={42} />
-      <span className="min-w-0">
+      <span className={`${styles.authorIdentity} min-w-0`}>
         <b className="flex items-center gap-1 text-sm font-extrabold">
           <span className="truncate">{entry.author}</span>
           <AccountBadges verified={post?.author.verified} speaker={post?.author.verifiedSpeaker} official={post?.author.verifiedOfficial} kind={post?.author.type} variant="reel" />
@@ -69,11 +71,12 @@ function AuthorRow({ entry, state }: { entry: VideoFeedEntry; state: ReturnType<
     </>
   );
   return (
-    <div className="flex items-center gap-2.5">
+    <div className={`${styles.author} flex items-center gap-2.5`}>
       {href ? <Link href={href} className="flex min-w-0 items-center gap-2.5">{name}</Link> : <div className="flex min-w-0 items-center gap-2.5">{name}</div>}
       {post ? (
         <button
           type="button"
+          aria-pressed={state.following}
           disabled={state.busy || !state.followReady}
           onClick={() => void state.follow()}
           className={`h-8 shrink-0 rounded-full px-3.5 text-xs font-extrabold text-white transition-colors ${state.following ? "bg-white/20" : "border border-white/70"}`}
@@ -97,6 +100,7 @@ function ReelItem({
   onOpenComments,
   onCloseComments,
   slot,
+  onWide,
 }: {
   entry: VideoFeedEntry;
   index: number;
@@ -109,6 +113,7 @@ function ReelItem({
   onCloseComments: () => void;
   /** Desktop: the element beside the player that hosts the comments panel. */
   slot: HTMLElement | null;
+  onWide: (wide: boolean) => void;
 }) {
   const router = useRouter();
   const state = useViewerPost(entry.post);
@@ -224,7 +229,7 @@ function ReelItem({
             onPosted={state.bumpComments}
             panel
             intro={
-              <div className="space-y-3 border-b border-white/10 p-4">
+              <div className={`${styles.panelIntro} space-y-3`}>
                 <AuthorRow entry={entry} state={state} />
                 {entry.body ? <p className="line-clamp-4 text-[13px] leading-[1.9] text-white/90">{entry.body}</p> : null}
               </div>
@@ -246,7 +251,7 @@ function ReelItem({
     >
       {/* the video card: full screen on phones, a rounded 9:16 card on desktop */}
       <div
-        className="absolute inset-y-0 left-0 right-0 overflow-hidden lg:left-auto lg:w-[var(--rw)] lg:rounded-[22px]"
+        className={`${styles.videoCard} absolute inset-y-0 left-0 right-0 overflow-hidden lg:left-auto lg:w-[var(--rw)] lg:rounded-[22px]`}
         style={{ background: `linear-gradient(160deg, hsl(${hueOf(entry.author)} 55% 22%), #000 75%)` }}
       >
         {entry.item.poster && !active ? (
@@ -264,7 +269,7 @@ function ReelItem({
             preload={active ? "auto" : "metadata"}
             onLoadedMetadata={(event) => {
               const { videoWidth, videoHeight } = event.currentTarget;
-              if (videoWidth && videoHeight) setWide(videoWidth > videoHeight * 1.1);
+              if (videoWidth && videoHeight) { const landscape = videoWidth > videoHeight * 1.1; setWide(landscape); onWide(landscape); }
             }}
             onTimeUpdate={(event) => {
               const element = event.currentTarget;
@@ -284,8 +289,8 @@ function ReelItem({
             </div>
           </div>
         ) : null}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,.34),transparent_64px),linear-gradient(transparent_55%,rgba(0,0,0,.7))] lg:bg-[linear-gradient(rgba(0,0,0,.34),transparent_64px),linear-gradient(transparent_70%,rgba(0,0,0,.6))]" />
-        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 grid place-items-center transition-opacity duration-150 ${paused && active ? "opacity-100" : "opacity-0"}`}>
+        <div aria-hidden="true" className={`${styles.scrim} pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,.34),transparent_64px),linear-gradient(transparent_55%,rgba(0,0,0,.7))] lg:bg-[linear-gradient(rgba(0,0,0,.34),transparent_64px),linear-gradient(transparent_70%,rgba(0,0,0,.6))]`} />
+        <div aria-hidden="true" className={`${styles.pauseIndicator} pointer-events-none absolute inset-0 grid place-items-center transition-opacity duration-150 ${paused && active ? "opacity-100" : "opacity-0"}`}>
           <Play className="h-[74px] w-[74px] rounded-full bg-black/45 p-5 text-white" fill="currentColor" />
         </div>
         {flash ? (
@@ -329,13 +334,13 @@ function ReelItem({
             if (event.key === "ArrowRight") element.currentTime = Math.max(0, element.currentTime - 5);
             if (event.key === "ArrowLeft") element.currentTime = Math.min(element.duration || 0, element.currentTime + 5);
           }}
-          className={`absolute inset-x-0 bottom-0 z-[4] cursor-pointer bg-white/20 transition-[height] before:absolute before:inset-x-0 before:-top-3.5 before:h-3.5 before:content-[''] hover:h-[7px] [touch-action:none] ${seeking ? "h-[7px]" : "h-[3px]"}`}
+          className={`${styles.progress} absolute inset-x-0 bottom-0 z-[4] cursor-pointer bg-white/20 transition-[height] before:absolute before:inset-x-0 before:-top-3.5 before:h-3.5 before:content-[''] hover:h-[7px] [touch-action:none] ${seeking ? "h-[7px]" : "h-[3px]"}`}
         >
           <i ref={fill} className="float-right block h-full w-0 bg-white" />
         </div>
 
         {/* author + caption and the quick comment: on phones only (desktop has the side panel) */}
-        <div className="absolute bottom-[72px] left-[76px] right-3.5 z-[3] text-white lg:hidden">
+        <div className={`${styles.caption} absolute bottom-[72px] left-[76px] right-3.5 z-[3] text-white lg:hidden`}>
           <AuthorRow entry={entry} state={state} />
           {entry.body ? <p className="mt-2.5 line-clamp-2 text-[13.5px] leading-[1.9]">{entry.body}</p> : null}
         </div>
@@ -361,11 +366,11 @@ function ReelItem({
       </div>
 
       {/* action rail: over the video on phones, beside the card on desktop */}
-      <div data-reel-ui className="absolute bottom-[92px] left-2.5 z-[3] flex flex-col items-center gap-4 text-white lg:bottom-6 lg:left-0 lg:w-[60px] lg:text-foreground">
+      <div data-reel-ui className={`${styles.rail} absolute bottom-[92px] left-2.5 z-[3] flex flex-col items-center gap-4 text-white lg:bottom-6 lg:left-0 lg:w-[60px] lg:text-foreground`}>
         <RailButton label={short(state.stats.likes)} aria-label={liked ? "برداشتن پسند" : "پسندیدن"} aria-pressed={liked} on={liked} disabled={state.busy} onClick={() => void state.toggle("like")}>
           <Heart className={`h-[26px] w-[26px] ${liked ? "fill-current" : ""}`} />
         </RailButton>
-        <RailButton label={fa.format(state.stats.comments)} aria-label="نظرها" on={commentsOpen} className="lg:pointer-events-none" onClick={() => onOpenComments(index)}>
+        <RailButton label={fa.format(state.stats.comments)} aria-label="نظرها" on={commentsOpen} className={`${styles.commentsAction} lg:pointer-events-none`} onClick={() => onOpenComments(index)}>
           <MessageCircle className="h-[26px] w-[26px]" />
         </RailButton>
         {post ? (
@@ -429,6 +434,7 @@ export function ReelsView({ initial, onClose }: {
   const [comments, setComments] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const [wideEntries, setWideEntries] = useState<Record<string, boolean>>({});
   const stateRef = useRef<VideoPageState>({ cursor: null, exhausted: false, recovered: false });
   const feed = useRef<HTMLDivElement>(null);
   const loading = useRef(false);
@@ -510,13 +516,15 @@ export function ReelsView({ initial, onClose }: {
   const content = (
     <div
       dir="rtl"
-      style={{ "--rh": "calc(100dvh - 120px)", "--rw": "calc(var(--rh) * 9 / 16)" } as CSSProperties}
+      data-overlay={overlay}
+      data-wide={entries?.[active] ? (wideEntries[entries[active].key] ?? Boolean(entries[active].item.width && entries[active].item.height && entries[active].item.width! > entries[active].item.height! * 1.1)) : false}
+      data-comments-open={comments === active}
       className={overlay
-        ? "reels fixed inset-0 z-[200] bg-black text-white lg:flex lg:items-center lg:justify-center lg:gap-[18px] lg:bg-background lg:text-foreground"
-        : "reels fixed inset-0 z-[80] bg-black text-white lg:static lg:z-auto lg:flex lg:h-dvh lg:items-center lg:justify-center lg:gap-[18px] lg:bg-transparent lg:text-foreground"}
+        ? `${styles.reels} reels fixed inset-0 z-[200] bg-black text-white lg:flex lg:items-center lg:justify-center lg:gap-[18px] lg:bg-background lg:text-foreground`
+        : `${styles.reels} reels fixed inset-0 z-[80] bg-black text-white lg:static lg:z-auto lg:flex lg:h-dvh lg:items-center lg:justify-center lg:gap-[18px] lg:bg-transparent lg:text-foreground`}
     >
-      <div className="relative h-full w-full lg:h-[var(--rh)] lg:w-[calc(var(--rw)+70px)] lg:shrink-0">
-        <div className="absolute inset-x-0 top-0 z-[6] flex items-center justify-between px-3.5 py-2 text-white lg:left-auto lg:w-[var(--rw)] lg:rounded-t-[22px]">
+      <div className={`${styles.player} relative h-full w-full lg:h-[var(--rh)] lg:w-[calc(var(--rw)+70px)] lg:shrink-0`}>
+        <div className={`${styles.topbar} absolute inset-x-0 top-0 z-[6] flex items-center justify-between text-white lg:left-auto lg:w-[var(--rw)] lg:rounded-t-[22px]`}>
           <button type="button" onClick={back} aria-label="بازگشت" className="reel-glass grid h-10 w-10 place-items-center rounded-full text-white">
             <ChevronRight className="h-[22px] w-[22px]" />
           </button>
@@ -544,12 +552,13 @@ export function ReelsView({ initial, onClose }: {
                 onOpenComments={(next) => setComments(comments === next ? null : next)}
                 onCloseComments={() => setComments(null)}
                 slot={slot}
+                onWide={(wide) => setWideEntries((current) => current[entry.key] === wide ? current : { ...current, [entry.key]: wide })}
               />
             ))
           )}
         </div>
       </div>
-      <div ref={setSlot} className="hidden h-[var(--rh)] w-[340px] shrink-0 lg:block" />
+      <div ref={setSlot} className={`${styles.panelHost} hidden shrink-0 lg:block`} />
     </div>
   );
 

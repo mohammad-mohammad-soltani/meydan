@@ -181,12 +181,12 @@ export function SpeakerInvitationsView({
             type="button"
             onClick={() => window.history.length > 1 && window.history.back()}
             aria-label="بازگشت"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand"
+            className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-brand"
           >
             <ArrowRight className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-sm font-black text-foreground">دعوت‌های سخنرانی</h1>
+            <h1 className="truncate text-[17px] font-extrabold text-foreground">دعوت‌های سخنرانی</h1>
             <p className="mt-0.5 text-[11px] text-muted-foreground">مدیریت دعوت‌های دریافتی و ارسالی</p>
           </div>
           {canInvite ? (
@@ -213,7 +213,7 @@ export function SpeakerInvitationsView({
                 aria-selected={active}
                 onClick={() => selectBox(tab.id)}
                 className={`flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-pill px-2 text-xs font-black transition-colors ${
-                  active ? "bg-brand text-brand-foreground shadow-xs" : "text-foreground-secondary hover:bg-hover hover:text-foreground"
+                  active ? "bg-foreground text-background shadow-xs" : "text-foreground-secondary hover:bg-hover hover:text-foreground"
                 }`}
               >
                 <tab.icon aria-hidden="true" className="h-4 w-4" />

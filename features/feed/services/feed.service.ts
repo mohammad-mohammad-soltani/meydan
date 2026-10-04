@@ -158,7 +158,7 @@ function mapNarrative(item: ApiNarrative): FeedPost {
     handle: item.author?.handle || item.author?.id || "meydan",
     timeAgo: relativeFa(item.published_at),
     city: cityFromAddress(item.author?.location_address),
-    badge: item.tags?.[0] || "روایت میدان",
+    badge: item.tags?.[0] || "روایت",
     title: item.author?.display_name || "روایت میدان",
     body: plainText(item.body || ""),
     attachments: (item.attachments || []).map((attachment) => ({

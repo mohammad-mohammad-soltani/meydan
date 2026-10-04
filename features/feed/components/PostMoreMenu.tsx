@@ -1,10 +1,12 @@
 "use client";
 
-import { Ellipsis, Link2, Pin, PinOff, Trash2 } from "lucide-react";
+import styles from "../reference.module.css";
+
+import { Ellipsis, Link2, Pin, PinOff, Send, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 /** The «…» menu in a post header: copy link, and delete when the viewer may. */
-export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin }: { postId: string; onDelete?: () => void; /** Owner's own profile: pin to / unpin from the profile. */ pinned?: boolean; onTogglePin?: () => void }) {
+export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin, onShare }: { postId: string; onShare?: () => void; onDelete?: () => void; /** Owner's own profile: pin to / unpin from the profile. */ pinned?: boolean; onTogglePin?: () => void }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -42,12 +44,13 @@ export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin }: 
           stop(event);
           setOpen((value) => !value);
         }}
-        className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-hover hover:text-foreground active:scale-95"
+        className={`${styles.more} grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors active:scale-95`}
       >
         <Ellipsis aria-hidden="true" className="h-4 w-4" />
       </button>
       {open ? (
-        <div role="menu" className="absolute left-0 top-9 z-30 min-w-40 overflow-hidden rounded-2xl border border-border bg-popover p-1 shadow-dialog">
+        <div role="menu" className={`${styles.moreMenu} absolute left-0 top-9 z-30 min-w-40 overflow-hidden rounded-2xl border border-border bg-popover p-1 shadow-dialog`}>
+          {onShare ? <button type="button" role="menuitem" onClick={(event) => { stop(event); setOpen(false); onShare(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-right text-xs font-bold hover:bg-hover"><Send aria-hidden="true" className="h-4 w-4" />اشتراک روایت</button> : null}
           <button
             type="button"
             role="menuitem"

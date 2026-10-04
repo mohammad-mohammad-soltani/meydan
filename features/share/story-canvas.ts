@@ -1,7 +1,6 @@
 /**
  * Draws a post as a shareable «عکس‌نوشت». The same function paints the
- * on-screen preview and the 1080px download, so what the user sees is exactly
- * what they get.
+ * on-screen preview and the 1080px download, keeping their composition together.
  */
 
 export type StoryFormat = "story" | "square";
@@ -12,11 +11,12 @@ export type StoryTheme = {
   stops: [string, string, string];
   /** Light backgrounds need dark text. */
   dark: boolean;
+  middleStop?: number;
 };
 
 export const STORY_THEMES: StoryTheme[] = [
   { id: "galaxy", label: "کهکشان شب", stops: ["#1a1a1a", "#1e1b4b", "#311042"], dark: true },
-  { id: "sunset", label: "غروب آتشین", stops: ["#881337", "#be123c", "#ea580c"], dark: true },
+  { id: "sunset", label: "غروب آتشین", stops: ["#881337", "#b50d22", "#ea580c"], dark: true, middleStop: 45 },
   { id: "emerald", label: "زمردی", stops: ["#064e3b", "#047857", "#0d9488"], dark: true },
   { id: "black", label: "لوکس مشکی", stops: ["#0a0a0a", "#1a1a1a", "#222222"], dark: true },
   { id: "light", label: "روشن مینیمال", stops: ["#f8fafc", "#e2e8f0", "#cbd5e1"], dark: false },
@@ -25,11 +25,6 @@ export const STORY_THEMES: StoryTheme[] = [
 export const STORY_SIZES: Record<StoryFormat, { width: number; height: number }> = {
   story: { width: 1080, height: 1920 },
   square: { width: 1080, height: 1080 },
-};
-
-const FONT_PX: Record<StoryFormat, Record<StoryFontSize, number>> = {
-  story: { sm: 46, md: 56, lg: 66, xl: 78 },
-  square: { sm: 36, md: 42, lg: 50, xl: 58 },
 };
 
 /** A tweet's length: longer posts are cut and point the reader to the app. */
@@ -100,7 +95,7 @@ function drawCircleImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement,
 
 function drawTick(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
   ctx.save();
-  ctx.fillStyle = "#3b82f6";
+  ctx.fillStyle = "#38bdf8";
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fill();
@@ -138,150 +133,110 @@ function drawScanGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, size
 }
 
 export function drawStory(canvas: HTMLCanvasElement, input: StoryInput): void {
-  const { width: W, height: H } = STORY_SIZES[input.format];
-  canvas.width = W;
-  canvas.height = H;
+  const { width, height } = STORY_SIZES[input.format];
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) throw new Error("Canvas is unavailable");
 
+  // Reference preview geometry; render at export resolution with the same composition.
   const square = input.format === "square";
-  const pad = square ? 72 : 84;
-  const fg = input.theme.dark ? "#ffffff" : "#0f172a";
-  const muted = input.theme.dark ? "rgba(255,255,255,0.72)" : "rgba(15,23,42,0.62)";
+  const W = square ? 340 : 310;
+  const H = square ? 340 : 510;
+  const pad = square ? 20 : 24;
+  const fg = input.theme.dark ? "#ffffff" : "#111827";
+  const muted = input.theme.dark ? "rgba(255,255,255,.7)" : "rgba(17,24,39,.7)";
   const font = (weight: number, px: number) => `${weight} ${px}px ${input.fontFamily}`;
-
-  // Background: the theme gradient at 135° plus the two soft glows of the reference.
+  ctx.scale(width / W, height / H);
   const gradient = ctx.createLinearGradient(0, 0, W, H);
   gradient.addColorStop(0, input.theme.stops[0]);
-  gradient.addColorStop(0.5, input.theme.stops[1]);
+  gradient.addColorStop((input.theme.middleStop ?? 50) / 100, input.theme.stops[1]);
   gradient.addColorStop(1, input.theme.stops[2]);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, W, H);
   ctx.save();
-  ctx.filter = "blur(120px)";
-  ctx.fillStyle = "rgba(244,63,94,0.22)";
-  ctx.beginPath();
-  ctx.arc(W - 40, 40, 300, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(14,165,233,0.2)";
-  ctx.beginPath();
-  ctx.arc(60, H - 60, 340, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.filter = "blur(64px)";
+  ctx.fillStyle = "rgba(240,36,58,.2)";
+  ctx.beginPath(); ctx.arc(W - 40, 40, 88, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(14,165,233,.2)";
+  ctx.beginPath(); ctx.arc(56, H - 40, 104, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
-
   ctx.direction = "rtl";
   ctx.textBaseline = "middle";
 
-  // Top row: brand on the right, hashtag pill on the left.
-  const topY = pad + 40;
-  const tile = 84;
-  ctx.fillStyle = "rgba(225,29,72,0.92)";
-  roundRect(ctx, W - pad - tile, topY - tile / 2, tile, tile, 26);
-  ctx.fill();
-  if (input.logo) ctx.drawImage(input.logo, W - pad - tile + 14, topY - tile / 2 + 14, tile - 28, tile - 28);
-  ctx.fillStyle = fg;
-  ctx.font = font(900, 40);
-  ctx.textAlign = "right";
-  ctx.fillText("نقش من", W - pad - tile - 22, topY + 2);
+  const topY = pad + 14;
+  ctx.fillStyle = "rgba(225,29,72,.9)";
+  roundRect(ctx, W - pad - 28, pad, 28, 28, 12); ctx.fill();
+  if (input.logo) ctx.drawImage(input.logo, W - pad - 21, pad + 7, 14, 14);
+  ctx.font = font(900, 12); ctx.fillStyle = fg; ctx.textAlign = "right";
+  ctx.fillText("نقش من", W - pad - 36, topY);
+  const tag = square ? `${input.hashtag} (۱:۱)` : input.hashtag;
+  ctx.font = font(400, 10);
+  const tagW = ctx.measureText(tag).width + 20;
+  ctx.fillStyle = "rgba(255,255,255,.1)";
+  roundRect(ctx, pad, topY - 10, tagW, 20, 10); ctx.fill();
+  ctx.fillStyle = muted; ctx.textAlign = "center";
+  ctx.fillText(tag, pad + tagW / 2, topY);
 
-  ctx.font = font(500, 30);
-  const tagWidth = ctx.measureText(input.hashtag).width + 52;
-  ctx.fillStyle = input.theme.dark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.08)";
-  roundRect(ctx, pad, topY - 30, tagWidth, 60, 30);
-  ctx.fill();
-  ctx.fillStyle = muted;
-  ctx.textAlign = "center";
-  ctx.fillText(input.hashtag, pad + tagWidth / 2, topY + 2);
-
-  // Bottom row: author on the right, scan glyph on the left, above a hairline.
-  const avatarR = 54;
+  const avatarR = square ? 16 : 18;
   const bottomY = H - pad - avatarR;
-  ctx.strokeStyle = input.theme.dark ? "rgba(255,255,255,0.15)" : "rgba(15,23,42,0.12)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(pad, bottomY - avatarR - 40);
-  ctx.lineTo(W - pad, bottomY - avatarR - 40);
-  ctx.stroke();
-
+  const footerTop = bottomY - avatarR - (square ? 10 : 16);
+  ctx.strokeStyle = "rgba(255,255,255,.15)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, footerTop); ctx.lineTo(W - pad, footerTop); ctx.stroke();
   const avatarX = W - pad - avatarR;
-  if (input.authorAvatar) {
-    drawCircleImage(ctx, input.authorAvatar, avatarX, bottomY, avatarR);
-  } else {
-    ctx.fillStyle = input.theme.dark ? "#f5f5f7" : "#0f172a";
-    ctx.beginPath();
-    ctx.arc(avatarX, bottomY, avatarR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = input.theme.dark ? "#0b0b0b" : "#ffffff";
-    ctx.font = font(900, 44);
-    ctx.textAlign = "center";
-    ctx.fillText(input.authorName.trim().charAt(0) || "؟", avatarX, bottomY + 2);
+  if (input.authorAvatar) drawCircleImage(ctx, input.authorAvatar, avatarX, bottomY, avatarR);
+  else {
+    ctx.fillStyle = "rgba(225,29,72,.8)";
+    ctx.beginPath(); ctx.arc(avatarX, bottomY, avatarR, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = font(700, 12); ctx.textAlign = "center";
+    ctx.fillText(input.authorName.trim().charAt(0) || "؟", avatarX, bottomY);
   }
-  const nameRight = W - pad - avatarR * 2 - 26;
-  ctx.textAlign = "right";
-  ctx.fillStyle = fg;
-  ctx.font = font(800, 38);
-  const name = input.authorName.length > 28 ? `${input.authorName.slice(0, 27)}…` : input.authorName;
-  ctx.fillText(name, nameRight, bottomY - 22);
-  if (input.authorVerified) {
-    const nameWidth = ctx.measureText(name).width;
-    drawTick(ctx, nameRight - nameWidth - 30, bottomY - 22, 17);
-  }
-  ctx.direction = "ltr";
-  ctx.textAlign = "right";
-  ctx.fillStyle = muted;
-  // The first family is the Persian-digit face; a URL keeps Latin digits.
-  ctx.font = `500 28px ${input.fontFamily.split(",").slice(1).join(",") || input.fontFamily}`;
-  ctx.fillText(input.link, nameRight, bottomY + 26);
+  const nameRight = W - pad - avatarR * 2 - 8;
+  ctx.fillStyle = fg; ctx.font = font(700, 12); ctx.textAlign = "right";
+  const name = input.authorName.length > 25 ? `${input.authorName.slice(0, 24)}…` : input.authorName;
+  ctx.fillText(name, nameRight, bottomY - 7, W - pad * 2 - avatarR * 2 - 50);
+  if (input.authorVerified) drawTick(ctx, nameRight - Math.min(ctx.measureText(name).width, W - pad * 2 - avatarR * 2 - 50) - 9, bottomY - 7, 6);
+  ctx.direction = "ltr"; ctx.font = font(400, 10); ctx.fillStyle = muted;
+  ctx.fillText(input.link, nameRight, bottomY + 10, W - pad * 2 - avatarR * 2 - 50);
   ctx.direction = "rtl";
-  const glyph = 96;
-  ctx.fillStyle = input.theme.dark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.06)";
-  roundRect(ctx, pad, bottomY - glyph / 2, glyph, glyph, 26);
-  ctx.fill();
-  drawScanGlyph(ctx, pad + 18, bottomY - glyph / 2 + 18, glyph - 36, fg);
+  const glyph = square ? 32 : 36;
+  ctx.fillStyle = "rgba(255,255,255,.1)";
+  roundRect(ctx, pad, bottomY - glyph / 2, glyph, glyph, 12); ctx.fill();
+  drawScanGlyph(ctx, pad + 5, bottomY - glyph / 2 + 5, glyph - 10, fg);
 
-  // Middle: the quote mark and the post text, vertically centred in the free band.
   const { text, truncated } = storyText(input.text);
-  const px = FONT_PX[input.format][input.fontSize];
-  const lineHeight = Math.round(px * 1.62);
+  const px = (square ? { sm: 11, md: 12, lg: 14, xl: 16 } : { sm: 12, md: 14, lg: 16, xl: 18 })[input.fontSize];
+  const lineHeight = px * 1.625;
   ctx.font = font(700, px);
-  const maxWidth = W - pad * 2;
-  const bandTop = topY + 70;
-  const bandBottom = bottomY - avatarR - 70;
-  const quoteSize = square ? 90 : 120;
-  const maxLines = Math.max(1, Math.floor((bandBottom - bandTop - quoteSize - (truncated ? lineHeight : 0)) / lineHeight));
-  let lines = wrap(ctx, text, maxWidth);
-  let cut = truncated;
-  if (lines.length > maxLines) {
-    lines = lines.slice(0, maxLines);
-    cut = true;
-  }
-  const blockHeight = quoteSize + lines.length * lineHeight + (cut ? lineHeight + 10 : 0);
+  const availableWidth = W - pad * 2;
+  const quoteSize = square ? 24 : 32;
+  const gap = square ? 6 : 12;
+  const bandTop = pad + 44;
+  const bandBottom = footerTop - 16;
+  const capacity = Math.max(1, Math.floor((bandBottom - bandTop - quoteSize - gap - (truncated ? lineHeight + 6 : 0)) / lineHeight));
+  const maxLines = square ? Math.min(capacity, { sm: 5, md: 4, lg: 4, xl: 3 }[input.fontSize]) : capacity;
+  let lines = wrap(ctx, text, availableWidth);
+  const cut = truncated || lines.length > maxLines;
+  lines = lines.slice(0, maxLines);
+  if (cut && !truncated && lines.length) lines[lines.length - 1] = lines[lines.length - 1].replace(/\s+\S*$/, "") + "…";
+  const blockHeight = quoteSize + gap + lines.length * lineHeight + (truncated ? lineHeight + 6 : 0);
   let y = bandTop + Math.max(0, (bandBottom - bandTop - blockHeight) / 2);
-
-  ctx.fillStyle = input.theme.dark ? "rgba(244,63,94,0.55)" : "rgba(225,29,72,0.5)";
-  ctx.font = `900 ${quoteSize * 1.6}px Georgia, serif`;
-  ctx.textAlign = "right";
-  ctx.fillText("”", W - pad, y + quoteSize * 0.55);
-  y += quoteSize;
-
-  ctx.font = font(700, px);
-  ctx.fillStyle = fg;
-  for (const line of lines) {
-    ctx.fillText(line, W - pad, y + lineHeight / 2);
-    y += lineHeight;
-  }
-
-  if (cut) {
-    ctx.font = font(800, Math.round(px * 0.82));
-    const label = STORY_MORE_LABEL;
-    const labelWidth = ctx.measureText(label).width + 36;
-    const labelHeight = Math.round(px * 1.25);
-    ctx.fillStyle = input.theme.dark ? "rgba(24,24,24,0.85)" : "rgba(15,23,42,0.9)";
-    roundRect(ctx, W - pad - labelWidth, y + 6, labelWidth, labelHeight, 12);
-    ctx.fill();
-    ctx.fillStyle = "#f5f5f7";
-    ctx.textAlign = "center";
-    ctx.fillText(label, W - pad - labelWidth / 2, y + 6 + labelHeight / 2 + 2);
+  ctx.save();
+  ctx.translate(W - pad - quoteSize, y); ctx.scale(quoteSize / 24, quoteSize / 24);
+  ctx.fillStyle = "rgba(240,36,58,.5)";
+  ctx.fill(new Path2D("M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"));
+  ctx.restore();
+  y += quoteSize + gap;
+  ctx.fillStyle = fg; ctx.textAlign = "right"; ctx.font = font(700, px);
+  for (const line of lines) { ctx.fillText(line, W - pad, y + lineHeight / 2); y += lineHeight; }
+  if (truncated) {
+    ctx.font = font(800, px);
+    const labelWidth = Math.min(availableWidth, ctx.measureText(STORY_MORE_LABEL).width + 12);
+    ctx.fillStyle = "rgba(240,36,58,.1)";
+    roundRect(ctx, W - pad - labelWidth, y + 3, labelWidth, lineHeight + 4, 4); ctx.fill();
+    ctx.strokeStyle = "rgba(240,36,58,.2)"; ctx.stroke();
+    ctx.fillStyle = "#fb7185"; ctx.textAlign = "center";
+    ctx.fillText(STORY_MORE_LABEL, W - pad - labelWidth / 2, y + 5 + lineHeight / 2);
   }
 }
 

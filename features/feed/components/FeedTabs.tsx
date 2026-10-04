@@ -1,7 +1,9 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import { Check, Clock, Plus } from "lucide-react";
-import { forwardRef, useState, useSyncExternalStore, type RefObject } from "react";
+import { forwardRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { PIN_OPTIONS, pinnedLabel, readPinned, subscribePinned, writePinned } from "../pinned-tab";
 import type { FeedFilter } from "../types";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
@@ -33,8 +35,8 @@ export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedT
   const tabClass = (active: boolean) => ` z-10 flex-1 px-2 py-3.5 text-[15px] font-bold transition-colors duration-200 ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`;
 
   return (
-    <div ref={ref} role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className="sticky top-0 z-30 flex w-full bg-background">
-      <button role="tab" type="button" onClick={() => onChange("for-you")} aria-selected={activeTab === "for-you" && !pinnedActive} className={tabClass(activeTab === "for-you" && !pinnedActive)}>
+    <div ref={ref} role="tablist" aria-label="نوع تایم‌لاین" data-active-tab={activeTab} className={`${styles.tabs} sticky top-0 z-30 flex w-full bg-background`} style={{ "--feed-columns": columns } as CSSProperties}>
+      <button role="tab" type="button" onClick={() => { if (pinnedActive) onPinnedSelect?.("all"); onChange("for-you"); }} aria-selected={activeTab === "for-you" && !pinnedActive} className={tabClass(activeTab === "for-you" && !pinnedActive)}>
         برای شما
       </button>
       <button role="tab" type="button" onClick={() => { if (requireAuth("/home")) onChange("following"); }} aria-selected={activeTab === "following"} className={tabClass(activeTab === "following")}>
@@ -45,19 +47,19 @@ export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedT
           {pinnedLabel(pinned)}
         </button>
       ) : null}
-      <button type="button" aria-label="سنجاق کردن یک دسته" onClick={() => setPickerOpen(true)} className="grid w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"><Plus aria-hidden="true" className="h-5 w-5" /></button>
+      <button type="button" aria-label="سنجاق کردن یک دسته" onClick={() => setPickerOpen(true)} className={`${styles.plus} grid w-11 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground`}><Plus aria-hidden="true" className="h-5 w-5" /></button>
       <span
         ref={indicatorRef}
         aria-hidden="true"
-        className={`pointer-events-none absolute bottom-0 right-0 h-[3px] transition-transform duration-300 ease-out after:absolute after:inset-x-1/4 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-foreground after:content-[''] lg:after:bg-brand`}
-        style={{ width: `calc((100% - 2.75rem) / ${columns})`, transform: `translateX(${-slot * 100}%)` }}
+        className={`${styles.indicator} pointer-events-none absolute bottom-0 right-0 h-[3px] transition-transform duration-300 ease-out after:absolute after:inset-x-1/4 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-foreground after:content-[''] lg:after:bg-brand`}
+        style={{ transform: `translateX(${-slot * 100}%)` }}
       />
       {pickerOpen ? (
         <div className="fixed inset-0 z-[120] flex items-end justify-center bg-overlay backdrop-blur-sm sm:items-center" role="presentation" onClick={() => setPickerOpen(false)}>
-          <div role="dialog" aria-modal="true" aria-label="سنجاق دستهٔ جدید" dir="rtl" onClick={(event) => event.stopPropagation()} className="w-full max-w-sm rounded-t-3xl border border-border bg-popover p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-3xl">
+          <div role="dialog" aria-modal="true" aria-label="سنجاق دستهٔ جدید" dir="rtl" onClick={(event) => event.stopPropagation()} className={`${styles.picker} w-full`}>
             <h2 className="text-base font-black">سنجاق دستهٔ جدید</h2>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">یک دسته را به‌عنوان تب سوم کنار «برای شما» و «دنبال‌شده‌ها» سنجاق کن.</p>
-            <div className="mt-4 space-y-2">
+            <div className={styles.pickerRows}>
               {PIN_OPTIONS.map((option) => {
                 const on = pinned === option.id;
                 return (
@@ -65,6 +67,7 @@ export const FeedTabs = forwardRef<HTMLDivElement, FeedTabsProps>(function FeedT
                     key={option.id}
                     type="button"
                     disabled={option.soon}
+                    aria-pressed={on}
                     onClick={() => {
                       writePinned(option.id as FeedFilter);
                       onPinnedSelect?.(option.id as FeedFilter);

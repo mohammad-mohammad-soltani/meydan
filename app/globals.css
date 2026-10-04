@@ -710,16 +710,6 @@ html.dark {
   }
 }
 
-/* Explore and «چندرسانه‌ای»: the trends column goes away and the centre column widens (as on chat). */
-@media (min-width: 1024px) {
-  .wide-route > aside:last-of-type {
-    display: none;
-  }
-  .wide-route #mainAppShell {
-    max-width: 980px;
-  }
-}
-
 /* Reels player (/videos) */
 .reel-glass {
   background: rgb(0 0 0 / 0.48);
@@ -761,43 +751,3 @@ html.dark {
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.15); }
 }
 
-/* Chat: the navigation collapses to an icon rail so the conversation list and thread get the width (as in the reference). */
-@media (min-width: 1024px) {
-  .works-route > aside:first-of-type {
-    width: 84px;
-    padding-inline: 10px;
-    align-items: stretch;
-  }
-  .works-route > aside:first-of-type nav a {
-    justify-content: center;
-    gap: 0;
-    padding-inline: 0;
-    font-size: 0;
-  }
-  .works-route > aside:first-of-type a[href="/home"] {
-    justify-content: center;
-    padding-inline: 0;
-  }
-  .works-route > aside:first-of-type a[href="/home"] > span:last-child {
-    display: none;
-  }
-  .works-route > aside:first-of-type a[href="/compose"] {
-    font-size: 0;
-    gap: 0;
-    padding-inline: 0;
-  }
-  .works-route > aside:first-of-type .border-t > div {
-    justify-content: center;
-    padding: 0;
-  }
-  .works-route > aside:first-of-type .border-t > div > :not(:first-child) {
-    display: none;
-  }
-  .works-route > aside:first-of-type button[class*="rounded-full"] {
-    font-size: 0;
-    gap: 0;
-  }
-  .works-route > aside:first-of-type button[class*="rounded-full"] svg {
-    font-size: 1rem;
-  }
-}

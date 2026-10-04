@@ -10,7 +10,7 @@ const base =
  */
 export function SidebarBanners() {
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <div
         aria-disabled="true"
         className={`${base} cursor-default bg-[linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.2)),linear-gradient(135deg,#e4152e,#f5525f)]`}

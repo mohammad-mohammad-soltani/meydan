@@ -1,0 +1,25 @@
+.reference-content { display:flex;flex-direction:column;gap:22px;padding:0 0 100px;color:var(--m-tx);background:var(--m-bg) }
+.reference-hub-banners { margin-top:14px }
+.reference-content-actions { margin-top:-9px }
+.reference-content-actions > a,.reference-content-actions > div { padding:6px 2px }
+.reference-content-actions a > span:first-child { transition:transform .15s }
+.reference-content-actions a:hover > span:first-child { transform:translateY(-2px) }
+.reference-content-actions a:active > span:first-child { transform:scale(.92) }
+.reference-content-sections { display:flex;flex-direction:column;gap:22px }
+.reference-content-sections > section { display:flex;flex-direction:column;gap:14px }
+.reference-content-heading { padding:0 18px }
+.reference-content-heading > a { font-size:11.5px }
+.reference-speech-list { padding:0 14px }
+.reference-speech-row > span:last-child { font-size:11.5px;background:transparent;color:var(--m-mu) }
+.reference-picked-rail { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:0 18px }
+.reference-picked-card { width:100%;min-width:0 }
+.reference-ava-feature { flex:0 0 calc(50% - 7px);aspect-ratio:.95;max-width:none }
+.reference-ava-squares { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px }
+.reference-ava > div:first-child label,.reference-notes > div:first-child label { min-height:44px;border-radius:999px;padding-block:0 }
+.reference-ava > div:first-child input,.reference-notes > div:first-child input { height:44px;font-size:13px }
+.reference-ava [role=tablist] button,.reference-notes [role=tablist] button { height:34px;border:1px solid var(--m-line);font-size:12.5px;font-weight:700;padding:0 16px }
+.reference-ava [role=tablist] button[aria-selected=true] { background:var(--m-tx);color:var(--m-bg);border-color:transparent }
+@media(max-width:1023px) {
+ .reference-picked-rail { display:flex;overflow-x:auto;gap:12px;scrollbar-width:none;scroll-padding-inline:18px }
+ .reference-picked-card { flex:0 0 calc((100% - 60px)/2.5) }
+}

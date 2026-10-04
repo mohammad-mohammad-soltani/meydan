@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import Link from "next/link";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { Route } from "next";
@@ -12,6 +14,8 @@ import {
 } from "react";
 import {
   ArrowLeft,
+  Download,
+  X,
   Heart,
   MessageCircle,
   Repeat2,
@@ -220,6 +224,31 @@ export function ImmersivePostSlide({
       )}
     </div>
   );
+  if (imageViewer) {
+    return (
+      <div ref={slideRef} className={`${styles.imageFrame} immersive-post is-image-viewer`} data-chrome-visible={visible} {...mediaDrag}>
+        <header className={`${styles.imageHeader} ${chrome("viewer-image-header")}`} inert={!visible} dir="rtl">
+          <button ref={closeRef} type="button" aria-label="بستن نمایشگر" onClick={() => (onBack ?? onClose)()}><X aria-hidden="true" /></button>
+          <span>{item.title || entry.author}</span>
+          <a href={item.downloadHref || item.src} download={item.title} target="_blank" rel="noreferrer" aria-label="دانلود رسانه"><Download aria-hidden="true" /></a>
+        </header>
+        <div className={styles.imageStage}>
+          <div ref={mediaTrackRef} className="viewer-media-track">
+            {media.map((attachment, position) => (
+              <div key={attachment.id} className="viewer-media-slide" style={{ transform: `translateX(${position * 100}%)` }} inert={position !== mediaIndex} aria-hidden={position !== mediaIndex}>
+                {position === mediaIndex ? <MediaStage key={mediaKey} item={item} onSwipe={() => {}} onBackdropClick={toggleChrome} immersive chromeVisible={visible} /> : Math.abs(position - mediaIndex) === 1 ? <MediaNeighbour item={attachment} /> : null}
+              </div>
+            ))}
+          </div>
+          {media.length > 1 ? <div className={chrome("viewer-media-arrows")} inert={!visible}><button type="button" disabled={mediaIndex === 0} aria-label="رسانهٔ قبلی" onClick={() => go(-1)}><ChevronRight /></button><button type="button" disabled={mediaIndex === media.length - 1} aria-label="رسانهٔ بعدی" onClick={() => go(1)}><ChevronLeft /></button></div> : null}
+        </div>
+        <footer className={`${styles.imageFooter} ${chrome("viewer-image-footer")}`} inert={!visible} dir="rtl">
+          <button type="button" aria-pressed={state.viewerState.liked} disabled={state.busy} onClick={() => void state.toggle("like")}><Heart className={state.viewerState.liked ? "fill-current" : ""} /><span>پسندیدن</span></button>
+          <button type="button" onClick={() => void state.share()}><Send /><span>اشتراک</span></button>
+        </footer>
+      </div>
+    );
+  }
   return (
     <div
       ref={slideRef}

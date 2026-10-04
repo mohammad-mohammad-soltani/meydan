@@ -19,7 +19,7 @@ export function ShareProvider({ children }: { children: ReactNode }) {
   return (
     <ShareContext.Provider value={value}>
       {children}
-      {post ? <ShareSheet post={post} onClose={() => setPost(null)} /> : null}
+      {post ? <ShareSheet key={post.id} post={post} onClose={() => setPost(null)} /> : null}
     </ShareContext.Provider>
   );
 }

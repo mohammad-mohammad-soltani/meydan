@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createDirectConversation } from "@/features/chat/services/chat.service";
 import { CalendarDays, Check, LoaderCircle, MapPin, MessageCircle, X } from "lucide-react";
@@ -75,7 +76,7 @@ function ActorIdentity({
 
   const heading = (
     <span className="flex min-w-0 items-center gap-1">
-      <strong className="truncate text-xs font-black text-foreground">{name}</strong>
+      <strong className="truncate text-[14.5px] font-extrabold text-foreground">{name}</strong>
       <AccountBadges verified={actor?.verified} speaker={actor?.verifiedSpeaker} kind={actor?.type} />
     </span>
   );
@@ -127,6 +128,7 @@ export function InvitationCard({
   onAccept?: () => void;
   onReject?: () => void;
 }) {
+  const router = useRouter();
   const counterpart = perspective === "speaker" ? invitation.inviter : invitation.speaker;
   const counterpartRole = perspective === "speaker" ? "دعوت‌کننده" : "سخنران";
   const scheduled = when(invitation);
@@ -139,7 +141,7 @@ export function InvitationCard({
     setChatError("");
     try {
       const conversation = await createDirectConversation(speakerUserId);
-      window.location.href = `/chat/${conversation.id}`;
+      router.push(`/chat/${conversation.id}` as Route);
     } catch {
       setChatError("باز کردن گفتگو انجام نشد. دوباره تلاش کنید.");
       setChatBusy(false);
@@ -148,7 +150,7 @@ export function InvitationCard({
   const canDecide = perspective === "speaker" && invitation.status === "pending";
 
   return (
-    <article className="ui-enter overflow-hidden rounded-card border border-border bg-card text-right shadow-xs transition-colors hover:border-border-strong">
+    <article className="ui-enter overflow-hidden rounded-[20px] border border-border bg-surface-muted text-right transition-colors hover:border-border-strong">
       <div className="flex items-center gap-3 p-3.5">
         <ActorIdentity actor={counterpart} role={counterpartRole} />
 
@@ -160,7 +162,7 @@ export function InvitationCard({
         </span>
       </div>
 
-      <dl className="space-y-1.5 border-t border-divider bg-surface-muted/40 px-3.5 py-3 text-[11px] text-foreground-secondary">
+      <dl className="space-y-1.5 border-t border-divider bg-surface-muted/40 px-3.5 py-3 text-xs text-foreground-secondary">
         {invitation.location ? (
           <div className="flex items-center gap-1.5">
             <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-brand" />

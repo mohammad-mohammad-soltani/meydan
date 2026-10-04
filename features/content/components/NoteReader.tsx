@@ -57,7 +57,7 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
   return (
     <article className="min-h-full pb-24" dir="rtl">
       <div
-        className="relative h-56 w-full"
+        className="relative h-[240px] w-full"
         style={{ background: cover ? `linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.05) 45%,var(--background)), url(${cover}) center/cover` : `linear-gradient(145deg,hsl(${hueOf(item.title)} 55% 36%),hsl(${(hueOf(item.title) + 50) % 360} 50% 18%))` }}
       >
         <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
@@ -68,9 +68,9 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
         </div>
       </div>
 
-      <div className="-mt-6 px-5">
+      <div className="px-5 pb-[60px] pt-5">
         {item.categoryName ? <span className="inline-block rounded-full bg-surface-muted px-3 py-1 text-[11px] font-bold text-foreground-secondary">{item.categoryName}</span> : null}
-        <h1 className="mt-3 text-2xl font-black leading-[2.4rem] text-foreground">{item.title}</h1>
+        <h1 className="mt-3 text-[22px] font-black leading-[1.7] text-foreground">{item.title}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="font-bold text-foreground-secondary">{item.creator.name}</span>
           <span aria-hidden="true">·</span>
@@ -78,15 +78,15 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
           {item.readingMinutes ? (<><span aria-hidden="true">·</span><span className="inline-flex items-center gap-1"><Clock aria-hidden="true" className="h-3.5 w-3.5" />{fa.format(item.readingMinutes)} دقیقه</span></>) : null}
         </div>
         {item.subtitle || item.description ? <p className="mt-5 text-[15px] font-bold leading-8 text-foreground">{item.subtitle || item.description}</p> : null}
-        <div className="mt-4 space-y-4 text-[15px] leading-9 text-foreground-secondary">
+        <div className="mt-4 space-y-4 text-[15px] leading-[2.1] text-foreground-secondary">
           {item.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
         </div>
 
         <div className="mt-8 flex gap-2.5 border-t border-divider pt-5">
-          <button type="button" aria-pressed={liked} onClick={() => void toggle("like")} className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl border text-sm font-black transition-colors ${liked ? "border-brand/40 bg-brand-muted text-brand" : "border-border bg-surface-muted text-foreground"}`}>
+          <button type="button" aria-pressed={liked} onClick={() => void toggle("like")} className={`inline-flex h-[46px] flex-1 items-center justify-center gap-2 rounded-full border text-[13px] font-bold transition-colors ${liked ? "border-brand/40 bg-brand-muted text-brand" : "border-border bg-surface-muted text-foreground"}`}>
             <Heart aria-hidden="true" className={`h-[18px] w-[18px] ${liked ? "fill-current" : ""}`} />{fa.format(likes)}
           </button>
-          <button type="button" aria-pressed={saved} onClick={() => void toggle("bookmark")} className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl border text-sm font-black transition-colors ${saved ? "border-brand/40 bg-brand-muted text-brand" : "border-border bg-surface-muted text-foreground"}`}>
+          <button type="button" aria-pressed={saved} onClick={() => void toggle("bookmark")} className={`inline-flex h-[46px] flex-1 items-center justify-center gap-2 rounded-full border text-[13px] font-bold transition-colors ${saved ? "border-brand/40 bg-brand-muted text-brand" : "border-border bg-surface-muted text-foreground"}`}>
             <Bookmark aria-hidden="true" className={`h-[18px] w-[18px] ${saved ? "fill-current" : ""}`} />ذخیره
           </button>
         </div>

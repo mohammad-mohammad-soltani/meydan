@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import styles from "../reference.module.css";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import { MapBelow } from "./MapBelow";
-import { MapFrame } from "./MapFrame";
+import { MapSvg, type MapFocus as MapFocusRequest } from "./MapSvg";
 import { useMap } from "../hooks/useMap";
 
 type MapFocus = { latitude: number; longitude: number; zoom?: number };
@@ -36,81 +38,62 @@ export function MapView() {
   // A square profile links here with ?lat=&lng= so the live map opens on that
   // square. The URL is read directly to avoid a useSearchParams boundary.
   const [linkedFocus, setLinkedFocus] = useState<MapFocus | null>(null);
-  const [requestedFocus, setRequestedFocus] = useState<MapFocus | null>(null);
+  const [requested, setRequested] = useState<MapFocusRequest | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setLinkedFocus(readLinkedFocus()));
   }, []);
 
-  const handleSelectProvince = (provinceId: number) => {
-    setLinkedFocus(null);
-    map.selectProvince(provinceId);
-    const province = map.provinceAggregates.find(
-      (item) => item.provinceId === provinceId,
-    );
-    if (province)
-      setRequestedFocus({
-        latitude: province.latitude,
-        longitude: province.longitude,
-        zoom: 7.2,
-      });
-  };
+  // The map flies to the chosen province or city on its own; only a single square needs a request.
+  const focus = useMemo<MapFocusRequest | null>(
+    () => requested ?? (linkedFocus ? { latitude: linkedFocus.latitude, longitude: linkedFocus.longitude, nonce: 0 } : null),
+    [requested, linkedFocus],
+  );
 
-  const handleSelectCity = (cityId: number) => {
-    setLinkedFocus(null);
-    map.selectCity(cityId);
-    const city = map.cityAggregates.find((item) => item.cityId === cityId);
-    if (city)
-      setRequestedFocus({
-        latitude: city.latitude,
-        longitude: city.longitude,
-        zoom: 10.2,
-      });
-  };
-  const mapMarkers =
-    map.level === "country"
-      ? {
-          squares: [],
-          aggregates: map.provinceAggregates,
-          onSelect: map.selectProvinceAggregate,
-        }
-      : map.level === "province"
-        ? {
-            squares: [],
-            aggregates: map.allCityAggregates,
-            onSelect: map.selectCityAggregate,
-          }
-        : {
-            squares: map.resolvedSquares,
-            aggregates: [],
-            onSelect: map.selectCityAggregate,
-          };
+  const handleSelectProvince = useCallback(
+    (provinceId: number) => {
+      setLinkedFocus(null);
+      setRequested(null);
+      map.selectProvince(provinceId);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `map` changes every render; its actions are stable
+    [map.selectProvince],
+  );
+
+  const handleSelectCity = useCallback(
+    (cityId: number) => {
+      setLinkedFocus(null);
+      setRequested(null);
+      map.selectCity(cityId);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+    [map.selectCity],
+  );
 
   return (
     <section
       id="view-map"
-      className="min-h-full bg-background pb-24 text-foreground"
+      className={`${styles.root} min-h-full bg-background text-foreground`}
     >
       <div>
-        <div className="relative overflow-hidden rounded-b-[22px] bg-[#1c1c1c] lg:rounded-b-[34px]">
-          <div className="min-h-[62dvh] sm:min-h-[62dvh] [&>*]:min-h-[62dvh] sm:[&>*]:min-h-[62dvh]">
-            <MapFrame
-              squares={mapMarkers.squares}
-              aggregates={mapMarkers.aggregates}
-              searchProvinces={map.provinceAggregates}
-              searchCities={map.allCityAggregates}
-              searchSquares={map.resolvedSquares}
-              center={linkedFocus ?? requestedFocus}
-              level={map.level}
-              onSelectAggregate={mapMarkers.onSelect}
-              onViewportLevel={map.setViewport}
+        <div className={styles.viewport}>
+          <div className={styles.frameHost}>
+            <MapSvg
+              squares={map.resolvedSquares}
+              provinces={map.provinceAggregates}
+              cities={map.allCityAggregates}
+              selectedProvinceName={map.selectedProvince?.name ?? null}
+              selectedCityName={map.selectedCity?.name ?? null}
+              focus={focus}
+              onSelectProvince={handleSelectProvince}
+              onSelectCity={handleSelectCity}
             />
           </div>
 
           {map.status === "loading" && map.activeCount === 0 ? (
             <div className="absolute inset-0 z-[700] grid place-items-center bg-black/30 backdrop-blur-[1px]">
-              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#2a2b2c]/90 px-4 py-2 text-xs font-bold text-white shadow-card backdrop-blur-md">
-                <LoaderCircle className="h-4 w-4 animate-spin text-[#e5544b]" />
+              <div className={`${styles.loadingBadge} flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold shadow-card`}>
+                <LoaderCircle className="h-4 w-4 animate-spin text-brand" />
                 در حال دریافت میدان‌ها…
               </div>
             </div>
@@ -138,12 +121,12 @@ export function MapView() {
         onCity={handleSelectCity}
         onAll={() => {
           setLinkedFocus(null);
+          setRequested(null);
           map.clearSelection();
-          setRequestedFocus({ latitude: 32.4, longitude: 53.7, zoom: 4.6 });
         }}
         onSquare={(square) => {
           setLinkedFocus(null);
-          setRequestedFocus({ latitude: square.latitude, longitude: square.longitude, zoom: 15 });
+          setRequested({ latitude: square.latitude, longitude: square.longitude, nonce: Date.now() });
           document.getElementById("view-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
         onShowMap={() => document.getElementById("view-map")?.scrollIntoView({ behavior: "smooth", block: "start" })}

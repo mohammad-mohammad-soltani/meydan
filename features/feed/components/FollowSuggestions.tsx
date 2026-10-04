@@ -1,5 +1,8 @@
 "use client";
 
+import styles from "../reference.module.css";
+import { useHorizontalDrag } from "../hooks/useHorizontalDrag";
+
 import Link from "next/link";
 import type { Route } from "next";
 import { Check, LoaderCircle, UserRoundPlus } from "lucide-react";
@@ -22,6 +25,7 @@ type FollowSuggestionsProps = {
 
 export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollowKeys, onToggleFollow, title = "پیشنهاد برای دنبال‌کردن", variant = "grid" }: FollowSuggestionsProps) {
   const { requireAuth } = useAuthGate();
+  const dragHandlers = useHorizontalDrag();
   if (!suggestions.length) return null;
 
   const number = new Intl.NumberFormat("fa-IR");
@@ -29,7 +33,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
   if (variant === "strip") {
     const compact = new Intl.NumberFormat("fa-IR", { notation: "compact", maximumFractionDigits: 1 });
     return (
-      <section aria-label="پیشنهاد دنبال کردن" className="border-y border-divider bg-surface-sunken/60 p-4">
+      <section aria-label="پیشنهاد دنبال کردن" className={`${styles.suggestions} border-y border-divider bg-surface-sunken/60 p-4`}>
         <div className="mb-3 flex items-center justify-between">
           <div className="flex min-w-0 items-center gap-2">
             <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-surface-muted text-foreground">
@@ -40,18 +44,18 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
           </div>
           <Link href={"/explore" as Route} className="shrink-0 text-[11px] font-bold text-foreground hover:underline">مشاهده همه</Link>
         </div>
-        <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 no-scrollbar">
+        <div className={`${styles.suggestionRow} -mx-4 flex snap-x gap-3 overflow-x-auto px-4 no-scrollbar`} {...dragHandlers}>
           {suggestions.map((suggestion) => {
             const key = actorKey(suggestion.actorType, suggestion.id);
             const followed = followedActorKeys.has(key);
             const pending = pendingFollowKeys.has(key);
             const profileHref = publicProfileHref(suggestion.actorType, suggestion.id, suggestion.handle) as Route;
             return (
-              <article key={key} className="flex w-[17rem] shrink-0 snap-start flex-col justify-between rounded-2xl border border-border bg-surface-muted p-3 transition-colors hover:border-border-strong">
-                <div className="mb-2 flex items-start justify-between gap-2">
-                  <Link href={profileHref} className="flex min-w-0 items-center gap-2" aria-label={`پروفایل ${suggestion.name}`}>
-                    <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border-strong bg-surface-elevated text-xs font-black text-foreground">
-                      {suggestion.avatarUrl ? <OptimizedAvatar src={suggestion.avatarUrl} alt="" width={40} className="h-full w-full object-cover" /> : suggestion.name.slice(0, 1)}
+              <article key={key} className={`${styles.suggestion} flex shrink-0 snap-start flex-col justify-between border border-border bg-surface-muted transition-colors hover:border-border-strong`}>
+                <div className={styles.suggestionHead}>
+                  <Link href={profileHref} className={`${styles.suggestionIdentity} flex min-w-0 items-center gap-2`} aria-label={`پروفایل ${suggestion.name}`}>
+                    <span className={`${styles.suggestionAvatar} grid shrink-0 place-items-center overflow-hidden rounded-full border bg-surface-elevated text-xs font-black text-foreground`}>
+                      {suggestion.avatarUrl ? <OptimizedAvatar src={suggestion.avatarUrl} alt="" width={64} className="h-full w-full object-cover" /> : suggestion.name.slice(0, 1)}
                     </span>
                     <span className="min-w-0">
                       <span className="flex items-center gap-1">
@@ -65,14 +69,14 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
                     type="button"
                     disabled={pending}
                     onClick={() => { if (requireAuth()) onToggleFollow(suggestion.actorType, suggestion.id); }}
-                    className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${followed ? "border border-border bg-surface-elevated text-muted-foreground" : "bg-emphasis text-emphasis-foreground"}`}
+                    className={`${styles.suggestionFollow} flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${followed ? "border border-border bg-surface-elevated text-muted-foreground" : "bg-emphasis text-emphasis-foreground"}`}
                   >
                     {pending ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : followed ? <Check className="h-3.5 w-3.5" /> : <UserRoundPlus className="h-3.5 w-3.5" />}
                     {followed ? "دنبال شد" : "دنبال کردن"}
                   </button>
                 </div>
                 <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-foreground-secondary">{suggestion.description}</p>
-                <div className="flex items-center justify-between border-t border-divider pt-1.5 text-[10px] text-muted-foreground">
+                <div className={`${styles.suggestionFooter} flex items-center justify-between border-t border-divider pt-1.5 text-[10px] text-muted-foreground`}>
                   <span className="truncate">{suggestion.city || "فعال در میدان"}</span>
                   {suggestion.followerCount != null ? (
                     <span className="shrink-0 font-bold">{compact.format(suggestion.followerCount)} دنبال‌کننده</span>

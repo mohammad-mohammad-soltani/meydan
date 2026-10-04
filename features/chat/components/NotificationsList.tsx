@@ -47,7 +47,7 @@ export function NotificationsList({
   }
 
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex flex-col gap-1">
       {notifications.map((notification) => {
         const Icon = icons[notification.kind];
         const presentation = getNotificationPresentation(notification);
@@ -55,15 +55,15 @@ export function NotificationsList({
           if (notification.unread) void onRead?.(notification.id);
         };
         const content = (
-          <article className={`flex items-center gap-3 rounded-[18px] px-3 py-[13px] text-right ${notification.unread ? "bg-foreground/[.07]" : ""}`}>
+          <article className={`flex items-center gap-3 rounded-2xl px-3 py-[7px] text-right ${notification.unread ? "bg-foreground/[.05]" : ""}`}>
             <span
               aria-hidden="true"
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full"
               style={{ background: `color-mix(in srgb, hsl(${hues[notification.kind]} 70% 52%) 18%, var(--surface-muted))`, color: `hsl(${hues[notification.kind]} 80% 66%)` }}
             >
               <Icon className="h-5 w-5" />
             </span>
-            <div className="flex min-w-0 flex-1 flex-col gap-[5px] text-sm leading-[1.8] text-foreground">
+            <div className="flex min-w-0 flex-1 flex-col gap-px text-sm leading-[1.7] text-foreground">
               <p className="line-clamp-3">
                 {presentation.actorName && presentation.title.startsWith(presentation.actorName) ? (
                   <><b className="font-bold">{presentation.actorName}</b>{presentation.title.slice(presentation.actorName.length)}</>

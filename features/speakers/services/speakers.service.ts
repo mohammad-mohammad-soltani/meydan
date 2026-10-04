@@ -1,4 +1,5 @@
 import { meydanApi, meydanApiEnvelope } from "@/lib/meydan-api";
+import { loadSpeakerCityNames } from "./city-names";
 import type { Speaker, SpeakerCategory } from "../types";
 
 type ApiCategory = { slug?: string; name?: string };
@@ -14,7 +15,7 @@ type ApiSpeaker = {
   expertise?: string;
   initials?: string;
   avatar_url?: string;
-  cities?: Array<{ name?: string } | string>;
+  cities?: Array<{ id?: number | string; name?: string } | string | number>;
   user_id?: number | null;
   categories?: ApiCategory[];
 };
@@ -27,9 +28,10 @@ function categoriesOf(item: ApiSpeaker): SpeakerCategory[] {
     .map((category) => ({ slug: String(category.slug), name: String(category.name || category.slug) }));
 }
 
-function cityNames(cities?: ApiSpeaker["cities"]): string[] {
+function cityNames(cities: ApiSpeaker["cities"], names: Map<string, string>): string[] {
   return (cities || [])
-    .map((city) => (typeof city === "string" ? city : city.name || ""))
+    .map((city) => (typeof city === "object" ? city.name || String(city.id ?? "") : String(city)))
+    .map((name) => /^\d+$/.test(name) ? names.get(name) || "" : name)
     .filter(Boolean);
 }
 
@@ -49,11 +51,13 @@ export async function getSpeakerPage(page = 1, q = "", category = "all"): Promis
   if (category !== "all") params.set("speaker_category", category);
   const response = await meydanApiEnvelope<ApiSpeaker[]>(`/speakers?${params}`);
   const items = response.data ?? [];
+  const needsNames = items.some((item) => item.cities?.some((city) => typeof city === "number" || (typeof city === "string" && /^\d+$/.test(city)) || (typeof city === "object" && !city.name && city.id != null)));
+  const names = needsNames ? await loadSpeakerCityNames().catch(() => new Map<string, string>()) : new Map<string, string>();
   return { items: items.map((item, index) => ({
     id: String(item.id),
     name: item.name,
     handle: item.handle || item.slug || `speaker_${item.id}`,
-    cities: cityNames(item.cities),
+    cities: cityNames(item.cities, names),
     categories: categoriesOf(item),
     expertise: item.expertise || item.bio || item.role || "",
     initials:

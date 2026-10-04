@@ -9,6 +9,7 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MobileDrawer } from "./MobileDrawer";
 import { useDrawerViewer } from "./useDrawerViewer";
 import { AppLogo } from "@/components/shared/AppLogo";
+import styles from "./shell.module.css";
 
 export function MobileHeader() {
   const pathname = usePathname();
@@ -28,7 +29,7 @@ export function MobileHeader() {
   if (pathname === "/chat" || pathname === "/content" || pathname === "/map" || isConversationRoute || isContentDetailRoute || isPostRoute || isExploreRoute || isProfileRoute || isInitiativeRoute || isSpeakerInvitationRoute) return null;
 
   return (
-    <header className={`${pathname === "/home" ? "relative" : "sticky top-0"} z-40 flex items-center justify-between border-b border-divider bg-surface-glass px-4 py-2.5 backdrop-blur-md lg:hidden`}>
+    <header className={`${styles.header} sticky top-0 z-40 flex items-center justify-between border-b border-divider bg-surface-glass px-4 py-2.5 backdrop-blur-md lg:hidden`}>
       <button
         type="button"
         onClick={() => setDrawerOpen(true)}
@@ -45,13 +46,13 @@ export function MobileHeader() {
         )}
       </button>
       <Link href="/home" aria-label="خانه نقش من" className="absolute left-1/2 -translate-x-1/2">
-        <AppLogo className="h-7 w-7 rounded-lg" priority />
+        <AppLogo appearance="ring" className="h-8 w-8 rounded-[10px]" priority />
       </Link>
       {/* Explore lives here on mobile now that chat owns its bottom-nav slot. */}
       <Link
         href="/explore"
         aria-label="کاوش و جستجو"
-        className="grid h-8 w-8 place-items-center rounded-full border border-border bg-surface-elevated text-icon transition-colors hover:bg-hover"
+        className="grid h-8 w-8 place-items-center rounded-full border border-[var(--header-btn-border)] bg-[var(--header-btn)] text-[var(--header-btn-fg)] transition-colors hover:bg-[var(--header-btn-hover)] active:scale-95"
       >
         <Search aria-hidden="true" className="h-4 w-4" />
       </Link>

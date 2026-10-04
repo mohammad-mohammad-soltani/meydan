@@ -1,0 +1,114 @@
+/* Values from the supplied HTML's final cascade. Contextual colors live with
+   their feature; these are the shared app palette, not estimated shades. */
+:root {
+  --m-bg: var(--background);
+  --m-soft: var(--surface-muted);
+  --m-line: var(--border);
+  --m-tx: var(--foreground);
+  --m-mu: var(--muted-foreground);
+  --m-glass: var(--reference-glass);
+  --reference-glass: rgba(255, 255, 255, .72);
+  --reference-nav-selected: color-mix(in srgb, #e4152e 7%, transparent);
+  --reference-like: #f0243a;
+  --reference-repost: #3b82f6;
+  --reference-gray-300: oklch(87.2% .01 258.338);
+  --reference-gray-400: oklch(70.7% .022 261.325);
+  --reference-gray-500: oklch(55.1% .027 264.364);
+  --foreground-secondary: #404040;
+  --foreground-subtle: #80838f;
+  --divider: #e8e8ec;
+  --surface-elevated: #f4f4f6;
+  --surface-sunken: #f4f4f6;
+  --surface-glass: rgba(255, 255, 255, .72);
+  --input: #f4f4f6;
+  --input-border: #e8e8ec;
+  --placeholder: #80838f;
+  --icon: #101010;
+  --icon-muted: #80838f;
+  --emphasis-foreground: #fff;
+  --brand: #e4152e;
+  --brand-hover: #b50d22;
+  --brand-active: #b50d22;
+  --message-own: var(--foreground);
+  --message-own-foreground: var(--background);
+  --message-peer: var(--surface-muted);
+  --message-peer-foreground: var(--foreground);
+  --message-meta: var(--muted-foreground);
+}
+html.dark {
+  --reference-glass: rgba(11, 11, 14, .6);
+  --foreground-secondary: oklch(87.2% .01 258.338);
+  --foreground-subtle: #8a8d98;
+  --muted-foreground: #8a8d98;
+  --surface-glass: rgba(11, 11, 14, .6);
+  --surface-sunken: #242424;
+  --placeholder: #8a8d98;
+  --icon: #f5f5f7;
+  --icon-muted: #8a8d98;
+  --emphasis-foreground: #1c1c1c;
+}
+html.black {
+  --reference-glass: rgba(11, 11, 14, .6);
+  --foreground: #f5f5f7;
+  --foreground-secondary: oklch(87.2% .01 258.338);
+  --foreground-subtle: #9ca3af;
+  --muted-foreground: #8a8d98;
+  --muted: #181818;
+  --surface-elevated: #0b0b0b;
+  --surface-sunken: #0b0b0b;
+  --surface-glass: rgba(0, 0, 0, .88);
+  --divider: #272727;
+  --input: #0b0b0b;
+  --input-hover: #171717;
+  --input-border: #1b1b1b;
+  --input-border-hover: #343434;
+  --placeholder: #9ca3af;
+  --icon: #f5f5f7;
+  --icon-muted: #8a8d98;
+  --emphasis: #f5f5f7;
+  --emphasis-foreground: #000;
+  --brand: #e4152e;
+  --brand-hover: #b50d22;
+  --brand-active: #b50d22;
+}
+html { scrollbar-gutter: stable; }
+
+/* Desktop sidebars (reference layout, measured per theme). */
+:root {
+  --sidebar-divider: oklch(.967 .003 264.542);
+  --sidebar-card: oklch(.984 .003 247.858);
+  --sidebar-card-border: #e8e8ec;
+  --rail-card: oklch(.984 .003 247.858);
+  --rail-card-border: oklch(.928 .006 264.531);
+  --rail-card-divider: oklch(.967 .003 264.542);
+  --rail-title: oklch(.278 .033 256.848);
+  --rail-meta: oklch(.707 .022 261.325);
+  --rail-note: oklab(.984 -.00113 -.00278 / .8);
+  --rail-note-border: oklch(.928 .006 264.531);
+  --rail-note-title: oklch(.278 .033 256.848);
+  --theme-switch: oklch(.967 .003 264.542);
+  --theme-switch-border: oklch(.928 .006 264.531);
+}
+html.dark, html.black {
+  --sidebar-divider: #282828;
+  --sidebar-card: #1a1a1a;
+  --sidebar-card-border: #2b2b2b;
+  --rail-card: #191919;
+  --rail-card-border: #2e2e2e;
+  --rail-card-divider: #2a2a2a;
+  --rail-title: oklch(.967 .003 264.542);
+  --rail-meta: oklch(.707 .022 261.325);
+  --rail-note: oklab(.205162 .004302 -.023504 / .6);
+  --rail-note-border: #292929;
+  --rail-note-title: oklch(.928 .006 264.531);
+  --theme-switch: #242424;
+  --theme-switch-border: #2f2f2f;
+}
+html.black { --sidebar-card-border: #272727; }
+:root { --theme-switch-on: #fff; --theme-switch-on-foreground: oklch(.21 .034 264.665); --theme-switch-on-border: transparent; }
+html.dark { --theme-switch-on: #f5f5f7; --theme-switch-on-foreground: #1c1c1c; --theme-switch-on-border: transparent; }
+html.black { --theme-switch-on: #000; --theme-switch-on-foreground: #fff; --theme-switch-on-border: rgb(255 255 255 / .2); }
+
+/* Mobile header search button (reference). */
+:root { --header-btn: oklch(.967 .003 264.542); --header-btn-hover: oklch(.928 .006 264.531); --header-btn-border: oklch(.928 .006 264.531); --header-btn-fg: oklch(.446 .03 256.802); }
+html.dark, html.black { --header-btn: #202020; --header-btn-hover: #2b2b2b; --header-btn-border: #313131; --header-btn-fg: oklch(.872 .01 258.338); }

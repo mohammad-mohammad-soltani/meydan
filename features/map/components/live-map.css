@@ -9,7 +9,7 @@
   background: transparent;
 }
 .live-map .map-marker:focus-visible {
-  outline: 3px solid #f9b6af;
+  outline: 3px solid var(--color-brand);
   outline-offset: 5px;
   border-radius: 50%;
 }
@@ -27,8 +27,8 @@
   overflow: hidden;
   border: 3px solid #fff;
   border-radius: 50%;
-  background: linear-gradient(145deg, #ef786c, #b93430);
-  color: #fff;
+  background: var(--m-tx);
+  color: var(--m-bg);
   font-size: 17px;
   font-weight: 900;
   box-shadow: 0 4px 14px #0005;
@@ -42,12 +42,13 @@
 }
 .live-map .map-square-popup .leaflet-popup-content-wrapper {
   padding: 0;
-  border: 1px solid #ffffff20;
+  border: 1px solid var(--m-line);
   border-radius: 20px;
-  background: #222629;
-  color: #f5f4f2;
+  background: var(--m-glass);
+  color: var(--m-tx);
   overflow: hidden;
-  box-shadow: 0 14px 45px #0006;
+  box-shadow: 0 14px 34px -14px rgba(0,0,0,.55);
+  backdrop-filter: blur(18px);
 }
 .live-map .map-square-popup .leaflet-popup-content {
   margin: 0;
@@ -55,7 +56,7 @@
   line-height: 1.7;
 }
 .live-map .map-square-popup .leaflet-popup-tip {
-  background: #222629;
+  background: var(--m-glass);
 }
 .live-map .map-square-popup .leaflet-popup-close-button {
   top: 9px;
@@ -64,8 +65,8 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #ffffff0c;
-  color: #d2d5d7;
+  background: var(--m-soft);
+  color: var(--m-mu);
   font-size: 20px;
   line-height: 26px;
 }
@@ -74,11 +75,11 @@
   color: #fff;
 }
 .map-square-card {
-  padding: 18px;
+  padding: 12px 14px;
   text-align: right;
 }
 .map-square-card-eyebrow {
-  color: #f6a39a;
+  color: var(--m-mu);
   font-size: 10px;
   font-weight: 700;
   margin-bottom: 14px;
@@ -103,14 +104,14 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
-  font-size: 14px;
-  font-weight: 900;
+  font-size: 13px;
+  font-weight: 800;
   line-height: 1.8;
 }
 .map-square-card-location {
   display: block;
   margin-top: 3px;
-  color: #b3b9bd;
+  color: var(--m-mu);
   font-size: 10px;
 }
 .map-square-card-coordinates {
@@ -120,9 +121,9 @@
   gap: 8px;
   margin: 16px 0 12px;
   padding-top: 12px;
-  border-top: 1px solid #ffffff12;
+  border-top: 1px solid var(--m-line);
   font-size: 9px;
-  color: #a9b0b5;
+  color: var(--m-mu);
 }
 .live-map a.map-square-card-link {
   display: flex;
@@ -140,9 +141,14 @@
   transition: background 0.15s;
 }
 .live-map a.map-square-card-link:hover {
-  background: #ec4235;
+  background: #e4152e;
 }
 .live-map a.map-square-card-link:focus-visible {
   outline: 2px solid white;
   outline-offset: 3px;
 }
+
+/* Aggregate markers follow the reference foreground/background palette. */
+.live-map .map-live-pin { background:var(--m-tx); border-color:var(--m-bg); }
+.live-map .map-live-pin > span { color:var(--m-bg); }
+.live-map .map-marker > .group > div:first-child { background:color-mix(in srgb,var(--m-tx) 12%,transparent); }

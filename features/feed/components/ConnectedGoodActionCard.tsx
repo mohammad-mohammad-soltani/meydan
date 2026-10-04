@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Check, Eye, HandHeart, LoaderCircle, Plus, UsersRound } from "lucide-react";
@@ -87,7 +89,7 @@ export function ConnectedGoodActionCard({
       dir="rtl"
       // The timeline card body is pointer-events-none behind a full-card link,
       // so this block has to opt back in for its button and link to work.
-      className="pointer-events-auto relative z-10 mt-3 w-full rounded-[16px] border border-warning-border bg-warning-surface/50 p-3"
+      className={`${styles.goodAction} pointer-events-auto relative z-10 mt-3 w-full rounded-[16px] border p-3`}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-center gap-3">

@@ -1,0 +1,77 @@
+/* «آوا» — the reference's final cascade, scoped so its short class names stay out of the rest of the app. */
+.ava-ref { display:block; padding:0 0 130px; color:var(--m-tx); background:var(--m-bg); }
+.ava-ref .av-h1 { position:sticky; top:50px; z-index:31; display:flex; align-items:center; gap:12px; padding:10px 16px; background:var(--m-bg); border-bottom:1px solid var(--m-line); direction:rtl; }
+.ava-ref .av-s { display:flex; align-items:center; gap:10px; width:100%; margin:0; height:46px; padding:0 16px; border-radius:999px; background:var(--m-soft); border:1px solid var(--m-line); color:var(--m-mu); }
+.ava-ref .av-s:focus-within { border-color:var(--m-tx); color:var(--m-tx); }
+.ava-ref .av-s input { flex:1; min-width:0; background:transparent; border:0; outline:0; color:var(--m-tx); font-size:14.5px; font-family:inherit; }
+.ava-ref .av-s input::-webkit-search-cancel-button { display:none; }
+.ava-ref .av-h2 { position:sticky; top:113px; z-index:30; background:var(--m-bg); border-bottom:1px solid var(--m-line); padding:10px 14px; }
+.ava-ref .av-chips { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+.ava-ref .av-chips::-webkit-scrollbar { display:none; }
+.ava-ref .av-chips button { flex:0 0 auto; height:34px; padding:0 16px; border-radius:999px; font-size:12.5px; font-weight:700; background:var(--m-soft); color:var(--m-mu); border:1px solid var(--m-line); }
+.ava-ref .av-chips button.on { background:#e4152e; border-color:#e4152e; color:#fff; }
+.ava-ref .av-body { display:flex; flex-direction:column; gap:32px; padding:20px 18px 0; }
+.ava-ref .av-sh { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+.ava-ref .av-sh b { font-size:17px; font-weight:900; }
+.ava-ref .av-sh span { font-size:11.5px; color:var(--m-mu); flex:1; }
+.ava-ref .av-sh .all { margin-right:auto; display:inline-flex; align-items:center; font-size:12px; font-weight:700; color:var(--m-mu); }
+.ava-ref .av-sh b + .all { margin-right:auto; }
+.ava-ref .av-feat, .ava-ref .av-faces { display:flex; gap:12px; overflow-x:auto; scrollbar-width:none; scroll-snap-type:x proximity; margin:0 -16px; padding:0 16px; scroll-padding-inline:16px; cursor:grab; }
+.ava-ref .av-feat::-webkit-scrollbar, .ava-ref .av-faces::-webkit-scrollbar { display:none; }
+.ava-ref .av-feat::before, .ava-ref .av-feat::after, .ava-ref .av-faces::before, .ava-ref .av-faces::after { content:""; flex:0 0 2px; }
+.ava-ref .ft { position:relative; flex:0 0 calc(50% - 7px); max-width:none; aspect-ratio:.95; border-radius:26px; padding:14px; display:flex; flex-direction:column; justify-content:flex-end; color:#fff; overflow:hidden; scroll-snap-align:start; background:linear-gradient(135deg,#484848,#0e0e0e); background-size:cover; background-position:center; }
+.ava-ref .ft.f1 { background-image:linear-gradient(135deg,#242424,#050505); }
+.ava-ref .ft.f2 { background-image:linear-gradient(135deg,#6a6a72,#2b2b2b); }
+.ava-ref .ft .ft-blur { position:absolute; inset:-24px; background-size:cover; background-position:center; filter:blur(22px) saturate(1.25) brightness(.7); transform:scale(1.15); }
+.ava-ref .ft .tx small { display:flex; align-items:center; gap:6px; }
+.ava-ref .ft .ft-by { flex:0 0 auto; width:22px; height:22px; border-radius:50%; background-size:cover; background-position:center; border:1.5px solid rgba(255,255,255,.7); }
+.ava-ref .ft.with-portrait::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.08) 30%,rgba(0,0,0,.72)); }
+.ava-ref .ft::before { content:""; position:absolute; inset:0; background:radial-gradient(90% 70% at 85% 0%,rgba(255,255,255,.22),transparent 60%); }
+.ava-ref .ft > * { position:relative; }
+.ava-ref .ft > .ft-blur { position:absolute; }
+.ava-ref .ft .bd, .ava-ref .ft .du, .ava-ref .ft .tx, .ava-ref .ft .pl { z-index:2; }
+.ava-ref .ft .bd, .ava-ref .ft .du { position:absolute; top:12px; padding:4px 11px; border-radius:999px; background:rgba(255,255,255,.18); backdrop-filter:blur(8px); font-size:10.5px; font-weight:700; }
+.ava-ref .ft .bd { right:12px; }
+.ava-ref .ft .du { left:12px; }
+.ava-ref .ft .tx { pointer-events:none; text-align:right; display:flex; flex-direction:column; gap:3px; padding-left:0; padding-bottom:50px; }
+.ava-ref .ft .tx b { font-size:14px; font-weight:900; line-height:1.5; }
+.ava-ref .ft .tx small { font-size:11.5px; opacity:.75; }
+.ava-ref .ft .pl { z-index:2; position:absolute; left:14px; bottom:14px; width:42px; height:42px; border-radius:50%; background:#fff; color:#000; display:grid; place-items:center; transition:transform .15s; }
+.ava-ref .ft .pl:active { transform:scale(.9); }
+.ava-ref .fc { flex:0 0 92px; display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--m-tx); scroll-snap-align:start; }
+.ava-ref .fc .ring { position:relative; width:78px; height:78px; border-radius:50%; padding:3px; border:2px solid var(--m-tx); display:grid; place-items:center; }
+.ava-ref .fc .ring i { width:100%; height:100%; border-radius:50%; background:var(--m-soft); display:grid; place-items:center; font-style:normal; font-weight:800; font-size:19px; }
+.ava-ref .fc .ring img { position:absolute; inset:3px; width:calc(100% - 6px); height:calc(100% - 6px); border-radius:50%; object-fit:cover; }
+.ava-ref .fc b { font-size:12px; font-weight:700; text-align:center; line-height:1.5; }
+.ava-ref .fc small { font-size:10.5px; color:var(--m-mu); }
+.ava-ref .av-places { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:0; padding:0; overflow:visible; }
+.ava-ref .sqm { display:flex; flex-direction:column; align-items:stretch; gap:2px; min-width:0; text-align:right; color:inherit; cursor:pointer; }
+.ava-ref .sqm .art { position:relative; aspect-ratio:1; border-radius:18px; overflow:hidden; background:linear-gradient(150deg,hsl(var(--h) 72% 52%),hsl(calc(var(--h) + 50) 70% 28%)); display:grid; place-items:center; margin-bottom:8px; }
+.ava-ref .sqm .art i { position:absolute; top:10px; right:14px; font-style:normal; font-size:24px; line-height:1; font-weight:900; color:rgba(255,255,255,.92); letter-spacing:0; }
+.ava-ref .sqm .art u { position:absolute; inset:auto 0 0 0; height:38%; background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 5px,transparent 5px 11px); -webkit-mask:linear-gradient(0deg,#000,transparent); mask:linear-gradient(0deg,#000,transparent); text-decoration:none; }
+.ava-ref .sqm .pl { z-index:3; position:absolute; left:10px; bottom:10px; width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:#fff; color:#111; }
+.ava-ref .sqm.on .pl { background:#e4152e; color:#fff; }
+.ava-ref .sqm > b { font-size:13.5px; font-weight:800; }
+.ava-ref .sqm > small { font-size:11px; color:var(--m-mu); }
+.ava-ref .asq { width:42px; height:42px; border-radius:14px; background:var(--m-bg); border:1px solid var(--m-line); display:grid; place-items:center; font-weight:800; font-size:14px; flex-shrink:0; }
+.ava-ref .av-last { display:flex; flex-direction:column; border-radius:24px; border:1px solid var(--m-line); overflow:hidden; }
+.ava-ref .ls { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--m-line); cursor:pointer; transition:background .15s; color:inherit; }
+.ava-ref .ls:last-child { border:0; }
+.ava-ref .ls:hover, .ava-ref .ls.on { background:var(--m-soft); }
+.ava-ref .ls .pl { width:38px; height:38px; border-radius:50%; border:1px solid var(--m-line); display:grid; place-items:center; flex-shrink:0; color:var(--m-tx); }
+.ava-ref .ls.on .pl { background:var(--m-tx); color:var(--m-bg); }
+.ava-ref .ls .tx { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.ava-ref .ls .tx b { font-size:13px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ava-ref .ls .tx small { font-size:11px; color:var(--m-mu); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ava-ref .ls .tm { font-size:11px; color:var(--m-mu); display:none; }
+.ava-ref .ls .dur { font-size:11.5px; font-weight:700; color:var(--m-mu); }
+@media(min-width:640px) { .ava-ref .ls .tm { display:block; } }
+@media(min-width:1024px) { .ava-ref .av-h1 { top:50px; } .ava-ref .av-places { grid-template-columns:repeat(4,1fr); } .ava-ref .av-body { padding:26px 24px 0; } }
+
+/* Square card: blurred wash of the picture, the picture itself inside spreading rings, play at the corner. */
+.ava-ref .sqm .art .art-blur { position:absolute; inset:-24px; background-size:cover; background-position:center; filter:blur(24px) saturate(1.7) brightness(.78); transform:scale(1.2); }
+.ava-ref .sqm .art::before { content:""; position:absolute; inset:0; z-index:1; background:radial-gradient(75% 60% at 50% 38%,rgba(255,255,255,.22),transparent 70%),linear-gradient(180deg,transparent 45%,rgba(0,0,0,.45)); }
+.ava-ref .sqm .art-disc { position:relative; z-index:2; display:grid; place-items:center; width:82px; height:82px; margin-top:-10px; border-radius:50%; background-size:cover; background-position:center; background-color:rgba(255,255,255,.2); border:3px solid rgba(255,255,255,.85); color:#fff; font-size:28px; font-weight:900; box-shadow:0 0 0 9px rgba(255,255,255,.14),0 0 0 19px rgba(255,255,255,.07),0 14px 30px -8px rgba(0,0,0,.55); }
+.ava-ref .sqm .art-count { position:absolute; top:10px; right:10px; z-index:3; padding:3px 10px; border-radius:999px; background:rgba(0,0,0,.38); backdrop-filter:blur(8px); color:#fff; font-size:10.5px; font-weight:700; }
+.ava-ref .sqm .art u { z-index:2; height:30%; opacity:.9; }
+.ava-ref .sqm .art .pl { box-shadow:0 8px 18px -6px rgba(0,0,0,.6); }

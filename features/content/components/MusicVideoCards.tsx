@@ -9,8 +9,8 @@ export function MusicVideoCard({ item, layout = "strip" }: { item: ContentItem; 
   const artwork = item.coverUrl || item.authorAvatar;
 
   return (
-    <Link href={`/content/${item.apiId}` as Route} className={`group block snap-start text-center ${layout === "grid" ? "w-full" : "w-[140px] shrink-0 sm:w-[156px]"}`} aria-label={`مشاهده ${item.title}`}>
-      <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-xl bg-surface-muted text-icon-muted">
+    <Link href={`/content/${item.apiId}` as Route} className={`group block snap-start text-center ${layout === "grid" ? "w-full" : "reference-picked-card shrink-0"}`} aria-label={`مشاهده ${item.title}`}>
+      <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-[18px] bg-surface-muted text-icon-muted">
         {artwork ? (
           <Image src={artwork} alt="" fill quality={MEDIA_THUMB_QUALITY} sizes={layout === "grid" ? "(max-width: 640px) 50vw, 240px" : "156px"} className="object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
@@ -29,7 +29,7 @@ export function MusicVideoStrip({ items }: { items: ContentItem[] }) {
   }
 
   return (
-    <div className="-mx-3 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-3 pb-2 sm:-mx-4 sm:px-4" dir="rtl" aria-label="آثار آوا و نوا">
+    <div className="reference-picked-rail snap-x snap-proximity" dir="rtl" aria-label="آثار آوا و نوا">
       {items.map((item) => <MusicVideoCard key={item.apiId} item={item} />)}
     </div>
   );

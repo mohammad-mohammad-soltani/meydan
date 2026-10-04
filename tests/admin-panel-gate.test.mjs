@@ -24,7 +24,7 @@ test("the proxy matcher covers the admin subtree", () => {
   assert.match(source("lib/protected-routes.ts"), /"\/admin"/);
 });
 
-test("speaker promotion searches accounts and never overwrites their identity", () => {
+test("speaker promotion preserves account identity and sends only an explicitly entered handle", () => {
   const form = source("features/admin/components/AdminSpeakerForm.tsx");
   const speakers = source("features/admin/services/speakers.service.ts");
   const profileBody = speakers.slice(
@@ -39,7 +39,15 @@ test("speaker promotion searches accounts and never overwrites their identity", 
   assert.match(form, /getProvinces\(\)/);
   assert.doesNotMatch(form, /id="speaker-name"/);
   assert.doesNotMatch(form, /هویت و معرفی سخنران/);
-  assert.doesNotMatch(profileBody, /\b(name|bio|role|handle|expertise|initials):/);
+  assert.doesNotMatch(profileBody, /\b(name|bio|role|expertise|initials):/);
+  // The backend accepts an explicit handle override. Leaving the optional
+  // field blank must omit it so promotion preserves the account's handle.
+  const returnAt = profileBody.indexOf("return {");
+  const serialize = new Function("input", profileBody.slice(returnAt, profileBody.indexOf("\n}", returnAt)));
+  const input = { handle: "   ", avatarMediaId: null, verified: false, cities: [], categories: [], socialLinks: {}, eitaaChannel: "", baleChannel: "" };
+  assert.equal(Object.hasOwn(serialize(input), "handle"), false);
+  assert.equal(serialize({ ...input, handle: "  requested_handle  " }).handle, "requested_handle");
+  assert.match(form, /id="speaker-handle"/);
   assert.match(form, /admin-speaker-form/);
   assert.match((source("app/globals.css") + source("features/admin/admin-workspace.css") + source("features/media/viewer.css")), /admin-speaker-city/);
 });

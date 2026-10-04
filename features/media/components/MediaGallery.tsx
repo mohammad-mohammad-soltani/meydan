@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "../reference.module.css";
+
 import type { FeedPost } from "@/features/feed/types";
 import { useVideoFeed } from "./VideoFeedProvider";
 import { videosFromPosts } from "../video-feed-queue";
@@ -42,6 +44,8 @@ type MediaGalleryProps = {
   className?: string;
   /** `bubble` matches chat bubbles; `surface` matches feed/post/content cards. */
   tone?: "surface" | "bubble";
+  /** Only timeline previews use the reference’s fixed image/video frame. */
+  presentation?: "timeline";
 };
 
 /**
@@ -62,6 +66,7 @@ export function MediaGallery({
   cover,
   className = "",
   tone = "surface",
+  presentation,
 }: MediaGalleryProps) {
   const openVideoFeed = useVideoFeed();
   const galleryRef = useRef<HTMLDivElement>(null);
@@ -111,7 +116,7 @@ export function MediaGallery({
     <div
       ref={galleryRef}
       tabIndex={-1}
-      className={className}
+      className={`${className} ${presentation === "timeline" ? styles.timelineGallery : ""}`}
       data-media-interactive
       onClick={(event) => event.stopPropagation()}
     >

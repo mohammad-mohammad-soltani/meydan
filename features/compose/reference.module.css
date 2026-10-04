@@ -1,0 +1,51 @@
+.composer { height: 100%; min-height: 100%; overflow: hidden; background: var(--m-bg); }
+.header { flex: none; position: relative; padding: 14px 16px; background: var(--m-bg); border-color: var(--m-line); backdrop-filter: none; }
+.header > div { gap: 10px; }
+.header > div > button { padding-block: 6px; font-weight: 700; }
+.header > div > button:first-child { background: #222; border-color: transparent; color: #d1d5db; }
+:global(html:not(.dark):not(.black)) .header > div > button:first-child { background: #f3f4f6; border-color: #d1d5db; color: #1f2937; }
+.body { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 16px; width: 100%; max-width: 672px; margin-inline: auto; }
+.types { padding: 5px; border-color: var(--m-line); background: var(--m-soft); border-radius: 18px; }
+.types > button, .types > span { height: 44px; border-radius: 14px; font-size: 12px; font-weight: 700; padding-block: 0; }
+.types > button[aria-selected="true"] { background: var(--m-tx); color: var(--m-bg); }
+.types svg { width: 14px; height: 14px; color: inherit; }
+.author { padding-top: 4px; }
+.avatar { border: 2px solid var(--m-line); background: var(--m-soft); color: var(--m-tx); }
+.title { border: 1px solid #353535; background: #242424; border-radius: 16px; padding: 12px 16px; font-size: 14px; font-weight: 600; }
+:global(html:not(.dark):not(.black)) .title { border-color: #d1d5db; background: #fff; }
+.textarea { padding: 6px 2px; min-height: 260px; font-size: 17px; line-height: 1.9; }
+.textarea::placeholder { color: var(--m-mu); opacity: .7; }
+.toolbar { flex: none; position: relative; padding: 12px 16px max(12px,env(safe-area-inset-bottom)); background: var(--m-bg); border-color: var(--m-line); backdrop-filter: none; }
+.tools { gap: 4px; color: var(--m-mu); }
+.tools > button { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 50%; transition: transform .15s, background .15s; }
+.tools > button:hover { background: var(--m-soft); }
+.tools > button:active { transform: scale(.95); }
+.tools svg { width: 20px; height: 20px; }
+.meter { direction: ltr; }
+.ring { width: 20px; height: 20px; border: 2px solid var(--m-tx); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.ring > span { width: 10px; height: 10px; border-radius: 50%; background: var(--m-tx); transition: transform .15s; }
+.media { max-height: 240px; border: 1px solid #353535; }
+:global(html:not(.dark):not(.black)) .media { border-color:#d1d5db; }
+.media[data-count="1"] { height: 208px; }
+.media[data-count="1"] > div { aspect-ratio: auto; height: 208px; }
+.media[data-count="1"] > div > button:last-child { top:12px; left:12px; }
+@media(min-width:640px) { .tools { gap:8px; } }
+@media(max-width:399px) { .toolbar { padding-inline:12px; } .tools { gap:0; } .meter { gap:4px; } }
+
+/* Black theme, from the reference: the compose sheet stays the soft #1c1c1c with darker bars around it. */
+:global(html.black) .composer { background: #1c1c1c; }
+:global(html.black) .header, :global(html.black) .toolbar { background: #0b0b0b; }
+
+/* Narrow screens: the type tabs wrap their labels instead of colliding, and the header trims itself. */
+.types > button, .types > span { min-width: 0; white-space: normal; text-align: center; line-height: 1.25; padding-inline: 4px; }
+.types { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media(max-width:379px) {
+  .header { padding-inline: 12px; }
+  .header > div { gap: 6px; }
+  .draftLabel { display: none; }
+  .header > div > button:first-child { padding-inline: 10px; }
+  .types { padding: 4px; gap: 2px; }
+  .types svg { display: none; }
+  .types > button, .types > span { font-size: 11.5px; }
+  .body { padding-inline: 12px; }
+}

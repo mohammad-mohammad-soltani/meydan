@@ -17,8 +17,8 @@ export function SidebarComposeButton() {
       href="/compose"
       title="نوشتن روایت تازه"
       className="
-        group flex min-h-[54px] w-full items-center justify-center gap-2.5
-        rounded-pill bg-brand px-5
+        group flex min-h-[54px] w-full items-center justify-center gap-2
+        mt-6 rounded-pill bg-brand
         text-[16.5px] font-semibold text-brand-foreground
         shadow-xs
         outline-none
@@ -27,7 +27,7 @@ export function SidebarComposeButton() {
         duration-200
         ease-out
 
-        hover:bg-brand-hover hover:shadow-card
+        hover:brightness-[1.08]
 
         active:scale-[0.98] active:bg-brand-active
 
@@ -36,7 +36,7 @@ export function SidebarComposeButton() {
     >
       <PenLine
         aria-hidden="true"
-        strokeWidth={2.35}
+        strokeWidth={2}
         className="h-5 w-5 transition-transform duration-200 ease-out group-hover:-rotate-6"
       />
       نوشتن

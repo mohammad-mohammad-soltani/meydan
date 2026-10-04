@@ -7,7 +7,7 @@ import { useTheme } from "./useTheme";
 const options: Array<{ value: ThemeName; label: string; icon: typeof Sun }> = [
   { value: "light", label: "روز", icon: Sun },
   { value: "dark", label: "شب", icon: Moon },
-  { value: "black", label: "تیره", icon: Circle },
+  { value: "black", label: "آمولد", icon: Circle },
 ];
 
 /**
@@ -15,7 +15,7 @@ const options: Array<{ value: ThemeName; label: string; icon: typeof Sun }> = [
  * segmented radiogroup so the current theme and the alternatives are visible
  * without opening a menu.
  */
-const MODE_LABEL: Record<ThemeName, string> = { light: "حالت روز", dark: "حالت شب", black: "حالت آمولد" };
+const MODE_LABEL: Record<ThemeName, string> = { light: "حالت روز", dark: "حالت شب", black: "مشکی خالص" };
 
 export function ThemeSwitcher({ className = "", variant = "sidebar" }: { className?: string; variant?: "sidebar" | "drawer" }) {
   const theme = useTheme();
@@ -40,7 +40,7 @@ export function ThemeSwitcher({ className = "", variant = "sidebar" }: { classNa
                 onClick={() => applyTheme(value)}
                 className={`flex items-center justify-center gap-1 rounded-full px-1 py-2 text-xs transition active:scale-95 ${active ? "bg-foreground font-black text-background" : "font-bold text-muted-foreground hover:text-foreground"}`}
               >
-                {value === "black" ? <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-current" /> : <Icon aria-hidden="true" className="h-3.5 w-3.5" />}
+                {value === "black" ? null : <Icon aria-hidden="true" className="h-3.5 w-3.5" />}
                 <span>{value === "black" ? "آمولد" : label}</span>
               </button>
             );
@@ -54,7 +54,7 @@ export function ThemeSwitcher({ className = "", variant = "sidebar" }: { classNa
     <div
       role="radiogroup"
       aria-label="انتخاب پوستهٔ نمایش"
-      className={`grid grid-cols-3 gap-1 rounded-2xl border border-border bg-surface-muted p-1 ${className}`}
+      className={`grid grid-cols-3 gap-1 rounded-2xl border border-[var(--theme-switch-border)] bg-[var(--theme-switch)] p-1 ${className}`}
     >
       {options.map(({ value, label, icon: Icon }) => {
         const active = value === theme;
@@ -66,14 +66,14 @@ export function ThemeSwitcher({ className = "", variant = "sidebar" }: { classNa
             aria-checked={active}
             title={label}
             onClick={() => applyTheme(value)}
-            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-black transition-colors ${
+            className={`flex flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-black transition-colors ${
               active
-                ? "bg-foreground text-background shadow-xs"
+                ? "bg-[var(--theme-switch-on)] shadow-[inset_0_0_0_1px_var(--theme-switch-on-border)] text-[var(--theme-switch-on-foreground)]"
                 : "text-foreground-secondary hover:bg-hover hover:text-foreground"
             }`}
           >
-            <Icon aria-hidden="true" className="h-4 w-4" />
-            <span>{label}</span>
+            <Icon aria-hidden="true" className={`h-3.5 w-3.5 ${value === "black" ? "fill-current" : ""}`} />
+            <span>{value === "black" ? "تیره" : label}</span>
           </button>
         );
       })}

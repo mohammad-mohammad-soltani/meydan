@@ -1,5 +1,8 @@
 "use client";
 
+import "../reference-profile.css";
+import { narrativeTotal } from "../profile-stats";
+import { ProfileImageViewer } from "./ProfileImageViewer";
 import { FollowListSheet } from "./FollowListSheet";
 import Image from "next/image";
 import Link from "next/link";
@@ -44,8 +47,8 @@ const persianYear = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numer
 /** «مهر ۱۴۰۲»: month first, as in the reference (the locale puts the year first). */
 const monthYear = { format: (date: Date) => `${persianMonth.format(date)} ${persianYear.format(date).replace(/\s*ه\.ش\.?/, "")}` };
 
-const plain = "grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95";
-const glass = "grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-md transition hover:bg-black/50 active:scale-95";
+const plain = "grid h-9 w-9 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95";
+const glass = "reference-profile-back grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-md transition hover:bg-black/50 active:scale-95";
 
 /**
  * Profile header in the reference design: cover with glass controls, the
@@ -62,11 +65,12 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
     return () => window.clearTimeout(timer);
   }, [notice]);
   const [followedBy, setFollowedBy] = useState<FollowedBy | null>(null);
+  const [imageOpen, setImageOpen] = useState<{ src: string; round: boolean } | null>(null);
   const [listOpen, setListOpen] = useState(false);
-  const { identity, accountType, narratives } = profile;
+  const { identity, accountType } = profile;
   const kind = accountType === "square" ? profile.kind ?? "square" : "user";
   const canBeInvited = !canEdit && accountType !== "square" && Boolean(identity.isSpeaker || identity.verifiedSpeaker);
-  const posts = profile.narrativeCount ?? narratives.length;
+  const posts = narrativeTotal(profile.narrativeCount);
   const followers = profile.social?.followers;
   const joined = profile.social?.joinedAt ? monthYear.format(new Date(profile.social.joinedAt)) : null;
   const kindLabel = accountType === "square" && isEntityKind(profile.kind) ? ENTITY_KIND_LABELS[profile.kind] : null;
@@ -78,7 +82,8 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
     ...(shortSubtitle ? [{ key: "subtitle", label: shortSubtitle, strong: true }] : []),
     ...(accountType === "square" ? profile.squareStats : [])
       .filter((stat) => stat.value && stat.value !== "…")
-      .slice(1, 3)
+      .filter((stat) => stat.label !== "روایت منتشرشده")
+      .slice(0, 2)
       .map((stat) => ({ key: `stat-${stat.label}`, label: `${stat.value} ${stat.label}`, strong: false })),
     ...profile.skills.slice(0, 4).map((skill) => ({ key: `skill-${skill}`, label: `#${skill.replace(/^#/, "")}`, strong: false })),
   ];
@@ -98,27 +103,29 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
   return (
     <>
       <div className="relative">
-        <div className="relative h-48 overflow-hidden rounded-b-[2rem] bg-surface-elevated">
+        <div className="relative h-[196px] overflow-hidden rounded-b-[30px] bg-surface-elevated">
           {identity.cover ? (
             <Image src={identity.cover} alt={`کاور ${identity.name}`} fill priority quality={MEDIA_THUMB_QUALITY} sizes="(max-width: 720px) 100vw, 640px" className="object-cover" />
           ) : (
-            <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(135deg,#e4152e,#f5525f)]" />
+            // Without a cover of their own, everyone gets the app's default one.
+            <Image src="/images/header.jpg" alt="" fill priority sizes="(max-width: 720px) 100vw, 640px" className="object-cover" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.28),transparent_38%,transparent_70%,rgba(0,0,0,.14))]" />
+          {identity.cover ? <button type="button" aria-label="مشاهده تصویر کاور" className="absolute inset-0 cursor-zoom-in" onClick={() => setImageOpen({ src: identity.cover!, round: false })} /> : null}
         </div>
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
+        <div className="absolute inset-x-3.5 top-3.5 z-10 flex items-center justify-between">
           <button type="button" aria-label="بازگشت" onClick={() => history.back()} className={glass}>
             <ArrowRight className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-0.5 rounded-full border border-white/15 bg-black/35 p-0.5 backdrop-blur-md">
-            {canEdit ? <AdminNavLink isAuthenticated className={`${glass} !w-auto px-3 text-xs font-black lg:hidden`} /> : null}
+          <div className="reference-profile-controls flex items-center gap-0.5 rounded-full border border-white/20 bg-black/35 p-1 backdrop-blur-[18px]">
+            {canEdit ? <AdminNavLink isAuthenticated iconOnly className={`${plain} lg:hidden`} /> : null}
             {!canEdit && isAuthenticated && onToggleNotify ? (
               <button
                 type="button"
                 aria-label="اعلان‌های نمایه"
                 aria-pressed={isNotifying}
                 onClick={() => void onToggleNotify().then((on) => { if (on !== undefined) setNotice(on ? "اعلان‌های نمایه فعال شد" : "اعلان‌های نمایه خاموش شد"); })}
-                className={isNotifying ? "grid h-10 w-10 place-items-center rounded-full bg-emphasis text-emphasis-foreground transition active:scale-95" : plain}
+                className={isNotifying ? "grid h-9 w-9 place-items-center rounded-full bg-emphasis text-emphasis-foreground transition active:scale-95" : plain}
               >
                 {isNotifying ? <BellRing className="h-[18px] w-[18px]" /> : <Bell className="h-[18px] w-[18px]" />}
               </button>
@@ -130,71 +137,72 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
           </div>
         </div>
         {canEdit ? (
-          <Link href={"/profile/edit" as Route} aria-label="تغییر کاور" className={`${glass} absolute bottom-3 left-3 h-9 w-9`}>
+          <Link href={"/profile/edit" as Route} aria-label="تغییر کاور" className={`${glass} absolute bottom-3 left-3 z-20 h-9 w-9`}>
             <Camera className="h-4 w-4" />
           </Link>
         ) : null}
       </div>
 
-      <div className="px-4 pb-5">
-        <div className="-mt-14 grid grid-cols-[1fr_auto_1fr] items-end">
-          <button type="button" onClick={() => setListOpen(true)} aria-label="فهرست دنبال‌کننده‌ها و دنبال‌شده‌ها" className="pb-0 text-center">
-            <strong className="block text-lg font-black text-foreground">{followers === undefined ? "—" : followers >= 100_000 ? compact.format(followers) : number.format(followers)}</strong>
-            <span className="text-[11px] text-muted-foreground">دنبال‌کننده</span>
+      <div className="pb-5">
+        <div className="relative -mt-12 grid grid-cols-[1fr_auto_1fr] items-end px-[22px]">
+          <button type="button" onClick={() => setListOpen(true)} aria-label="فهرست دنبال‌کننده‌ها و دنبال‌شده‌ها" className="pb-2 text-center">
+            <strong className="block text-[19px] font-extrabold leading-[1.15] text-foreground">{followers === undefined ? "—" : followers >= 100_000 ? compact.format(followers) : number.format(followers)}</strong>
+            <span className="block text-[11.5px] leading-[1.25] text-muted-foreground">دنبال‌کننده</span>
           </button>
-          <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-background bg-surface-muted text-3xl font-black text-foreground">
-            {identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}
+          <div className="relative grid h-[108px] w-[108px] place-items-center overflow-hidden rounded-full border-4 border-background bg-surface-muted text-3xl font-black text-foreground">
+            {identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={108} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}
             <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full border-2 border-foreground" />
+            {identity.avatar ? <button type="button" aria-label="مشاهده تصویر نمایه" className="absolute inset-0 cursor-zoom-in" onClick={() => setImageOpen({ src: identity.avatar!, round: true })} /> : null}
           </div>
-          <div className="pb-0 text-center">
-            <strong className="block text-lg font-black text-foreground">{number.format(posts)}</strong>
-            <span className="text-[11px] text-muted-foreground">روایت</span>
+          <div className="pb-2 text-center">
+            <strong className="block text-[19px] font-extrabold leading-[1.15] text-foreground">{posts === null ? "—" : number.format(posts)}</strong>
+            <span className="block text-[11.5px] leading-[1.25] text-muted-foreground">روایت</span>
           </div>
         </div>
 
-        <div className="mt-3 text-center">
-          <h1 className="flex items-center justify-center gap-1.5 text-xl font-black leading-8 text-foreground">
+        <div className="mt-3 px-6 text-center">
+          <h1 className="flex items-center justify-center gap-1.5 text-[21px] font-black leading-8 text-foreground">
             <span className="truncate">{identity.name}</span>
             <AccountBadges verified={identity.verified} speaker={identity.verifiedSpeaker} official={identity.verifiedOfficial} kind={kind} size="lg" />
           </h1>
           {identity.handle ? <p className="latin-digits mt-0.5 text-xs text-muted-foreground" dir="ltr">@{identity.handle}</p> : null}
-          {bio ? <p className="mx-auto mt-3 max-w-md whitespace-pre-wrap text-[13px] leading-7 text-foreground-secondary">{bio}</p> : null}
+          {bio ? <p className="mx-auto mt-3 max-w-[420px] whitespace-pre-wrap text-[13.5px] leading-[1.9] text-muted-foreground">{bio}</p> : null}
         </div>
 
         {chips.length || identity.location || joined ? (
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 px-6">
             {chips.map((chip) => (
-              <span key={chip.key} className={`rounded-full border border-border bg-surface-muted px-3 py-1 text-[11px] ${chip.strong ? "font-black text-foreground" : "text-muted-foreground"}`}>{chip.label}</span>
+              <span key={chip.key} className={`rounded-full bg-surface-muted px-[11px] py-[5px] text-[11px] ${chip.strong ? "font-black text-foreground" : "text-muted-foreground"}`}>{chip.label}</span>
             ))}
             {identity.location ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1 text-[11px] text-muted-foreground"><MapPin aria-hidden="true" className="h-3.5 w-3.5" />{identity.location}</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-[11px] py-[5px] text-[11px] text-muted-foreground"><MapPin aria-hidden="true" className="h-3.5 w-3.5" />{identity.location}</span>
             ) : null}
             {joined ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1 text-[11px] text-muted-foreground"><CalendarDays aria-hidden="true" className="h-3.5 w-3.5" />عضویت از {joined}</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-[11px] py-[5px] text-[11px] text-muted-foreground"><CalendarDays aria-hidden="true" className="h-3.5 w-3.5" />عضویت از {joined}</span>
             ) : null}
           </div>
         ) : null}
 
-        <div className="mt-5 grid grid-cols-2 gap-2.5">
+        <div className="mt-[18px] grid grid-cols-2 gap-2.5 px-5">
           {canEdit ? (
             <>
-              <Link href={"/profile/edit" as Route} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emphasis text-sm font-black text-emphasis-foreground transition hover:opacity-90">
+              <Link href={"/profile/edit" as Route} className="inline-flex h-[46px] items-center justify-center gap-2 rounded-full bg-emphasis text-[13.5px] font-extrabold text-emphasis-foreground transition hover:opacity-90">
                 <Pencil aria-hidden="true" className="h-4 w-4" />
                 ویرایش نمایه
               </Link>
               {/* As in the reference: «پیام» beside «ویرایش نمایه»; on your own profile it opens your conversations. */}
-              <Link href={"/chat" as Route} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-transparent text-sm font-black text-foreground transition hover:bg-hover">
+              <Link href={"/chat" as Route} className="inline-flex h-[46px] items-center justify-center gap-2 rounded-full border border-border-strong bg-transparent text-[13.5px] font-extrabold text-foreground transition hover:bg-hover">
                 <Mail aria-hidden="true" className="h-4 w-4" />
                 پیام
               </Link>
             </>
           ) : (
             <>
-              <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full text-sm font-black transition disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border border-border-strong bg-surface-sunken text-foreground hover:bg-hover" : "bg-emphasis text-emphasis-foreground hover:opacity-90"}`}>
+              <button type="button" disabled={isFollowLoading || !followStateReady} onClick={() => { if (requireAuth()) onToggleFollow?.(); }} className={`inline-flex h-[46px] items-center justify-center gap-2 rounded-full text-[13.5px] font-extrabold transition disabled:cursor-wait disabled:opacity-70 ${isFollowing ? "border border-border-strong bg-surface-sunken text-foreground hover:bg-hover" : "bg-emphasis text-emphasis-foreground hover:opacity-90"}`}>
                 {isFollowLoading || !followStateReady ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isFollowing ? <Check className="h-4 w-4" /> : <UserRoundPlus className="h-4 w-4" />}
                 {isFollowing ? "دنبال می‌کنید" : "دنبال کردن"}
               </button>
-              <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-transparent text-sm font-black text-foreground transition hover:bg-hover disabled:cursor-wait disabled:opacity-70">
+              <button type="button" disabled={isChatOpening} onClick={() => { if (requireAuth()) onMessage?.(); }} aria-label="ارسال پیام" className="inline-flex h-[46px] items-center justify-center gap-2 rounded-full border border-border-strong bg-transparent text-[13.5px] font-extrabold text-foreground transition hover:bg-hover disabled:cursor-wait disabled:opacity-70">
                 {isChatOpening ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                 پیام
               </button>
@@ -202,7 +210,7 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
           )}
         </div>
         {canBeInvited ? (
-          <div className="mt-2.5">
+          <div className="mt-2.5 px-5">
             <SpeakerInviteButton
               speaker={{ userId: String(profile.actorId), name: identity.name, avatarUrl: identity.avatar, verifiedSpeaker: identity.verifiedSpeaker }}
               canInvite={canInvite}
@@ -242,6 +250,7 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
           {notice || "انجام شد"}
         </span>
       </p>
+      {imageOpen ? <ProfileImageViewer src={imageOpen.src} name={identity.name} round={imageOpen.round} onClose={() => setImageOpen(null)} /> : null}
       {listOpen ? <FollowListSheet type={actorKindOf(kind)} id={Number(profile.actorId)} name={identity.name} handle={identity.handle} onClose={() => setListOpen(false)} /> : null}
     </>
   );

@@ -49,6 +49,8 @@ export type ContentItem = {
   coverUrl?: string;
   /** «سلسله سخنرانی» the audio belongs to. */
   series?: string;
+  /** Overrides the content page, e.g. «/posts/12» for audio that lives on a post. */
+  href?: string;
   /** Minutes to read a note, from its word count. */
   readingMinutes?: number;
   publishedAt?: string;

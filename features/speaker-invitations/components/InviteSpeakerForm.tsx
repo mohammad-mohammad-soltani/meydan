@@ -10,7 +10,7 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import type { CreateInvitationInput, InvitableSpeaker, SpeakerCategory } from "../types";
 
 const fieldClass =
-  "mt-1.5 w-full rounded-control border border-input-border bg-input px-3 py-2 text-xs text-foreground outline-none transition-colors placeholder:text-placeholder hover:border-input-border-hover focus:border-ring focus-visible:ring-2 focus-visible:ring-ring";
+  "mt-[7px] min-h-[46px] w-full rounded-2xl border border-input-border bg-input px-4 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-placeholder hover:border-input-border-hover focus:border-ring focus-visible:ring-2 focus-visible:ring-ring";
 
 function SpeakerAvatar({ speaker, className = "h-9 w-9" }: { speaker: InvitableSpeaker; className?: string }) {
   if (speaker.avatarUrl) {
@@ -292,7 +292,7 @@ export function InviteSpeakerForm({
           </div>
 
           {localError || submitError ? (
-            <p role="alert" className="mt-3 rounded-control bg-danger-surface px-3 py-2 text-xs font-bold text-danger-foreground">
+            <p role="alert" className="mt-3 rounded-control bg-danger-surface px-4 py-2 text-sm font-bold text-danger-foreground">
               {localError || submitError}
             </p>
           ) : null}

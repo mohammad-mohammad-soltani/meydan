@@ -70,7 +70,7 @@ export function ProfileTabBar<Id extends string>({
               <span aria-hidden="true" className="invisible col-start-1 row-start-1 font-extrabold">{tab.label}</span>
               <span className="col-start-1 row-start-1">{tab.label}</span>
             </span>
-            {tab.count ? <sup className="text-[9.5px] opacity-70">{tab.count.toLocaleString("fa-IR")}</sup> : null}
+            {tab.count !== undefined ? <sup className="text-[9.5px] opacity-70">{tab.count.toLocaleString("fa-IR")}</sup> : null}
             <i
               aria-hidden="true"
               className={`absolute inset-x-3.5 bottom-0 h-[2.5px] origin-center rounded-[3px] bg-foreground transition-transform duration-[250ms] ease-out ${selected ? "scale-x-100" : "scale-x-0"}`}

@@ -1,0 +1,21 @@
+/* Reference .mp page presentation, independent of the real Leaflet engine. */
+.root { padding-bottom:96px; background:var(--m-bg); color:var(--m-tx); }
+.viewport { position:relative; height:58vh; min-height:340px; max-height:640px; overflow:hidden; border-radius:0 0 30px 30px; background:var(--m-bg); border-bottom:1px solid var(--m-line); }
+.frameHost, .frame { height:100%; min-height:0; }
+.frame, .canvas { background:var(--m-bg); }
+.search { display:flex; align-items:center; gap:8px; height:46px; padding:0 14px; border-radius:999px; background:var(--m-glass); backdrop-filter:blur(16px); border:1px solid var(--m-line); box-shadow:0 10px 30px -14px rgba(0,0,0,.5); color:var(--m-mu); }
+.search input { color:var(--m-tx); font-size:13.5px; }
+.search input::placeholder { color:var(--m-mu); }
+.live { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:var(--m-soft); color:var(--m-tx); font-size:11px; font-weight:700; flex-shrink:0; }
+.results { margin-top:8px; max-height:min(46vh,320px); overflow-y:auto; border-radius:22px; background:var(--m-glass); backdrop-filter:blur(18px); border:1px solid var(--m-line); box-shadow:0 18px 40px -16px rgba(0,0,0,.55); }
+.results button { flex-direction:column; align-items:flex-start; gap:2px; padding:11px 16px; border-bottom:1px solid var(--m-line); color:var(--m-tx); font-size:13px; font-weight:700; }
+.results button:last-child { border:0; }
+.results button:hover { background:var(--m-soft); }
+.results button > span:last-child { color:var(--m-mu); font-size:11px; }
+.results > div { padding:16px; color:var(--m-mu); font-size:12px; }
+.controls { position:absolute; z-index:500; left:12px; bottom:14px; display:flex; flex-direction:column; gap:8px; }
+.controls button { width:40px; height:40px; border-radius:14px; color:var(--m-tx); background:var(--m-glass); backdrop-filter:blur(14px); border:1px solid var(--m-line); }
+.error, .loadingBadge { background:var(--m-glass); color:var(--m-tx); border:1px solid var(--m-line); border-radius:20px; backdrop-filter:blur(18px); }
+.below { color:var(--m-tx); gap:10px; }
+.below > button { background:var(--m-soft); border-color:var(--m-line); color:var(--m-tx); }
+@media(min-width:1024px) { .root { padding-bottom:40px; } .viewport { height:62vh; border-radius:0 0 34px 34px; } }

@@ -19,7 +19,6 @@ export function BistCallView() {
   return (
     <PageShell title="بیست‌کال" subtitle="یک شمارهٔ تصادفی، همیشه هم‌جنس خودت" back="/content" soon>
       <div className="space-y-5 px-4 pt-4">
-        <div className="grid h-24 place-items-center rounded-3xl bg-gradient-to-br from-sky-500 to-sky-800 text-white"><PhoneCall aria-hidden="true" className="h-9 w-9" /></div>
 
         <fieldset className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-surface-muted p-1">
           <legend className="sr-only">جنسیت</legend>
