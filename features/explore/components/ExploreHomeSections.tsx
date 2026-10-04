@@ -79,7 +79,7 @@ function Suggestions({ entities, follow }: { entities: ExploreAccount[]; follow:
           <article key={entity.key} className="reference-explore-suggestion flex w-[148px] shrink-0 flex-col items-center rounded-3xl border border-border bg-surface-muted px-3 pb-3.5 pt-5 text-center">
             <Link href={entity.href as Route} className="flex flex-col items-center">
               <Avatar account={entity} size={64} />
-              <b className="mt-2 flex max-w-full items-center gap-1 text-sm font-bold text-foreground"><span className="truncate">{entity.name}</span><AccountBadges verified={entity.verified} kind={entity.type} size="sm" /></b>
+              <b className="mt-2 flex max-w-full line-clamp-2 items-center gap-1 text-sm font-bold text-foreground"><span className="line-clamp-2">{entity.name}</span><AccountBadges verified={entity.verified} kind={entity.type} size="sm" /></b>
               <small className="mt-0.5 line-clamp-1 text-[11.5px] text-muted-foreground">{entity.description || "میدان"}</small>
             </Link>
             <div className="mt-3"><FollowButton account={entity} follow={follow} /></div>

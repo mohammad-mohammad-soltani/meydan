@@ -49,7 +49,7 @@ export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin, on
         <Ellipsis aria-hidden="true" className="h-4 w-4" />
       </button>
       {open ? (
-        <div role="menu" className={`${styles.moreMenu} absolute left-0 top-9 z-30 min-w-40 overflow-hidden rounded-2xl border border-border bg-popover p-1 shadow-dialog`}>
+        <div role="menu" className={`${styles.moreMenu} absolute z-[999] left-0 top-9 z-30 min-w-40 overflow-hidden rounded-2xl border border-border bg-popover p-1 shadow-dialog`}>
           {onShare ? <button type="button" role="menuitem" onClick={(event) => { stop(event); setOpen(false); onShare(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-right text-xs font-bold hover:bg-hover"><Send aria-hidden="true" className="h-4 w-4" />اشتراک روایت</button> : null}
           <button
             type="button"
