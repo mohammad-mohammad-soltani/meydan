@@ -133,7 +133,7 @@
   --comment-composer-height: 0px;
 
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #101010;
   --foreground-secondary: #404040;
   --foreground-subtle: #737373;
   --on-solid: #ffffff;
@@ -142,7 +142,7 @@
   --solid-light: #ffffff;
 
   --surface: #ffffff;
-  --surface-muted: #f3f3f3;
+  --surface-muted: #f4f4f6;
   --surface-elevated: #ffffff;
   --surface-sunken: #ededed;
   --surface-glass: rgb(255 255 255 / 0.92);
@@ -151,7 +151,7 @@
   --popover: var(--surface-elevated);
   --popover-foreground: var(--foreground);
 
-  --border: #e2e2e2;
+  --border: #e8e8ec;
   --border-strong: #cccccc;
   --divider: #e8e8e8;
 
@@ -162,7 +162,7 @@
   --placeholder: #8a8a8a;
 
   --muted: #f0f0f0;
-  --muted-foreground: #6b6b6b;
+  --muted-foreground: #80838f;
   --icon: #525252;
   --icon-muted: #8a8a8a;
 
@@ -251,37 +251,37 @@ html.dark {
   color-scheme: dark;
 
   /* Requested LAB color resolves to #1F1F1F (opaque canvas). */
-  --background: #121212;
-  --foreground: #f3f4f6;
+  --background: #1c1c1c;
+  --foreground: #f5f5f7;
   --foreground-secondary: #d1d5db;
-  --foreground-subtle: #9ca3af;
+  --foreground-subtle: #9a9aa3;
   --on-solid: #ffffff;
   --on-light: #0b0b0b;
   --solid-dark: #0b0b0b;
   --solid-light: #f5f5f7;
 
-  --surface: #191919;
-  --surface-muted: #1c1c1c;
-  --surface-elevated: #202020;
+  --surface: #1c1c1c;
+  --surface-muted: #242424;
+  --surface-elevated: #242424;
   --surface-sunken: #0d0d0d;
-  --surface-glass: rgb(18 18 18 / 0.88);
+  --surface-glass: rgb(28 28 28 / 0.88);
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --popover: var(--surface-elevated);
   --popover-foreground: var(--foreground);
 
-  --border: #2e2e2e;
+  --border: #2b2b2b;
   --border-strong: #343434;
-  --divider: #212121;
-  --input: #1c1c1c;
+  --divider: #2b2b2b;
+  --input: #242424;
   --input-hover: #202020;
-  --input-border: #2c2c2c;
+  --input-border: #2b2b2b;
   --input-border-hover: #3a3a3a;
   --placeholder: #6b7280;
-  --muted: #1c1c1c;
-  --muted-foreground: #9ca3af;
+  --muted: #242424;
+  --muted-foreground: #9a9aa3;
   --icon: #d1d5db;
-  --icon-muted: #9ca3af;
+  --icon-muted: #9a9aa3;
 
   --hover: rgb(255 255 255 / 0.065);
   --active: rgb(255 255 255 / 0.105);

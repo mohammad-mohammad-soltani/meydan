@@ -2272,3 +2272,8 @@
 .works-feature .cs-switch { width: 100%; padding: 4px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--line) }
 .works-feature .cs-switch button { height: 42px; border-radius: 14px; font-size: 14.5px; font-weight: 600; gap: 7px }
 .works-feature .cs-switch button.on { font-weight: 700; border: 1px solid var(--line) }
+/* Reference .ch-nh: «اعلان‌های اخیر» and an outlined «همه را خوانده کن». */
+.works-feature .cs-notif-bar { height: 46px; padding: 0 18px; border-bottom: 0; font-size: 12.5px }
+.works-feature .cs-notif-bar b { font-size: 14.5px; font-weight: 700; color: var(--fg) }
+.works-feature .cs-notif-bar button { gap: 6px; padding: 8px 12px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); font-weight: 600; font-size: 12.5px }
+.works-feature .cs-notif-bar button:disabled { opacity: .4 }

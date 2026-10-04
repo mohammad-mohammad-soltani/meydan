@@ -1,4 +1,3 @@
-import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import Link from "next/link";
 import type { Route } from "next";
 import { AtSign, BriefcaseBusiness, Bell, Heart, MessageCircle, Newspaper, Quote, Repeat2, UserPlus, Users } from "lucide-react";
@@ -18,17 +17,18 @@ const icons: Record<ChatNotificationKind, typeof Heart> = {
   system: Bell,
 };
 
-const tones: Record<ChatNotificationKind, string> = {
-  like: "bg-danger-surface text-danger",
-  repost: "bg-success-surface text-success",
-  quote: "bg-success-surface text-success",
-  media: "bg-info-surface text-info",
-  mention: "bg-warning-surface text-warning",
-  follow: "bg-accent-surface text-accent",
-  comment: "bg-info-surface text-info",
-  initiative: "bg-success-surface text-success",
-  work: "bg-brand-muted text-brand",
-  system: "bg-muted text-foreground-secondary",
+/** Hue of each kind's icon circle, as in the reference list. */
+const hues: Record<ChatNotificationKind, number> = {
+  like: 350,
+  repost: 150,
+  quote: 150,
+  media: 205,
+  mention: 35,
+  follow: 220,
+  comment: 140,
+  initiative: 160,
+  work: 0,
+  system: 330,
 };
 
 export function NotificationsList({
@@ -47,7 +47,7 @@ export function NotificationsList({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-0.5">
       {notifications.map((notification) => {
         const Icon = icons[notification.kind];
         const presentation = getNotificationPresentation(notification);
@@ -55,37 +55,24 @@ export function NotificationsList({
           if (notification.unread) void onRead?.(notification.id);
         };
         const content = (
-          <article className={`relative flex gap-3 rounded-card border p-3 text-right transition-colors hover:bg-hover ${notification.unread ? "border-ring/40 bg-hover/40" : "border-border bg-card"}`}>
-            <div className="relative shrink-0">
-              {presentation.visualUrl ? (
-                <OptimizedAvatar
-                  src={presentation.visualUrl}
-                  alt=""
-                  width={44}
-                  height={44}
-                  className="h-11 w-11 rounded-full object-cover ring-1 ring-border/70"
-                />
-              ) : (
-                <div className="grid h-11 w-11 place-items-center rounded-full bg-brand-muted text-xs font-black text-brand">
-                  {notification.actor?.avatarLabel ?? <Icon className="h-5 w-5" aria-hidden="true" />}
-                </div>
-              )}
-              <span className={`absolute -bottom-1 -left-1 grid h-5 w-5 place-items-center rounded-full ring-2 ring-card ${tones[notification.kind]}`}>
-                <Icon className="h-3 w-3" aria-hidden="true" />
-              </span>
+          <article className={`flex items-center gap-3 rounded-[18px] px-3 py-[13px] text-right ${notification.unread ? "bg-foreground/[.07]" : ""}`}>
+            <span
+              aria-hidden="true"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
+              style={{ background: `color-mix(in srgb, hsl(${hues[notification.kind]} 70% 52%) 18%, var(--surface-muted))`, color: `hsl(${hues[notification.kind]} 80% 66%)` }}
+            >
+              <Icon className="h-5 w-5" />
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-[5px] text-sm leading-[1.8] text-foreground">
+              <p className="line-clamp-3">
+                {presentation.actorName && presentation.title.startsWith(presentation.actorName) ? (
+                  <><b className="font-bold">{presentation.actorName}</b>{presentation.title.slice(presentation.actorName.length)}</>
+                ) : presentation.title}
+                {presentation.description ? <>: «{presentation.description}»</> : null}
+              </p>
+              <time className="text-[11.5px] text-muted-foreground">{notification.createdAt}</time>
             </div>
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="text-xs font-bold leading-5 text-foreground">{presentation.title}</h2>
-                <div className="flex shrink-0 items-center gap-2">
-                  {notification.unread ? <span className="h-2 w-2 rounded-full bg-danger" aria-label="خوانده نشده" /> : null}
-                  <time className="text-[9px] text-foreground-subtle">{notification.createdAt}</time>
-                </div>
-              </div>
-              {presentation.description ? (
-                <p className="line-clamp-2 text-[11px] leading-5 text-foreground-secondary">{presentation.description}</p>
-              ) : null}
-            </div>
+            {notification.unread ? <span className="h-[9px] w-[9px] shrink-0 rounded-full bg-brand" aria-label="خوانده نشده" /> : null}
           </article>
         );
 

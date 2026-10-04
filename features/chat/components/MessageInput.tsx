@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- File previews use temporary local blob URLs. */
-import { FileText, Paperclip, SendHorizontal, Smile, X } from "lucide-react";
+import { FileText, Mic, Plus, SendHorizontal, Smile, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { ChatAttachment, ChatMessage, MessageReply } from "../types";
 import { AttachmentSheet } from "./AttachmentSheet";
@@ -78,7 +78,7 @@ export function MessageInput({ value, attachment, replyingTo, editingMessage, no
   const iconButtonClass = "grid h-9 w-9 place-items-center rounded-full text-icon-muted transition-colors hover:bg-hover hover:text-foreground";
 
   return (
-    <footer className="shrink-0 bg-transparent px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2">
+    <footer className="shrink-0 border-t border-border bg-background px-3 pb-[max(.625rem,env(safe-area-inset-bottom))] pt-2.5">
       {replyingTo || editingMessage ? (
         <div className={`mb-2 flex items-center gap-2 rounded-2xl px-3 py-2 ${glassPanelClass}`}>
           <span className="min-w-0 flex-1 border-r-2 border-info pr-2 text-right"><strong className="block text-[11px] text-info">{editingMessage ? "ویرایش پیام" : `پاسخ به ${replyingTo?.senderName}`}</strong><span className="block truncate text-[10px] text-muted-foreground">{editingMessage?.body ?? replyingTo?.body}</span></span>
@@ -94,20 +94,17 @@ export function MessageInput({ value, attachment, replyingTo, editingMessage, no
         </div>
       ) : null}
 
+      {/* Reference composer (.ch-cf): «+» and emoji outside, a pill input, a round send button. */}
       <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); onSubmit(); }}>
-        <div className={`flex min-w-0 flex-1 items-end gap-1 rounded-[22px] px-2 ${glassPanelClass}`}>
-          <span className="flex h-11 w-9 shrink-0 items-center justify-center">
-            <button type="button" aria-label="افزودن پیوست" aria-expanded={isAttachmentOpen} onClick={() => setIsAttachmentOpen(true)} className={iconButtonClass}><Paperclip className="h-5 w-5" /></button>
-          </span>
-          <textarea id="directChatMessageInput" ref={textareaRef} rows={1} value={value} onChange={(event) => onChange(event.target.value)} placeholder="پیام بنویسید" className="max-h-[108px] min-h-10 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1 py-2 text-[13px] leading-5 text-foreground outline-none placeholder:text-placeholder focus-visible:outline-none" />
-          <span className={`relative flex h-11 w-9 shrink-0 items-center justify-center transition-all duration-200 ease-out ${hasMessage ? "-translate-x-0.5 opacity-100" : "translate-x-0 opacity-100"}`}>
-            <button type="button" aria-label="انتخاب شکلک" aria-expanded={isEmojiPickerOpen} onClick={() => setIsEmojiPickerOpen((open) => !open)} className={iconButtonClass}><Smile className="h-5 w-5" /></button>
-            {isEmojiPickerOpen ? <div role="dialog" aria-label="انتخاب شکلک" className="absolute bottom-full left-0 z-20 mb-2 grid w-56 grid-cols-4 gap-1 rounded-panel border border-border bg-popover p-2 shadow-popover backdrop-blur-xl">{emojis.map((emoji) => <button key={emoji} type="button" aria-label={`افزودن ${emoji}`} onClick={() => addEmoji(emoji)} className="grid h-10 w-10 place-items-center rounded-xl text-xl transition-colors hover:bg-hover">{emoji}</button>)}</div> : null}
-          </span>
-          <span aria-hidden={!hasMessage} className={`flex h-11 shrink-0 items-center justify-center overflow-hidden transition-[width] duration-200 ease-out ${hasMessage ? "w-9" : "w-0"}`}>
-            <button type="submit" disabled={!hasMessage || isSending} tabIndex={hasMessage ? 0 : -1} aria-label="ارسال پیام" className={`grid h-9 w-9 shrink-0 origin-center place-items-center rounded-full bg-brand text-brand-foreground shadow-card transition-[transform,opacity,background-color] duration-200 ease-out hover:bg-brand-hover active:scale-95 disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground ${hasMessage ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-50 opacity-0"}`}><SendHorizontal className="h-5 w-5 rotate-180" /></button>
-          </span>
-        </div>
+        <button type="button" aria-label="افزودن پیوست" aria-expanded={isAttachmentOpen} onClick={() => setIsAttachmentOpen(true)} className="grid h-[46px] w-10 shrink-0 place-items-center text-icon-muted transition-colors hover:text-foreground"><Plus className="h-[22px] w-[22px]" /></button>
+        <span className="relative flex h-[46px] w-10 shrink-0 items-center justify-center">
+          <button type="button" aria-label="انتخاب شکلک" aria-expanded={isEmojiPickerOpen} onClick={() => setIsEmojiPickerOpen((open) => !open)} className="grid h-10 w-10 place-items-center text-icon-muted transition-colors hover:text-foreground"><Smile className="h-[22px] w-[22px]" /></button>
+          {isEmojiPickerOpen ? <div role="dialog" aria-label="انتخاب شکلک" className="absolute bottom-full right-0 z-20 mb-2 grid w-56 grid-cols-4 gap-1 rounded-panel border border-border bg-popover p-2 shadow-popover backdrop-blur-xl">{emojis.map((emoji) => <button key={emoji} type="button" aria-label={`افزودن ${emoji}`} onClick={() => addEmoji(emoji)} className="grid h-10 w-10 place-items-center rounded-xl text-xl transition-colors hover:bg-hover">{emoji}</button>)}</div> : null}
+        </span>
+        <textarea id="directChatMessageInput" ref={textareaRef} rows={1} value={value} onChange={(event) => onChange(event.target.value)} placeholder="پیام خود را بنویسید…" className="max-h-[108px] min-h-[46px] min-w-0 flex-1 resize-none overflow-y-auto rounded-[23px] border border-border bg-surface-muted px-[18px] py-[11px] text-[14.5px] leading-6 text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none" />
+        <button type="submit" disabled={isSending || !hasMessage} aria-label={hasMessage ? "ارسال پیام" : "ضبط صدا"} className={`grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full transition-[transform,opacity] duration-150 active:scale-[.92] ${hasMessage ? "bg-foreground text-background" : "text-icon-muted"}`}>
+          {hasMessage ? <SendHorizontal className="h-5 w-5 rotate-180" /> : <Mic className="h-5 w-5" />}
+        </button>
       </form>
       {notice ? <p className="mx-2 mt-1.5 rounded-lg bg-surface-glass px-2 py-1 text-[10px] text-muted-foreground backdrop-blur">{notice}</p> : null}
 

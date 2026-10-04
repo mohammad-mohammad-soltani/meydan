@@ -91,7 +91,7 @@ export function ConversationView({ conversationId, conversation, messages, embed
   const conversationForUi: Conversation = { ...chat.conversation, notificationsMuted: muted };
 
   return (
-    <section className={`relative isolate flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-surface-sunken before:pointer-events-none before:absolute before:inset-0 before:z-0 before:bg-[url('/images/patterns/resistance-chat-pattern-v2.png')] before:bg-[length:512px_512px] before:bg-repeat before:bg-center before:opacity-10 [&>*]:relative [&>*]:z-[1] ${isLeaving ? "ui-view-leave" : isOpeningInfo ? "ui-opening" : "ui-view-enter"}`}>
+    <section className={`relative isolate flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background [&>*]:relative [&>*]:z-[1] ${isLeaving ? "ui-view-leave" : isOpeningInfo ? "ui-opening" : "ui-view-enter"}`}>
       <ChatHeader embedded={embedded} conversation={conversationForUi} isLeaving={isLeaving || isOpeningInfo} onBack={leaveConversation} onOpenInfo={openInfo} onOpenProfile={openInfo} onOpenSearch={() => setIsSearchOpen(true)} onToggleMute={() => void toggleMute()} />
       {isSearchOpen ? <ConversationSearch query={searchQuery} resultCount={searchResults.length} isLoading={isSearching} onChange={setSearchQuery} onClose={() => { setIsSearchOpen(false); setSearchQuery(""); setSearchResults([]); }} /> : null}
       {chat.isPeerTyping ? <p className="border-b border-border bg-surface-glass px-4 py-1 text-[10px] text-verified">{chat.conversation.participant.name} در حال نوشتن است…</p> : !chat.isConnected ? <p className="border-b border-border bg-warning-surface px-4 py-1 text-[10px] text-warning">در حال اتصال مجدد…</p> : null}

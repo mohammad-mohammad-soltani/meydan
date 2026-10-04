@@ -5,7 +5,7 @@ html.black {
 
   /* Pure-black canvas and surfaces. Separation comes from borders/opacity. */
   --background: #000000;
-  --foreground: #f7f7f7;
+  --foreground: #f4f4f5;
   --foreground-secondary: #d4d4d4;
   --foreground-subtle: #9a9a9a;
   --on-solid: #ffffff;
@@ -14,7 +14,7 @@ html.black {
   --solid-light: #ffffff;
 
   --surface: #000000;
-  --surface-muted: #000000;
+  --surface-muted: #0b0b0b;
   --surface-elevated: #000000;
   --surface-sunken: #000000;
   --surface-glass: rgb(0 0 0 / .92);
@@ -23,7 +23,7 @@ html.black {
   --popover: #000000;
   --popover-foreground: var(--foreground);
 
-  --border: #282828;
+  --border: #1b1b1b;
   --border-strong: #3b3b3b;
   --divider: #202020;
 
@@ -34,7 +34,7 @@ html.black {
   --placeholder: #858585;
 
   --muted: #000000;
-  --muted-foreground: #a3a3a3;
+  --muted-foreground: #8a8d98;
   --icon: #d4d4d4;
   --icon-muted: #8f8f8f;
 

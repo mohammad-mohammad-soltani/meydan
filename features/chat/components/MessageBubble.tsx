@@ -351,7 +351,7 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
         onPointerCancel={longPressEnd}
         onPointerMove={longPressEnd}
       >
-        <article className={`rounded-2xl text-[13px] leading-6 shadow-sm ${hasAttachment ? "px-2 py-2" : "px-3 py-2"} ${isOwn ? "rounded-tr-md bg-message-own text-message-own-foreground" : "rounded-tl-md bg-message-peer text-message-peer-foreground"}`}>
+        <article className={`rounded-[18px] text-[14.5px] leading-[1.85] ${hasAttachment ? "px-2 py-2" : "px-[13px] pb-1.5 pt-2"} ${isOwn ? "rounded-br-md bg-foreground text-background" : "rounded-bl-md border border-border bg-surface-muted text-foreground"}`}>
           {message.forwardedFrom ? <p className="mb-1 text-[10px] font-semibold text-success">فورواردشده از {message.forwardedFrom}</p> : null}
           {message.replyTo ? <div className={`mb-1.5 border-r-2 pr-2 text-[11px] leading-4 ${isOwn ? "border-success-border text-message-meta" : "border-info-border text-message-meta"}`}><strong className="block text-[10px]">{message.replyTo.senderName}</strong><span className="block line-clamp-1">{message.replyTo.body}</span></div> : null}
           {message.attachment ? <MessageAttachment attachment={message.attachment} scope={`chat:${message.id}`} transfer={transfer} /> : null}

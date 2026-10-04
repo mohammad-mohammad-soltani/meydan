@@ -15,7 +15,7 @@ type MessageListProps = {
 export function MessageList({ messages, currentUserId, onReply, onCopy, onEdit, onDelete, onForward, onReact }: MessageListProps) {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 no-scrollbar">
-      <div className="flex min-h-full flex-col justify-end gap-2.5">
+      <div className="flex min-h-full flex-col gap-1.5">
         <div className="mb-2 flex justify-center"><span className="rounded-lg bg-surface-glass px-2.5 py-1 text-[10px] font-medium text-foreground-secondary shadow-xs backdrop-blur">امروز</span></div>
         {messages.map((message) => <MessageBubble key={message.id} message={message} isOwn={message.senderId === currentUserId} onReply={onReply} onCopy={onCopy} onEdit={onEdit} onDelete={onDelete} onForward={onForward} onReact={onReact} />)}
       </div>

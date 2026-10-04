@@ -62,13 +62,11 @@ export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useCha
       {notifications ? (
         <>
           <div className="cs-notif-bar">
-            <span>{chat.unreadNotificationCount > 0 ? `${chat.unreadNotificationCount.toLocaleString("fa-IR")} اعلان خوانده‌نشده` : "همه اعلان‌ها خوانده شده‌اند"}</span>
-            {chat.unreadNotificationCount > 0 ? (
-              <button type="button" onClick={() => void chat.readAllNotifications()}>
-                <CheckCheck className="h-4 w-4" />
-                خواندن همه
-              </button>
-            ) : null}
+            <b>اعلان‌های اخیر</b>
+            <button type="button" disabled={chat.unreadNotificationCount === 0} onClick={() => void chat.readAllNotifications()}>
+              <CheckCheck className="h-4 w-4" />
+              همه را خوانده کن
+            </button>
           </div>
           <div className="w-groups tw-scope" style={{ padding: 12 }}>
             {chat.isNotificationsLoading && !chat.notifications.length ? (

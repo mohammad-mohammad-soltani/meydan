@@ -127,11 +127,13 @@ test("theme supports light, dark and pure-black modes", () => {
   assert.ok(existsSync(blackThemePath), "app/black-theme.css must exist");
   const blackBlock = readFileSync(blackThemePath, "utf8");
   assert.match(blackBlock, /html\.black/);
-  for (const token of ["--background", "--surface", "--surface-muted", "--surface-elevated", "--surface-sunken", "--input"]) {
+  for (const token of ["--background", "--surface", "--surface-elevated", "--surface-sunken", "--input"]) {
     assert.match(blackBlock, new RegExp(`${token}:\\s*#000000`, "i"), `${token} must be pure black`);
   }
 
   const layout = source("app/layout.tsx");
+  // Soft fills (chips, stat tiles) stay one step above pure black, like the reference's AMOLED mode.
+  assert.match(blackBlock, /--surface-muted:\s*#0b0b0b/i);
   assert.match(layout, /black-theme\.css/);
   assert.match(layout, /black/);
   assert.match(layout, /meydan-theme/);
