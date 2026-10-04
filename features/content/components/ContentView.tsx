@@ -59,7 +59,7 @@ export function ContentView({ banners, speeches, musicVideos, reportDays, todayN
         {ACTIONS.map(({ label, icon: Icon, tone, href, soon }) => {
           const body = (
             <>
-              <span className={`relative grid h-[60px] w-[60px] place-items-center rounded-full text-white ${tone} ${soon ? "opacity-60" : ""}`}><Icon aria-hidden="true" className="h-6 w-6" /></span>
+              <span className={`relative grid h-[60px] w-[60px] place-items-center rounded-full text-white ${tone}`}><Icon aria-hidden="true" className="h-6 w-6" /></span>
               <span className="mt-2 truncate text-[11px] font-black">{label}</span>
               {soon ? <span className="mt-1 inline-flex items-center gap-0.5 rounded-full bg-surface-muted px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground"><Clock aria-hidden="true" className="h-2.5 w-2.5" />به‌زودی</span> : null}
             </>

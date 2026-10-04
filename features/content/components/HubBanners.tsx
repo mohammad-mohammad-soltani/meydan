@@ -9,9 +9,9 @@ import type { ContentBanner } from "../services/banners.service";
 type Slide = { id: string; tag: string; title: string; hint: string; href?: string; image?: string; soon?: boolean; tone: string };
 
 const DEFAULTS: Slide[] = [
-  { id: "screening", tag: "ثبت‌نام اکران", title: "فیلم و مستند در میادین", hint: "برای ثبت‌نام اکران در میدان خود اقدام کنید", soon: true, tone: "from-rose-700 to-rose-950" },
-  { id: "nights", tag: "برنامهٔ شب‌ها", title: "محور محتوایی شب‌های تجمع", hint: "برنامهٔ هر شب، آمادهٔ استفاده", href: "/content/report-days", tone: "from-zinc-600 to-zinc-900" },
-  { id: "kit", tag: "بستهٔ تبلیغاتی", title: "پلاکارد، بنر و استوری", hint: "فایل‌های آمادهٔ چاپ و انتشار", soon: true, tone: "from-neutral-600 to-neutral-900" },
+  { id: "screening", tag: "ثبت‌نام اکران", title: "فیلم و مستند در میادین", hint: "برای ثبت‌نام اکران در میدان خود اقدام کنید", soon: true, tone: "from-[#484848] to-[#0e0e0e]" },
+  { id: "nights", tag: "برنامهٔ شب‌ها", title: "محور محتوایی شب‌های تجمع", hint: "برنامهٔ هر شب، آمادهٔ استفاده", href: "/content/report-days", tone: "from-[#484848] to-[#0e0e0e]" },
+  { id: "kit", tag: "بستهٔ تبلیغاتی", title: "پلاکارد، بنر و استوری", hint: "فایل‌های آمادهٔ چاپ و انتشار", soon: true, tone: "from-[#484848] to-[#0e0e0e]" },
 ];
 
 /**
