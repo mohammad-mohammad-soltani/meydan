@@ -106,7 +106,7 @@ test("search has a filter and a result kind for every entity kind", () => {
 
 test("every surface that shows a name renders the shared account badges", () => {
   const badges = read("components/shared/AccountBadges.tsx");
-  assert.match(badges, /fill-verified/); // media and organizations use the same blue tick
+  assert.match(badges, /fill-current text-foreground/); // every account kind uses the reference tick
   assert.doesNotMatch(badges, /fill-foreground/);
   for (const file of [
     "features/feed/components/PostCard.tsx",

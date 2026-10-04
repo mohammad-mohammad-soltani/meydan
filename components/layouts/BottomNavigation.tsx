@@ -53,7 +53,7 @@ export function BottomNavigation({ isAuthenticated = false }: BottomNavigationPr
     <nav
       id="bottomNavBar"
       aria-label="ناوبری اصلی"
-      className="relative z-50 grid w-full shrink-0 grid-cols-5 items-center gap-1.5 border-t border-border bg-surface-glass px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-icon-muted backdrop-blur lg:hidden"
+      className="relative z-50 grid w-full shrink-0 grid-cols-5 items-center gap-1.5 bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-icon-muted shadow-[0_-10px_28px_-14px_rgba(0,0,0,.45),0_-1px_0_color-mix(in_srgb,var(--foreground)_7%,transparent)] backdrop-blur-[24px] backdrop-saturate-[1.7] lg:hidden"
     >
       {links.map(({ href, label, icon: Icon, match, badge }) => {
         const active = match(pathname);

@@ -57,14 +57,14 @@ export function FloatingComposeButton() {
         disabled={loadingVideos}
         aria-label={videoError ? "ویدیویی پیدا نشد؛ دوباره تلاش کنید" : "مشاهده ویدیوها"}
         title={videoError ? "ویدیویی پیدا نشد" : "فید ویدیو"}
-        className={`group relative grid size-11 place-items-center rounded-full border text-foreground shadow-floating transition-[transform,filter] duration-200 hover:scale-105 hover:brightness-110 active:scale-90 focus-visible:outline-none focus-visible:ring-4 disabled:cursor-wait ${
-          videoError ? "border-warning bg-warning-surface text-warning" : "border-border bg-surface-elevated backdrop-blur"
+        className={`group relative grid size-10 place-items-center rounded-full text-foreground shadow-[0_8px_24px_-8px_rgba(0,0,0,.5)] transition-transform duration-200 active:scale-90 focus-visible:outline-none focus-visible:ring-4 disabled:cursor-wait ${
+          videoError ? "bg-warning-surface text-warning" : "bg-surface-muted"
         }`}
       >
         {loadingVideos ? (
           <LoaderCircle aria-hidden="true" className="h-[1.15rem] w-[1.15rem] animate-spin motion-reduce:animate-none" />
         ) : (
-          <SquarePlay aria-hidden="true" className="h-[1.3rem] w-[1.3rem] transition-transform duration-200 group-hover:scale-110" strokeWidth={2} />
+          <SquarePlay aria-hidden="true" className="h-5 w-5" strokeWidth={2} />
         )}
       </button>
 
@@ -75,11 +75,9 @@ export function FloatingComposeButton() {
         }}
         aria-label="نوشتن روایت تازه"
         title="نوشتن روایت"
-        className="group relative grid size-14 place-items-center overflow-visible rounded-full border border-brand/20 bg-brand text-brand-foreground shadow-floating transition-[transform,box-shadow,filter] duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.04] hover:shadow-dialog hover:brightness-105 active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-4"
+        className="group relative grid size-14 place-items-center rounded-full bg-brand text-brand-foreground shadow-[0_14px_30px_-10px_rgba(225,29,72,.65)] transition-[transform,background-color] duration-200 hover:bg-brand-hover active:scale-[0.94] focus-visible:outline-none focus-visible:ring-4"
       >
-        <span aria-hidden="true" className="pointer-events-none absolute -inset-1 -z-10 rounded-full bg-brand/20 opacity-60 blur-md transition-all duration-300 group-hover:-inset-1.5 group-hover:opacity-80" />
-        <span aria-hidden="true" className="pointer-events-none absolute inset-[2px] rounded-full border border-white/10" />
-        <Plus aria-hidden="true" className="relative z-10 h-7 w-7 transition-transform duration-300 ease-out group-hover:rotate-90 group-active:scale-95" strokeWidth={2.4} />
+        <Plus aria-hidden="true" className="h-7 w-7" strokeWidth={2.4} />
       </Link>
     </div>
   );

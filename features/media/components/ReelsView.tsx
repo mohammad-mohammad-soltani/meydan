@@ -62,7 +62,7 @@ function AuthorRow({ entry, state }: { entry: VideoFeedEntry; state: ReturnType<
       <span className="min-w-0">
         <b className="flex items-center gap-1 text-sm font-extrabold">
           <span className="truncate">{entry.author}</span>
-          <AccountBadges verified={post?.author.verified} speaker={post?.author.verifiedSpeaker} official={post?.author.verifiedOfficial} kind={post?.author.type} />
+          <AccountBadges verified={post?.author.verified} speaker={post?.author.verifiedSpeaker} official={post?.author.verifiedOfficial} kind={post?.author.type} variant="reel" />
         </b>
         {post?.handle ? <small dir="ltr" className="block truncate text-start text-[11.5px] opacity-70">@{post.handle}</small> : null}
       </span>

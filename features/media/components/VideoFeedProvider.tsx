@@ -13,6 +13,7 @@ import type { VideoFeedEntry } from "../video-feed-queue";
 import { appendVideos } from "../video-feed-queue";
 import { setVideoFeedOwner, stopVideoAutoplay } from "@/lib/video-sound";
 import { ReelsView } from "./ReelsView";
+import { VideoFeedViewer } from "./VideoFeedViewer";
 
 export type VideoFeedRequest = {
   entry: VideoFeedEntry;
@@ -91,8 +92,13 @@ export function VideoFeedProvider({ children }: { children: ReactNode }) {
     <VideoFeedContext.Provider value={open}>
       {children}
       {session && (
-        // A tapped video opens the reels on it; scrolling on continues with the video narratives.
-        <ReelsView key={session.entry.key} initial={session.queue} onClose={close} />
+        session.entry.item.kind === "video" ? (
+          // A tapped video opens the reels on it; scrolling on continues with the video narratives.
+          <ReelsView key={session.entry.key} initial={session.queue} onClose={close} />
+        ) : (
+          // Photos keep the full-screen media viewer (zoom, swipe between a post's attachments).
+          <VideoFeedViewer key={session.entry.key} session={session} onClose={close} />
+        )
       )}
     </VideoFeedContext.Provider>
   );

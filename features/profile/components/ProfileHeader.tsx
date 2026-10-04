@@ -182,10 +182,11 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
                 <Pencil aria-hidden="true" className="h-4 w-4" />
                 ویرایش نمایه
               </Link>
-              <button type="button" onClick={() => void shareProfile(profile, setNotice)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-transparent text-sm font-black text-foreground transition hover:bg-hover">
-                <Share2 aria-hidden="true" className="h-4 w-4" />
-                اشتراک نمایه
-              </button>
+              {/* As in the reference: «پیام» beside «ویرایش نمایه»; on your own profile it opens your conversations. */}
+              <Link href={"/chat" as Route} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border-strong bg-transparent text-sm font-black text-foreground transition hover:bg-hover">
+                <Mail aria-hidden="true" className="h-4 w-4" />
+                پیام
+              </Link>
             </>
           ) : (
             <>

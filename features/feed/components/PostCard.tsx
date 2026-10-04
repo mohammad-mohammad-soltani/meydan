@@ -208,7 +208,7 @@ export function PostCard({
             scope={`post:${post.id}`}
             artist={post.squareName}
             cover={post.author.avatarUrl}
-            className="mt-3"
+            className="pointer-events-auto relative z-10 mt-3"
           />
         ) : null}
 
@@ -380,7 +380,7 @@ export function PostCard({
             scope={`post:${post.id}`}
             artist={post.squareName}
             cover={post.author.avatarUrl}
-            className="mt-3"
+            className="pointer-events-auto relative z-10 mt-3"
           />
         ) : null}
 
