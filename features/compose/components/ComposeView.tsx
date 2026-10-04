@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, Hash, Image as ImageIcon, LoaderCircle, Plus, Save, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
+import { Bookmark, Hash, Image as ImageIcon, LoaderCircle, Plus, Save, Send, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { getMe } from "@/lib/me-client";
@@ -249,19 +249,26 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
       </div>
 
       <div className="flex flex-1 flex-col px-4 pb-28 pt-4">
-        {!quoteId ? <div role="tablist" aria-label="نوع روایت" className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-surface-muted p-1">
+        {!quoteId ? <div role="tablist" aria-label="نوع روایت" className="grid grid-cols-4 gap-1 rounded-[18px] border border-border bg-surface-muted p-1">
           {([[false, "روایت", null], [true, "کار", Sparkles]] as const).map(([echo, label, Icon]) => (
-            <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black transition-all ${isEcho === echo ? "bg-emphasis text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`inline-flex items-center justify-center gap-1.5 rounded-[14px] px-2 py-2.5 text-xs font-bold transition-all ${isEcho === echo ? "bg-emphasis text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {Icon ? <Icon aria-hidden="true" className="h-4 w-4" /> : null}
               {label}
             </button>
+          ))}
+          {/* In the reference; publishing a پویش from here has no backend yet. */}
+          {([["پویش", Send], ["پویش رسانه‌ای", Video]] as const).map(([label, Icon]) => (
+            <span key={label} role="tab" aria-selected="false" aria-disabled="true" title="به‌زودی" className="inline-flex cursor-default items-center justify-center gap-1.5 whitespace-nowrap rounded-[14px] px-1 py-2.5 text-xs font-bold text-muted-foreground">
+              <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
+              {label}
+            </span>
           ))}
         </div> : null}
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-emphasis text-xs font-black text-emphasis-foreground">
-              {viewer.avatarUrl ? <OptimizedAvatar src={viewer.avatarUrl} alt="" width={40} className="h-full w-full object-cover" /> : "من"}
+            <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-[#a9c4f9] text-sm font-extrabold text-[#223967]">
+              {viewer.avatarUrl ? <OptimizedAvatar src={viewer.avatarUrl} alt="" width={44} className="h-full w-full object-cover" /> : null}
             </span>
             <span className="min-w-0">
               <strong className="block truncate text-xs font-black text-foreground">{quoteId ? "نقل‌قول روایت" : isEcho ? "ثبت کار یا ایده" : "ارسال مطلب جدید"}</strong>
