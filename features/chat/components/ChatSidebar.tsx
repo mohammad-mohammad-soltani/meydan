@@ -1,5 +1,6 @@
 "use client";
 
+import { useUnreadCounts } from "../providers/UnreadProvider";
 import { Bell, CheckCheck, MessageCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Icon } from "@/features/works/components/Icon";
@@ -37,6 +38,7 @@ export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useCha
     return [...direct, ...works].sort((a, b) => b.at - a.at);
   }, [chat.conversations, feed.works, q]);
 
+  const unread = useUnreadCounts();
   const notifications = chat.section === "notifications";
   const loading = chat.isLoading && feed.loading && !entries.length;
 
@@ -47,11 +49,12 @@ export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useCha
           <button type="button" role="tab" aria-selected={!notifications} aria-label="گفتگوها" className={!notifications ? "on" : ""} onClick={() => chat.setSection("conversations")}>
             <MessageCircle className="h-4 w-4" />
             گفتگوها
+            {unread.messages > 0 ? <em className="cs-count">{unread.messages > 99 ? "۹۹+" : unread.messages.toLocaleString("fa-IR")}</em> : null}
           </button>
           <button type="button" role="tab" aria-selected={notifications} aria-label="اعلان‌ها" className={notifications ? "on" : ""} onClick={() => chat.setSection("notifications")}>
             <Bell className="h-4 w-4" />
             اعلان‌ها
-            {chat.unreadNotificationCount > 0 ? <span className="cs-dot" aria-hidden="true" /> : null}
+            {chat.unreadNotificationCount > 0 ? <em className="cs-count">{chat.unreadNotificationCount > 99 ? "۹۹+" : chat.unreadNotificationCount.toLocaleString("fa-IR")}</em> : null}
           </button>
         </div>
       </div>

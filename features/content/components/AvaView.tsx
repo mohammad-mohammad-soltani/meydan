@@ -24,6 +24,9 @@ type Chip = (typeof CHIPS)[number]["id"];
 
 const tint = (seed: string, from = 52, to = 22) => `linear-gradient(145deg,hsl(${hueOf(seed)} 60% ${from}%),hsl(${(hueOf(seed) + 40) % 360} 55% ${to}%))`;
 
+/** The reference's monochrome cards: three greys, picked per title. */
+const GREYS = ["linear-gradient(135deg,#484848,#0e0e0e)", "linear-gradient(135deg,#242424,#050505)", "linear-gradient(135deg,#6a6a72,#2b2b2b)"];
+
 function trackOf(item: ContentItem): AudioTrack | null {
   if (!item.media.audioSrc) return null;
   return { id: `ava:${item.apiId}`, title: item.title, artist: item.author, cover: item.coverUrl, url: item.media.audioSrc, sourceHref: `/content/${item.id}` };
@@ -59,7 +62,7 @@ function SectionHead({ title, hint, href }: { title: string; hint?: string; href
       <h2 className="text-base font-black text-foreground">{title}</h2>
       {hint ? <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">{hint}</span> : <span className="flex-1" />}
       {href ? (
-        <Link href={href as Route} className="shrink-0 text-[11px] font-bold text-brand hover:underline">مشاهده همه ‹</Link>
+        <Link href={href as Route} className="shrink-0 text-xs font-bold text-muted-foreground hover:text-foreground">مشاهده همه ‹</Link>
       ) : null}
     </div>
   );
@@ -98,8 +101,8 @@ function FeaturedCard({ item, queue, badge }: { item: ContentItem; queue: Conten
   return (
     <Link
       href={`/content/${item.id}` as Route}
-      className="relative flex aspect-[1.25/1] w-[272px] shrink-0 flex-col justify-end overflow-hidden rounded-3xl p-4 text-white"
-      style={{ background: item.coverUrl ? `linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.78)), url(${item.coverUrl}) center/cover` : tint(item.title, 40, 14) }}
+      className="relative flex aspect-[1.45/1] w-[78%] max-w-[300px] shrink-0 flex-col justify-end overflow-hidden rounded-[26px] p-3.5 text-white"
+      style={{ background: item.coverUrl ? `linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.78)), url(${item.coverUrl}) center/cover` : GREYS[hueOf(item.title) % GREYS.length] }}
     >
       <span className="absolute right-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold backdrop-blur">{badge}</span>
       {item.media.duration ? <span className="absolute left-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold backdrop-blur" dir="ltr">{item.media.duration}</span> : null}

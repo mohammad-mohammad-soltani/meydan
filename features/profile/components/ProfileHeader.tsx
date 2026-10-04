@@ -44,6 +44,7 @@ const persianYear = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numer
 /** «مهر ۱۴۰۲»: month first, as in the reference (the locale puts the year first). */
 const monthYear = { format: (date: Date) => `${persianMonth.format(date)} ${persianYear.format(date).replace(/\s*ه\.ش\.?/, "")}` };
 
+const plain = "grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/10 active:scale-95";
 const glass = "grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-md transition hover:bg-black/50 active:scale-95";
 
 /**
@@ -109,7 +110,7 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
           <button type="button" aria-label="بازگشت" onClick={() => history.back()} className={glass}>
             <ArrowRight className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5 rounded-full border border-white/15 bg-black/35 p-0.5 backdrop-blur-md">
             {canEdit ? <AdminNavLink isAuthenticated className={`${glass} !w-auto px-3 text-xs font-black lg:hidden`} /> : null}
             {!canEdit && isAuthenticated && onToggleNotify ? (
               <button
@@ -117,15 +118,15 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
                 aria-label="اعلان‌های نمایه"
                 aria-pressed={isNotifying}
                 onClick={() => void onToggleNotify().then((on) => { if (on !== undefined) setNotice(on ? "اعلان‌های نمایه فعال شد" : "اعلان‌های نمایه خاموش شد"); })}
-                className={isNotifying ? "grid h-10 w-10 place-items-center rounded-full bg-emphasis text-emphasis-foreground transition active:scale-95" : glass}
+                className={isNotifying ? "grid h-10 w-10 place-items-center rounded-full bg-emphasis text-emphasis-foreground transition active:scale-95" : plain}
               >
                 {isNotifying ? <BellRing className="h-[18px] w-[18px]" /> : <Bell className="h-[18px] w-[18px]" />}
               </button>
             ) : null}
-            <button type="button" aria-label="اشتراک‌گذاری نمایه" onClick={() => void shareProfile(profile, setNotice)} className={glass}>
+            <button type="button" aria-label="اشتراک‌گذاری نمایه" onClick={() => void shareProfile(profile, setNotice)} className={plain}>
               <Share2 className="h-[18px] w-[18px]" />
             </button>
-            <ProfileActionsMenu profile={profile} canEdit={canEdit} onNotice={setNotice} triggerClassName={glass} />
+            <ProfileActionsMenu profile={profile} canEdit={canEdit} onNotice={setNotice} triggerClassName={plain} />
           </div>
         </div>
         {canEdit ? (
@@ -137,14 +138,15 @@ export function ProfileHeader({ profile, isNotifying = false, onToggleNotify, ca
 
       <div className="px-4 pb-5">
         <div className="-mt-14 grid grid-cols-[1fr_auto_1fr] items-end">
-          <button type="button" onClick={() => setListOpen(true)} aria-label="فهرست دنبال‌کننده‌ها و دنبال‌شده‌ها" className="pb-2 text-center">
+          <button type="button" onClick={() => setListOpen(true)} aria-label="فهرست دنبال‌کننده‌ها و دنبال‌شده‌ها" className="pb-0 text-center">
             <strong className="block text-lg font-black text-foreground">{followers === undefined ? "—" : followers >= 100_000 ? compact.format(followers) : number.format(followers)}</strong>
             <span className="text-[11px] text-muted-foreground">دنبال‌کننده</span>
           </button>
           <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-background bg-surface-muted text-3xl font-black text-foreground">
             {identity.avatar ? <OptimizedAvatar src={identity.avatar} alt={`آواتار ${identity.name}`} width={112} className="h-full w-full object-cover" /> : identity.name.slice(0, 1)}
+            <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full border-2 border-foreground" />
           </div>
-          <div className="pb-2 text-center">
+          <div className="pb-0 text-center">
             <strong className="block text-lg font-black text-foreground">{number.format(posts)}</strong>
             <span className="text-[11px] text-muted-foreground">روایت</span>
           </div>

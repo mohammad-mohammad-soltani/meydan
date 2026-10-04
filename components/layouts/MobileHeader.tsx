@@ -24,7 +24,8 @@ export function MobileHeader() {
   const isInitiativeRoute = pathname.startsWith("/initiatives/");
   const isSpeakerInvitationRoute = pathname.startsWith("/speaker-invitations");
 
-  if (pathname === "/chat" || isConversationRoute || isContentDetailRoute || isPostRoute || isExploreRoute || isProfileRoute || isInitiativeRoute || isSpeakerInvitationRoute) return null;
+  // The reference shows the header on the timeline only; the content hub and the live map open straight on their own bars.
+  if (pathname === "/chat" || pathname === "/content" || pathname === "/map" || isConversationRoute || isContentDetailRoute || isPostRoute || isExploreRoute || isProfileRoute || isInitiativeRoute || isSpeakerInvitationRoute) return null;
 
   return (
     <header className={`${pathname === "/home" ? "relative" : "sticky top-0"} z-40 flex items-center justify-between border-b border-divider bg-surface-glass px-4 py-2.5 backdrop-blur-md lg:hidden`}>

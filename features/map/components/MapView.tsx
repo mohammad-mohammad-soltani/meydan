@@ -100,7 +100,7 @@ export function MapView() {
     >
       <div className="sm:px-4 sm:pt-3">
         <div className="relative overflow-hidden border-y border-border bg-[#171a1b] shadow-sm sm:rounded-[22px] sm:border">
-          <div className="min-h-[62dvh] sm:min-h-[500px] [&>*]:min-h-[62dvh] sm:[&>*]:min-h-[500px]">
+          <div className="min-h-[62dvh] sm:min-h-[62dvh] [&>*]:min-h-[62dvh] sm:[&>*]:min-h-[62dvh]">
             <MapFrame
               squares={mapMarkers.squares}
               aggregates={mapMarkers.aggregates}
