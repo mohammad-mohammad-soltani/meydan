@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Bell, X } from "lucide-react";
+import { getShell } from "@/lib/shell-client";
 import { meydanApi } from "@/lib/meydan-api";
 import { enableWebPush, type WebPushConfig } from "@/lib/web-push";
 
@@ -74,7 +75,8 @@ export function PushEnrollment({ isAuthenticated }: { isAuthenticated: boolean }
     if (!isAuthenticated) return;
 
     let cancelled = false;
-    meydanApi<WebPushConfig>("/push/config", { suppressAuthRedirect: true })
+    getShell()
+      .then((shell) => (shell?.push ? (shell.push as WebPushConfig) : meydanApi<WebPushConfig>("/push/config", { suppressAuthRedirect: true })))
       .then((value) => {
         if (cancelled) return;
         setConfig(value);

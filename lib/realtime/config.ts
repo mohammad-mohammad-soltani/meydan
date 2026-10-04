@@ -1,4 +1,5 @@
 import { meydanApi } from "@/lib/meydan-api";
+import { getShell } from "@/lib/shell-client";
 import { SOKETI_CONFIG } from "./soketi";
 
 /**
@@ -63,7 +64,8 @@ export async function getRealtimeConfig(): Promise<RealtimeConfig> {
   if (cached) return cached;
 
   if (!pending) {
-    pending = meydanApi<ApiRealtimeConfig>("/chat/realtime/config")
+    pending = getShell()
+      .then((shell) => (shell?.realtime ? (shell.realtime as ApiRealtimeConfig) : meydanApi<ApiRealtimeConfig>("/chat/realtime/config")))
       .then((raw) => {
         const config = normalize(raw);
         cached = config;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { meydanApi } from "@/lib/meydan-api";
+import { getShell, invalidateShell } from "@/lib/shell-client";
 
 /**
  * One `/me` request per page load, shared by every client component that
@@ -10,9 +11,14 @@ import { meydanApi } from "@/lib/meydan-api";
  * Each of them used to call `/me` on its own.
  */
 let pending: Promise<Record<string, unknown>> | null = null;
+/** After an edit the shell's copy of `/me` is stale; read `/me` itself from then on. */
+let shellAllowed = true;
 
 export function getMe<T = Record<string, unknown>>(): Promise<T> {
-  pending ??= meydanApi<Record<string, unknown>>("/me").catch((reason) => {
+  pending ??= (shellAllowed ? getShell() : Promise.resolve(null))
+    // The shell already carries `/me`; only an older backend (or a stale shell) costs a second request.
+    .then((shell) => (shell?.me ? shell.me : meydanApi<Record<string, unknown>>("/me")))
+    .catch((reason) => {
     // A failed read must not stick: the next caller tries again.
     pending = null;
     throw reason;
@@ -23,6 +29,8 @@ export function getMe<T = Record<string, unknown>>(): Promise<T> {
 /** Drops the shared result, e.g. after the profile was edited or on logout. */
 export function invalidateMe(): void {
   pending = null;
+  shellAllowed = false;
+  invalidateShell();
 }
 
 /** `/me` for signed-in viewers; guests must pass `enabled = false`. */

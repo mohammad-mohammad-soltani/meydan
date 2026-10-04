@@ -11,6 +11,8 @@ import {
   type ReactNode,
 } from "react";
 import { subscribeToUserChannel } from "@/lib/realtime/user-channel";
+import { getShell } from "@/lib/shell-client";
+import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { worksPage } from "@/features/works/services/works.service";
 import { getConversations } from "../services/chat.service";
 import { getUnreadNotificationCount } from "../services/notification.service";
@@ -63,7 +65,14 @@ export function UnreadProvider({
     if (!isAuthenticated) return;
     let active = true;
 
-    const refresh = async () => {
+    // Older backends without /me/unread: the badge is summed from the lists, as before.
+    let countsEndpoint = true;
+    let first = true;
+    const apply = (messages: number, notifications: number) => {
+      setCounts((current) => (current.messages === messages && current.notifications === notifications ? current : { messages, notifications }));
+    };
+
+    const refreshFromLists = async () => {
       const [conversations, notifications, works] = await Promise.allSettled([
         getConversations(),
         getUnreadNotificationCount(true),
@@ -84,6 +93,30 @@ export function UnreadProvider({
             : { ...current, notifications: notifications.value },
         );
       }
+    };
+
+    const refresh = async () => {
+      // The first read rides on the shared shell request; later ones read only the two counters.
+      if (first) {
+        first = false;
+        const shell = await getShell();
+        if (!active) return;
+        if (shell?.unread) {
+          apply(shell.unread.messages, shell.unread.notifications);
+          return;
+        }
+      }
+      if (countsEndpoint) {
+        try {
+          const counts = await meydanApi<{ messages: number; notifications: number }>("/me/unread", { suppressAuthRedirect: true });
+          if (active) apply(counts.messages, counts.notifications);
+          return;
+        } catch (reason) {
+          if (reason instanceof MeydanApiError && (reason.status === 404 || reason.status === 405)) countsEndpoint = false;
+          else return;
+        }
+      }
+      await refreshFromLists();
     };
 
     refreshRef.current = () => void refresh();
