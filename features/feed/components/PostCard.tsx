@@ -366,6 +366,7 @@ export function PostCard({
           {bodyTitle ? <p className="mb-1 font-bold text-foreground">{bodyTitle}</p> : null}
           <ReadMoreText
             body={bodyRest}
+            limit={200}
             className="text-foreground-secondary"
             contentClassName="relative z-10"
           />

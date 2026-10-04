@@ -1,5 +1,5 @@
-import { VideosView } from "@/features/media/components/VideosView";
+import { ReelsView } from "@/features/media/components/ReelsView";
 
 export default function VideosPage() {
-  return <VideosView />;
+  return <ReelsView />;
 }

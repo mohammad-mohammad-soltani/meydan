@@ -719,3 +719,44 @@ html.dark {
     max-width: 980px;
   }
 }
+
+/* Reels player (/videos) */
+.reel-glass {
+  background: rgb(0 0 0 / 0.48);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.6);
+}
+.reel-rail {
+  background: rgb(0 0 0 / 0.48);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.6);
+}
+@media (min-width: 1024px) {
+  .reel-rail {
+    background: var(--card);
+    border-color: var(--border);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+}
+.reels-feed {
+  scrollbar-width: none;
+}
+.reels-feed::-webkit-scrollbar {
+  display: none;
+}
+.reel-flash {
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
+  animation: reel-flash 0.6s ease-out;
+}
+@keyframes reel-flash {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.15); }
+}
