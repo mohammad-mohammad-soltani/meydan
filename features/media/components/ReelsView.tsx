@@ -413,11 +413,17 @@ function RailButton({ children, label, on, className = "", ...rest }: { children
  * one per screen; on desktop the video sits in the centre column with the
  * author, caption and comments in a panel beside it.
  */
-export function ReelsView() {
+export function ReelsView({ initial, onClose }: {
+  /** Opened from a video in a list: start on these reels, then continue with the video narratives. */
+  initial?: VideoFeedEntry[];
+  /** Overlay mode: the reels cover the page and closing returns to it. */
+  onClose?: () => void;
+} = {}) {
+  const overlay = Boolean(onClose);
   const router = useRouter();
   const desktop = useDesktop();
   const muted = useSyncExternalStore(subscribeToVideoMuted, videoMutedSnapshot, videoMutedServerSnapshot);
-  const [entries, setEntries] = useState<VideoFeedEntry[] | null>(null);
+  const [entries, setEntries] = useState<VideoFeedEntry[] | null>(initial?.length ? initial : null);
   const [error, setError] = useState(false);
   const [active, setActive] = useState(0);
   const [comments, setComments] = useState<number | null>(null);
@@ -449,8 +455,9 @@ export function ReelsView() {
     }
   }, []);
 
+  const seed = useRef(initial ?? []);
   useEffect(() => {
-    void load([]);
+    void load(seed.current);
   }, [load]);
 
   // The reel that is at least 60% on screen is the active one.
@@ -487,8 +494,16 @@ export function ReelsView() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
+  useEffect(() => {
+    if (!onClose) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const back = () => {
-    if (window.history.length > 1) router.back();
+    if (onClose) onClose();
+    else if (window.history.length > 1) router.back();
     else router.push("/home");
   };
 
@@ -496,7 +511,9 @@ export function ReelsView() {
     <div
       dir="rtl"
       style={{ "--rh": "calc(100dvh - 120px)", "--rw": "calc(var(--rh) * 9 / 16)" } as CSSProperties}
-      className="reels fixed inset-0 z-[80] bg-black text-white lg:static lg:z-auto lg:flex lg:h-dvh lg:items-center lg:justify-center lg:gap-[18px] lg:bg-transparent lg:text-foreground"
+      className={overlay
+        ? "reels fixed inset-0 z-[200] bg-black text-white lg:flex lg:items-center lg:justify-center lg:gap-[18px] lg:bg-background lg:text-foreground"
+        : "reels fixed inset-0 z-[80] bg-black text-white lg:static lg:z-auto lg:flex lg:h-dvh lg:items-center lg:justify-center lg:gap-[18px] lg:bg-transparent lg:text-foreground"}
     >
       <div className="relative h-full w-full lg:h-[var(--rh)] lg:w-[calc(var(--rw)+70px)] lg:shrink-0">
         <div className="absolute inset-x-0 top-0 z-[6] flex items-center justify-between px-3.5 py-2 text-white lg:left-auto lg:w-[var(--rw)] lg:rounded-t-[22px]">
@@ -538,5 +555,5 @@ export function ReelsView() {
 
   if (!mounted) return null;
   // On phones the player covers the whole screen, above the bottom navigation.
-  return desktop ? content : createPortal(content, document.body);
+  return desktop && !overlay ? content : createPortal(content, document.body);
 }

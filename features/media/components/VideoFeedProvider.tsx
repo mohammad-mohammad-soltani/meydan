@@ -12,7 +12,7 @@ import {
 import type { VideoFeedEntry } from "../video-feed-queue";
 import { appendVideos } from "../video-feed-queue";
 import { setVideoFeedOwner, stopVideoAutoplay } from "@/lib/video-sound";
-import { VideoFeedViewer } from "./VideoFeedViewer";
+import { ReelsView } from "./ReelsView";
 
 export type VideoFeedRequest = {
   entry: VideoFeedEntry;
@@ -91,11 +91,8 @@ export function VideoFeedProvider({ children }: { children: ReactNode }) {
     <VideoFeedContext.Provider value={open}>
       {children}
       {session && (
-        <VideoFeedViewer
-          key={session.entry.key}
-          session={session}
-          onClose={close}
-        />
+        // A tapped video opens the reels on it; scrolling on continues with the video narratives.
+        <ReelsView key={session.entry.key} initial={session.queue} onClose={close} />
       )}
     </VideoFeedContext.Provider>
   );
