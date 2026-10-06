@@ -68,7 +68,6 @@ export function MessageRow({ m, cont, last }: { m: WorkMessage; cont: boolean; l
   };
 
   let bubble: ReactNode;
-  let keyboard: ReactNode = null;
   if (m.delivery) bubble = <PendingBubble m={m} />;
   else if (deleted && m.kind !== "text")
     bubble = (
@@ -79,14 +78,11 @@ export function MessageRow({ m, cont, last }: { m: WorkMessage; cont: boolean; l
       </div>
     );
   else if (m.kind === "task" && m.task) {
-    bubble = <TaskBubble {...props} />;
-    keyboard = <TaskKeyboard m={m} />;
+    bubble = <TaskBubble {...props} kb={<TaskKeyboard m={m} />} />;
   } else if (m.kind === "meeting" && m.meeting) {
-    bubble = <MeetingBubble {...props} />;
-    keyboard = <MeetingKeyboard m={m} />;
+    bubble = <MeetingBubble {...props} kb={<MeetingKeyboard m={m} />} />;
   } else if (m.kind === "announcement" && m.announcement) {
-    bubble = <AnnouncementBubble {...props} seenOpen={seenOpen} />;
-    keyboard = <AnnouncementKeyboard m={m} seenOpen={seenOpen} onToggleSeen={() => setSeenOpen((v) => !v)} />;
+    bubble = <AnnouncementBubble {...props} seenOpen={seenOpen} kb={<AnnouncementKeyboard m={m} seenOpen={seenOpen} onToggleSeen={() => setSeenOpen((v) => !v)} />} />;
   } else if (m.kind === "poll" && m.poll) bubble = <PollBubble {...props} />;
   else bubble = <TextBubble {...props} />;
 
@@ -183,7 +179,6 @@ export function MessageRow({ m, cont, last }: { m: WorkMessage; cont: boolean; l
       >
         {canReply ? <span ref={swipeIcon} className="swipe-ic" aria-hidden="true"><Icon name="reply" size={16} /></span> : null}
         {bubble}
-        {keyboard}
         {canReply ? (
           <button type="button" className="b-reply" aria-label="پاسخ" title="پاسخ" onClick={() => { reply(m); }}>
             <Icon name="reply" size={15} />

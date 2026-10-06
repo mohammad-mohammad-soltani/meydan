@@ -1,14 +1,13 @@
 "use client";
 
 import { useUnreadCounts } from "../providers/UnreadProvider";
-import { Bell, CheckCheck, MessageCircle } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Icon } from "@/features/works/components/Icon";
 import { WorkRow, workActivity } from "@/features/works/components/WorkRow";
 import { useWorksFeed } from "@/features/works/hooks/useWorksFeed";
 import type { WorkGroup } from "@/features/works/types";
 import type { useChat } from "../hooks/useChat";
 import type { Conversation } from "../types";
+import { ChIcon } from "./ChIcon";
 import { DirectRow } from "./DirectRow";
 import { NotificationsList } from "./NotificationsList";
 
@@ -20,10 +19,11 @@ const time = (iso?: string | null) => {
   const t = iso ? new Date(iso).getTime() : 0;
   return Number.isNaN(t) ? 0 : t;
 };
+const count = (n: number) => (n > 99 ? "۹۹+" : n.toLocaleString("fa-IR"));
 
 export type Selected = { kind: "direct" | "work"; id: string } | null;
 
-/** Right column of the chat page: direct conversations and work groups in one list (works get a richer row). */
+/** Right column of the chat page (reference `.ch-l`): direct conversations and work groups in one list. */
 export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useChat>; selected: Selected }) {
   const [q, setQ] = useState("");
   const feed = useWorksFeed(q);
@@ -43,34 +43,34 @@ export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useCha
   const loading = chat.isLoading && feed.loading && !entries.length;
 
   return (
-    <aside className="w-list">
-      <div className="w-list-h">
-        <div className="cs-switch" role="tablist" aria-label="گفتگوها و اعلان‌ها">
-          <button type="button" role="tab" aria-selected={!notifications} aria-label="گفتگوها" className={!notifications ? "on" : ""} onClick={() => chat.setSection("conversations")}>
-            <MessageCircle className="h-4 w-4" />
-            گفتگوها
-            {unread.messages > 0 ? <em className="cs-count">{unread.messages > 99 ? "۹۹+" : unread.messages.toLocaleString("fa-IR")}</em> : null}
-          </button>
-          <button type="button" role="tab" aria-selected={notifications} aria-label="اعلان‌ها" className={notifications ? "on" : ""} onClick={() => chat.setSection("notifications")}>
-            <Bell className="h-4 w-4" />
-            اعلان‌ها
-            {chat.unreadNotificationCount > 0 ? <em className="cs-count">{chat.unreadNotificationCount > 99 ? "۹۹+" : chat.unreadNotificationCount.toLocaleString("fa-IR")}</em> : null}
-          </button>
-        </div>
+    <aside className="w-list ch-l">
+      <div className={`ch-seg ${notifications ? "n" : ""}`} role="tablist" aria-label="گفتگوها و اعلان‌ها">
+        <i />
+        <button type="button" role="tab" aria-selected={!notifications} aria-label="گفتگوها" className={!notifications ? "on" : ""} onClick={() => chat.setSection("conversations")}>
+          <ChIcon name="chat" size={18} />
+          <span>گفتگوها</span>
+          {unread.messages > 0 ? <em>{count(unread.messages)}</em> : null}
+        </button>
+        <button type="button" role="tab" aria-selected={notifications} aria-label="اعلان‌ها" className={notifications ? "on" : ""} onClick={() => chat.setSection("notifications")}>
+          <ChIcon name="bell" size={18} />
+          <span>اعلان‌ها</span>
+          {chat.unreadNotificationCount > 0 ? <em>{count(chat.unreadNotificationCount)}</em> : null}
+        </button>
       </div>
 
       {notifications ? (
         <>
-          <div className="cs-notif-bar">
-            <b>اعلان‌های اخیر</b>
-            <button type="button" disabled={chat.unreadNotificationCount === 0} onClick={() => void chat.readAllNotifications()}>
-              <CheckCheck className="h-4 w-4" />
-              همه را خوانده کن
-            </button>
+          <div className="ch-sb">
+            <div className="ch-nh">
+              <b>اعلان‌های اخیر</b>
+              <button type="button" disabled={chat.unreadNotificationCount === 0} onClick={() => void chat.readAllNotifications()}>
+                <ChIcon name="task" size={16} /> همه را خوانده کن
+              </button>
+            </div>
           </div>
-          <div className="w-groups tw-scope" style={{ padding: 0 }}>
+          <div className="ch-list">
             {chat.isNotificationsLoading && !chat.notifications.length ? (
-              <div className="w-empty">
+              <div className="ch-em2">
                 <span className="spin" aria-label="در حال دریافت" />
               </div>
             ) : (
@@ -80,11 +80,13 @@ export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useCha
         </>
       ) : (
         <>
-          <label className="sp-search w-search">
-            <Icon name="search" size={16} weight={2} />
-            <input type="search" placeholder="جستجو در گفتگوها" aria-label="جستجو در گفتگوها" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} />
-          </label>
-          <div className="w-groups">
+          <div className="ch-sb">
+            <label className="ch-sr">
+              <ChIcon name="sr" size={18} />
+              <input type="search" placeholder="جستجو در گفتگوها" aria-label="جستجو در گفتگوها" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} />
+            </label>
+          </div>
+          <div className="ch-list">
             {entries.map((e) =>
               e.kind === "work" ? (
                 <WorkRow key={e.key} w={e.work} selected={selected?.kind === "work" && selected.id === e.work.id} />
@@ -93,21 +95,26 @@ export function ChatSidebar({ chat, selected }: { chat: ReturnType<typeof useCha
               ),
             )}
             {loading ? (
-              <div className="w-empty">
+              <div className="ch-em2">
                 <span className="spin" aria-label="در حال دریافت" />
               </div>
             ) : null}
-            {!loading && !entries.length && !feed.error ? <p className="hint" style={{ padding: 16 }}>گفتگویی پیدا نشد.</p> : null}
+            {!loading && !entries.length && !feed.error ? (
+              <div className="ch-em2">
+                <ChIcon name="sr" size={28} />
+                <p>گفتگویی پیدا نشد</p>
+              </div>
+            ) : null}
             {feed.error ? (
-              <p className="hint err" role="alert" style={{ padding: 16 }}>
+              <p className="ch-nb" role="alert" style={{ padding: 16 }}>
                 {feed.error}{" "}
-                <button type="button" className="edit-pp" onClick={() => void feed.reload()}>
+                <button type="button" className="ch-bd" onClick={() => void feed.reload()}>
                   تلاش دوباره
                 </button>
               </p>
             ) : null}
             {feed.hasMore ? (
-              <button type="button" className="btn load-more" disabled={feed.loadingMore} onClick={() => void feed.loadMore()}>
+              <button type="button" className="ch-more" disabled={feed.loadingMore} onClick={() => void feed.loadMore()}>
                 کارهای بیشتر
               </button>
             ) : null}

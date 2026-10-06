@@ -1,22 +1,32 @@
 "use client";
 
+import "../reference-notes.css";
 import Link from "next/link";
-import { ArrowRight, Bookmark, Check, Clock, Heart, Share2 } from "lucide-react";
+import { Bookmark, Check, Heart, Share2, X } from "lucide-react";
 import { useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { meydanApi } from "@/lib/meydan-api";
-import { hueOf } from "@/lib/relative-fa";
+import { VideoPlayer } from "@/features/media/components/VideoPlayer";
 import type { ContentDetailItem } from "../types";
+import { AudioMediaStage } from "./AudioMediaStage";
+import { useViewerStates } from "../hooks/use-viewer-states";
+import { NoteMeta, NoteQuote, noteBackground } from "./note-ui";
 
 const fa = new Intl.NumberFormat("fa-IR");
 
-/** A note (یادداشت) as an article: hero, category, title, byline, lead, body, then like / save. */
+/** A note as the reference's reader: hero, category, title, byline, lead, body, then like / save. */
 export function NoteReader({ item }: { item: ContentDetailItem }) {
   const { requireAuth } = useAuthGate();
-  const [liked, setLiked] = useState(Boolean(item.viewerState?.liked));
-  const [likes, setLikes] = useState(item.likeCount ?? 0);
-  const [saved, setSaved] = useState(Boolean(item.viewerState?.bookmarked));
+  const states = useViewerStates([item.apiId]);
+  const mine = states[String(item.apiId)];
+  const [likedOverride, setLiked] = useState<boolean | null>(null);
+  const [savedOverride, setSaved] = useState<boolean | null>(null);
+  const [likeDelta, setLikes] = useState(0);
+  const liked = likedOverride ?? Boolean(mine?.liked ?? item.viewerState?.liked);
+  const saved = savedOverride ?? Boolean(mine?.bookmarked ?? item.viewerState?.bookmarked);
+  const likes = Math.max(0, (item.likeCount ?? 0) + likeDelta);
   const [copied, setCopied] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const cover = item.media.coverImage;
 
   async function toggle(kind: "like" | "bookmark") {
@@ -24,7 +34,7 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
     const turnOn = kind === "like" ? !liked : !saved;
     if (kind === "like") {
       setLiked(turnOn);
-      setLikes((value) => Math.max(0, value + (turnOn ? 1 : -1)));
+      setLikes((value) => value + (turnOn ? 1 : -1));
     } else {
       setSaved(turnOn);
     }
@@ -33,7 +43,7 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
     } catch {
       if (kind === "like") {
         setLiked(!turnOn);
-        setLikes((value) => Math.max(0, value + (turnOn ? -1 : 1)));
+        setLikes((value) => value + (turnOn ? -1 : 1));
       } else {
         setSaved(!turnOn);
       }
@@ -54,40 +64,44 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
     }
   }
 
+  const lead = item.subtitle || item.description;
+
   return (
-    <article className="min-h-full pb-24" dir="rtl">
-      <div
-        className="relative h-[240px] w-full"
-        style={{ background: cover ? `linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.05) 45%,var(--background)), url(${cover}) center/cover` : `linear-gradient(145deg,hsl(${hueOf(item.title)} 55% 36%),hsl(${(hueOf(item.title) + 50) % 360} 50% 18%))` }}
-      >
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
-          <Link href="/content?tab=notes" aria-label="بازگشت" className="grid h-10 w-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur"><ArrowRight aria-hidden="true" className="h-5 w-5" /></Link>
-          <button type="button" onClick={() => void share()} aria-label="اشتراک" className="grid h-10 w-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur">
-            {copied ? <Check aria-hidden="true" className="h-[18px] w-[18px]" /> : <Share2 aria-hidden="true" className="h-[18px] w-[18px]" />}
-          </button>
-        </div>
+    <article className="nv-read">
+      <div className="nv-rb">
+        <Link href="/content?tab=notes" aria-label="بستن"><X aria-hidden="true" width={20} height={20} strokeWidth={2} /></Link>
+        <button type="button" onClick={() => void share()} aria-label="اشتراک">
+          {copied ? <Check aria-hidden="true" width={18} height={18} /> : <Share2 aria-hidden="true" width={18} height={18} strokeWidth={2} />}
+        </button>
       </div>
-
-      <div className="px-5 pb-[60px] pt-5">
-        {item.categoryName ? <span className="inline-block rounded-full bg-surface-muted px-3 py-1 text-[11px] font-bold text-foreground-secondary">{item.categoryName}</span> : null}
-        <h1 className="mt-3 text-[22px] font-black leading-[1.7] text-foreground">{item.title}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-bold text-foreground-secondary">{item.creator.name}</span>
-          <span aria-hidden="true">·</span>
-          <span>{item.publishedAt}</span>
-          {item.readingMinutes ? (<><span aria-hidden="true">·</span><span className="inline-flex items-center gap-1"><Clock aria-hidden="true" className="h-3.5 w-3.5" />{fa.format(item.readingMinutes)} دقیقه</span></>) : null}
+      {item.media.videoSrc ? (
+        <div className="nv-vid">
+          <VideoPlayer
+            item={{ id: `content:${item.apiId}`, kind: "video", title: item.title, src: item.media.videoSrc, poster: item.media.coverImage, width: item.media.videoWidth, height: item.media.videoHeight }}
+            variant="inline"
+            className="w-full"
+          />
         </div>
-        {item.subtitle || item.description ? <p className="mt-5 text-[15px] font-bold leading-8 text-foreground">{item.subtitle || item.description}</p> : null}
-        <div className="mt-4 space-y-4 text-[15px] leading-[2.1] text-foreground-secondary">
-          {item.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+      ) : (
+        <div className={`nv-hero ${cover ? "" : "ph"}`} style={noteBackground(cover, item.apiId % 8)}>
+          {cover ? null : <NoteQuote />}
         </div>
-
-        <div className="mt-8 flex gap-2.5 border-t border-divider pt-5">
-          <button type="button" aria-pressed={liked} onClick={() => void toggle("like")} className={`inline-flex h-[46px] flex-1 items-center justify-center gap-2 rounded-full border text-[13px] font-bold transition-colors ${liked ? "border-brand/40 bg-brand-muted text-brand" : "border-border bg-surface-muted text-foreground"}`}>
-            <Heart aria-hidden="true" className={`h-[18px] w-[18px] ${liked ? "fill-current" : ""}`} />{fa.format(likes)}
+      )}
+      <div className="nv-rc">
+        {item.categoryName ? <span className="nv-cat">{item.categoryName}</span> : null}
+        <h1>{item.title}</h1>
+        <NoteMeta author={item.creator.name} avatar={item.creator.avatar} date={item.publishedAt} minutes={item.readingMinutes} />
+        {item.media.audioSrc ? <AudioMediaStage item={item} isPlaying={playing} onPlayingChange={setPlaying} /> : null}
+        {lead ? <p className="lead">{lead}</p> : null}
+        {item.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+        <div className="nv-act">
+          <button type="button" className={liked ? "on" : ""} aria-pressed={liked} onClick={() => void toggle("like")}>
+            <Heart aria-hidden="true" width={18} height={18} strokeWidth={2} fill={liked ? "currentColor" : "none"} />
+            <span>{fa.format(likes)}</span>
           </button>
-          <button type="button" aria-pressed={saved} onClick={() => void toggle("bookmark")} className={`inline-flex h-[46px] flex-1 items-center justify-center gap-2 rounded-full border text-[13px] font-bold transition-colors ${saved ? "border-brand/40 bg-brand-muted text-brand" : "border-border bg-surface-muted text-foreground"}`}>
-            <Bookmark aria-hidden="true" className={`h-[18px] w-[18px] ${saved ? "fill-current" : ""}`} />ذخیره
+          <button type="button" className={saved ? "on" : ""} aria-pressed={saved} onClick={() => void toggle("bookmark")}>
+            <Bookmark aria-hidden="true" width={18} height={18} strokeWidth={2} fill={saved ? "currentColor" : "none"} />
+            <span>ذخیره</span>
           </button>
         </div>
       </div>

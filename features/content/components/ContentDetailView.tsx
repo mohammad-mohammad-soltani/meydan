@@ -700,6 +700,7 @@ function ContentDetailBody({
 
 
 export function ContentDetailView(props: ContentDetailViewProps) {
-  // Notes read as articles; every other kind keeps the media-first layout.
-  return props.item.contentType === "note" ? <NoteReader item={props.item} /> : <ContentDetailBody {...props} />;
+  // Every speech opens as the reference's reader (video / audio sit inside it); other kinds keep the media-first layout.
+  const written = props.item.contentType === "speech";
+  return written ? <NoteReader item={props.item} /> : <ContentDetailBody {...props} />;
 }

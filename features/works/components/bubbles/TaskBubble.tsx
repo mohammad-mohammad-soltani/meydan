@@ -255,6 +255,7 @@ export function TaskBubble({
   onSave,
   onCancel,
   onReact,
+  kb,
 }: {
   m: WorkMessage;
   mine: boolean;
@@ -264,6 +265,8 @@ export function TaskBubble({
   onSave: (patch: { title?: string; body: string }) => Promise<void>;
   onCancel: () => void;
   onReact: (emoji: string, mine: boolean) => void;
+  /** Inline keyboard (reference `.rk-st` / `.rk-r`): lives inside the card, above the time. */
+  kb?: ReactNode;
 }) {
   const { viewerId, detailsOpen } = useRoom();
   const t = m.task!;
@@ -337,6 +340,7 @@ export function TaskBubble({
             </div>
           ) : null}
         </div>
+        {kb}
         <Reactions m={m} onToggle={onReact} />
         <Foot m={m} mine={mine} extra={replies ? <span>· {fa(replies)} پاسخ</span> : null} />
       </div>

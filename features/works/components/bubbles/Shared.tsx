@@ -2,8 +2,10 @@
 
 import type { ReactNode } from "react";
 import { splitMentions } from "../../mention";
+import { VoiceMessage } from "@/features/chat/components/VoiceMessage";
 import type { WorkMessage, WorkRole, WorkUser } from "../../types";
-import { bareHandle, nameColor, timeLabel } from "../../utils";
+import { bareHandle, timeLabel } from "../../utils";
+import { useRoom } from "../roomContext";
 
 export const TICK = (
   <svg className="ticks" width="16" height="11" viewBox="0 0 16 11" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
@@ -20,7 +22,7 @@ export function UserLabel({ label }: { label?: string | null }) {
 export function Who({ user, role }: { user: WorkUser | null; role?: WorkRole | null }) {
   if (!user) return null;
   return (
-    <div className="who" style={{ color: nameColor(user.id) }}>
+    <div className="who">
       {user.name}
       <UserLabel label={user.work_label} />
       {role === "owner" ? <span className="role-b admin">مدیر</span> : role === "admin" ? <span className="role-b lead">ادمین</span> : null}
@@ -72,8 +74,15 @@ export const Reactions = ({ m, onToggle }: { m: WorkMessage; onToggle: (emoji: s
   ) : null;
 
 export function Attachment({ m }: { m: WorkMessage }) {
+  const { viewerId } = useRoom();
   const a = m.attachment;
   if (!a) return null;
+  if (a.voice && a.mime_type.startsWith("audio/"))
+    return (
+      <div className="attachment">
+        <VoiceMessage attachment={{ id: a.id, name: a.name, mimeType: a.mime_type, size: 0, url: a.url, duration: a.duration, voice: true, waveform: a.waveform }} transfer={null} isOwn={!!viewerId && m.sender?.id === viewerId} />
+      </div>
+    );
   return (
     <div className="attachment">
       {a.mime_type.startsWith("image/") ? (

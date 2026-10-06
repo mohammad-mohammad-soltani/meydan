@@ -184,8 +184,8 @@ export async function setEditorial(id: string, editorial: boolean, init?: Reques
  * the row created by the first, so no duplicate content is produced.
  * `content_type` is required and must be one of the five canonical content types.
  */
-export async function convertNarrativeToContent(id: string, contentType: string, format: string, primaryAttachmentId?: number | null, init?: RequestInit): Promise<void> {
-  await adminPost(`/admin/narratives/${segment(id)}/content`, { content_type: contentType, format, ...(primaryAttachmentId ? { primary_attachment_id: primaryAttachmentId } : {}) }, init);
+export async function convertNarrativeToContent(id: string, contentType: string, format: string, primaryAttachmentId?: number | null, extra: { category?: string; featured?: boolean; title?: string } = {}, init?: RequestInit): Promise<void> {
+  await adminPost(`/admin/narratives/${segment(id)}/content`, { content_type: contentType, format, ...(primaryAttachmentId ? { primary_attachment_id: primaryAttachmentId } : {}), ...(extra.category ? { category: extra.category } : {}), featured: Boolean(extra.featured), ...(extra.title ? { title: extra.title } : {}) }, init);
 }
 
 /**

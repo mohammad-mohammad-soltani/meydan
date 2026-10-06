@@ -17,6 +17,7 @@ import type {
   SquareStatus,
 } from "../types";
 import { withAdminAuth } from "./admin-request";
+import { getNoteCategories as getNoteCategoriesRaw } from "./note-categories.service";
 import { getUsers as getUsersRaw, getUser as getUserRaw, getUserRoles as getUserRolesRaw, type UserFilters } from "./users.service";
 import type { AdminUser, AdminUserRole } from "./users.service";
 import {
@@ -208,4 +209,8 @@ export async function getFeedSettings(): Promise<AdminFeedSettingsResponse> {
 
 export async function previewFeed(userId: number, limit = 20): Promise<FeedPreview> {
   return previewFeedRaw(userId, limit, await withAdminAuth());
+}
+
+export async function getNoteCategoriesServer() {
+  return getNoteCategoriesRaw(await withAdminAuth());
 }

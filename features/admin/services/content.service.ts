@@ -228,8 +228,8 @@ export function contentBody(input: ContentInput): Record<string, unknown> {
       media_subtitle: attachment.mediaSubtitle,
     })),
     tags: input.tags,
-    // The controller writes a single category id, not a list.
-    ...(input.category ? { category: input.category } : {}),
+    // One category by slug; null clears it.
+    category: input.category ?? null,
   };
   return body;
 }

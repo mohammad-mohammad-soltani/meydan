@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import "@/features/works/works.css";
-import "@/features/works/reference-chat.css";
+import "@/features/chat/reference-chat.css";
 import { ChatWorkspace } from "@/features/chat/components/ChatWorkspace";
 import { isAuthenticated } from "@/lib/meydan-session";
 import { loginHref } from "@/lib/auth-navigation";

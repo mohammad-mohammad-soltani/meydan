@@ -5,7 +5,7 @@ import { subscribeToUserChannel } from "@/lib/realtime/user-channel";
 import { worksPage } from "../services/works.service";
 import type { WorkGroup } from "../types";
 
-/** Paged list of work groups for the unified conversations sidebar (search is server-side). */
+/** Paged list of the work groups the viewer has joined, for the unified conversations sidebar (filter and search are server-side). */
 export function useWorksFeed(query: string) {
   const [works, setWorks] = useState<WorkGroup[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export function useWorksFeed(query: string) {
     async (quiet = false) => {
       const n = ++seq.current;
       try {
-        const page = await worksPage("all", debounced);
+        const page = await worksPage("joined", debounced);
         if (n !== seq.current) return;
         setWorks((cur) => {
           if (!quiet) return page.data;
@@ -76,7 +76,7 @@ export function useWorksFeed(query: string) {
     if (!cursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const p = await worksPage("all", debounced, cursor);
+      const p = await worksPage("joined", debounced, cursor);
       setWorks((v) => [...v, ...p.data.filter((w) => !v.some((x) => x.id === w.id))]);
       setCursor(p.nextCursor);
     } catch (e) {

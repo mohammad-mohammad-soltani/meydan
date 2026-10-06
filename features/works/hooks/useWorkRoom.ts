@@ -117,7 +117,10 @@ export function useWorkRoom(workId: string) {
         const detail = await refreshDetail();
         if (cancelled || !detail) return;
         setOpenedReadMarker((v) => v ?? Number(detail.viewer.last_read_message_id ?? 0));
-        if (view === "board") await loadTasks();
+        // Outsiders only get the invitation card; the room itself is served to members.
+        const inside = detail.viewer.joined || detail.viewer.can_manage;
+        if (!inside) setMessages([]);
+        else if (view === "board") await loadTasks();
         else if (view === "chat") await fetchLatest(true);
         const uid = await getRealtimeUserId().catch(() => "");
         if (!cancelled) setViewerId(uid);

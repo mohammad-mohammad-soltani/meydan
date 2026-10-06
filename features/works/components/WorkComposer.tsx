@@ -5,21 +5,28 @@ import { insertMention, mentionToken } from "../mention";
 import { kindNames, messageTitle, type WorkGroup, type WorkKind, type WorkMessage, type WorkUser } from "../types";
 import { bareHandle, fa } from "../utils";
 import { Person } from "./Avatar";
+import { ChIcon, type ChIconName } from "@/features/chat/components/ChIcon";
 import { Icon, type IconName } from "./Icon";
 import { MemberList } from "./MemberPicker";
 import { PeoplePicker } from "./PeoplePicker";
 import { Popover } from "./Popover";
 import { Quote } from "./bubbles/Quote";
+import { VoiceRecorderBar } from "@/features/chat/components/VoiceRecorderBar";
+import { uploadChatAttachment } from "@/features/chat/services/chat.service";
+import { useVoiceRecorder, type VoiceClip } from "@/features/chat/voice/useVoiceRecorder";
+import { voiceRecordingSupported } from "@/features/chat/voice/voice-utils";
 
 type RichKind = Exclude<WorkKind, "text">;
 type PickerKind = "assign" | "tag" | "audience";
 
-const TYPES: { kind: RichKind; icon: IconName; label: string; sub: string; color: string }[] = [
-  { kind: "task", icon: "task", label: "وظیفه", sub: "کار با مسئول، مهلت و زیرکار", color: "var(--ok)" },
-  { kind: "meeting", icon: "meeting", label: "جلسه", sub: "زمان، مکان و اعلام حضور", color: "var(--accent)" },
-  { kind: "announcement", icon: "announcement", label: "اعلان", sub: "ابلاغیه با تأیید «دیدم»", color: "var(--s2)" },
-  { kind: "poll", icon: "poll", label: "نظرسنجی", sub: "پرسش با چند گزینه", color: "#8b5cf6" },
+/** Reference menu: four types with the reference's own pastel hues. */
+const TYPES: { kind: RichKind; icon: IconName; ch: ChIconName; label: string; color: string }[] = [
+  { kind: "task", icon: "task", ch: "task", label: "وظیفه", color: "#6ee7b7" },
+  { kind: "meeting", icon: "meeting", ch: "cal", label: "جلسه", color: "#7ab8ff" },
+  { kind: "announcement", icon: "announcement", ch: "ann", label: "اعلان سنجاق‌شده", color: "#fcd34d" },
+  { kind: "poll", icon: "poll", ch: "poll", label: "نظرسنجی", color: "#b9a3ff" },
 ];
+const EMOJIS = ["😀", "😂", "😍", "🥳", "👍", "👏", "🙏", "❤️", "🔥", "✅", "🤝", "🎉", "💚", "😔", "🤔", "📌"];
 
 const HINT: Record<RichKind, string> = {
   task: "متن پایین، توضیح وظیفه است. مسئول‌ها و تگ‌شده‌ها اعلان می‌گیرند.",
@@ -55,6 +62,7 @@ export const WorkComposer = forwardRef<
   const manager = !!work.viewer.can_post;
   const [kind, setKind] = useState<WorkKind>("text");
   const [menu, setMenu] = useState(false);
+  const [emoji, setEmoji] = useState(false);
   const [body, setBody] = useState("");
   const [title, setTitle] = useState("");
   const [assignees, setAssignees] = useState<WorkUser[]>([]);
@@ -75,6 +83,10 @@ export const WorkComposer = forwardRef<
   const [picker, setPicker] = useState<PickerKind | null>(null);
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const [voiceBusy, setVoiceBusy] = useState(false);
+  const sendVoiceRef = useRef<(clip: VoiceClip) => Promise<void>>(async () => undefined);
+  const voice = useVoiceRecorder({ onLimit: (clip) => { if (clip) void sendVoiceRef.current(clip); } });
+  const canRecord = typeof window !== "undefined" && voiceRecordingSupported();
   const [caret, setCaret] = useState<{ target: "body" | "title"; pos: number } | null>(null);
   const [hl, setHl] = useState(0);
   const [suggest, setSuggest] = useState<WorkUser[]>([]);
@@ -121,6 +133,46 @@ export const WorkComposer = forwardRef<
     }
   };
   useEffect(autoGrow, [body]);
+
+  async function sendVoice(clip: VoiceClip) {
+    if (!allowed || voiceBusy) return;
+    setError("");
+    setVoiceBusy(true);
+    try {
+      const uploaded = await uploadChatAttachment(clip.file);
+      const payload: Record<string, unknown> = {
+        kind: "text",
+        body: "",
+        attachment: { id: uploaded.id, name: clip.file.name, voice: true, duration: clip.duration, waveform: clip.waveform },
+      };
+      if (reply) payload.reply_to_id = Number(reply.id);
+      await send({ ...payload, client_id: crypto.randomUUID() }, reply);
+      cancelReply();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "ارسال پیام صوتی انجام نشد");
+    } finally {
+      setVoiceBusy(false);
+    }
+  }
+  useEffect(() => {
+    sendVoiceRef.current = sendVoice;
+  });
+  async function finishVoice() {
+    const clip = await voice.stop();
+    if (clip) await sendVoice(clip);
+  }
+
+  function addEmoji(e: string) {
+    const el = bodyRef.current;
+    const start = el?.selectionStart ?? body.length;
+    const end = el?.selectionEnd ?? body.length;
+    setBody(body.slice(0, start) + e + body.slice(end));
+    setEmoji(false);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(start + e.length, start + e.length);
+    });
+  }
 
   function pickMention(user: WorkUser) {
     if (!token || !caret) return;
@@ -267,19 +319,26 @@ export const WorkComposer = forwardRef<
 
   if (!work.viewer.joined && !manager)
     return (
-      <div className="r-foot">
-        <div className="member-note">
-          <span>
-            <Icon name="users" size={16} /> برای قبول وظیفه، اعلام حضور و پاسخ دادن به این کار بپیوندید.
-          </span>
-          <button type="button" className="btn primary" disabled={parentBusy} onClick={onJoin} style={{ padding: "7px 16px" }}>
-            من پای‌کارم
-          </button>
-        </div>
+      <div className="ch-jn">
+        <span>برای قبول وظیفه، اعلام حضور و پاسخ دادن به این کار بپیوندید.</span>
+        <button type="button" disabled={parentBusy} onClick={onJoin}>
+          من پای‌کارم
+        </button>
+      </div>
+    );
+
+  // Members never post by default: they react and interact with managers' messages. Replies exist only when the owner turns them on.
+  if (!manager && !work.members_can_reply)
+    return (
+      <div className="ch-jn ch-ro">
+        <span>
+          <Icon name="lock" size={14} /> در این کار فقط مدیر و ادمین‌ها پیام می‌گذارند؛ شما می‌توانید واکنش بدهید و روی پیام‌ها تعامل کنید.
+        </span>
       </div>
     );
 
   const typeMeta = rich ? TYPES.find((t) => t.kind === rich)! : null;
+  const hasText = !!body.trim() || !!rich;
   const placeholder = !allowed
     ? "برای پاسخ، روی پیام بزنید یا دکمه پاسخ را بزنید"
     : reply
@@ -305,12 +364,10 @@ export const WorkComposer = forwardRef<
 
       {rich && typeMeta ? (
         <div className="att" style={{ "--tc": typeMeta.color } as CSSProperties}>
-          <div className="att-h">
-            <Icon name={typeMeta.icon} size={15} />
-            {rich === "poll" ? "نظرسنجی تازه" : `${kindNames[rich]} تازه`}
-            <span className="sp" />
+          <div className="att-h mk-h">
+            <b>{rich === "poll" ? "نظرسنجی جدید" : rich === "announcement" ? "اعلان جدید" : `${kindNames[rich]} جدید`}</b>
             <button type="button" onClick={() => setKind("text")} aria-label="بستن">
-              ×
+              <ChIcon name="x" size={18} />
             </button>
           </div>
           <div className="att-b">
@@ -434,42 +491,57 @@ export const WorkComposer = forwardRef<
               </div>
             ) : null}
             <small className="hint2">{HINT[rich]}</small>
+            <button type="button" className="mk-ok" disabled={sending} onClick={() => void submit()}>
+              ثبت در گروه
+            </button>
           </div>
         </div>
       ) : null}
 
       {menu && manager && !reply ? (
-        <div className="tmenu" role="menu" aria-label="افزودن به گفتگو">
+        <div className="tmenu ch-mn" role="menu" aria-label="افزودن به گفتگو">
           {TYPES.map((t) => (
             <button
               key={t.kind}
               type="button"
               role="menuitem"
-              style={{ "--tc": t.color } as CSSProperties}
+              style={{ "--c": t.color } as CSSProperties}
               onClick={() => {
                 setKind(t.kind);
                 setMenu(false);
                 requestAnimationFrame(() => titleRef.current?.focus());
               }}
             >
-              <span className="ti">
-                <Icon name={t.icon} size={17} />
-              </span>
               <span>
-                <b>{t.label}</b>
-                <small>{t.sub}</small>
+                <ChIcon name={t.ch} size={19} />
               </span>
+              <b>{t.label}</b>
             </button>
           ))}
         </div>
       ) : null}
 
-      <div className="cbar">
+      {voice.recording ? <VoiceRecorderBar elapsed={voice.elapsed} levels={voice.levels} onCancel={voice.cancel} onSend={() => void finishVoice()} /> : null}
+      <div hidden={voice.recording} className={`cbar ch-cf ${hasText ? "has" : ""}`}>
         {manager && !reply ? (
-          <button ref={plusRef} type="button" className={`plus ${menu ? "on" : ""}`} aria-label="وظیفه، جلسه، اعلان یا نظرسنجی" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-            <Icon name="plus" size={20} weight={2.2} />
+          <button ref={plusRef} type="button" className={`plus ch-pl ${menu ? "on" : ""}`} aria-label="وظیفه، جلسه، اعلان یا نظرسنجی" aria-expanded={menu} onClick={() => { setMenu((v) => !v); setEmoji(false); }}>
+            <ChIcon name="plus" size={22} />
           </button>
         ) : null}
+        <span className="emo-wrap">
+          <button type="button" className="ch-pl" aria-label="انتخاب شکلک" aria-expanded={emoji} disabled={!allowed} onClick={() => { setEmoji((v) => !v); setMenu(false); }}>
+            <ChIcon name="smile" size={22} />
+          </button>
+          {emoji ? (
+            <div role="dialog" aria-label="انتخاب شکلک" className="emo-pop">
+              {EMOJIS.map((e) => (
+                <button key={e} type="button" aria-label={`افزودن ${e}`} onClick={() => addEmoji(e)}>
+                  {e}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </span>
         <div className="cinput">
           <textarea
             ref={bodyRef}
@@ -489,11 +561,19 @@ export const WorkComposer = forwardRef<
             onKeyDown={(e) => onKey(e, "body")}
           />
         </div>
-        <button type="button" className="send" disabled={!allowed || sending} aria-label="ارسال" onClick={() => void submit()}>
-          <Icon name="send" size={18} weight={2} />
-        </button>
+        {hasText ? (
+          <button type="button" className="send ch-sd" disabled={!allowed || sending} aria-label="ارسال" onClick={() => void submit()}>
+            <ChIcon name="send" size={20} />
+          </button>
+        ) : (
+          <button type="button" className="ch-pl ch-mc" disabled={!manager || !canRecord || voice.phase === "starting" || voiceBusy} onClick={() => void voice.start()} title={manager ? "ضبط پیام صوتی" : undefined} aria-label="ضبط پیام صوتی">
+            <ChIcon name="mic" size={22} />
+          </button>
+        )}
       </div>
 
+      {voice.error ? <div className="cnote err" role="alert">{voice.error}</div> : null}
+      {voiceBusy ? <div className="cnote">در حال ارسال پیام صوتی…</div> : null}
       {error ? (
         <div className="cnote err" role="alert">
           {error}

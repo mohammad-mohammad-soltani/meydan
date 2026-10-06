@@ -21,6 +21,7 @@ import {
   uploadChatAttachment,
 } from "../services/chat.service";
 import type { ChatAttachment, ChatMessage, Conversation, MessageReply } from "../types";
+import type { VoiceClip } from "../voice/useVoiceRecorder";
 
 /** How long a keystroke keeps the typing indicator alive. */
 const TYPING_IDLE_MS = 1200;
@@ -357,6 +358,65 @@ export function useConversation(conversationId: string, initialConversation: Con
     }
   };
 
+  /** Uploads a recorded voice note (with live progress in its bubble) and sends it as its own message. */
+  const failedClips = useRef(new Map<string, VoiceClip>());
+  const sendVoice = async (clip: VoiceClip) => {
+    if (!currentUserId || isSending) return;
+    const clientId = crypto.randomUUID();
+    const previewUrl = URL.createObjectURL(clip.file);
+    const local: ChatAttachment = {
+      id: `attachment-${clientId}`,
+      name: clip.file.name,
+      mimeType: clip.file.type,
+      size: clip.file.size,
+      previewUrl,
+      duration: clip.duration,
+      voice: true,
+      waveform: clip.waveform,
+    };
+    const optimistic: ChatMessage = {
+      id: `optimistic-${clientId}`,
+      clientId,
+      conversationId,
+      senderId: currentUserId,
+      body: "",
+      sentAt: new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()),
+      status: "sending",
+      attachment: local,
+      replyTo: replyingTo ?? undefined,
+    };
+    setReplyingTo(null);
+    setActionError(null);
+    setIsSending(true);
+    setMessages((current) => [...current, optimistic]);
+    try {
+      const uploaded = await uploadChatAttachment(clip.file);
+      const persisted: ChatAttachment = { ...uploaded, duration: clip.duration, voice: true, waveform: clip.waveform };
+      const sent = await sendMessage(conversationId, "", persisted, { clientId, replyToId: optimistic.replyTo?.id });
+      setMessages((current) => upsertMessage(current, {
+        ...sent,
+        attachment: sent.attachment ? { ...sent.attachment, duration: sent.attachment.duration ?? clip.duration, voice: true, waveform: sent.attachment.waveform ?? clip.waveform } : undefined,
+      }));
+      URL.revokeObjectURL(previewUrl);
+    } catch {
+      failedClips.current.set(clientId, clip);
+      setMessages((current) => current.map((message) => message.clientId === clientId ? { ...message, status: "failed" } : message));
+      setActionError("ارسال پیام صوتی انجام نشد. دوباره تلاش کنید.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  /** A voice note that failed to send keeps its recording; retrying drops the failed bubble and sends it again. */
+  const retryVoice = (message: ChatMessage) => {
+    const clip = message.clientId ? failedClips.current.get(message.clientId) : undefined;
+    if (!clip) return;
+    failedClips.current.delete(message.clientId!);
+    setMessages((current) => current.filter((item) => item.id !== message.id));
+    if (message.attachment?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(message.attachment.previewUrl);
+    void sendVoice(clip);
+  };
+
   const startReply = (message: ChatMessage) => {
     setEditingMessage(null);
     setReplyingTo({ id: message.id, body: messageExcerpt(message), senderName: message.senderId === currentUserId ? "شما" : conversation?.participant.name ?? "مخاطب" });
@@ -474,12 +534,13 @@ export function useConversation(conversationId: string, initialConversation: Con
     cancelEdit: () => { setEditingMessage(null); setInput(""); },
     startReply, startEdit, copyMessage, toggleReaction,
     requestDelete: setMessageToDelete, cancelDelete: () => setMessageToDelete(null), confirmDelete,
-    requestForward: setMessageToForward, cancelForward: () => setMessageToForward(null), forwardTo, send, sendSquareLocation,
+    requestForward: setMessageToForward, cancelForward: () => setMessageToForward(null), forwardTo, send, sendVoice, retryVoice, sendSquareLocation,
   };
 }
 
 function messageExcerpt(message: ChatMessage) {
   const location = parseSquareLocationMessage(message.body);
   if (location) return `📍 موقعیت میدان · ${location.name}`;
+  if (message.attachment?.voice) return "🎤 پیام صوتی";
   return message.body || message.attachment?.name || "فایل پیوست‌شده";
 }

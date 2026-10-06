@@ -26,6 +26,7 @@ export function WorkInfo({ work, close, refresh, onLeft }: { work: WorkGroup; cl
   const ref = useRef<HTMLDivElement>(null);
   const picker = useRef<HTMLInputElement>(null);
 
+  const [membersReply, setMembersReply] = useState(!!work.members_can_reply);
   const preview = useMemo(() => (avatar ? URL.createObjectURL(avatar) : null), [avatar]);
   useEffect(() => () => (preview ? URL.revokeObjectURL(preview) : undefined), [preview]);
 
@@ -38,14 +39,14 @@ export function WorkInfo({ work, close, refresh, onLeft }: { work: WorkGroup; cl
 
   const canEdit = !!work.viewer.can_edit_info;
   const shown = preview ?? (removeAvatar ? null : work.avatar_url);
-  const dirty = title.trim() !== work.title || description !== work.description || !!avatar || removeAvatar;
+  const dirty = title.trim() !== work.title || description !== work.description || !!avatar || removeAvatar || membersReply !== !!work.members_can_reply;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      const update: Record<string, unknown> = { title, description };
+      const update: Record<string, unknown> = { title, description, members_can_reply: membersReply };
       if (avatar) {
         const file = await uploadChatAttachment(avatar);
         const id = String(file.id).replace(/\D/g, "");
@@ -167,6 +168,10 @@ export function WorkInfo({ work, close, refresh, onLeft }: { work: WorkGroup; cl
                     توضیحات <em>{fa(description.length)} / {fa(2000)}</em>
                   </span>
                   <textarea value={description} maxLength={2000} placeholder="این کار درباره چیست؟" onChange={(e) => setDescription(e.target.value)} />
+                </label>
+                <label className="check">
+                  <input type="checkbox" checked={membersReply} onChange={(e) => setMembersReply(e.target.checked)} />
+                  <span>اعضا بتوانند به پیام‌های مدیران پاسخ بدهند (پیش‌فرض: فقط واکنش و تعامل)</span>
                 </label>
                 <button className="btn primary" disabled={busy || !dirty || !title.trim()}>
                   {busy ? "در حال ذخیره…" : "ذخیره تغییرات"}

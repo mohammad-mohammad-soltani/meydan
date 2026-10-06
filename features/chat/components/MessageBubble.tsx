@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { parseSquareLocationMessage } from "../chat-utils";
+import { VoiceMessage } from "./VoiceMessage";
+import { PostLinkPreview } from "@/features/feed/components/PostLinkPreview";
+import { extractPostLink } from "@/features/feed/post-link";
 import { chatUploadKey, subscribeToChatUploadProgress, type ChatUploadProgressDetail } from "../chat-upload-progress";
 import { MediaGallery } from "@/features/media/components/MediaGallery";
 import { mediaItemFromNamedAttachment } from "@/features/media/media-utils";
@@ -26,6 +29,7 @@ type MessageBubbleProps = {
   onDelete: (message: ChatMessage) => void;
   onForward: (message: ChatMessage) => void;
   onReact: (messageId: string, reaction: string) => void;
+  onRetryVoice?: (message: ChatMessage) => void;
 };
 
 type MenuPosition = { x: number; y: number };
@@ -35,7 +39,8 @@ function faPercent(value: number): string {
   return `${new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 0 }).format(Math.round(value))}٪`;
 }
 
-function MessageAttachment({ attachment, scope, transfer }: { attachment: ChatAttachment; scope: string; transfer: ChatUploadProgressDetail | null }) {
+function MessageAttachment({ attachment, scope, transfer, isOwn }: { attachment: ChatAttachment; scope: string; transfer: ChatUploadProgressDetail | null; isOwn: boolean }) {
+  const isVoice = Boolean(attachment.voice) && /^audio\//i.test(attachment.mimeType);
   const isImage = /^image\//i.test(attachment.mimeType);
   const isVideo = /^video\//i.test(attachment.mimeType);
   const isVisual = isImage || isVideo;
@@ -122,6 +127,8 @@ function MessageAttachment({ attachment, scope, transfer }: { attachment: ChatAt
       video.load();
     };
   }, [attachment.height, attachment.posterSrc, attachment.previewUrl, attachment.url, attachment.width, isVideo, transfer]);
+
+  if (isVoice) return <VoiceMessage attachment={attachment} transfer={transfer} isOwn={isOwn} />;
 
   const uploadRatio = pendingPoster?.ratio || (attachment.width && attachment.height ? attachment.width / attachment.height : 16 / 9);
 
@@ -257,9 +264,10 @@ function MessageLocationCard({ location }: { location: NonNullable<ReturnType<ty
   );
 }
 
-export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelete, onForward, onReact }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelete, onForward, onReact, onRetryVoice }: MessageBubbleProps) {
   const StatusIcon = statusIcon[message.status];
   const location = parseSquareLocationMessage(message.body);
+  const postLink = location ? null : extractPostLink(message.body);
   const isVisualAttachment = Boolean(message.attachment && /^(image|video)\//i.test(message.attachment.mimeType));
   const hasAttachment = Boolean(message.attachment);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -354,12 +362,20 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
         <article className={`rounded-[18px] text-[14.5px] leading-[1.85] ${hasAttachment ? "px-2 py-2" : "px-[13px] pb-1.5 pt-2"} ${isOwn ? "rounded-br-md bg-foreground text-background" : "rounded-bl-md border border-border bg-surface-muted text-foreground"}`}>
           {message.forwardedFrom ? <p className="mb-1 text-[10px] font-semibold text-success">فورواردشده از {message.forwardedFrom}</p> : null}
           {message.replyTo ? <div className={`mb-1.5 border-r-2 pr-2 text-[11px] leading-4 ${isOwn ? "border-success-border text-message-meta" : "border-info-border text-message-meta"}`}><strong className="block text-[10px]">{message.replyTo.senderName}</strong><span className="block line-clamp-1">{message.replyTo.body}</span></div> : null}
-          {message.attachment ? <MessageAttachment attachment={message.attachment} scope={`chat:${message.id}`} transfer={transfer} /> : null}
+          {message.attachment ? <MessageAttachment attachment={message.attachment} scope={`chat:${message.id}`} transfer={transfer} isOwn={isOwn} /> : null}
           {location ? (
             <MessageLocationCard location={location} />
-          ) : message.body ? (
-            <p className={`whitespace-pre-wrap ${hasAttachment ? "px-1 pt-1" : ""}`}>{message.body}</p>
-          ) : null}
+          ) : (
+            <>
+              {postLink?.cleanedText ? (
+                <p className={`whitespace-pre-wrap ${hasAttachment ? "px-1 pt-1" : ""}`}>{postLink.cleanedText}</p>
+              ) : !postLink && message.body ? (
+                <p className={`whitespace-pre-wrap ${hasAttachment ? "px-1 pt-1" : ""}`}>{message.body}</p>
+              ) : null}
+              {postLink ? <div className={isOwn ? "chat-quote own" : "chat-quote"}><PostLinkPreview postId={postLink.postId} className="mb-1" /></div> : null}
+            </>
+          )}
+          {message.status === "failed" && message.attachment?.voice && onRetryVoice ? <button type="button" onClick={() => onRetryVoice(message)} className="mt-1 rounded-full border border-current px-3 py-1 text-[11.5px] font-bold">ارسال دوباره</button> : null}
           {message.reactions?.length ? <div className="mt-1 flex flex-wrap gap-1">{message.reactions.map((reaction) => <button key={reaction} type="button" aria-label={`حذف واکنش ${reaction}`} onClick={() => onReact(message.id, reaction)} className="rounded-full bg-surface-glass px-1.5 py-0.5 text-xs shadow-xs">{reaction}</button>)}</div> : null}
           <footer className={`mt-px flex items-center justify-end gap-1 text-[10.5px] leading-4 text-inherit opacity-[.65] ${hasAttachment ? "px-1" : ""}`}><time>{message.sentAt}</time>{message.editedAt ? <span>ویرایش‌شده</span> : null}{isOwn ? <StatusIcon className="h-3.5 w-3.5" aria-label={message.status} /> : null}</footer>
         </article>

@@ -44,7 +44,7 @@ export type WorkMessage = {
   sender: WorkUser | null;
   /** Sender's standing in this work (owner / admin / member). */
   sender_role?: WorkRole | null;
-  attachment?: { id: string; name: string; url: string; mime_type: string } | null;
+  attachment?: { id: string; name: string; url: string; mime_type: string; voice?: boolean; duration?: number; waveform?: number[] } | null;
   body: string;
   created_at: string;
   edited_at: string | null;
@@ -131,6 +131,8 @@ export type WorkGroup = {
   avatar_url: string | null;
   updated_at?: string | null;
   member_count: number;
+  /** Off by default: members may only react / interact; an owner can let them answer managers' messages. */
+  members_can_reply?: boolean;
   progress?: { done: number; total: number };
   last_message?: WorkLastMessage | null;
   viewer: WorkViewer;

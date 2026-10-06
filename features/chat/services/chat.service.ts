@@ -48,6 +48,8 @@ type ApiMessage = {
     width?: number;
     height?: number;
     duration?: number;
+    voice?: boolean;
+    waveform?: number[];
   } | null;
   reply_to?: { id: string | number; body?: string; sender_name?: string } | null;
   forwarded_from?: string | null;
@@ -121,6 +123,8 @@ function mapMessage(item: ApiMessage): ChatMessage {
       width: Number(item.attachment.width || 0) || undefined,
       height: Number(item.attachment.height || 0) || undefined,
       duration: Number(item.attachment.duration || 0) || undefined,
+      voice: item.attachment.voice ? true : undefined,
+      waveform: Array.isArray(item.attachment.waveform) && item.attachment.waveform.length ? item.attachment.waveform.map(Number) : undefined,
     } : undefined,
     replyTo: item.reply_to ? {
       id: String(item.reply_to.id),
@@ -317,6 +321,8 @@ export async function sendMessage(
         height: attachment.height,
         duration: attachment.duration,
         poster_url: attachment.posterSrc,
+        voice: attachment.voice || undefined,
+        waveform: attachment.voice ? attachment.waveform : undefined,
       } : undefined,
     }),
   });

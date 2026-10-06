@@ -139,6 +139,64 @@ function ContentFormatPicker({
   );
 }
 
+type CategoryOption = { slug: string; name: string; source: "speaker" | "note" };
+
+/** Category (speaker categories + the notes section's own) and the «برگزیده» flag of the content being published. */
+function ContentCategoryFields({
+  categories,
+  category,
+  featured,
+  disabled,
+  onCategory,
+  onFeatured,
+}: {
+  categories: CategoryOption[];
+  category: string;
+  featured: boolean;
+  disabled: boolean;
+  onCategory: (value: string) => void;
+  onFeatured: (value: boolean) => void;
+}) {
+  const own = categories.filter((item) => item.source === "note");
+  const speaker = categories.filter((item) => item.source === "speaker");
+  return (
+    <>
+      <div className="mt-4 w-full text-right">
+        <label htmlFor="post-admin-content-category" className="mb-1.5 block text-[11px] font-bold text-foreground-subtle">
+          دسته‌بندی
+        </label>
+        <select
+          id="post-admin-content-category"
+          value={category}
+          disabled={disabled}
+          onChange={(event) => onCategory(event.target.value)}
+          className="min-h-11 w-full rounded-control border border-border bg-background px-3 text-xs font-black text-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <option value="">خودکار (دستهٔ سخنران یا بدون دسته)</option>
+          {own.length ? (
+            <optgroup label="دسته‌بندی‌های یادداشت">
+              {own.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+            </optgroup>
+          ) : null}
+          {speaker.length ? (
+            <optgroup label="دسته‌بندی‌های سخنرانان">
+              {speaker.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+            </optgroup>
+          ) : null}
+        </select>
+        <p className="mt-1.5 text-[10px] leading-5 text-muted-foreground">اگر انتخاب نکنید و ناشر سخنران باشد، دستهٔ خودِ او ثبت می‌شود؛ وگرنه بدون دسته می‌ماند.</p>
+      </div>
+      <label className="mt-3 flex w-full cursor-pointer items-start gap-2 text-right text-xs">
+        <input type="checkbox" checked={featured} disabled={disabled} onChange={(event) => onFeatured(event.target.checked)} className="mt-0.5 accent-brand" />
+        <span>
+          <b className="font-black text-foreground">برگزیده</b>
+          <span className="block text-[10px] leading-5 text-muted-foreground">در بخش «برگزیده‌ها» بالای صفحهٔ یادداشت‌ها نمایش داده می‌شود.</span>
+        </span>
+      </label>
+    </>
+  );
+}
+
 function ContentTitleInput({ value, disabled, onChange }: { value: string; disabled: boolean; onChange: (value: string) => void }) {
   return (
     <div className="mt-4 w-full text-right">
@@ -344,6 +402,9 @@ export function PostAdminActions({
   const [currentContentType, setCurrentContentType] = useState<string | null>(null);
   const [primaryAttachmentId, setPrimaryAttachmentId] = useState<string | null>(null);
   const [contentTitle, setContentTitle] = useState("");
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [featured, setFeatured] = useState(false);
   const [pendingAction, setPendingAction] = useState<AdminAction | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -427,7 +488,7 @@ export function PostAdminActions({
             ? {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: JSON.stringify({ title: contentTitle.trim(), content_type: selectedContentType, ...(primaryAttachmentId ? { primary_attachment_id: Number(primaryAttachmentId) } : {}) }),
+                body: JSON.stringify({ title: contentTitle.trim(), content_type: selectedContentType, ...(selectedContentType === "speech" ? { featured, ...(selectedCategory ? { category: selectedCategory } : {}) } : {}), ...(primaryAttachmentId ? { primary_attachment_id: Number(primaryAttachmentId) } : {}) }),
               }
             : { method: "DELETE" },
         );
@@ -492,6 +553,9 @@ export function PostAdminActions({
             setError("");
             if (!isPublished) {
               setPrimaryAttachmentId(null);
+              setSelectedCategory("");
+              setFeatured(false);
+              void meydanApi<CategoryOption[]>("/admin/note-categories").then(setCategories).catch(() => setCategories([]));
               setContentTitle(suggestedContentTitle(body, Number(postId)));
             }
             setPendingAction(isPublished ? "removeContent" : "publishContent");
@@ -537,6 +601,7 @@ export function PostAdminActions({
                 disabled={isSaving}
                 onChange={setSelectedContentType}
               />
+              {selectedContentType === "speech" ? <ContentCategoryFields categories={categories} category={selectedCategory} featured={featured} disabled={isSaving} onCategory={setSelectedCategory} onFeatured={setFeatured} /> : null}
               <PrimaryAttachmentPicker media={media} value={primaryAttachmentId} disabled={isSaving} onChange={setPrimaryAttachmentId} />
             </>
           ) : null}

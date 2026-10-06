@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useMe } from "@/lib/me-client";
 import {
   FileText,
   Image as ImageIcon,
@@ -63,7 +64,7 @@ const fileOptions: FileOption[] = [
  * location is resolved and sent by the conversation hook.
  */
 export function AttachmentSheet({
-  onClose,
+  onClose: onClosed,
   onSelectFile,
   onSendLocation,
 }: {
@@ -71,6 +72,15 @@ export function AttachmentSheet({
   onSelectFile: (file: File) => void;
   onSendLocation: () => void;
 }) {
+  const [closing, setClosing] = useState(false);
+  // Only a square account has a location to send.
+  const { me } = useMe<{ account_type?: string }>(true);
+  const isSquare = me?.account_type === "square";
+  /** Plays the slide-down, then tells the parent. */
+  const onClose = useCallback(() => {
+    setClosing(true);
+    window.setTimeout(onClosed, 220);
+  }, [onClosed]);
   const dialogRef = useRef<HTMLDivElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -129,7 +139,7 @@ export function AttachmentSheet({
     <div
       role="presentation"
       onClick={onClose}
-      className="fixed inset-0 z-[120] flex items-end justify-center bg-overlay/70 backdrop-blur-sm sm:items-center"
+      className={`attach-backdrop ${closing ? "is-closing" : ""} fixed inset-0 z-[120] flex items-end justify-center bg-overlay/70 backdrop-blur-sm sm:items-center`}
     >
       <div
         ref={dialogRef}
@@ -137,7 +147,7 @@ export function AttachmentSheet({
         aria-modal="true"
         aria-label="افزودن پیوست"
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-md rounded-t-panel border border-border bg-popover p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-popover-foreground shadow-dialog sm:rounded-panel sm:pb-4"
+        className="attach-sheet w-full max-w-md rounded-t-panel border border-border bg-popover p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-popover-foreground shadow-dialog sm:rounded-panel sm:pb-4"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-sm font-black text-foreground">افزودن پیوست</h2>
@@ -170,7 +180,7 @@ export function AttachmentSheet({
             </button>
           ))}
 
-          <button
+          {isSquare ? <button
             type="button"
             onClick={() => {
               onSendLocation();
@@ -187,7 +197,7 @@ export function AttachmentSheet({
                 نشانی و موقعیت میدان برای مخاطب فرستاده می‌شود
               </small>
             </span>
-          </button>
+          </button> : null}
         </div>
 
         {fileOptions.map(({ id, accept }) => (

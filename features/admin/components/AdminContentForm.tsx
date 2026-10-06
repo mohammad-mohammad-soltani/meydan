@@ -12,6 +12,7 @@ import { AdminFieldMessage } from "./AdminFieldMessage";
 import { MediaPickerField } from "./MediaPickerField";
 import { AdminDateTimeField } from "./AdminDateTimeField";
 import { getCreators } from "../services/creators.service";
+import { getNoteCategories, type NoteCategoryOption } from "../services/note-categories.service";
 import { AdminDisclosureSection } from "./AdminDisclosureSection";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
 import {
@@ -66,7 +67,7 @@ function toInput(content?: ContentItem): ContentInput {
       size: attachment.size,
     })),
     tags: content?.tags ?? [],
-    category: content?.category?.id ?? null,
+    category: content?.category?.slug ?? null,
     creators: content?.creators ?? [],
   };
 }
@@ -88,6 +89,7 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
   const [tagText, setTagText] = useState((content?.tags ?? []).join("، "));
   const [mediaId, setMediaId] = useState<number | null>(null);
   const [creators, setCreators] = useState<Creator[]>([]);
+  const [categories, setCategories] = useState<NoteCategoryOption[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -97,6 +99,7 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
 
   useEffect(() => {
     void getCreators().then(setCreators).catch(() => setCreators([]));
+    void getNoteCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
 
   const submit = async () => {
@@ -275,29 +278,32 @@ export function AdminContentForm({ content }: { content?: ContentItem }) {
             </select>
           </AdminField>
 
+          {form.contentType === "speech" ? (
           <AdminField
-            label="شناسه دسته‌بندی"
+            label="دسته‌بندی"
             htmlFor="content-category"
             error={fieldErrors.category}
-            hint="اختیاری؛ در صورت نداشتن شناسه، خالی بگذارید."
+            hint="از دسته‌بندی سخنرانان یا دسته‌های اختصاصی یادداشت. خالی بماند و مالک سخنران باشد، دستهٔ خود او می‌نشیند."
           >
-            <input
-              id="content-category"
-              value={form.category ?? ""}
-              inputMode="numeric"
-              onChange={(event) =>
-                patch({ category: event.target.value === "" ? null : Number(event.target.value) })
-              }
-              className={fieldClass}
-            />
+            <select id="content-category" value={form.category ?? ""} onChange={(event) => patch({ category: event.target.value || null })} className={fieldClass}>
+              <option value="">بدون دسته‌بندی (خودکار)</option>
+              {form.category && !categories.some((item) => item.slug === form.category) ? <option value={form.category}>{form.category}</option> : null}
+              <optgroup label="دسته‌بندی‌های یادداشت">
+                {categories.filter((item) => item.source === "note").map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+              </optgroup>
+              <optgroup label="دسته‌بندی‌های سخنرانان">
+                {categories.filter((item) => item.source === "speaker").map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+              </optgroup>
+            </select>
           </AdminField>
+          ) : null}
 
         </div>
 
         <AdminCheckbox
           id="content-featured"
-          label="محتوا ویژه"
-          description="در فهرست عمومی با نشان ویژه نمایش داده می‌شود."
+          label="برگزیده"
+          description="در بخش «برگزیده‌ها» بالای صفحهٔ یادداشت‌ها (و فهرست‌های ویژه) نمایش داده می‌شود."
           checked={form.featured}
           onChange={(featured) => patch({ featured })}
         />

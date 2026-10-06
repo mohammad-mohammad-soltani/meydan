@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { seenPage } from "../../services/works.service";
 import type { WorkMessage, WorkUser } from "../../types";
@@ -107,6 +108,7 @@ export function AnnouncementBubble({
   onSave,
   onCancel,
   onReact,
+  kb,
 }: {
   m: WorkMessage;
   mine: boolean;
@@ -117,6 +119,8 @@ export function AnnouncementBubble({
   onSave: (patch: { title?: string; body: string }) => Promise<void>;
   onCancel: () => void;
   onReact: (emoji: string, mine: boolean) => void;
+  /** Inline keyboard (reference `.rk-st` / `.rk-r`): lives inside the card, above the time. */
+  kb?: ReactNode;
 }) {
   const { viewerId } = useRoom();
   const a = m.announcement!;
@@ -136,6 +140,7 @@ export function AnnouncementBubble({
         {!mine && showWho ? <Who user={m.sender} role={m.sender_role} /> : null}
         <TitleBody m={m} viewerId={viewerId} editing={editing} onSave={onSave} onCancel={onCancel} />
         <Attachment m={m} />
+        {kb}
         <Reactions m={m} onToggle={onReact} />
         <Foot
           m={m}

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { fa } from "../../utils";
 import type { WorkMessage } from "../../types";
 import { Person } from "../Avatar";
@@ -33,6 +34,7 @@ export function MeetingBubble({
   onSave,
   onCancel,
   onReact,
+  kb,
 }: {
   m: WorkMessage;
   mine: boolean;
@@ -42,6 +44,8 @@ export function MeetingBubble({
   onSave: (patch: { title?: string; body: string }) => Promise<void>;
   onCancel: () => void;
   onReact: (emoji: string, mine: boolean) => void;
+  /** Inline keyboard (reference `.rk-st` / `.rk-r`): lives inside the card, above the time. */
+  kb?: ReactNode;
 }) {
   const { viewerId } = useRoom();
   const g = m.meeting!;
@@ -90,6 +94,7 @@ export function MeetingBubble({
             </div>
           ) : null}
         </div>
+        {kb}
         <Reactions m={m} onToggle={onReact} />
         <Foot m={m} mine={mine} />
       </div>

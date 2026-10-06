@@ -1,0 +1,77 @@
+/*
+ * «یادداشت» exactly as the reference draws it: search pill, «برگزیده‌ها» strip, sticky category chips,
+ * article rows with a square thumbnail, and the reader (hero, byline, lead, body, like / save).
+ * Rules are the reference's own (`.nv-*`), on the app's --m-* tokens.
+ */
+.nv { padding-bottom: 100px; color: var(--m-tx); direction: rtl; }
+.nv-sq { padding: 10px 16px 4px; }
+.nv-sq .av-s { display: flex; align-items: center; gap: 10px; width: 100%; height: 46px; padding: 0 16px; border-radius: 999px; background: var(--m-soft); border: 1px solid var(--m-line); color: var(--m-mu); }
+.nv-sq .av-s:focus-within { border-color: var(--m-tx); color: var(--m-tx); }
+.nv-sq .av-s input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--m-tx); font-size: 14.5px; font-family: inherit; }
+.nv-sq .av-s input::-webkit-search-cancel-button { display: none; }
+.nv-sh { padding: 20px 18px 10px; font-size: 16px; font-weight: 900; }
+.nv-feat { display: flex; gap: 12px; overflow-x: auto; padding: 0 18px; scrollbar-width: none; scroll-snap-type: x proximity; scroll-padding-inline: 18px; cursor: grab; }
+.nv-feat::-webkit-scrollbar { display: none; }
+.nv-fc { position: relative; flex: 0 0 78%; max-width: 340px; aspect-ratio: 1.5; border-radius: 22px; overflow: hidden; background-size: cover; background-position: center; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: space-between; padding: 14px; color: #fff; cursor: pointer; text-decoration: none; }
+.nv-fc:before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.78)); }
+.nv-fc > * { position: relative; }
+.nv-fc h3 { font-size: 16px; font-weight: 900; line-height: 1.7; margin: 0; }
+.nv-fc small { font-size: 11.5px; opacity: .8; }
+.nv-cat { align-self: flex-start; font-size: 10.5px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.18); backdrop-filter: blur(8px); color: inherit; }
+.nv-row .nv-cat { background: var(--m-soft); color: var(--m-mu); }
+.nv-chips { position: sticky; top: 50px; z-index: 15; display: flex; gap: 8px; overflow-x: auto; padding: 12px 18px; margin-top: 8px; background: var(--m-bg); border-bottom: 1px solid var(--m-line); scrollbar-width: none; }
+.nv-chips::-webkit-scrollbar { display: none; }
+.nv-chips button { flex: 0 0 auto; padding: 7px 15px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: var(--m-soft); color: var(--m-mu); border: 1px solid var(--m-line); }
+.nv-chips button.on { background: var(--m-tx); color: var(--m-bg); border-color: var(--m-tx); }
+.nv-list { padding: 0 18px; }
+.nv-row { position: relative; display: flex; gap: 14px; padding: 18px 0; border-bottom: 1px solid var(--m-line); cursor: pointer; }
+.nv-lnk { color: inherit; text-decoration: none; }
+.nv-lnk::after { content: ""; position: absolute; inset: 0; }
+.nv-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.nv-tx h3 { font-size: 15.5px; font-weight: 900; line-height: 1.7; margin: 0; }
+.nv-tx p { font-size: 12.5px; line-height: 1.9; color: var(--m-mu); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; }
+.nv-th { flex: 0 0 96px; height: 96px; border-radius: 16px; background-size: cover; background-position: center; align-self: center; }
+.nv-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--m-mu); flex-wrap: wrap; }
+.nv-meta .mn { display: inline-flex; align-items: center; gap: 3px; }
+.nv-meta .d { opacity: .5; }
+.nv-av { font-style: normal; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 9px; font-weight: 800; background: var(--m-tx); color: var(--m-bg); overflow: hidden; }
+.nv-av img { width: 100%; height: 100%; object-fit: cover; }
+.nv-bm { position: relative; z-index: 2; margin-inline-start: auto; color: var(--m-mu); display: grid; place-items: center; width: 30px; height: 30px; background: none; border: 0; }
+.nv-bm.on { color: var(--m-tx); }
+.nv-empty { padding: 40px 0; text-align: center; color: var(--m-mu); font-size: 13px; }
+.nv-q { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; color: #111; }
+.nv-q svg { width: 44px; height: 33px; opacity: .88; }
+.nv-th.ph .nv-q svg { width: 36px; height: 27px; }
+.nv-hero.ph .nv-q svg { width: 84px; height: 63px; }
+.nv-fc.noimg .nv-q svg { width: 70px; height: 52px; }
+.nv-th.ph, .nv-hero.ph { position: relative; overflow: hidden; }
+.nv-fc.noimg:before { display: none; }
+.nv-fc.noimg { color: #111; }
+.nv-fc.noimg .nv-cat { background: rgba(255,255,255,.7); color: #111; }
+.nv-fc.noimg > * { position: relative; z-index: 1; }
+.nv-fc.noimg .nv-q { position: absolute; z-index: 0; }
+
+/* reader (the reference's `.nv-read`, as a page of the centre column) */
+.nv-read { position: relative; min-height: 100%; overflow: visible; background: var(--m-bg); color: var(--m-tx); direction: rtl; }
+.nv-rb { position: absolute; z-index: 2; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; }
+.nv-rb button, .nv-rb a { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.45); color: #fff; backdrop-filter: blur(10px); border: 0; text-decoration: none; }
+.nv-hero { height: 240px; background-size: cover; background-position: center; }
+.nv-hero0 { height: 64px; }
+.nv-rc { padding: 20px 20px 60px; display: flex; flex-direction: column; gap: 14px; }
+.nv-rc .nv-cat { background: var(--m-soft); color: var(--m-mu); }
+.nv-rc h1, .nv-rc h2 { font-size: 22px; font-weight: 900; line-height: 1.7; margin: 0; }
+.nv-rc p { font-size: 15px; line-height: 2.1; margin: 0; }
+.nv-rc p.lead { font-weight: 700; color: var(--m-mu); }
+.nv-act { display: flex; gap: 10px; margin-top: 10px; }
+.nv-act button { flex: 1; height: 46px; border-radius: 999px; border: 1px solid var(--m-line); display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13px; font-weight: 700; background: none; color: inherit; }
+.nv-act button.on { background: var(--m-tx); color: var(--m-bg); }
+@media (min-width: 1024px) { .nv-read { border-inline: 0; } }
+
+/* long unbroken words must wrap inside their box, never push past it */
+.nv, .nv-read { overflow-wrap: anywhere; word-break: break-word; }
+.nv-row, .nv-tx, .nv-tx h3, .nv-tx p, .nv-fc, .nv-fc h3, .nv-rc, .nv-rc h1, .nv-rc p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.nv-row { overflow: hidden; }
+.nv-tx h3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.nv-fc h3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.nv-media { padding: 12px 18px 0; }
+.nv-vid { position: relative; background: #000; }

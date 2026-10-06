@@ -6,6 +6,7 @@ import { oneMessage } from "../services/works.service";
 import { useWorkRoom } from "../hooks/useWorkRoom";
 import type { WorkKind, WorkMessage } from "../types";
 import { dayLabel, fa, sameDay } from "../utils";
+import { ChIcon } from "@/features/chat/components/ChIcon";
 import { Icon } from "./Icon";
 import { MessageRow } from "./MessageRow";
 import { Popover } from "./Popover";
@@ -27,7 +28,7 @@ const FILTERS: { id: string; label: string }[] = [
   { id: "text", label: "پیام‌ها" },
 ];
 
-const ROLE_LABEL = { owner: "مدیر", admin: "ادمین", member: "عضو" } as const;
+const ROLE_NOTE = { owner: "شما مدیر هستید", admin: "شما ادمین هستید", member: "" } as const;
 
 export function WorkRoom({ workId }: { workId: string }) {
   const room = useWorkRoom(workId);
@@ -158,41 +159,43 @@ export function WorkRoom({ workId }: { workId: string }) {
       last.group = [...(last.group ?? [last.m]), m];
     } else blocks.push({ m });
   }
-  const roleLabel = work.viewer.role ? ROLE_LABEL[work.viewer.role] : manager ? "مدیر سایت" : "عضو نیستید";
+  const roleNote = work.viewer.role ? ROLE_NOTE[work.viewer.role] : manager ? "مدیر سایت" : "عضو نیستید";
   const stats = work.stats;
   const pinned = work.pinned;
 
   return (
     <RoomContext.Provider value={ctx}>
       <div className="w-room">
-        <div className="r-head">
-          <Link href="/chat" className="icon-btn r-back" aria-label="بازگشت به گفتگوها">
-            <Icon name="back" size={20} weight={2} />
+        <header className="r-head ch-vh">
+          <Link href="/chat" className="ch-bk r-back" aria-label="بازگشت به گفتگوها">
+            <ChIcon name="bk" size={22} />
           </Link>
-          <WorkIcon work={work} size={40} />
-          <button type="button" className="r-title" onClick={() => setInfo(true)} aria-label="اطلاعات کار">
+          <WorkIcon work={work} size={42} />
+          <button type="button" className="r-title ch-vt" onClick={() => setInfo(true)} aria-label="اطلاعات کار">
             <b>{work.title}</b>
             <small>
-              {fa(work.member_count)} عضو · <Icon name="lock" size={11} /> اعضا فقط پاسخ می‌دهند
+              {fa(work.member_count)} عضو · گروه کاری{roleNote ? ` · ${roleNote}` : ""}
             </small>
           </button>
-          <div className="r-views" role="tablist">
-            {(
-              [
-                ["chat", "گفتگو", "chat"],
-                ["board", "بورد", "board"],
-                ["members", "اعضا", "users"],
-              ] as const
-            ).map(([v, label, icon]) => (
-              <button key={v} type="button" role="tab" aria-selected={view === v} className={view === v ? "on" : ""} onClick={() => room.setView(v)}>
-                <Icon name={icon} size={14} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-          <button ref={viewMenuBtn} type="button" className="icon-btn r-more" aria-label="بخش‌های کار" aria-haspopup="menu" aria-expanded={viewMenu} onClick={() => setViewMenu((v) => !v)}>
-            <Icon name="more" size={20} />
-          </button>
+          <span className="ch-ha">
+            <span className="r-views" role="tablist">
+              {(
+                [
+                  ["chat", "گفتگو", "chat"],
+                  ["board", "بورد", "board"],
+                  ["members", "اعضا", "users"],
+                ] as const
+              ).map(([v, label, icon]) => (
+                <button key={v} type="button" role="tab" aria-selected={view === v} className={view === v ? "on" : ""} onClick={() => room.setView(v)}>
+                  <Icon name={icon} size={14} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </span>
+            <button ref={viewMenuBtn} type="button" className="r-more" aria-label="بخش‌های کار" aria-haspopup="menu" aria-expanded={viewMenu} onClick={() => setViewMenu((v) => !v)}>
+              <ChIcon name="dots" size={20} />
+            </button>
+          </span>
           {viewMenu ? (
             <Popover anchor={viewMenuBtn} className="picker view-menu" onClose={() => setViewMenu(false)}>
               <div role="menu" className="view-menu-list">
@@ -211,11 +214,7 @@ export function WorkRoom({ workId }: { workId: string }) {
               </div>
             </Popover>
           ) : null}
-        </div>
-
-        <div className="r-role">
-          نقش شما: <span className={`role-b ${work.viewer.role === "owner" ? "admin" : work.viewer.role === "admin" ? "lead" : ""}`} style={work.viewer.role === "member" || !work.viewer.role ? { background: "var(--surface)", color: "var(--muted)" } : undefined}>{roleLabel}</span>
-        </div>
+        </header>
 
         {view === "board" ? (
           <div className="r-sum">
@@ -238,35 +237,33 @@ export function WorkRoom({ workId }: { workId: string }) {
           </div>
         ) : null}
 
-        {view === "chat" && pinned ? (
-          <button type="button" className="r-pin" onClick={() => void jump(pinned.id)}>
-            <Icon name="pinned" size={15} />
-            <b>سنجاق‌شده:</b>
-            <span>{pinned.announcement?.title ?? pinned.body}</span>
-          </button>
-        ) : null}
-
         {view === "chat" ? (
-          <div className="r-filt">
+          <div className="r-filt ch-fl">
             {FILTERS.map((f) => {
               const on = f.id === "all" ? !kind && !mine : f.id === "me" ? mine && !kind : kind === f.id;
-              const n = f.id === "all" ? counts.all : f.id === "me" ? undefined : counts[f.id];
               return (
                 <button
                   key={f.id}
                   type="button"
-                  className={`chip ${on ? "on" : ""}`}
+                  className={on ? "on" : ""}
                   aria-pressed={on}
                   onClick={() => {
                     room.setKind(f.id === "all" || f.id === "me" ? "" : f.id);
                     room.setMine(f.id === "me");
                   }}
                 >
-                  {f.label} {n !== undefined ? <span className="num">{fa(n)}</span> : null}
+                  {f.label}
                 </button>
               );
             })}
           </div>
+        ) : null}
+
+        {view === "chat" && pinned ? (
+          <button type="button" className="r-pin ch-pn" onClick={() => void jump(pinned.id)}>
+            <ChIcon name="pinI" size={15} />
+            <span>{pinned.announcement?.title ?? pinned.body}</span>
+          </button>
         ) : null}
 
         {error ? (

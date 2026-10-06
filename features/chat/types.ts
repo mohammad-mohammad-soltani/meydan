@@ -59,6 +59,9 @@ export type ChatAttachment = {
   width?: number;
   height?: number;
   duration?: number;
+  /** A recorded voice note: rendered as a player with `waveform` (0‥100 bars) instead of a file card. */
+  voice?: boolean;
+  waveform?: number[];
 };
 
 export type MessageReply = { id: string; body: string; senderName: string };

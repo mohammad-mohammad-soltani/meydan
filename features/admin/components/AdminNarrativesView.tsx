@@ -29,6 +29,7 @@ import {
   updateMediaReflection,
 } from "../services/narratives.service";
 import { getMediaOutlets } from "../services/creators.service";
+import { getNoteCategories, type NoteCategoryOption } from "../services/note-categories.service";
 import { CONTENT_FORMATS, CONTENT_FORMAT_LABELS, CONTENT_TYPES, CONTENT_TYPE_LABELS, type ContentFormat, type ContentType } from "../types";
 import type { EditorialPage } from "../services/narratives.service";
 import type { Narrative, MediaReflection, MediaOutlet } from "../types";
@@ -63,6 +64,10 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
 
   const [convertOpen, setConvertOpen] = useState(false);
   const [format, setFormat] = useState<ContentFormat>("mixed");
+  const [convertTitle, setConvertTitle] = useState("");
+  const [convertCategory, setConvertCategory] = useState("");
+  const [convertFeatured, setConvertFeatured] = useState(false);
+  const [noteCategories, setNoteCategories] = useState<NoteCategoryOption[]>([]);
   const [contentType, setContentType] = useState<ContentType>("report");
   const [primaryAttachmentId, setPrimaryAttachmentId] = useState<number | null>(null);
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -141,6 +146,10 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
 
   const doConvert = async () => {
     if (!narrative) return;
+    if (!convertTitle.trim()) {
+      setActionError("عنوان محتوا را بنویسید.");
+      return;
+    }
     if (narrative.attachments.length > 0 && !primaryAttachmentId) {
       setActionError("فایل اصلی محتوا را انتخاب کنید.");
       return;
@@ -148,7 +157,7 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
     setBusy(true);
     setActionError(null);
     try {
-      await convertNarrativeToContent(String(narrative.id), contentType, format, primaryAttachmentId);
+      await convertNarrativeToContent(String(narrative.id), contentType, format, primaryAttachmentId, contentType === "speech" ? { title: convertTitle.trim(), category: convertCategory, featured: convertFeatured } : { title: convertTitle.trim() });
       setConvertOpen(false);
       setNotice("روایت به محتوا تبدیل شد.");
       await openNarrative(String(narrative.id));
@@ -385,6 +394,10 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
                   onClick={() => {
                     setActionError(null);
                     setPrimaryAttachmentId(null);
+                    setConvertTitle((narrative.body || "").split("\n")[0].trim().slice(0, 120));
+                    setConvertCategory("");
+                    setConvertFeatured(false);
+                    void getNoteCategories().then(setNoteCategories).catch(() => setNoteCategories([]));
                     setConvertOpen(true);
                   }}
                   className={primaryButtonClass}
@@ -527,6 +540,9 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
           onConfirm={() => void doConvert()}
           onClose={() => setConvertOpen(false)}
         >
+          <AdminField label="عنوان" htmlFor="convert-title" required>
+            <input id="convert-title" value={convertTitle} maxLength={190} onChange={(event) => setConvertTitle(event.target.value)} className={fieldClass} />
+          </AdminField>
           <AdminField label="نوع محتوا" htmlFor="convert-content-type" required>
             <select id="convert-content-type" value={contentType} onChange={(event) => setContentType(event.target.value as ContentType)} className={fieldClass}>
               {CONTENT_TYPES.map((item) => <option key={item} value={item}>{CONTENT_TYPE_LABELS[item]}</option>)}
@@ -546,6 +562,21 @@ export function AdminNarrativesView({ initial }: { initial: EditorialPage }) {
               ))}
             </select>
           </AdminField>
+          {contentType === "speech" ? <><AdminField label="دسته‌بندی" htmlFor="convert-category" hint="از دسته‌بندی سخنرانان یا دسته‌های اختصاصی یادداشت. اگر انتخاب نکنید و ناشر سخنران باشد، دستهٔ خودِ او؛ وگرنه بدون دسته.">
+            <select id="convert-category" value={convertCategory} onChange={(event) => setConvertCategory(event.target.value)} className={fieldClass}>
+              <option value="">خودکار (دستهٔ سخنران یا بدون دسته)</option>
+              <optgroup label="دسته‌بندی‌های یادداشت">
+                {noteCategories.filter((item) => item.source === "note").map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+              </optgroup>
+              <optgroup label="دسته‌بندی‌های سخنرانان">
+                {noteCategories.filter((item) => item.source === "speaker").map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+              </optgroup>
+            </select>
+          </AdminField>
+          <label className="flex items-start gap-2 text-xs">
+            <input type="checkbox" checked={convertFeatured} onChange={(event) => setConvertFeatured(event.target.checked)} className="mt-1" />
+            <span><b>برگزیده</b><span className="block text-muted-foreground">در بخش «برگزیده‌ها» بالای صفحهٔ یادداشت‌ها نمایش داده می‌شود.</span></span>
+          </label></> : null}
           {narrative?.attachments.length ? (
             <AdminField label="فایل اصلی" htmlFor="convert-primary-attachment" required hint="نمای بالای صفحه محتوا با این فایل ساخته می‌شود.">
               <select id="convert-primary-attachment" value={primaryAttachmentId ?? ""} onChange={(event) => setPrimaryAttachmentId(event.target.value ? Number(event.target.value) : null)} className={fieldClass}>

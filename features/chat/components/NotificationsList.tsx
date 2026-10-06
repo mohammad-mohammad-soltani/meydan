@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { AtSign, BriefcaseBusiness, Bell, Heart, MessageCircle, Newspaper, Quote, Repeat2, UserPlus, Users } from "lucide-react";
 import { getNotificationPresentation } from "../chat-utils";
 import type { ChatNotification, ChatNotificationKind } from "../types";
+import { ChIcon, type ChIconName } from "./ChIcon";
 
 const icons: Record<ChatNotificationKind, typeof Heart> = {
   like: Heart,
@@ -31,6 +32,9 @@ const hues: Record<ChatNotificationKind, number> = {
   system: 330,
 };
 
+/** Kinds the reference draws itself; the rest keep their lucide glyph. */
+const ref: Partial<Record<ChatNotificationKind, ChIconName>> = { like: "heart", follow: "add", comment: "chat", mention: "at", system: "star" };
+
 export function NotificationsList({
   notifications,
   onRead,
@@ -40,14 +44,15 @@ export function NotificationsList({
 }) {
   if (!notifications.length) {
     return (
-      <div className="grid min-h-56 place-items-center rounded-card border border-dashed border-border px-4 text-center text-sm text-foreground-secondary">
-        هنوز اعلانی ندارید
+      <div className="ch-em2">
+        <ChIcon name="bell" size={28} />
+        <p>هنوز اعلانی ندارید</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <>
       {notifications.map((notification) => {
         const Icon = icons[notification.kind];
         const presentation = getNotificationPresentation(notification);
@@ -55,51 +60,38 @@ export function NotificationsList({
           if (notification.unread) void onRead?.(notification.id);
         };
         const content = (
-          <article className={`flex items-center gap-3 rounded-2xl px-3 py-[7px] text-right ${notification.unread ? "bg-foreground/[.05]" : ""}`}>
-            <span
-              aria-hidden="true"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full"
-              style={{ background: `color-mix(in srgb, hsl(${hues[notification.kind]} 70% 52%) 18%, var(--surface-muted))`, color: `hsl(${hues[notification.kind]} 80% 66%)` }}
-            >
-              <Icon className="h-5 w-5" />
+          <>
+            <span className="ch-ni" aria-hidden="true" style={{ ["--h" as string]: hues[notification.kind] }}>
+              {ref[notification.kind] ? <ChIcon name={ref[notification.kind]!} size={19} /> : <Icon width={19} height={19} strokeWidth={1.9} />}
             </span>
-            <div className="flex min-w-0 flex-1 flex-col gap-px text-sm leading-[1.7] text-foreground">
-              <p className="line-clamp-3">
+            <span className="ch-nb">
+              <span>
                 {presentation.actorName && presentation.title.startsWith(presentation.actorName) ? (
-                  <><b className="font-bold">{presentation.actorName}</b>{presentation.title.slice(presentation.actorName.length)}</>
+                  <><b>{presentation.actorName}</b>{presentation.title.slice(presentation.actorName.length)}</>
                 ) : presentation.title}
                 {presentation.description ? <>: «{presentation.description}»</> : null}
-              </p>
-              <time className="text-[11.5px] text-muted-foreground">{notification.createdAt}</time>
-            </div>
-            {notification.unread ? <span className="h-[9px] w-[9px] shrink-0 rounded-full bg-brand" aria-label="خوانده نشده" /> : null}
-          </article>
+              </span>
+              <time>{notification.createdAt}</time>
+            </span>
+            {notification.unread ? <i className="ch-dot" aria-label="خوانده نشده" /> : null}
+          </>
         );
+        const cls = `ch-n${notification.unread ? " u" : ""}`;
 
         if (presentation.href) {
           return (
-            <Link
-              key={notification.id}
-              href={presentation.href as Route}
-              onClick={markRead}
-              className="block rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
+            <Link key={notification.id} href={presentation.href as Route} onClick={markRead} className={cls}>
               {content}
             </Link>
           );
         }
 
         return (
-          <button
-            key={notification.id}
-            type="button"
-            onClick={markRead}
-            className="block w-full rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
+          <button key={notification.id} type="button" onClick={markRead} className={cls}>
             {content}
           </button>
         );
       })}
-    </div>
+    </>
   );
 }

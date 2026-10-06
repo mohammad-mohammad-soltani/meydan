@@ -88,7 +88,8 @@ test("the attachment menu offers every chat attachment type", () => {
   assert.match(input, /setIsAttachmentOpen\(true\)/);
   assert.match(input, /onSendSquareLocation/);
   // The send action is the reference's round, text-coloured primary control.
-  assert.match(input, /bg-foreground text-background/);
+  assert.match(input, /bg-foreground/);
+  assert.match(input, /var\(--m-bg\)/);
 });
 
 test("location sharing resolves a square and sends it through the message API", () => {
