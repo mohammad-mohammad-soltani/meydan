@@ -1,5 +1,8 @@
 import type { CSSProperties } from "react";
 import { Clock } from "lucide-react";
+import Link from "next/link";
+import type { Route } from "next";
+import { AccountBadges } from "@/components/shared/AccountBadges";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 
 const faNumber = new Intl.NumberFormat("fa-IR");
@@ -52,11 +55,25 @@ export function ReadingTime({ minutes }: { minutes?: number }) {
 }
 
 /** Byline: initials disc, author, date, reading time. */
-export function NoteMeta({ author, avatar, date, minutes, children }: { author?: string; avatar?: string; date?: string; minutes?: number; children?: React.ReactNode }) {
+export type NoteAuthor = { name?: string; avatar?: string; href?: string; verified?: boolean; speaker?: boolean; official?: boolean; kind?: string };
+
+export function NoteMeta({ author, date, minutes, children }: { author: NoteAuthor; date?: string; minutes?: number; children?: React.ReactNode }) {
+  const name = (
+    <>
+      <span>{author.name}</span>
+      <AccountBadges verified={author.verified} speaker={author.speaker} official={author.official} kind={author.kind} size="sm" />
+    </>
+  );
   return (
     <div className="nv-meta">
-      <i className="nv-av">{avatar ? <OptimizedAvatar src={avatar} alt="" width={44} height={44} /> : initials(author)}</i>
-      <span>{author}</span>
+      <i className="nv-av">{author.avatar ? <OptimizedAvatar src={author.avatar} alt="" width={44} height={44} /> : initials(author.name)}</i>
+      {author.href ? (
+        <Link href={author.href as Route} className="nv-au">
+          {name}
+        </Link>
+      ) : (
+        <span className="nv-au">{name}</span>
+      )}
       {date ? (
         <>
           <span className="d">·</span>

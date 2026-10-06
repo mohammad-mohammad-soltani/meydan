@@ -79,19 +79,22 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
   const counterRef = useRef<ReturnType<typeof createShareCounter> | null>(null);
   const saveLock = useRef(false);
 
-  const url = `${window.location.origin}/posts/${post.id}`;
+  const isContent = post.kind === "content";
+  const apiBase = isContent ? `/content/${post.id}` : `/narratives/${post.id}`;
+  const pagePath = post.href ?? `/posts/${post.id}`;
+  const url = `${window.location.origin}${pagePath}`;
   const shareText = post.title ?? `${post.authorName}: ${post.body.slice(0, 120)}`;
 
   /** The share counter goes up once per sheet, on the first real share action. */
   const countShare = useCallback(() => {
     if (!counterRef.current) {
       const key = crypto.randomUUID();
-      counterRef.current = createShareCounter(() => meydanApi(`/narratives/${post.id}/share`, {
+      counterRef.current = createShareCounter(() => meydanApi(`${apiBase}/share`, {
         method: "POST", headers: { "idempotency-key": key },
       }));
     }
     void counterRef.current();
-  }, [post.id]);
+  }, [apiBase]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -110,13 +113,16 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
       .catch(() => {
         if (active) { setContactsError(true); setContacts([]); }
       });
-    void meydanApi<{ bookmarked?: boolean }>(`/narratives/${post.id}/bookmark`)
-      .then((state) => active && setSaved(Boolean(state.bookmarked)))
-      .catch(() => active && setSaved(null));
+    if (isContent) setSaved(Boolean(post.bookmarked));
+    else {
+      void meydanApi<{ bookmarked?: boolean }>(`/narratives/${post.id}/bookmark`)
+        .then((state) => active && setSaved(Boolean(state.bookmarked)))
+        .catch(() => active && setSaved(null));
+    }
     return () => {
       active = false;
     };
-  }, [isAuthenticated, post.id]);
+  }, [isAuthenticated, post.id, isContent, post.bookmarked]);
 
   useEffect(() => {
     const previous = document.body.style.overflow;
@@ -192,16 +198,16 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
   };
 
   const toggleSaved = async () => {
-    if (saveLock.current || !requireAuth(`/posts/${post.id}`)) return;
+    if (saveLock.current || !requireAuth(pagePath)) return;
     saveLock.current = true;
     setSavePending(true);
     const previous = saved;
     const next = !saved;
     try {
-      await meydanApi(`/narratives/${post.id}/bookmark`, { method: next ? "PUT" : "DELETE" });
+      await meydanApi(`${apiBase}/bookmark`, { method: next ? "PUT" : "DELETE" });
       setSaved(next);
-      announceBookmark({ id: post.id, bookmarked: next });
-      flash(next ? "روایت ذخیره شد؛ در «نشان‌شده‌ها» می‌بینید" : "از ذخیره‌ها برداشته شد");
+      if (!isContent) announceBookmark({ id: post.id, bookmarked: next });
+      flash(next ? (isContent ? "ذخیره شد" : "روایت ذخیره شد؛ در «نشان‌شده‌ها» می‌بینید") : "از ذخیره‌ها برداشته شد");
     } catch {
       setSaved(previous);
       flash("ذخیره روایت انجام نشد");

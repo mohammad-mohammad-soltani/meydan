@@ -46,7 +46,7 @@ export function StoryStudio({ post, onClose, onShared }: { post: SharePost; onCl
   const text = [post.title, post.body].filter(Boolean).join("\n");
   const { truncated } = storyText(text);
   const theme = STORY_THEMES.find((item) => item.id === themeId) ?? STORY_THEMES[0];
-  const link = `${typeof window === "undefined" ? "naghshman.ir" : window.location.host}/posts/${post.id}`;
+  const link = `${typeof window === "undefined" ? "naghshman.ir" : window.location.host}${post.href ?? `/posts/${post.id}`}`;
 
   // Fonts and images are loaded once; every option change only repaints.
   useEffect(() => {

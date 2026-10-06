@@ -2,10 +2,10 @@
 
 import styles from "../reference.module.css";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import { MapBelow } from "./MapBelow";
-import { MapSvg, type MapFocus as MapFocusRequest } from "./MapSvg";
+import { MapFrame } from "./MapFrame";
 import { useMap } from "../hooks/useMap";
 
 type MapFocus = { latitude: number; longitude: number; zoom?: number };
@@ -38,37 +38,39 @@ export function MapView() {
   // A square profile links here with ?lat=&lng= so the live map opens on that
   // square. The URL is read directly to avoid a useSearchParams boundary.
   const [linkedFocus, setLinkedFocus] = useState<MapFocus | null>(null);
-  const [requested, setRequested] = useState<MapFocusRequest | null>(null);
+  const [requestedFocus, setRequestedFocus] = useState<MapFocus | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setLinkedFocus(readLinkedFocus()));
   }, []);
 
-  // The map flies to the chosen province or city on its own; only a single square needs a request.
-  const focus = useMemo<MapFocusRequest | null>(
-    () => requested ?? (linkedFocus ? { latitude: linkedFocus.latitude, longitude: linkedFocus.longitude, nonce: 0 } : null),
-    [requested, linkedFocus],
-  );
+  const handleSelectProvince = (provinceId: number) => {
+    setLinkedFocus(null);
+    map.selectProvince(provinceId);
+    const province = map.provinceAggregates.find((item) => item.provinceId === provinceId);
+    if (province) setRequestedFocus({ latitude: province.latitude, longitude: province.longitude, zoom: 7.2 });
+  };
 
-  const handleSelectProvince = useCallback(
-    (provinceId: number) => {
-      setLinkedFocus(null);
-      setRequested(null);
-      map.selectProvince(provinceId);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `map` changes every render; its actions are stable
-    [map.selectProvince],
-  );
+  // A province polygon was clicked: the frame zooms on its own, so only the selection is set here.
+  const handleSelectProvinceName = (name: string) => {
+    setLinkedFocus(null);
+    setRequestedFocus(null);
+    map.selectProvinceByName(name);
+  };
 
-  const handleSelectCity = useCallback(
-    (cityId: number) => {
-      setLinkedFocus(null);
-      setRequested(null);
-      map.selectCity(cityId);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
-    [map.selectCity],
-  );
+  const handleSelectCity = (cityId: number) => {
+    setLinkedFocus(null);
+    map.selectCity(cityId);
+    const city = map.cityAggregates.find((item) => item.cityId === cityId);
+    if (city) setRequestedFocus({ latitude: city.latitude, longitude: city.longitude, zoom: 10.2 });
+  };
+
+  const mapMarkers =
+    map.level === "country"
+      ? { squares: [], aggregates: map.provinceAggregates, onSelect: map.selectProvinceAggregate }
+      : map.level === "province"
+        ? { squares: [], aggregates: map.allCityAggregates, onSelect: map.selectCityAggregate }
+        : { squares: map.resolvedSquares, aggregates: [], onSelect: map.selectCityAggregate };
 
   return (
     <section
@@ -78,15 +80,18 @@ export function MapView() {
       <div>
         <div className={styles.viewport}>
           <div className={styles.frameHost}>
-            <MapSvg
-              squares={map.resolvedSquares}
-              provinces={map.provinceAggregates}
-              cities={map.allCityAggregates}
-              selectedProvinceName={map.selectedProvince?.name ?? null}
-              selectedCityName={map.selectedCity?.name ?? null}
-              focus={focus}
-              onSelectProvince={handleSelectProvince}
-              onSelectCity={handleSelectCity}
+            <MapFrame
+              squares={mapMarkers.squares}
+              aggregates={mapMarkers.aggregates}
+              searchProvinces={map.provinceAggregates}
+              searchCities={map.allCityAggregates}
+              searchSquares={map.resolvedSquares}
+              center={linkedFocus ?? requestedFocus}
+              level={map.level}
+              onSelectAggregate={mapMarkers.onSelect}
+              onViewportLevel={map.setViewport}
+              selectedProvinceName={map.selectedProvinceName}
+              onSelectProvinceName={handleSelectProvinceName}
             />
           </div>
 
@@ -121,12 +126,12 @@ export function MapView() {
         onCity={handleSelectCity}
         onAll={() => {
           setLinkedFocus(null);
-          setRequested(null);
           map.clearSelection();
+          setRequestedFocus({ latitude: 32.4, longitude: 53.7, zoom: 4.6 });
         }}
         onSquare={(square) => {
           setLinkedFocus(null);
-          setRequested({ latitude: square.latitude, longitude: square.longitude, nonce: Date.now() });
+          setRequestedFocus({ latitude: square.latitude, longitude: square.longitude, zoom: 15 });
           document.getElementById("view-map")?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
         onShowMap={() => document.getElementById("view-map")?.scrollIntoView({ behavior: "smooth", block: "start" })}

@@ -23,6 +23,10 @@ export type ContentCreator = {
   profileHref?: string;
   bio: string;
   publishedCount: string;
+  verified?: boolean;
+  speaker?: boolean;
+  official?: boolean;
+  actorType?: string;
 };
 
 export type ContentFile = {
@@ -46,6 +50,12 @@ export type ContentItem = {
   description: string;
   author?: string;
   authorAvatar?: string;
+  /** Public page of the author, with the account's ticks. */
+  authorHref?: string;
+  authorVerified?: boolean;
+  authorSpeaker?: boolean;
+  authorOfficial?: boolean;
+  authorKind?: string;
   coverUrl?: string;
   /** «سلسله سخنرانی» the audio belongs to. */
   series?: string;

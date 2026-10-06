@@ -54,7 +54,7 @@ function NoteRow({ item, index, bookmarked }: { item: ContentItem; index: number
           <Link href={`/content/${item.id}` as Route} className="nv-lnk">{item.title}</Link>
         </h3>
         {item.description ? <p>{item.description}</p> : null}
-        <NoteMeta author={item.author} avatar={item.authorAvatar} date={shortJalali(item.publishedAt)} minutes={item.readingMinutes}>
+        <NoteMeta author={{ name: item.author, avatar: item.authorAvatar, href: item.authorHref, verified: item.authorVerified, speaker: item.authorSpeaker, official: item.authorOfficial, kind: item.authorKind }} date={shortJalali(item.publishedAt)} minutes={item.readingMinutes}>
           <SaveButton item={item} bookmarked={bookmarked} />
         </NoteMeta>
       </div>

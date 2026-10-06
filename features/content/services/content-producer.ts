@@ -8,6 +8,11 @@ export type ContentProducerSource = {
   avatar_url?: string;
   role?: string;
   bio?: string;
+  verified?: boolean;
+  is_speaker?: boolean;
+  verified_speaker?: boolean;
+  is_official?: boolean;
+  verified_official?: boolean;
 };
 
 export type LegacyContentCreator = {
@@ -24,6 +29,10 @@ export type DisplayContentProducer = {
   profileHref?: string;
   bio: string;
   publishedCount: string;
+  verified?: boolean;
+  speaker?: boolean;
+  official?: boolean;
+  actorType?: string;
 };
 
 const ROLE_BY_ACTOR_TYPE: Record<string, string> = {
@@ -60,6 +69,10 @@ export function contentProducer(
       profileHref: producerProfileHref(producer),
       bio: producer?.bio || "",
       publishedCount: "",
+      verified: Boolean(producer?.verified),
+      speaker: Boolean(producer?.verified_speaker || producer?.is_speaker),
+      official: Boolean(producer?.verified_official || producer?.is_official),
+      actorType: producer?.type,
     };
   }
 

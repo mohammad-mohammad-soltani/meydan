@@ -17,7 +17,7 @@ import { addOpenFreeMapBasemap } from "../services/openfreemap-basemap";
 import { squareAvatar, squarePopup } from "./marker-content";
 import { normalizePlace } from "../geo/aggregation";
 import "./live-map.css";
-import { LIVE_MAP_THEME, makePinHtml, makeProvinceStyle } from "../map-theme";
+import { LIVE_MAP_THEME, makeHoverProvinceStyle, makePinHtml, makeProvinceStyle, makeSelectedProvinceStyle } from "../map-theme";
 
 const iranCenter: [number, number] = [32.4279, 53.688];
 const initialZoom = 5;
@@ -50,6 +50,12 @@ function formatScale(value: number): string {
   return (value * 1000).toLocaleString("fa-IR", { maximumFractionDigits: 0 });
 }
 
+/** Persian name of a province polygon, normalised like the squares' province names. */
+function provinceName(feature: unknown): string {
+  const properties = (feature as { properties?: Record<string, unknown> } | undefined)?.properties ?? {};
+  return normalizePlace(String(properties["name:fa"] ?? properties.name ?? ""));
+}
+
 export function MapFrame({
   squares,
   aggregates,
@@ -60,6 +66,8 @@ export function MapFrame({
   level,
   onSelectAggregate,
   onViewportLevel,
+  selectedProvinceName = null,
+  onSelectProvinceName,
 }: {
   squares: SquareMarker[];
   aggregates: CountAggregate[];
@@ -70,6 +78,10 @@ export function MapFrame({
   level: MapLevel;
   onSelectAggregate: (id: string) => void;
   onViewportLevel: (viewport: MapViewport) => void;
+  /** Province outlined as chosen (kept in step with the list below the map). */
+  selectedProvinceName?: string | null;
+  /** A province polygon was clicked: the map zooms to it, the page selects it. */
+  onSelectProvinceName?: (name: string) => void;
 }) {
   const element = useRef<HTMLDivElement>(null);
   const map = useRef<import("leaflet").Map | null>(null);
@@ -79,6 +91,8 @@ export function MapFrame({
   const syncViewportRef = useRef<(() => void) | null>(null);
   const provincesVisibleRef = useRef(true);
   const provinceLayerRef = useRef<import("leaflet").GeoJSON | null>(null);
+  const selectedProvinceRef = useRef<string | null>(selectedProvinceName);
+  const onSelectProvinceNameRef = useRef(onSelectProvinceName);
   const userLocationRef = useRef<import("leaflet").CircleMarker | null>(null);
   const onSelectAggregateRef = useRef(onSelectAggregate);
   const onViewportLevelRef = useRef(onViewportLevel);
@@ -216,8 +230,25 @@ export function MapFrame({
         if (disposed || !map.current) return;
 
         const provinceLayer = L.geoJSON(data, {
-          style: makeProvinceStyle,
-          interactive: false,
+          style: (feature) => (provinceName(feature) === selectedProvinceRef.current ? makeSelectedProvinceStyle() : makeProvinceStyle()),
+          interactive: true,
+          bubblingMouseEvents: false,
+          onEachFeature: (feature, layer) => {
+            const polygon = layer as import("leaflet").Path & { getBounds?: () => import("leaflet").LatLngBounds };
+            const name = provinceName(feature);
+            polygon.on({
+              mouseover: () => {
+                if (name !== selectedProvinceRef.current) polygon.setStyle(makeHoverProvinceStyle());
+              },
+              mouseout: () => provinceLayer.resetStyle(polygon),
+              click: () => {
+                const bounds = polygon.getBounds?.();
+                if (bounds?.isValid()) instance.flyToBounds(bounds, { padding: [28, 28], duration: 0.8, maxZoom: 9 });
+                if (name) onSelectProvinceNameRef.current?.(name);
+              },
+            });
+            polygon.getElement()?.setAttribute("aria-label", name ? `استان ${name}` : "استان");
+          },
         });
         if (provincesVisibleRef.current) provinceLayer.addTo(instance);
         provinceLayerRef.current = provinceLayer;
@@ -335,6 +366,23 @@ export function MapFrame({
       cancelled = true;
     };
   }, [ready, squares, aggregates, level]);
+
+  useEffect(() => {
+    onSelectProvinceNameRef.current = onSelectProvinceName;
+  });
+
+  // Keep the chosen province outlined (and the previous one released).
+  useEffect(() => {
+    selectedProvinceRef.current = selectedProvinceName;
+    provinceLayerRef.current?.eachLayer((layer) => {
+      const feature = (layer as unknown as { feature?: unknown }).feature;
+      provinceLayerRef.current?.resetStyle(layer as import("leaflet").Path);
+      if (provinceName(feature) === selectedProvinceName) {
+        (layer as import("leaflet").Path).setStyle(makeSelectedProvinceStyle());
+        (layer as import("leaflet").Path).bringToFront?.();
+      }
+    });
+  }, [selectedProvinceName, ready]);
 
   useEffect(() => {
     if (!ready || !map.current || !center) return;

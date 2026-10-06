@@ -43,6 +43,22 @@ export function makeProvinceStyle() {
   };
 }
 
+/** A province polygon the viewer has chosen: accent outline and a soft accent wash. */
+export function makeSelectedProvinceStyle() {
+  return {
+    color: LIVE_MAP_THEME.pin,
+    weight: 2.4,
+    opacity: 1,
+    fillColor: LIVE_MAP_THEME.pin,
+    fillOpacity: 0.16,
+  };
+}
+
+/** Under the pointer: the outline firms up and the wash lightens a little. */
+export function makeHoverProvinceStyle() {
+  return { weight: 2, fillOpacity: 0.5, color: LIVE_MAP_THEME.pin, opacity: 0.9 };
+}
+
 export function makePinHtml(count: string): string {
   return `
     <div class="group relative flex cursor-pointer items-center justify-center">

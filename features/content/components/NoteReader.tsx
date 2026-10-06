@@ -2,7 +2,8 @@
 
 import "../reference-notes.css";
 import Link from "next/link";
-import { Bookmark, Check, Heart, Share2, X } from "lucide-react";
+import { Bookmark, Heart, Share2, X } from "lucide-react";
+import { useShare } from "@/features/share/ShareProvider";
 import { useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { meydanApi } from "@/lib/meydan-api";
@@ -25,9 +26,9 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
   const liked = likedOverride ?? Boolean(mine?.liked ?? item.viewerState?.liked);
   const saved = savedOverride ?? Boolean(mine?.bookmarked ?? item.viewerState?.bookmarked);
   const likes = Math.max(0, (item.likeCount ?? 0) + likeDelta);
-  const [copied, setCopied] = useState(false);
   const [playing, setPlaying] = useState(false);
   const cover = item.media.coverImage;
+  const lead = item.subtitle || item.description;
 
   async function toggle(kind: "like" | "bookmark") {
     if (!requireAuth(`/content/${item.id}`)) return;
@@ -50,28 +51,28 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
     }
   }
 
-  async function share() {
-    const url = `${window.location.origin}/content/${item.id}`;
-    try {
-      if (navigator.share) await navigator.share({ title: item.title, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
-      }
-    } catch {
-      // Cancelled share sheets are not errors.
-    }
+  const { openShare } = useShare();
+  /** The app's own share sheet, with this page's link. */
+  function share() {
+    openShare({
+      id: String(item.apiId),
+      kind: "content",
+      href: `/content/${item.apiId}`,
+      title: item.title,
+      body: lead || item.body[0] || "",
+      authorName: item.creator.name,
+      authorAvatar: item.creator.avatar,
+      authorVerified: item.creator.verified,
+      bookmarked: saved,
+    });
   }
-
-  const lead = item.subtitle || item.description;
 
   return (
     <article className="nv-read">
       <div className="nv-rb">
         <Link href="/content?tab=notes" aria-label="بستن"><X aria-hidden="true" width={20} height={20} strokeWidth={2} /></Link>
-        <button type="button" onClick={() => void share()} aria-label="اشتراک">
-          {copied ? <Check aria-hidden="true" width={18} height={18} /> : <Share2 aria-hidden="true" width={18} height={18} strokeWidth={2} />}
+        <button type="button" onClick={share} aria-label="اشتراک">
+          <Share2 aria-hidden="true" width={18} height={18} strokeWidth={2} />
         </button>
       </div>
       {item.media.videoSrc ? (
@@ -90,7 +91,7 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
       <div className="nv-rc">
         {item.categoryName ? <span className="nv-cat">{item.categoryName}</span> : null}
         <h1>{item.title}</h1>
-        <NoteMeta author={item.creator.name} avatar={item.creator.avatar} date={item.publishedAt} minutes={item.readingMinutes} />
+        <NoteMeta author={{ name: item.creator.name, avatar: item.creator.avatar, href: item.creator.profileHref, verified: item.creator.verified, speaker: item.creator.speaker, official: item.creator.official, kind: item.creator.actorType }} date={item.publishedAt} minutes={item.readingMinutes} />
         {item.media.audioSrc ? <AudioMediaStage item={item} isPlaying={playing} onPlayingChange={setPlaying} /> : null}
         {lead ? <p className="lead">{lead}</p> : null}
         {item.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}

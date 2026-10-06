@@ -6,6 +6,8 @@ import { parseSquareLocationMessage } from "../chat-utils";
 import { VoiceMessage } from "./VoiceMessage";
 import { PostLinkPreview } from "@/features/feed/components/PostLinkPreview";
 import { extractPostLink } from "@/features/feed/post-link";
+import { extractContentLink } from "@/features/content/content-link";
+import { ContentLinkPreview } from "@/features/content/components/ContentLinkPreview";
 import { chatUploadKey, subscribeToChatUploadProgress, type ChatUploadProgressDetail } from "../chat-upload-progress";
 import { MediaGallery } from "@/features/media/components/MediaGallery";
 import { mediaItemFromNamedAttachment } from "@/features/media/media-utils";
@@ -268,6 +270,7 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
   const StatusIcon = statusIcon[message.status];
   const location = parseSquareLocationMessage(message.body);
   const postLink = location ? null : extractPostLink(message.body);
+  const contentLink = location || postLink ? null : extractContentLink(message.body);
   const isVisualAttachment = Boolean(message.attachment && /^(image|video)\//i.test(message.attachment.mimeType));
   const hasAttachment = Boolean(message.attachment);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -367,12 +370,13 @@ export function MessageBubble({ message, isOwn, onReply, onCopy, onEdit, onDelet
             <MessageLocationCard location={location} />
           ) : (
             <>
-              {postLink?.cleanedText ? (
-                <p className={`whitespace-pre-wrap ${hasAttachment ? "px-1 pt-1" : ""}`}>{postLink.cleanedText}</p>
-              ) : !postLink && message.body ? (
+              {(postLink ?? contentLink)?.cleanedText ? (
+                <p className={`whitespace-pre-wrap ${hasAttachment ? "px-1 pt-1" : ""}`}>{(postLink ?? contentLink)?.cleanedText}</p>
+              ) : !postLink && !contentLink && message.body ? (
                 <p className={`whitespace-pre-wrap ${hasAttachment ? "px-1 pt-1" : ""}`}>{message.body}</p>
               ) : null}
               {postLink ? <div className={isOwn ? "chat-quote own" : "chat-quote"}><PostLinkPreview postId={postLink.postId} className="mb-1" /></div> : null}
+              {contentLink ? <div className={isOwn ? "chat-quote own" : "chat-quote"}><ContentLinkPreview contentId={contentLink.contentId} className="mb-1" /></div> : null}
             </>
           )}
           {message.status === "failed" && message.attachment?.voice && onRetryVoice ? <button type="button" onClick={() => onRetryVoice(message)} className="mt-1 rounded-full border border-current px-3 py-1 text-[11.5px] font-bold">ارسال دوباره</button> : null}
