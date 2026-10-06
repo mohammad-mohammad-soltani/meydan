@@ -33,6 +33,7 @@ import { RepostMenu } from "@/features/feed/components/RepostMenu";
 import { quoteComposeHref, repostTotal } from "@/features/feed/post-counts";
 import { useRouter } from "next/navigation";
 import { useDragPager } from "../use-drag-pager";
+import { faDigits } from "../media-utils";
 import { ReelComments } from "./ReelComments";
 import { MarkdownText } from "@/components/shared/MarkdownText";
 import { AccountBadges } from "@/components/shared/AccountBadges";
@@ -139,7 +140,8 @@ export function ImmersivePostSlide({
     index: mediaIndex,
     count: media.length,
     enabled: media.length > 1,
-    transform: (position, drag) => `translate3d(calc(${-position * 100}% + ${drag}px), 0, 0)`,
+    reverse: true,
+    transform: (position, drag) => `translate3d(calc(${position * 100}% + ${drag}px), 0, 0)`,
     onIndexChange: (next) => go(next - mediaIndex),
     reservedSelector: "button, a, input, textarea, [role=slider], [data-image-gesturing=true]",
     onDragged: () => { suppress.current = true; },
@@ -229,19 +231,33 @@ export function ImmersivePostSlide({
       <div ref={slideRef} className={`${styles.imageFrame} immersive-post is-image-viewer`} data-chrome-visible={visible} {...mediaDrag}>
         <header className={`${styles.imageHeader} ${chrome("viewer-image-header")}`} inert={!visible} dir="rtl">
           <button ref={closeRef} type="button" aria-label="بستن نمایشگر" onClick={() => (onBack ?? onClose)()}><X aria-hidden="true" /></button>
-          <span>{item.title || entry.author}</span>
+          <span>{entry.post?.title || entry.post?.body || entry.author}</span>
           <a href={item.downloadHref || item.src} download={item.title} target="_blank" rel="noreferrer" aria-label="دانلود رسانه"><Download aria-hidden="true" /></a>
         </header>
         <div className={styles.imageStage}>
           <div ref={mediaTrackRef} className="viewer-media-track">
             {media.map((attachment, position) => (
-              <div key={attachment.id} className="viewer-media-slide" style={{ transform: `translateX(${position * 100}%)` }} inert={position !== mediaIndex} aria-hidden={position !== mediaIndex}>
+              <div key={attachment.id} className="viewer-media-slide" style={{ transform: `translateX(${-position * 100}%)` }} inert={position !== mediaIndex} aria-hidden={position !== mediaIndex}>
                 {position === mediaIndex ? <MediaStage key={mediaKey} item={item} onSwipe={() => {}} onBackdropClick={toggleChrome} immersive chromeVisible={visible} /> : Math.abs(position - mediaIndex) === 1 ? <MediaNeighbour item={attachment} /> : null}
               </div>
             ))}
           </div>
-          {media.length > 1 ? <div className={chrome("viewer-media-arrows")} inert={!visible}><button type="button" disabled={mediaIndex === 0} aria-label="رسانهٔ قبلی" onClick={() => go(-1)}><ChevronRight /></button><button type="button" disabled={mediaIndex === media.length - 1} aria-label="رسانهٔ بعدی" onClick={() => go(1)}><ChevronLeft /></button></div> : null}
+          {media.length > 1 ? <div className={chrome("viewer-media-arrows")} inert={!visible} dir="rtl"><button type="button" disabled={mediaIndex === 0} aria-label="رسانهٔ قبلی" onClick={() => go(-1)}><ChevronRight /></button><button type="button" disabled={mediaIndex === media.length - 1} aria-label="رسانهٔ بعدی" onClick={() => go(1)}><ChevronLeft /></button></div> : null}
         </div>
+        {media.length > 1 ? (
+          <nav className={`${styles.imageDots} ${chrome("viewer-image-footer")}`} inert={!visible} aria-label="رسانه‌های این پست" dir="rtl">
+            {media.map((attachment, position) => (
+              <button
+                key={attachment.id}
+                type="button"
+                aria-label={`رسانهٔ ${faDigits(String(position + 1))} از ${faDigits(String(media.length))}`}
+                aria-current={position === mediaIndex ? "true" : undefined}
+                className={position === mediaIndex ? styles.imageDotActive : undefined}
+                onClick={() => go(position - mediaIndex)}
+              />
+            ))}
+          </nav>
+        ) : null}
         <footer className={`${styles.imageFooter} ${chrome("viewer-image-footer")}`} inert={!visible} dir="rtl">
           <button type="button" aria-pressed={state.viewerState.liked} disabled={state.busy} onClick={() => void state.toggle("like")}><Heart className={state.viewerState.liked ? "fill-current" : ""} /><span>پسندیدن</span></button>
           <button type="button" onClick={() => void state.share()}><Send /><span>اشتراک</span></button>
@@ -301,7 +317,7 @@ export function ImmersivePostSlide({
             <div
               key={attachment.id}
               className="viewer-media-slide"
-              style={{ transform: `translateX(${position * 100}%)` }}
+              style={{ transform: `translateX(${-position * 100}%)` }}
               inert={position !== mediaIndex}
               aria-hidden={position !== mediaIndex}
             >

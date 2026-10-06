@@ -107,11 +107,14 @@
 .viewer-menu button { text-align: right; padding: 10px 18px; }
 .viewer-media-arrows { position: absolute; inset: 45% 12px auto; z-index: 35; display: flex; justify-content: space-between; pointer-events: none; }
 .viewer-media-arrows button { pointer-events: auto; background: #0006; border-radius: 50%; padding: 8px; }
+.is-image-viewer .viewer-media-arrows { inset: 50% 8px auto; transform: translateY(-50%); }
+.is-image-viewer .viewer-media-arrows button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; background: #0009; border: 1px solid #fff3; backdrop-filter: blur(6px); }
+.is-image-viewer .viewer-media-arrows svg { width: 16px; height: 16px; }
 .viewer-media-arrows button:disabled { opacity: .25; }
 .viewer-chrome-hidden.viewer-media-arrows button { pointer-events: none; }
 .viewer-feed-navigation:empty { display: none; }
 .viewer-feed-navigation { order: 6; }
-@media (max-width: 767px) { .viewer-media-arrows { display: none; } }
+@media (max-width: 767px) { .viewer-media-arrows { display: none; } .is-image-viewer .viewer-media-arrows { display: flex; } }
 
 /* Desktop video viewer follows X: the video owns the entire viewport and the
    playback controls float over the bottom edge. Post metadata stays a mobile

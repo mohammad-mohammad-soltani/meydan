@@ -17,7 +17,7 @@ export function FollowPill({ following, onToggle }: { following: boolean; onTogg
         event.stopPropagation();
         onToggle();
       }}
-      className={`${styles.follow} pointer-events-auto relative z-10 flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-bold transition active:scale-95 ${
+      className={`${styles.follow} pointer-events-auto flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-bold transition active:scale-95 ${
         following ? "border-transparent bg-surface-elevated text-muted-foreground" : "border-border bg-surface-muted text-foreground hover:bg-hover"
       }`}
     >

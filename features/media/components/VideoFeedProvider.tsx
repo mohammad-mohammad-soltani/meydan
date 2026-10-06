@@ -75,6 +75,9 @@ export function VideoFeedProvider({ children }: { children: ReactNode }) {
   // entry of ours is still on the stack.
   useEffect(() => {
     if (session) return;
+    // `open` claimed the feed for the viewer; give it back so timeline players
+    // can start (and open the reels) again once the viewer is closed.
+    setVideoFeedOwner(false);
     const state = history.state;
     if (state && typeof state === "object" && state[VIDEO_FEED_HISTORY_KEY]) {
       history.replaceState({ ...state, [VIDEO_FEED_HISTORY_KEY]: false }, "");

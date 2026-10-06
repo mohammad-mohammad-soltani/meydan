@@ -161,7 +161,7 @@ export function MediaGallery({
                 className={`${isBubble ? "object-contain" : "object-cover"} transition-transform duration-300 group-hover/media:scale-[1.01]`}
                 draggable={false}
                 onLoad={(event) => {
-                  if (!isBubble || single.width || single.height) return;
+                  if (single.width || single.height) return;
                   const width = event.currentTarget.naturalWidth;
                   const height = event.currentTarget.naturalHeight;
                   if (!width || !height) return;

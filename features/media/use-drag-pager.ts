@@ -55,6 +55,8 @@ type DragPagerOptions = {
   /** Fired once a drag has actually moved, so the following tap can be eaten. */
   onDragged?: () => void;
   enabled?: boolean;
+  /** Next pane lies in the negative direction (RTL carousels): dragging right advances. */
+  reverse?: boolean;
 };
 
 export function useDragPager({
@@ -66,6 +68,7 @@ export function useDragPager({
   reservedSelector,
   onDragged,
   enabled = true,
+  reverse = false,
 }: DragPagerOptions) {
   const trackRef = useRef<HTMLDivElement>(null);
   const gestureRef = useRef<Gesture | null>(null);
@@ -160,7 +163,7 @@ export function useDragPager({
       gesture.lastTime = event.timeStamp;
     }
 
-    const wanted = main < 0 ? index + 1 : index - 1;
+    const wanted = (main < 0) !== reverse ? index + 1 : index - 1;
     gesture.target = wanted >= 0 && wanted < count ? wanted : null;
     paint(offsetFor(gesture, main), "none");
   };

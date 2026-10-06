@@ -9,6 +9,8 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { createPortal } from "react-dom";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
+import { AccountBadges } from "@/components/shared/AccountBadges";
+import { ViewerAvatar } from "./ViewerAvatar";
 import { relativeFa } from "@/lib/relative-fa";
 import { listComments, listReplies, postComment, setCommentLike, type ReelComment } from "../comments.service";
 
@@ -44,7 +46,7 @@ function CommentRow({
         <Avatar comment={comment} />
         <div className="min-w-0 flex-1">
           <div className={`${styles.commentMeta} flex items-baseline gap-2`}>
-            <b className="truncate font-black text-white">{comment.name}</b>
+            <b className="flex min-w-0 items-center gap-1 font-black text-white"><span className="truncate">{comment.name}</span><AccountBadges verified={comment.verified} speaker={comment.verifiedSpeaker} official={comment.verifiedOfficial} kind={comment.authorType} variant="reel" /></b>
             <span className="shrink-0 text-white/50">{comment.mine ? "همین الان · شما" : relativeFa(comment.createdAt)}</span>
           </div>
           <p className={`${styles.commentText} whitespace-pre-wrap break-words`}>{comment.body}</p>
@@ -218,7 +220,7 @@ export function ReelComments({ postId, count, onClose, onPosted, intro, panel = 
         ) : null}
         {error && items?.length ? <p role="alert" className="mb-1.5 px-1 text-[11px] text-red-400">{error}</p> : null}
         <form onSubmit={(event) => { event.preventDefault(); void send(); }} className={`${styles.commentForm} flex items-center`}>
-          <span className={styles.commentMe} aria-hidden="true">ش</span>
+          <ViewerAvatar size={34} />
           <input
             ref={inputRef}
             value={draft}

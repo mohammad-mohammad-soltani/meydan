@@ -10,10 +10,13 @@ import {
   Eye,
   Heart,
   LoaderCircle,
+  Maximize,
   MessageCircle,
+  FastForward,
   Pause,
   Play,
   Repeat2,
+  Rewind,
   Send,
   Volume2,
   VolumeX,
@@ -31,9 +34,15 @@ import { setVideoMuted, subscribeToVideoMuted, videoMutedServerSnapshot, videoMu
 import { useViewerPost } from "../hooks/useViewerPost";
 import { scanVideoPages, videoFeedQuery, type VideoFeedEntry, type VideoPageState } from "../video-feed-queue";
 import { ReelComments } from "./ReelComments";
+import { ViewerAvatar } from "./ViewerAvatar";
+import { mediaThumbnailSrc, sampleEdgeColors } from "../media-utils";
 
 const fa = new Intl.NumberFormat("fa-IR");
 const short = (value: number) => (value >= 1000 ? `${fa.format(Math.round(value / 100) / 10)}k` : fa.format(value));
+const clock = (seconds: number) => {
+  const total = Math.max(0, Math.floor(seconds));
+  return `${fa.format(Math.floor(total / 60))}:${fa.format(total % 60).padStart(2, "۰")}`;
+};
 const DESKTOP = "(min-width: 1024px)";
 const subscribeDesktop = (notify: () => void) => {
   const query = window.matchMedia(DESKTOP);
@@ -101,6 +110,7 @@ function ReelItem({
   onCloseComments,
   slot,
   onWide,
+  onEnded,
 }: {
   entry: VideoFeedEntry;
   index: number;
@@ -114,6 +124,8 @@ function ReelItem({
   /** Desktop: the element beside the player that hosts the comments panel. */
   slot: HTMLElement | null;
   onWide: (wide: boolean) => void;
+  /** The video finished: move on to the next reel. Returns false when there is none (it then replays). */
+  onEnded: (index: number) => boolean;
 }) {
   const router = useRouter();
   const state = useViewerPost(entry.post);
@@ -124,8 +136,22 @@ function ReelItem({
   const [flash, setFlash] = useState<{ text: string; key: number } | null>(null);
   const [badge, setBadge] = useState("");
   const [seeking, setSeeking] = useState(false);
+  const [seekLabel, setSeekLabel] = useState("");
+  // A long caption opens up on tap (scrollable) and folds back on the next tap.
+  const [captionOpen, setCaptionOpen] = useState(false);
+  const [captionLong, setCaptionLong] = useState(false);
+  const captionRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    const element = captionRef.current;
+    if (element && !captionOpen) setCaptionLong(element.scrollHeight > element.clientHeight + 2);
+  }, [entry.body, captionOpen]);
+  const captionExpanded = captionOpen && active;
   const [wide, setWide] = useState(Boolean(entry.item.width && entry.item.height && entry.item.width > entry.item.height * 1.1));
   const [failed, setFailed] = useState(false);
+  const [ratio, setRatio] = useState(entry.item.width && entry.item.height ? entry.item.width / entry.item.height : 16 / 9);
+  const card = useRef<HTMLDivElement>(null);
+  const tainted = useRef(false);
+  const lastSample = useRef(0);
   const held = useRef(0);
   const seek = useRef<{ resume: boolean } | null>(null);
 
@@ -145,6 +171,36 @@ function ReelItem({
       element.pause();
     }
   }, [active, muted, near]);
+
+  // Backdrop colours come from the video itself: the poster through the
+  // same-origin image optimizer first, then live frames when the file allows it.
+  const paintBackdrop = (colors: [string, string] | null) => {
+    if (!colors || !card.current) return;
+    card.current.style.setProperty("--g1", colors[0]);
+    card.current.style.setProperty("--g2", colors[1]);
+  };
+  const poster = entry.item.poster;
+  useEffect(() => {
+    const thumb = mediaThumbnailSrc(poster, 64);
+    if (!thumb) return;
+    const image = new window.Image();
+    image.onload = () => paintBackdrop(sampleEdgeColors(image));
+    image.src = thumb;
+  }, [poster]);
+  const sampleFrame = (element: HTMLVideoElement) => {
+    if (tainted.current || element.readyState < 2) return;
+    const colors = sampleEdgeColors(element);
+    if (!colors) { tainted.current = true; return; }
+    paintBackdrop(colors);
+  };
+
+  const enterFullscreen = () => {
+    const element = video.current;
+    if (!element) return;
+    const anyElement = element as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
+    if (element.requestFullscreen) void element.requestFullscreen().catch(() => anyElement.webkitEnterFullscreen?.());
+    else anyElement.webkitEnterFullscreen?.();
+  };
 
   const toggle = () => {
     const element = video.current;
@@ -212,6 +268,7 @@ function ReelItem({
     // RTL: the bar fills from the right edge.
     const fraction = Math.min(1, Math.max(0, (rect.right - event.clientX) / rect.width));
     element.currentTime = fraction * element.duration;
+    setSeekLabel(`${clock(element.currentTime)} / ${clock(element.duration)}`);
     if (fill.current) fill.current.style.width = `${fraction * 100}%`;
   };
 
@@ -243,16 +300,31 @@ function ReelItem({
     <section
       data-reel={index}
       onPointerDown={onPointerDown}
+      onClick={(event) => {
+        // Any tap outside the open caption folds it back.
+        if (captionExpanded && !(event.target as HTMLElement).closest("[data-caption]")) setCaptionOpen(false);
+      }}
       onDoubleClick={(event) => {
         if ((event.target as HTMLElement).closest("button, a, input, form, [data-reel-ui]") || Date.now() - held.current < 400) return;
-        toggle();
+        const element = video.current;
+        const rect = (card.current ?? event.currentTarget).getBoundingClientRect();
+        const fraction = (event.clientX - rect.left) / rect.width;
+        // Double tap: the left side rewinds 10s, the right side skips ahead 10s, the middle pauses/plays.
+        if (element && fraction < 0.34) {
+          element.currentTime = Math.max(0, element.currentTime - 10);
+          setFlash({ text: "back", key: Date.now() });
+        } else if (element && fraction > 0.66) {
+          element.currentTime = Math.min(element.duration || Infinity, element.currentTime + 10);
+          setFlash({ text: "forward", key: Date.now() });
+        } else toggle();
       }}
       className="relative h-full snap-start snap-always select-none overflow-hidden [touch-action:pan-y] lg:overflow-visible"
     >
       {/* the video card: full screen on phones, a rounded 9:16 card on desktop */}
       <div
+        ref={card}
         className={`${styles.videoCard} absolute inset-y-0 left-0 right-0 overflow-hidden lg:left-auto lg:w-[var(--rw)] lg:rounded-[22px]`}
-        style={{ background: `linear-gradient(160deg, hsl(${hueOf(entry.author)} 55% 22%), #000 75%)` }}
+        style={{ "--g1": `hsl(${hueOf(entry.author)} 55% 22%)`, "--g2": "#000", background: "linear-gradient(170deg, var(--g1), var(--g2) 85%)" } as React.CSSProperties}
       >
         {entry.item.poster && !active ? (
           // eslint-disable-next-line @next/next/no-img-element -- remote poster of unknown size
@@ -264,15 +336,23 @@ function ReelItem({
             src={entry.item.src}
             poster={entry.item.poster}
             muted={muted}
-            loop
             playsInline
             preload={active ? "auto" : "metadata"}
             onLoadedMetadata={(event) => {
               const { videoWidth, videoHeight } = event.currentTarget;
-              if (videoWidth && videoHeight) { const landscape = videoWidth > videoHeight * 1.1; setWide(landscape); onWide(landscape); }
+              if (videoWidth && videoHeight) { setRatio(videoWidth / videoHeight); const landscape = videoWidth > videoHeight * 1.1; setWide(landscape); onWide(landscape); }
+            }}
+            onLoadedData={(event) => sampleFrame(event.currentTarget)}
+            onEnded={(event) => {
+              if (!active || seek.current) return;
+              if (onEnded(index)) return;
+              const element = event.currentTarget;
+              element.currentTime = 0;
+              void element.play().catch(() => {});
             }}
             onTimeUpdate={(event) => {
               const element = event.currentTarget;
+              if (wide && active && event.timeStamp - lastSample.current > 2000) { lastSample.current = event.timeStamp; sampleFrame(element); }
               if (fill.current && element.duration && !seeking) fill.current.style.width = `${(element.currentTime / element.duration) * 100}%`;
             }}
             onPause={(event) => setPaused(active && !event.currentTarget.ended)}
@@ -280,6 +360,18 @@ function ReelItem({
             onError={() => setFailed(true)}
             className={wide ? "absolute inset-x-0 top-1/2 h-auto w-full -translate-y-1/2 object-contain" : "absolute inset-0 h-full w-full object-cover"}
           />
+        ) : null}
+        {near && !failed ? (
+          <button
+            type="button"
+            data-reel-ui
+            onClick={(event) => { event.stopPropagation(); enterFullscreen(); }}
+            aria-label="تمام‌صفحه"
+            style={{ "--vb": `calc(50% + 50vw / ${ratio} - 48px)` } as React.CSSProperties}
+            className={`reel-glass absolute right-2.5 z-[5] grid h-9 w-9 place-items-center rounded-full text-white ${wide ? "top-[var(--vb)] lg:top-auto lg:bottom-4" : "top-[64px]"}`}
+          >
+            <Maximize className="h-[18px] w-[18px]" />
+          </button>
         ) : null}
         {failed ? (
           <div className="absolute inset-0 grid place-items-center text-center text-sm text-white/70">
@@ -294,8 +386,13 @@ function ReelItem({
           <Play className="h-[74px] w-[74px] rounded-full bg-black/45 p-5 text-white" fill="currentColor" />
         </div>
         {flash ? (
-          <div key={flash.key} aria-hidden="true" className="reel-flash pointer-events-none absolute left-1/2 top-1/2 z-[6] grid h-[74px] w-[74px] place-items-center rounded-full bg-black/55 text-white">
-            {flash.text === "play" ? <Play className="h-6 w-6" fill="currentColor" /> : <Pause className="h-6 w-6" fill="currentColor" />}
+          <div key={flash.key} aria-hidden="true" style={flash.text === "back" ? { left: "20%" } : flash.text === "forward" ? { left: "80%" } : undefined} className="reel-flash pointer-events-none absolute left-1/2 top-1/2 z-[6] grid h-[74px] w-[74px] place-items-center rounded-full bg-black/55 text-white">
+            {flash.text === "play" ? <Play className="h-6 w-6" fill="currentColor" /> : flash.text === "pause" ? <Pause className="h-6 w-6" fill="currentColor" /> : (
+              <span dir="ltr" className="flex flex-col items-center text-[11px] font-extrabold leading-none">
+                {flash.text === "back" ? <Rewind className="mb-1 h-5 w-5" fill="currentColor" /> : <FastForward className="mb-1 h-5 w-5" fill="currentColor" />}
+                {fa.format(10)}
+              </span>
+            )}
           </div>
         ) : null}
         {badge ? <div className="pointer-events-none absolute left-1/2 top-[84px] z-[6] -translate-x-1/2 rounded-full bg-black/60 px-3.5 py-1.5 text-[13px] font-extrabold text-white backdrop-blur">{badge}</div> : null}
@@ -334,22 +431,36 @@ function ReelItem({
             if (event.key === "ArrowRight") element.currentTime = Math.max(0, element.currentTime - 5);
             if (event.key === "ArrowLeft") element.currentTime = Math.min(element.duration || 0, element.currentTime + 5);
           }}
-          className={`${styles.progress} absolute inset-x-0 bottom-0 z-[4] cursor-pointer bg-white/20 transition-[height] before:absolute before:inset-x-0 before:-top-3.5 before:h-3.5 before:content-[''] hover:h-[7px] [touch-action:none] ${seeking ? "h-[7px]" : "h-[3px]"}`}
+          className={`${styles.progress} absolute inset-x-0 bottom-0 z-[4] cursor-pointer bg-white/20 transition-[height] before:absolute before:inset-x-0 before:-top-6 before:h-6 before:content-[''] hover:h-[7px] [touch-action:none] ${seeking ? "h-[7px]" : "h-[3px]"}`}
         >
-          <i ref={fill} className="float-right block h-full w-0 bg-white" />
+          <i ref={fill} className="relative float-right block h-full w-0 bg-white">
+            <b aria-hidden="true" className={`absolute left-0 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-md transition-transform ${seeking ? "scale-100" : "scale-0"}`} />
+          </i>
+          {seeking && seekLabel ? <span aria-hidden="true" className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs font-extrabold tabular-nums text-white backdrop-blur">{seekLabel}</span> : null}
         </div>
 
         {/* author + caption and the quick comment: on phones only (desktop has the side panel) */}
+        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[2] bg-black/60 transition-opacity duration-200 lg:hidden ${captionExpanded ? "opacity-100" : "opacity-0"}`} />
         <div className={`${styles.caption} absolute bottom-[72px] left-[76px] right-3.5 z-[3] text-white lg:hidden`}>
           <AuthorRow entry={entry} state={state} />
-          {entry.body ? <p className="mt-2.5 line-clamp-2 text-[13.5px] leading-[1.9]">{entry.body}</p> : null}
+          {entry.body ? (
+            <p
+              ref={captionRef}
+              data-reel-ui
+              data-caption
+              onClick={captionLong || captionExpanded ? () => setCaptionOpen((open) => !open) : undefined}
+              className={`mt-2.5 whitespace-pre-wrap break-words text-[13.5px] leading-[1.9] ${captionExpanded ? "max-h-[38dvh] overflow-y-auto overscroll-contain pe-1 [touch-action:pan-y] [scrollbar-width:none]" : "line-clamp-2"} ${captionLong || captionExpanded ? "cursor-pointer" : ""}`}
+            >
+              {entry.body}
+            </p>
+          ) : null}
         </div>
         <form
           data-reel-ui
           onSubmit={(event) => { event.preventDefault(); void state.reply(); }}
           className={`absolute inset-x-3 bottom-[calc(14px+env(safe-area-inset-bottom))] z-[5] flex items-center gap-2 rounded-full border bg-black/50 py-[5px] pe-1.5 ps-2 backdrop-blur-xl transition-[border-color,box-shadow] focus-within:border-white/50 lg:hidden ${state.notice === "پاسخ ارسال شد." ? "border-green-500 shadow-[0_0_0_3px_rgba(34,197,94,.25)]" : "border-white/20"}`}
         >
-          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-brand text-xs font-extrabold text-white">ش</span>
+          <ViewerAvatar size={30} />
           <input
             value={state.draft}
             onChange={(event) => state.setDraft(event.target.value)}
@@ -528,7 +639,7 @@ export function ReelsView({ initial, onClose }: {
           <button type="button" onClick={back} aria-label="بازگشت" className="reel-glass grid h-10 w-10 place-items-center rounded-full text-white">
             <ChevronRight className="h-[22px] w-[22px]" />
           </button>
-          <b className="text-base font-extrabold">ریلز</b>
+          <b className="text-base font-extrabold">ویدیوها</b>
           <button type="button" onClick={() => setVideoMuted(!muted)} aria-label={muted ? "پخش با صدا" : "بی‌صدا"} className="reel-glass grid h-10 w-10 place-items-center rounded-full text-white">
             {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </button>
@@ -552,6 +663,12 @@ export function ReelsView({ initial, onClose }: {
                 onOpenComments={(next) => setComments(comments === next ? null : next)}
                 onCloseComments={() => setComments(null)}
                 slot={slot}
+                onEnded={(position) => {
+                  const next = feed.current?.querySelector<HTMLElement>(`[data-reel="${position + 1}"]`);
+                  if (!next) return false;
+                  next.scrollIntoView({ behavior: "smooth", block: "start" });
+                  return true;
+                }}
                 onWide={(wide) => setWideEntries((current) => current[entry.key] === wide ? current : { ...current, [entry.key]: wide })}
               />
             ))

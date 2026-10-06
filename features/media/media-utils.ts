@@ -176,3 +176,37 @@ export function fileItems(items: MediaItem[]): MediaItem[] {
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
+
+/**
+ * Two dark, saturated colours (top, bottom) taken from the picture's own
+ * edges, for the backdrop behind a letterboxed video. Returns null when the
+ * source is cross-origin and taints the canvas.
+ */
+export function sampleEdgeColors(source: CanvasImageSource): [string, string] | null {
+  try {
+    const size = 12;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return null;
+    context.drawImage(source, 0, 0, size, size);
+    const { data } = context.getImageData(0, 0, size, size);
+    const band = (from: number, to: number) => {
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let y = from; y < to; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+          const i = (y * size + x) * 4;
+          r += data[i]; g += data[i + 1]; b += data[i + 2]; n += 1;
+        }
+      }
+      // Deepen and slightly lift saturation so it reads as a glow, not a smear.
+      const mean = (r + g + b) / (3 * n);
+      const tone = (value: number) => Math.round(Math.max(0, Math.min(255, (mean + (value / n - mean) * 1.35) * 0.5)));
+      return `rgb(${tone(r)} ${tone(g)} ${tone(b)})`;
+    };
+    return [band(0, 4), band(size - 4, size)];
+  } catch {
+    return null;
+  }
+}

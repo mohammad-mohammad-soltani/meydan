@@ -1,7 +1,7 @@
 import { meydanApi, meydanApiPage } from "@/lib/meydan-api";
 import { actorKindOf, publicProfileHref } from "@/lib/profile-route";
 
-type ApiActor = { id?: string; type?: string; display_name?: string; handle?: string; avatar_url?: string | null; verified?: boolean };
+type ApiActor = { id?: string; type?: string; display_name?: string; handle?: string; avatar_url?: string | null; verified?: boolean; verified_speaker?: boolean; verified_official?: boolean };
 type ApiComment = {
   id: number;
   author?: ApiActor | null;
@@ -20,6 +20,9 @@ export type ReelComment = {
   profileHref: string;
   avatarUrl?: string;
   verified: boolean;
+  verifiedSpeaker: boolean;
+  verifiedOfficial: boolean;
+  authorType?: string;
   body: string;
   createdAt?: string;
   likes: number;
@@ -38,6 +41,9 @@ function toComment(row: ApiComment, mine = false): ReelComment {
     profileHref: actorId ? publicProfileHref(actorKindOf(row.author?.type), actorId, row.author?.handle) : "/",
     avatarUrl: row.author?.avatar_url || undefined,
     verified: Boolean(row.author?.verified),
+    verifiedSpeaker: Boolean(row.author?.verified_speaker),
+    verifiedOfficial: Boolean(row.author?.verified_official),
+    authorType: actorKindOf(row.author?.type),
     body: row.body,
     createdAt: row.created_at ?? undefined,
     likes: row.likes ?? 0,

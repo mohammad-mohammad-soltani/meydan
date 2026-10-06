@@ -1,8 +1,10 @@
 "use client";
 
 import { Bookmark, BookmarkCheck, Check, FileText, Link2, LoaderCircle, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { meydanApi } from "@/lib/meydan-api";
@@ -12,7 +14,7 @@ import { announceBookmark } from "@/features/feed/bookmark-sync";
 import { createShareCounter } from "../share-counter";
 import styles from "../share.module.css";
 
-type Messenger = { id: string; label: string; color: string; href?: (url: string, text: string) => string; web?: string };
+type Messenger = { id: string; label: string; logo: string; href?: (url: string, text: string) => string; web?: string };
 
 /**
  * Telegram, WhatsApp and X take a prefilled link. Eitaa, Bale and Rubika have
@@ -20,12 +22,12 @@ type Messenger = { id: string; label: string; color: string; href?: (url: string
  * lists them on phones) or copy the link and open their web app.
  */
 const MESSENGERS: Messenger[] = [
-  { id: "eitaa", label: "ایتا", color: "#ea580c", web: "https://web.eitaa.com/" },
-  { id: "bale", label: "بله", color: "#059669", web: "https://web.bale.ai/" },
-  { id: "rubika", label: "روبیکا", color: "#9333ea", web: "https://web.rubika.ir/" },
-  { id: "telegram", label: "تلگرام", color: "#0284c7", href: (url, text) => `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}` },
-  { id: "whatsapp", label: "واتساپ", color: "#16a34a", href: (url, text) => `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}` },
-  { id: "x", label: "X", color: "#000000", href: (url, text) => `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}` },
+  { id: "eitaa", label: "ایتا", logo: "/images/messengers/eitaa.svg", web: "https://web.eitaa.com/" },
+  { id: "bale", label: "بله", logo: "/images/messengers/bale.png", web: "https://web.bale.ai/" },
+  { id: "rubika", label: "روبیکا", logo: "/images/messengers/rubika.svg", web: "https://web.rubika.ir/" },
+  { id: "telegram", label: "تلگرام", logo: "/images/messengers/telegram.svg", href: (url, text) => `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}` },
+  { id: "whatsapp", label: "واتساپ", logo: "/images/messengers/whatsapp.svg", href: (url, text) => `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}` },
+  { id: "x", label: "X", logo: "/images/messengers/x.svg", href: (url, text) => `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}` },
 ];
 
 type ApiConversation = { id: number | string; participant?: { name?: string; avatar_url?: string | null } | null };
@@ -33,7 +35,41 @@ type ApiConversation = { id: number | string; participant?: { name?: string; ava
 /** The reference design's share sheet. Opening it costs at most two small reads (recent chats, saved state), both for signed-in viewers only. */
 export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => void }) {
   const { isAuthenticated, requireAuth } = useAuthGate();
+  const router = useRouter();
   const [studioOpen, setStudioOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const requestClose = useCallback(() => setClosing(true), []);
+
+  // Swipe-to-dismiss: drag the handle/header down past a third of the sheet
+  // (or let the CSS keyframe take over from wherever the drag left off).
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ y: number; height: number } | null>(null);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const onDragPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
+    if (closing) return;
+    dragStartRef.current = { y: event.clientY, height: dialogRef.current?.offsetHeight ?? 400 };
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const onDragPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
+    if (!dragStartRef.current) return;
+    setDragY(Math.max(0, event.clientY - dragStartRef.current.y));
+  };
+  const onDragPointerUp = () => {
+    const start = dragStartRef.current;
+    dragStartRef.current = null;
+    if (!start) return;
+    setIsDragging(false);
+    const shouldClose = dragY > Math.min(160, start.height * 0.3);
+    if (shouldClose) {
+      dialogRef.current?.style.setProperty("--drag-y", `${dragY}px`);
+      requestClose();
+    } else {
+      setDragY(0);
+    }
+  };
   const [contacts, setContacts] = useState<Array<{ id: string; name: string; avatarUrl?: string }> | null>(isAuthenticated ? null : []);
   const [contactsError, setContactsError] = useState(false);
   const [sent, setSent] = useState<Record<string, "sending" | "sent" | "failed">>({});
@@ -86,14 +122,14 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !studioOpen) onClose();
+      if (event.key === "Escape" && !studioOpen) requestClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
     };
-  }, [onClose, studioOpen]);
+  }, [requestClose, studioOpen]);
 
   const flash = (message: string) => {
     setNotice(message);
@@ -148,6 +184,8 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
       });
       setSent((current) => ({ ...current, [contactId]: "sent" }));
       countShare();
+      router.push(`/chat/${contactId}` as Route);
+      requestClose();
     } catch {
       setSent((current) => ({ ...current, [contactId]: "failed" }));
     }
@@ -179,17 +217,35 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
 
   return createPortal(
     <div className={styles.shareOverlay} dir="rtl">
-      <button type="button" tabIndex={-1} aria-label="بستن" onClick={onClose} className={styles.shareBackdrop} />
-      <div role="dialog" aria-modal="true" aria-label="اشتراک‌گذاری روایت" className={styles.shareDialog}>
-        <span aria-hidden="true" className={styles.handle} />
-        <div className={styles.shareHeader}>
-          <div className="min-w-0">
-            <p className={styles.shareTitle}>{post.title || post.body.slice(0, 60) || "روایت"}</p>
-            <p className={styles.shareSubtitle}>{post.authorName}</p>
+      <button type="button" tabIndex={-1} aria-label="بستن" onClick={requestClose} className={`${styles.shareBackdrop} ${closing ? styles.closing : ""}`} />
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="اشتراک‌گذاری روایت"
+        className={`${styles.shareDialog} ${closing ? styles.closing : ""}`}
+        style={closing ? undefined : { transform: dragY ? `translateY(${dragY}px)` : undefined, transition: isDragging ? "none" : "transform .25s cubic-bezier(.32,.72,0,1)" }}
+        onAnimationEnd={(event) => {
+          if (closing && event.target === event.currentTarget) onClose();
+        }}
+      >
+        <div
+          className="touch-none"
+          onPointerDown={onDragPointerDown}
+          onPointerMove={onDragPointerMove}
+          onPointerUp={onDragPointerUp}
+          onPointerCancel={onDragPointerUp}
+        >
+          <span aria-hidden="true" className={styles.handle} />
+          <div className={styles.shareHeader}>
+            <div className="min-w-0">
+              <p className={styles.shareTitle}>{post.title || post.body.slice(0, 60) || "روایت"}</p>
+              <p className={styles.shareSubtitle}>{post.authorName}</p>
+            </div>
+            <button type="button" onClick={requestClose} aria-label="بستن" className={styles.shareClose}>
+              <X aria-hidden="true" className="h-4 w-4" />
+            </button>
           </div>
-          <button type="button" onClick={onClose} aria-label="بستن" className={styles.shareClose}>
-            <X aria-hidden="true" className="h-4 w-4" />
-          </button>
         </div>
 
         {isAuthenticated ? (
@@ -229,9 +285,8 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
           <div className={styles.messengers}>
             {MESSENGERS.map((messenger) => (
               <button key={messenger.id} type="button" onClick={() => void openMessenger(messenger)} className="flex flex-col items-center gap-1.5">
-                <span aria-hidden="true" className={styles.messengerIcon} style={{ backgroundColor: messenger.color }}>
-                  {messenger.label}
-                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element -- tiny static brand logos */}
+                <img src={messenger.logo} alt="" aria-hidden="true" width={44} height={44} draggable={false} className={styles.messengerIcon} />
                 <span className={styles.messengerLabel}>{messenger.label}</span>
               </button>
             ))}

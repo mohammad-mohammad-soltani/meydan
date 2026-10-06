@@ -2,11 +2,11 @@
 
 import styles from "../reference.module.css";
 
-import { Ellipsis, Link2, Pin, PinOff, Send, Trash2 } from "lucide-react";
+import { Ellipsis, FileImage, Link2, Pin, PinOff, Send, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-/** The «…» menu in a post header: copy link, and delete when the viewer may. */
-export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin, onShare }: { postId: string; onShare?: () => void; onDelete?: () => void; /** Owner's own profile: pin to / unpin from the profile. */ pinned?: boolean; onTogglePin?: () => void }) {
+/** The «…» menu in a post header: photo-quote, share, copy link, and delete when the viewer may. */
+export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin, onShare, onOpenStory }: { postId: string; onShare?: () => void; /** Opens the photo-quote («عکس‌نوشت») studio for this post. */ onOpenStory?: () => void; onDelete?: () => void; /** Owner's own profile: pin to / unpin from the profile. */ pinned?: boolean; onTogglePin?: () => void }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -34,7 +34,7 @@ export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin, on
   };
 
   return (
-    <div ref={ref} className="pointer-events-auto relative z-20">
+    <div ref={ref} className="pointer-events-auto relative">
       <button
         type="button"
         aria-label="گزینه‌های روایت"
@@ -49,8 +49,9 @@ export function PostMoreMenu({ postId, onDelete, pinned = false, onTogglePin, on
         <Ellipsis aria-hidden="true" className="h-4 w-4" />
       </button>
       {open ? (
-        <div role="menu" className={`${styles.moreMenu} absolute z-[999] left-0 top-9 z-30 min-w-40 overflow-hidden rounded-2xl border border-border bg-popover p-1 shadow-dialog`}>
-          {onShare ? <button type="button" role="menuitem" onClick={(event) => { stop(event); setOpen(false); onShare(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-right text-xs font-bold hover:bg-hover"><Send aria-hidden="true" className="h-4 w-4" />اشتراک روایت</button> : null}
+        <div role="menu" className={`${styles.moreMenu} absolute left-0 top-9 z-40 min-w-40 overflow-hidden rounded-2xl border border-border bg-popover p-1 shadow-dialog`}>
+          {onOpenStory ? <button type="button" role="menuitem" onClick={(event) => { stop(event); setOpen(false); onOpenStory(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-right text-xs font-bold hover:bg-hover"><FileImage aria-hidden="true" className="h-4 w-4" />تولید عکس‌نوشت</button> : null}
+          {onShare ? <button type="button" role="menuitem" onClick={(event) => { stop(event); setOpen(false); onShare(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-right text-xs font-bold hover:bg-hover"><Send aria-hidden="true" className="h-4 w-4" />اشتراک‌گذاری</button> : null}
           <button
             type="button"
             role="menuitem"

@@ -277,6 +277,9 @@ export function MediaStage({
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isGesturing, setIsGesturing] = useState(false);
+  // Only a pinch or a zoomed photo reserves the touch from the carousel pager;
+  // a plain one-finger drag at 1× must be free to swipe to the next photo.
+  const [pinching, setPinching] = useState(false);
   const [imageState, setImageState] = useState<"loading" | "ready" | "error">("loading");
   const [imageRatio, setImageRatio] = useState<number | null>(
     item.kind === "image" && item.width && item.height
@@ -306,7 +309,7 @@ export function MediaStage({
   const zoomRef = useRef(MIN_ZOOM);
   const offsetRef = useRef({ x: 0, y: 0 });
   const pointers = useRef(new Map<number, { x: number; y: number }>());
-  const pinch = useRef<{ distance: number; zoom: number } | null>(null);
+  const pinch = useRef<{ distance: number; zoom: number; mid: { x: number; y: number }; offset: { x: number; y: number } } | null>(null);
   const pan = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null);
   const swipe = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const moved = useRef(false);
@@ -331,9 +334,31 @@ export function MediaStage({
     setOffset(clampedOffset);
   }, []);
 
-  const zoomBy = useCallback(
-    (factor: number) => applyView(zoomRef.current * factor, offsetRef.current),
+  /**
+   * Zoom so the content under `focal` (client coordinates) stays under it —
+   * the cursor for wheel zoom, the midpoint of the fingers for a pinch. With no
+   * focal point it zooms about the middle of the stage.
+   */
+  const zoomAt = useCallback(
+    (nextZoom: number, focal?: { x: number; y: number }, base = offsetRef.current, baseZoom = zoomRef.current) => {
+      const stage = stageRef.current;
+      const target = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
+      const ratio = target / baseZoom;
+      if (!stage || !focal) {
+        applyView(target, { x: base.x * ratio, y: base.y * ratio });
+        return;
+      }
+      const rect = stage.getBoundingClientRect();
+      const fx = focal.x - (rect.left + rect.width / 2);
+      const fy = focal.y - (rect.top + rect.height / 2);
+      applyView(target, { x: fx - (fx - base.x) * ratio, y: fy - (fy - base.y) * ratio });
+    },
     [applyView],
+  );
+
+  const zoomBy = useCallback(
+    (factor: number) => zoomAt(zoomRef.current * factor),
+    [zoomAt],
   );
 
   useEffect(() => {
@@ -342,12 +367,12 @@ export function MediaStage({
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
-      applyView(zoomRef.current * (event.deltaY < 0 ? 1.15 : 0.87), offsetRef.current);
+      zoomAt(zoomRef.current * (event.deltaY < 0 ? 1.15 : 0.87), { x: event.clientX, y: event.clientY });
     };
 
     stage.addEventListener("wheel", onWheel, { passive: false });
     return () => stage.removeEventListener("wheel", onWheel);
-  }, [applyView, item.kind]);
+  }, [zoomAt, item.kind]);
 
   // Zoom shortcuts, matching every desktop viewer.
   useEffect(() => {
@@ -373,6 +398,27 @@ export function MediaStage({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [applyView, item.kind, zoomBy]);
 
+  // The carousel pager may take over a pointer (capturing it away from the
+  // stage), so the stage never sees its pointerup. Forget it on the window.
+  useEffect(() => {
+    const forget = (event: PointerEvent) => {
+      if (!pointers.current.delete(event.pointerId)) return;
+      if (pointers.current.size < 2) { pinch.current = null; setPinching(false); }
+      if (pointers.current.size === 0) { pan.current = null; swipe.current = null; setIsGesturing(false); }
+    };
+    window.addEventListener("pointerup", forget);
+    window.addEventListener("pointercancel", forget);
+    return () => {
+      window.removeEventListener("pointerup", forget);
+      window.removeEventListener("pointercancel", forget);
+    };
+  }, []);
+
+  const pointerMidpoint = () => {
+    const [first, second] = [...pointers.current.values()];
+    return first && second ? { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 } : { x: 0, y: 0 };
+  };
+
   const pointerDistance = () => {
     const [first, second] = [...pointers.current.values()];
     if (!first || !second) return 0;
@@ -383,12 +429,14 @@ export function MediaStage({
     if ((event.target as HTMLElement).closest("button, input, [role=slider]")) return;
 
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (item.kind === "image") event.currentTarget.setPointerCapture(event.pointerId);
+    // Capturing a lone finger at 1× would starve the carousel pager above us.
+    if (item.kind === "image" && (zoomRef.current > MIN_ZOOM || pointers.current.size > 1)) event.currentTarget.setPointerCapture(event.pointerId);
     setIsGesturing(true);
     moved.current = false;
 
     if (pointers.current.size === 2) {
-      pinch.current = { distance: pointerDistance(), zoom: zoomRef.current };
+      setPinching(true);
+      pinch.current = { distance: pointerDistance(), zoom: zoomRef.current, mid: pointerMidpoint(), offset: offsetRef.current };
       pan.current = null;
       swipe.current = null;
       return;
@@ -415,7 +463,16 @@ export function MediaStage({
     if (pinch.current && pointers.current.size >= 2) {
       const distance = pointerDistance();
       if (pinch.current.distance > 0 && distance > 0) {
-        applyView(pinch.current.zoom * (distance / pinch.current.distance), offsetRef.current);
+        // Zoom about the fingers' starting midpoint, then follow the midpoint
+        // as the fingers travel so two-finger panning works too.
+        const start = pinch.current;
+        const mid = pointerMidpoint();
+        zoomAt(
+          start.zoom * (distance / start.distance),
+          mid,
+          { x: start.offset.x + (mid.x - start.mid.x), y: start.offset.y + (mid.y - start.mid.y) },
+          start.zoom,
+        );
       }
       return;
     }
@@ -444,7 +501,7 @@ export function MediaStage({
   const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
     pointers.current.delete(event.pointerId);
 
-    if (pointers.current.size < 2) pinch.current = null;
+    if (pointers.current.size < 2) { pinch.current = null; setPinching(false); }
     if (pointers.current.size === 0) {
       pan.current = null;
       setIsGesturing(false);
@@ -491,7 +548,7 @@ export function MediaStage({
       <div
         ref={stageRef}
         data-image-stage
-        data-image-gesturing={zoom > MIN_ZOOM || isGesturing}
+        data-image-gesturing={zoom > MIN_ZOOM || pinching}
         className="relative flex h-full w-full touch-none items-center justify-center overflow-hidden"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

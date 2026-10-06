@@ -14,6 +14,8 @@ import { FollowPill } from "./FollowPill";
 import { PostMoreMenu } from "./PostMoreMenu";
 import { PostShareButton } from "./PostShareButton";
 import { QuotedPostCard } from "./QuotedPostCard";
+import { PostLinkPreview } from "./PostLinkPreview";
+import { extractPostLink } from "../post-link";
 import { repostTotal } from "../post-counts";
 import { ReadMoreText } from "./ReadMoreText";
 import { MarkdownText } from "@/components/shared/MarkdownText";
@@ -22,6 +24,8 @@ import { mediaItemsFromAttachments } from "@/features/media/media-utils";
 import type { FeedPost } from "../types";
 import { splitPostTitle } from "../post-title";
 import { AccountBadges } from "@/components/shared/AccountBadges";
+import { useShare } from "@/features/share/ShareProvider";
+import { toSharePost } from "@/features/share/to-share-post";
 
 type PostCardProps = {
   post: FeedPost;
@@ -115,6 +119,7 @@ export function PostCard({
 }: PostCardProps) {
   void onJoin;
 
+  const { openStory } = useShare();
   const isDetail = variant === "detail";
 
   const mediaItems = mediaItemsFromAttachments(post.attachments);
@@ -124,6 +129,8 @@ export function PostCard({
     post.author.id,
     post.author.handle,
   ) as Route;
+
+  const detailLink = post.quote ? null : extractPostLink(post.body);
 
   /*
    * Detail
@@ -196,7 +203,7 @@ export function PostCard({
           {/* The post page is where the reader came to read it all: never fold. */}
           <div className="relative z-10">
             <MarkdownText
-              body={post.body}
+              body={post.quote ? post.body : (detailLink?.cleanedText ?? post.body)}
               className="whitespace-pre-wrap text-[16px] leading-8 text-foreground"
             />
           </div>
@@ -214,7 +221,11 @@ export function PostCard({
           />
         ) : null}
 
-        {post.quote ? <QuotedPostCard quote={post.quote} className="mt-3" /> : null}
+        {post.quote ? (
+          <QuotedPostCard quote={post.quote} className="mt-3" />
+        ) : detailLink ? (
+          <PostLinkPreview postId={detailLink.postId} className="relative z-10 mt-3" />
+        ) : null}
 
         {/* Related media */}
         {post.mediaReflection ? (
@@ -302,6 +313,7 @@ export function PostCard({
    * and the rounded action bar.
    */
   const { title: bodyTitle, rest: bodyRest } = splitPostTitle(post.body);
+  const timelineLink = post.quote ? null : extractPostLink(bodyRest);
   return (
     <article className={`${styles.card} relative border-b border-transparent px-4 py-4 transition-colors duration-150`}>
       <Link
@@ -359,7 +371,7 @@ export function PostCard({
           <div className="flex shrink-0 items-center gap-1.5">
             {onFollow ? <FollowPill following={following} onToggle={onFollow} /> : null}
             {!hideActions ? (
-              <PostMoreMenu postId={post.id} onShare={onShare} onDelete={post.viewerState?.canDelete ? onDelete : undefined} pinned={pinned} onTogglePin={onTogglePin} />
+              <PostMoreMenu postId={post.id} onShare={onShare} onOpenStory={() => openStory(toSharePost(post))} onDelete={post.viewerState?.canDelete ? onDelete : undefined} pinned={pinned} onTogglePin={onTogglePin} />
             ) : null}
           </div>
         </div>
@@ -367,7 +379,7 @@ export function PostCard({
         <div dir="rtl" className="mt-2.5 text-[15.5px] leading-relaxed">
           {bodyTitle ? <p className={`${styles.title} mb-1 font-bold text-foreground`}>{bodyTitle}</p> : null}
           <ReadMoreText
-            body={bodyRest}
+            body={timelineLink?.cleanedText ?? bodyRest}
             lines={3}
             className="text-foreground-secondary"
             contentClassName="relative z-10"
@@ -387,7 +399,11 @@ export function PostCard({
           />
         ) : null}
 
-        {post.quote ? <QuotedPostCard quote={post.quote} className="mt-3" /> : null}
+        {post.quote ? (
+          <QuotedPostCard quote={post.quote} className="mt-3" />
+        ) : timelineLink ? (
+          <PostLinkPreview postId={timelineLink.postId} className="pointer-events-auto relative z-10 mt-3" />
+        ) : null}
 
         {post.mediaReflection ? (
           post.mediaReflection.url ? (
