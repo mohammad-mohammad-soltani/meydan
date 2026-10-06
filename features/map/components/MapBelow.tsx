@@ -47,12 +47,14 @@ export function MapBelow({
     .filter((item) => !needle || item.name.includes(needle));
 
   // A province shows all its squares; picking a city narrows to that city.
-  const squares = map.selectedProvince
+  // (a province clicked on the map counts even when none of its squares carry a province id)
+  const provinceName = map.selectedProvince?.name ?? map.selectedProvinceName;
+  const squares = provinceName
     ? map.selectedCity
       ? map.citySquares
-      : map.resolvedSquares.filter((square) => square.displayProvinceName === map.selectedProvince?.name)
+      : map.resolvedSquares.filter((square) => square.displayProvinceName === provinceName)
     : map.resolvedSquares;
-  const title = map.selectedCity?.name ?? map.selectedProvince?.name ?? "میادین سراسر کشور";
+  const title = map.selectedCity?.name ?? provinceName ?? "میادین سراسر کشور";
   const total = squares.length;
 
   const rowClass = (on: boolean) =>

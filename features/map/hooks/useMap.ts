@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PROVINCE_CENTERS } from "@/features/map/data/province-centers";
 import {
   getAllSquares,
@@ -66,7 +66,7 @@ export function useMap() {
   const [allSquares, setAllSquares] = useState<SquareMarker[]>([]);
   const [boundaries, setBoundaries] = useState<ProvinceBoundaries | null>(null);
   const [resolvedSquares, setResolvedSquares] = useState<ResolvedSquare[]>([]);
-  const polygonLock = useRef<string | null>(null);
+  const polygonLock = useRef<{ name: string; zoom: number } | null>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState(0);
   const [selectedProvinceName, setSelectedProvinceName] = useState<
     string | null
@@ -293,7 +293,7 @@ export function useMap() {
   const selectProvinceByName = useCallback(
     (name: string) => {
       const province = provinceAggregates.find((item) => normalizePlace(item.name) === normalizePlace(name));
-      polygonLock.current = normalizePlace(name);
+      polygonLock.current = { name: normalizePlace(name), zoom: 0 };
       setSelectedProvinceId(province?.provinceId ?? 0);
       setSelectedProvinceName(province?.name ?? name);
       setSelectedCityId(0);
@@ -334,7 +334,14 @@ export function useMap() {
 
   const setViewport = useCallback(
     (viewport: MapViewport) => {
-      const nextLevel = getViewportLevel(viewport.zoom);
+      let nextLevel = getViewportLevel(viewport.zoom);
+      // A clicked province stays chosen while the map settles on it; zooming well back out releases it.
+      const lock = polygonLock.current;
+      if (lock) {
+        lock.zoom = Math.max(lock.zoom, viewport.zoom);
+        if (viewport.zoom < lock.zoom - 1) polygonLock.current = null;
+        else if (nextLevel === "country") nextLevel = "province";
+      }
       setLevel(nextLevel);
       if (nextLevel === "country") {
         polygonLock.current = null;
@@ -347,7 +354,7 @@ export function useMap() {
       // Use actual points in the view, never a city's averaged center. Selection
       // is only a label/list context; it does not filter the map's detail layer.
       const nearest = nearestVisibleSquare(resolvedSquares, viewport);
-      const locked = polygonLock.current;
+      const locked = polygonLock.current?.name ?? null;
       const lockedProvince = locked ? provinceAggregates.find((item) => normalizePlace(item.name) === locked) : undefined;
       if (locked) {
         const here = nearest && normalizePlace(nearest.displayProvinceName) === locked ? nearest : null;
