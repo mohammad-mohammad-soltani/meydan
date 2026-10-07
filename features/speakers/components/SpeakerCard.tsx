@@ -22,9 +22,13 @@ export function SpeakerCard({
     : null;
 
   const letter =
-    speaker.initials.trim().slice(0, 1) ||
-    speaker.name.trim().slice(0, 1) ||
-    "؟";
+    speaker.name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((word) => word[0])
+      .join("\u200c") || "؟";
+  const hue = hueOf(speaker.name);
 
   const avatar = speaker.avatarUrl ? (
     <OptimizedAvatar
@@ -32,13 +36,13 @@ export function SpeakerCard({
       alt=""
       width={50}
       height={50}
-      className="h-[50px] w-[50px] rounded-full object-cover ring-2 ring-brand-muted"
+      className="h-[50px] w-[50px] rounded-full object-cover"
     />
   ) : (
     <span
       aria-hidden="true"
-      className="grid h-[50px] w-[50px] place-items-center rounded-full text-[14.5px] font-extrabold"
-      style={{ background: `hsl(${hueOf(speaker.name)} 88% 82%)`, color: `hsl(${hueOf(speaker.name)} 50% 27%)` }}
+      className="grid h-[50px] w-[50px] place-items-center rounded-full text-base font-extrabold text-white"
+      style={{ background: `linear-gradient(135deg, hsl(${hue} 60% 42%), hsl(${hue + 40} 55% 28%))` }}
     >
       {letter}
     </span>
@@ -47,7 +51,7 @@ export function SpeakerCard({
   return (
     <article
       dir="rtl"
-      className="reference-speaker-row ui-enter flex w-full items-center justify-between gap-3 border-t border-divider px-4 py-3"
+      className="reference-speaker-row flex w-full items-center justify-between gap-3 border-t border-[var(--m-line)] px-4 py-3"
     >
       {/* Avatar + Name + Speaker verification */}
       <div className="flex min-w-0 items-center gap-3">
@@ -72,9 +76,9 @@ export function SpeakerCard({
             ) : (
               <span className="truncate text-[14.5px] font-extrabold text-foreground">{speaker.name}</span>
             )}
-            <SpeakerBadge verified={speaker.verified} size="md" />
+            <SpeakerBadge verified={speaker.verified} size="md" tone="neutral" />
           </div>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          <p className="mt-[3px] truncate text-xs text-[var(--m-mu)]">
             {[speaker.categories[0]?.name, speaker.cities[0]].filter(Boolean).join(" · ") || speaker.expertise}
           </p>
         </div>
@@ -93,6 +97,8 @@ export function SpeakerCard({
           }}
           canInvite={canInvite}
           venue={venue}
+          tone="ghost"
+          showIcon={false}
         />
       </div>
     </article>

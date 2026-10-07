@@ -4,7 +4,7 @@ import "../reference-speakers.css";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { ChevronRight, Clock, Inbox, Mic } from "lucide-react";
+import { ChevronRight, Mic } from "lucide-react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { SpeakerCard } from "./SpeakerCard";
 import { SpeakerCardSkeleton } from "./SpeakerCardSkeleton";
@@ -50,7 +50,7 @@ export function SpeakersView({
           <Link
             href="/content"
             aria-label="بازگشت به محتوا"
-            className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full border border-border bg-surface-muted text-icon transition-colors hover:bg-hover"
+            className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-[var(--m-soft)] text-[var(--m-tx)] transition-colors hover:bg-hover"
           >
             <ChevronRight className="h-5 w-5" />
           </Link>
@@ -61,9 +61,8 @@ export function SpeakersView({
           {isAuthenticated ? (
             <Link
               href={"/speaker-invitations" as Route}
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-pill border border-border bg-surface-muted px-3.5 text-[12.5px] font-bold text-foreground transition-colors hover:bg-hover"
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-pill border border-[var(--m-line)] bg-[var(--m-soft)] px-3.5 text-[12.5px] font-bold text-[var(--m-tx)] transition-colors hover:bg-hover"
             >
-              <Inbox aria-hidden="true" className="h-3.5 w-3.5" />
               دعوت‌های من
             </Link>
           ) : null}
@@ -76,16 +75,17 @@ export function SpeakersView({
       </div>
 
       <main className="pb-[30px]">
-        <div className="mx-4 mb-3.5 mt-0.5 flex items-center gap-3 rounded-[20px] border border-border bg-surface-muted px-4 py-3.5">
+        <div className="mx-4 mb-3.5 mt-0.5 flex items-center gap-3 rounded-[20px] border border-[var(--m-line)] bg-[var(--m-soft)] px-4 py-3.5">
           <div className="min-w-0 flex-1">
-            <b className="block text-sm font-black text-foreground">سخنران هستید؟</b>
-            <small className="mt-0.5 block text-[11.5px] leading-[1.7] text-muted-foreground">برای حضور در فهرست سخنرانان درخواست ثبت‌نام بدهید.</small>
+            <b className="block text-sm font-extrabold text-[var(--m-tx)]">سخنران هستید؟</b>
+            <small className="mt-[3px] block text-[11.5px] leading-[1.7] text-[var(--m-mu)]">برای حضور در فهرست سخنرانان درخواست ثبت‌نام بدهید.</small>
           </div>
-          {/* The registration page is designed but not open yet. */}
-          <span aria-disabled="true" className="inline-flex shrink-0 cursor-default items-center gap-1.5 rounded-pill bg-surface-muted px-4 py-2 text-xs font-black text-muted-foreground">
+          <Link
+            href={"/speaker-signup" as Route}
+            className="inline-flex h-[38px] shrink-0 items-center rounded-pill bg-[#e4152e] px-4 text-[12.5px] font-extrabold text-white transition-colors hover:bg-[#b50d22]"
+          >
             ثبت‌نام سخنران
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-background/60 px-1.5 py-0.5 text-[9px]"><Clock aria-hidden="true" className="h-2.5 w-2.5" />به‌زودی</span>
-          </span>
+          </Link>
         </div>
 
         {!speakers.isLoading && speakers.total > 0 ? (

@@ -52,6 +52,12 @@ const desktopLinkClass =
 const idleDesktopLinkClass = "text-foreground hover:bg-surface-muted";
 const activeDesktopLinkClass = "text-foreground";
 
+const NAV_SECTIONS = ["/home", "/content", "/map", "/chat", "/profile"];
+/** Position of the bottom-nav section a path belongs to, or -1 for pages outside the tab bar. */
+function navSectionIndex(path: string) {
+  return NAV_SECTIONS.findIndex((section) => path === section || (section === "/chat" && path.startsWith("/chat/")));
+}
+
 function desktopLink(pathname: string, href: string) {
   const active = pathname === href || pathname.startsWith(`${href}/`) ||
     (href === "/speakers" && pathname.startsWith("/speaker-invitations"));
@@ -95,6 +101,20 @@ export function AppShell({
     if (!main) return;
     main.scrollTop = 0;
     main.scrollLeft = 0;
+  }, [pathname]);
+
+  // Switching between the bottom-nav sections slides the incoming page in from the side the tab sits on
+  // (RTL: later tabs are further left). Read by `.route-transition-stage` in globals.css.
+  const previousPath = useRef(pathname);
+  useLayoutEffect(() => {
+    const from = navSectionIndex(previousPath.current);
+    const to = navSectionIndex(pathname);
+    previousPath.current = pathname;
+    const root = document.documentElement;
+    if (from < 0 || to < 0 || from === to) return;
+    root.dataset.navDir = to > from ? "L" : "R";
+    const timer = window.setTimeout(() => delete root.dataset.navDir, 500);
+    return () => window.clearTimeout(timer);
   }, [pathname]);
 
   useEffect(() => {
@@ -224,7 +244,7 @@ export function AppShell({
   : "max-w-[600px] lg:w-[600px] lg:flex-none pb-[var(--comment-composer-height)]"
 }`}
         >
-          {!isWorksRoute && !isAdminRoute && !isComposePage && !isPublicProfilePage ? (
+          {!isWorksRoute && !isAdminRoute && !isComposePage && !isPublicProfilePage && pathname !== "/speakers" ? (
             pathname === "/home" ? null : <MobileHeader />
           ) : null}
           <main

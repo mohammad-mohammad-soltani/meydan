@@ -2,9 +2,9 @@
 
 import styles from "../reference.module.css";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, Hash, Image as ImageIcon, LoaderCircle, Plus, Save, Send, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
+import { Bookmark, Hash, Image as ImageIcon, LoaderCircle, PenLine, Plus, Save, Send, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { getMe } from "@/lib/me-client";
@@ -126,6 +126,56 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   const hasContent = body.length > 0 || media.length > 0;
   const atCapacity = media.length >= MAX_COMPOSE_MEDIA;
   const quoteReady = !quoteId || quote.status === "ready";
+  // Swiping the page pulls the روایت / کار indicator along with the finger and switches on release.
+  const typesRef = useRef<HTMLDivElement>(null);
+  const swipe = useRef<{ x: number; y: number; t: number; lastX: number; lastT: number; v: number; axis: "?" | "x" | "y"; width: number } | null>(null);
+  const indicatorShift = (index: number) => `translateX(calc(${index} * (-100% - var(--gap))))`;
+  const onSwipeStart = (event: TouchEvent) => {
+    const { clientX: x, clientY: y } = event.touches[0];
+    const box = event.currentTarget.getBoundingClientRect();
+    swipe.current = { x, y, t: Date.now(), lastX: x, lastT: Date.now(), v: 0, axis: "?", width: box.width };
+  };
+  const onSwipeMove = (event: TouchEvent) => {
+    const g = swipe.current;
+    const indicator = typesRef.current?.querySelector<HTMLElement>("[data-indicator]");
+    if (!g || g.axis === "y" || quoteId) return;
+    const { clientX, clientY } = event.touches[0];
+    const dx = clientX - g.x;
+    const dy = clientY - g.y;
+    if (g.axis === "?") {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      g.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? "x" : "y";
+      if (g.axis === "y") return;
+      if (indicator) indicator.style.transition = "none";
+    }
+    const now = Date.now();
+    if (now - g.lastT >= 8) {
+      g.v = (clientX - g.lastX) / (now - g.lastT);
+      g.lastX = clientX;
+      g.lastT = now;
+    }
+    // The finger moves the content right to reach کار (the tab on the left), so progress follows dx.
+    const index = isEcho ? 1 : 0;
+    const progress = Math.min(1, Math.max(0, index + dx / g.width));
+    if (indicator) indicator.style.transform = `translateX(calc(${progress} * (-100% - var(--gap))))`;
+  };
+  const onSwipeEnd = (event: TouchEvent) => {
+    const g = swipe.current;
+    swipe.current = null;
+    const indicator = typesRef.current?.querySelector<HTMLElement>("[data-indicator]");
+    if (!g || g.axis !== "x" || quoteId) return;
+    const dx = event.changedTouches[0].clientX - g.x;
+    if (indicator) {
+      indicator.style.transition = "";
+      indicator.style.transform = "";
+    }
+    const wantsEcho = dx > 0;
+    if (wantsEcho === isEcho) return;
+    if (Math.abs(dx) > g.width * 0.22 || Math.abs(g.v) > 0.45) setIsEcho(wantsEcho);
+  };
+
+  // Regular accounts only file a روایت or a کار; the campaign tabs belong to institutional accounts.
+  const showCampaignTabs = !["user", "speaker", "official", ""].includes(viewer.accountType);
   const canPublish =
     quoteReady && hasContent && text.length <= MAX_CHARACTERS && !isPublishing && !isUploading && !hasUploadError && isReady;
 
@@ -250,16 +300,17 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
         </div>
       </div>
 
-      <div className={`${styles.body} flex flex-col`}>
-        {!quoteId ? <div role="tablist" aria-label="نوع روایت" className={`${styles.types} grid grid-cols-4 gap-1 border`}>
-          {([[false, "روایت", null], [true, "کار", Sparkles]] as const).map(([echo, label, Icon]) => (
-            <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`inline-flex items-center justify-center gap-1.5 rounded-[14px] px-2 py-2.5 text-xs font-bold transition-all ${isEcho === echo ? "bg-emphasis text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+      <div className={`${styles.body} flex flex-col`} onTouchStart={onSwipeStart} onTouchMove={onSwipeMove} onTouchEnd={onSwipeEnd} onTouchCancel={onSwipeEnd}>
+        {!quoteId ? <div ref={typesRef} role="tablist" aria-label="نوع روایت" style={{ "--n": showCampaignTabs ? 4 : 2 } as React.CSSProperties} className={`${styles.types} ${showCampaignTabs ? "" : styles.typesTwo} grid gap-1 border`}>
+          <i data-indicator aria-hidden="true" className={styles.indicator} style={{ transform: indicatorShift(isEcho ? 1 : 0) }} />
+          {([[false, "روایت", PenLine], [true, "کار", Sparkles]] as const).map(([echo, label, Icon]) => (
+            <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`inline-flex items-center justify-center gap-1.5 rounded-[14px] px-2 py-2.5 text-xs font-bold transition-colors ${isEcho === echo ? "text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {Icon ? <Icon aria-hidden="true" className="h-4 w-4" /> : null}
               {label}
             </button>
           ))}
           {/* In the reference; publishing a پویش from here has no backend yet. */}
-          {([["پویش", Send], ["پویش رسانه‌ای", Video]] as const).map(([label, Icon]) => (
+          {(showCampaignTabs ? [["پویش", Send], ["پویش رسانه‌ای", Video]] as const : []).map(([label, Icon]) => (
             <span key={label} role="tab" aria-selected="false" aria-disabled="true" title="به‌زودی" className="inline-flex cursor-default items-center justify-center gap-1.5 whitespace-nowrap rounded-[14px] px-1 py-2.5 text-xs font-bold text-muted-foreground">
               <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
               {label}
@@ -278,7 +329,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
             </span>
           </div>
           {!quoteId && !showTitle ? (
-            <button type="button" onClick={() => { setShowTitle(true); window.requestAnimationFrame(() => titleRef.current?.focus()); }} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:bg-hover">
+            <button type="button" onClick={() => { setShowTitle(true); window.setTimeout(() => titleRef.current?.focus({ preventScroll: true }), 120); }} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:bg-hover">
               <Plus aria-hidden="true" className="h-3.5 w-3.5" />
               افزودن عنوان (اختیاری)
             </button>
@@ -286,7 +337,13 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
         </div>
 
         <div className="pt-3">
-          {!quoteId && showTitle ? <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="عنوان (اختیاری)" aria-label="تیتر روایت" className={`${styles.title} w-full text-foreground shadow-none outline-none ring-0 placeholder:text-placeholder focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`} /> : null}
+          {!quoteId ? (
+            <div className={`${styles.titleWrap} ${showTitle ? styles.titleOpen : ""}`} aria-hidden={!showTitle}>
+              <div className={styles.titleInner}>
+                <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="عنوان (اختیاری)" aria-label="تیتر روایت" tabIndex={showTitle ? 0 : -1} className={`${styles.title} w-full text-foreground shadow-none outline-none ring-0 placeholder:text-placeholder focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`} />
+              </div>
+            </div>
+          ) : null}
           <textarea
             ref={textRef}
             value={text}

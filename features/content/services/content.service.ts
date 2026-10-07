@@ -1,4 +1,4 @@
-import { compactFa, meydanApi, meydanApiPage, persianDate, plainText } from "@/lib/meydan-api";
+import { compactFa, meydanApi, meydanApiPage, persianDate, plainText, stripMarkdown } from "@/lib/meydan-api";
 import { cache } from "react";
 import type {
   ContentCategory,
@@ -15,7 +15,7 @@ import {
   type ContentProducerSource,
   type LegacyContentCreator,
 } from "./content-producer";
-import { contentCover, type ContentCoverAttachment } from "./content-cover";
+import { contentCover, firstBodyImage, type ContentCoverAttachment } from "./content-cover";
 import { contentVideo, type ContentVideoAttachment } from "./content-video";
 import { contentAudioSource } from "./content-audio";
 
@@ -121,9 +121,9 @@ export function toItem(item: ApiContent): ContentItem {
     category: categoryOf(item),
     status: item.featured ? "urgent" : "ready",
     badge: item.badge || undefined,
-    title: item.title,
-    subtitle: item.subtitle || item.excerpt || "",
-    description: item.excerpt || plainText(item.body || ""),
+    title: stripMarkdown(item.title),
+    subtitle: stripMarkdown(item.subtitle || item.excerpt || ""),
+    description: stripMarkdown(item.excerpt || plainText(item.body || "")),
     author: producer.name,
     authorAvatar: producer.avatar,
     authorHref: producer.profileHref,
@@ -131,7 +131,8 @@ export function toItem(item: ApiContent): ContentItem {
     authorSpeaker: producer.speaker,
     authorOfficial: producer.official,
     authorKind: producer.actorType,
-    coverUrl: item.media_cover_url || undefined,
+    // Without a chosen cover a note shows the first picture it contains (attachment, then body).
+    coverUrl: item.media_cover_url || contentCover(item.attachments, item.format) || firstBodyImage(item.body) || undefined,
     series: item.series || undefined,
     href: item.href || undefined,
     readingMinutes: item.reading_minutes || undefined,
@@ -198,9 +199,9 @@ function toDetail(item: ApiContent): ContentDetailItem {
     category: kind === "video" ? "video" : categoryOf(item),
     status: item.featured ? "urgent" : "ready",
     badge: item.badge || undefined,
-    title: item.title,
-    subtitle: item.subtitle || item.excerpt || "",
-    description: item.excerpt || plainText(item.body || ""),
+    title: stripMarkdown(item.title),
+    subtitle: stripMarkdown(item.subtitle || item.excerpt || ""),
+    description: stripMarkdown(item.excerpt || plainText(item.body || "")),
     author: creator.name,
     media: {
       kind,

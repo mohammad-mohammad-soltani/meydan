@@ -16,10 +16,13 @@ export function SpeakerBadge({
   verified,
   size = "sm",
   className = "",
+  tone = "brand",
 }: {
   verified?: boolean;
   size?: keyof typeof sizes;
   className?: string;
+  /** "neutral" follows the foreground color, as in the speaker directory. */
+  tone?: "brand" | "neutral";
 }) {
   if (!verified) return null;
 
@@ -29,7 +32,7 @@ export function SpeakerBadge({
     <span title={label} className="inline-flex shrink-0">
       <BadgeCheck
         aria-label={label}
-        className={`${sizes[size]} shrink-0 fill-brand text-brand-foreground ${className}`}
+        className={`${sizes[size]} shrink-0 ${tone === "neutral" ? "fill-foreground text-background" : "fill-brand text-brand-foreground"} ${className}`}
       />
     </span>
   );

@@ -26,3 +26,12 @@ export function contentCover(
 
   return attachments?.find((attachment) => attachment.type === "image")?.url;
 }
+
+/** First image written into a body, either HTML (`<img src>`) or Markdown (`![alt](url)`). */
+export function firstBodyImage(body: string | undefined): string | undefined {
+  if (!body) return undefined;
+  const html = /<img\b[^>]*?\bsrc=["']([^"']+)["']/i.exec(body);
+  const markdown = /!\[[^\]]*\]\(\s*<?([^)\s>]+)/.exec(body);
+  const first = [html, markdown].filter((match): match is RegExpExecArray => Boolean(match)).sort((a, b) => a.index - b.index)[0];
+  return first?.[1];
+}

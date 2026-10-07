@@ -49,7 +49,7 @@ function NoteRow({ item, index, bookmarked }: { item: ContentItem; index: number
   return (
     <article className="nv-row">
       <div className="nv-tx">
-        {item.categoryName ? <span className="nv-cat">{item.categoryName}</span> : null}
+        {item.categoryName ? <span className="nv-cat">{item.categoryName}</span> : <span className="nv-cat-sp" aria-hidden="true" />}
         <h3>
           <Link href={`/content/${item.id}` as Route} className="nv-lnk">{item.title}</Link>
         </h3>

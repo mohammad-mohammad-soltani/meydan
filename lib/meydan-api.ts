@@ -270,6 +270,18 @@ export function plainText(value: string): string {
     .trim();
 }
 
+/** Drops Markdown emphasis marks (`*bold*`, `**bold**`, `` `code` ``, `~~strike~~`, leading `#`/`>`) from one-line display text. */
+export function stripMarkdown(value: string): string {
+  return value
+    .replace(/\\([*_`~#>])/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/[*`]+/g, "")
+    .replace(/~~/g, "")
+    .replace(/^\s*(?:#{1,6}|>)\s+/gm, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function persianDate(value?: string | null): string {
   if (!value) return "";
   const date = new Date(value);

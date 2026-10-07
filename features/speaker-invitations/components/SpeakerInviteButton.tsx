@@ -44,6 +44,7 @@ export function SpeakerInviteButton({
   tone = "soft",
   size = "sm",
   className = "",
+  showIcon = true,
   onInvited,
 }: {
   speaker: SpeakerInviteTarget;
@@ -54,6 +55,7 @@ export function SpeakerInviteButton({
   tone?: keyof typeof toneClasses;
   size?: keyof typeof sizeClasses;
   className?: string;
+  showIcon?: boolean;
   onInvited?: () => void;
 }) {
   const { requireAuth } = useAuthGate();
@@ -135,9 +137,9 @@ export function SpeakerInviteButton({
       >
         {busy ? (
           <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
-        ) : (
+        ) : showIcon ? (
           <Send aria-hidden="true" className="h-3.5 w-3.5" />
-        )}
+        ) : null}
         دعوت
       </button>
 

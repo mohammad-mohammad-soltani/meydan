@@ -23,6 +23,10 @@
 .works-feature .ch-sr { display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 16px; border-radius: 99px; background: var(--m-soft); border: 1px solid var(--m-line); color: var(--m-mu); margin: 0; }
 .works-feature .ch-sr input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--m-tx); font-size: 14px; font-family: inherit; padding: 0; }
 .works-feature .ch-sr input::placeholder { color: var(--m-mu); }
+.works-feature .ch-vp { direction: ltr; flex: 1 0 auto; min-height: 0; overflow: hidden; touch-action: pan-y; }
+.works-feature .ch-track { display: flex; width: 200%; direction: ltr; align-items: flex-start; transform: translate3d(-50%, 0, 0); transition: transform .34s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+.works-feature .ch-track.n { transform: translate3d(0, 0, 0); }
+.works-feature .ch-pane { flex: 0 0 50%; min-width: 0; direction: rtl; display: flex; flex-direction: column; gap: 10px; }
 .works-feature .ch-sb { flex: none; }
 .works-feature .ch-nh { display: flex; align-items: center; justify-content: space-between; height: 46px; padding: 0 6px; }
 .works-feature .ch-nh b { font-size: 14.5px; font-weight: 700; }

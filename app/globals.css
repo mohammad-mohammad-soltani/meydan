@@ -457,6 +457,26 @@ html.dark {
     transform: translateY(0) scale(1);
   }
 }
+@keyframes route-slide-from-left-keyframes {
+  from {
+    opacity: 0;
+    transform: translateX(-2.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes route-slide-from-right-keyframes {
+  from {
+    opacity: 0;
+    transform: translateX(2.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 @keyframes ui-enter-keyframes {
   from {
     opacity: 0;
@@ -582,6 +602,14 @@ html.dark {
   animation: route-transition-enter-keyframes var(--motion-page)
     var(--motion-ease-emphasized) both;
   transform-origin: 50% 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-nav-dir="L"] .route-transition-stage {
+    animation: route-slide-from-left-keyframes 340ms var(--motion-ease-standard) both;
+  }
+  html[data-nav-dir="R"] .route-transition-stage {
+    animation: route-slide-from-right-keyframes 340ms var(--motion-ease-standard) both;
+  }
 }
 
 [role="dialog"] {

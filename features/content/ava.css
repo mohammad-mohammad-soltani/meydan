@@ -34,16 +34,17 @@
 .ava-ref .ft .bd { right:12px; }
 .ava-ref .ft .du { left:12px; }
 .ava-ref .ft .tx { pointer-events:none; text-align:right; display:flex; flex-direction:column; gap:3px; padding-left:0; padding-bottom:50px; }
-.ava-ref .ft .tx b { font-size:14px; font-weight:900; line-height:1.5; }
-.ava-ref .ft .tx small { font-size:11.5px; opacity:.75; }
+.ava-ref .ft .tx b { font-size:14px; font-weight:900; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+.ava-ref .ft .tx small { font-size:11.5px; opacity:.75; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ava-ref .ft .tx { min-width:0; max-width:100%; }
 .ava-ref .ft .pl { z-index:2; position:absolute; left:14px; bottom:14px; width:42px; height:42px; border-radius:50%; background:#fff; color:#000; display:grid; place-items:center; transition:transform .15s; }
 .ava-ref .ft .pl:active { transform:scale(.9); }
 .ava-ref .fc { flex:0 0 92px; display:flex; flex-direction:column; align-items:center; gap:7px; color:var(--m-tx); scroll-snap-align:start; }
 .ava-ref .fc .ring { position:relative; width:78px; height:78px; border-radius:50%; padding:3px; border:2px solid var(--m-tx); display:grid; place-items:center; }
 .ava-ref .fc .ring i { width:100%; height:100%; border-radius:50%; background:var(--m-soft); display:grid; place-items:center; font-style:normal; font-weight:800; font-size:19px; }
 .ava-ref .fc .ring img { position:absolute; inset:3px; width:calc(100% - 6px); height:calc(100% - 6px); border-radius:50%; object-fit:cover; }
-.ava-ref .fc b { font-size:12px; font-weight:700; text-align:center; line-height:1.5; }
-.ava-ref .fc small { font-size:10.5px; color:var(--m-mu); }
+.ava-ref .fc b { font-size:12px; font-weight:700; text-align:center; line-height:1.5; max-width:100%; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+.ava-ref .fc small { font-size:10.5px; color:var(--m-mu); max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ava-ref .av-places { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:0; padding:0; overflow:visible; }
 .ava-ref .sqm { display:flex; flex-direction:column; align-items:stretch; gap:2px; min-width:0; text-align:right; color:inherit; cursor:pointer; }
 .ava-ref .sqm .art { position:relative; aspect-ratio:1; border-radius:18px; overflow:hidden; background:linear-gradient(150deg,hsl(var(--h) 72% 52%),hsl(calc(var(--h) + 50) 70% 28%)); display:grid; place-items:center; margin-bottom:8px; }
@@ -51,8 +52,8 @@
 .ava-ref .sqm .art u { position:absolute; inset:auto 0 0 0; height:38%; background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 5px,transparent 5px 11px); -webkit-mask:linear-gradient(0deg,#000,transparent); mask:linear-gradient(0deg,#000,transparent); text-decoration:none; }
 .ava-ref .sqm .pl { z-index:3; position:absolute; left:10px; bottom:10px; width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:#fff; color:#111; }
 .ava-ref .sqm.on .pl { background:#e4152e; color:#fff; }
-.ava-ref .sqm > b { font-size:13.5px; font-weight:800; }
-.ava-ref .sqm > small { font-size:11px; color:var(--m-mu); }
+.ava-ref .sqm > b { font-size:13.5px; font-weight:800; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+.ava-ref .sqm > small { font-size:11px; color:var(--m-mu); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ava-ref .asq { width:42px; height:42px; border-radius:14px; background:var(--m-bg); border:1px solid var(--m-line); display:grid; place-items:center; font-weight:800; font-size:14px; flex-shrink:0; }
 .ava-ref .av-last { display:flex; flex-direction:column; border-radius:24px; border:1px solid var(--m-line); overflow:hidden; }
 .ava-ref .ls { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--m-line); cursor:pointer; transition:background .15s; color:inherit; }

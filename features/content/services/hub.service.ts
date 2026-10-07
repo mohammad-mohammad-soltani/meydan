@@ -1,4 +1,4 @@
-import { meydanApi, meydanApiPage } from "@/lib/meydan-api";
+import { meydanApi, meydanApiPage, stripMarkdown } from "@/lib/meydan-api";
 import type { ContentItem } from "../types";
 import { toItem, type ApiContent } from "./content.service";
 
@@ -51,7 +51,7 @@ export async function getAudioHub(q = ""): Promise<AudioHub> {
   return {
     featured: (hub.featured ?? []).map(toItem),
     series: (hub.series ?? []).map((row) => ({
-      title: row.title,
+      title: stripMarkdown(row.title),
       sessions: row.sessions,
       coverUrl: row.cover_url || undefined,
       author: row.producer?.display_name,
