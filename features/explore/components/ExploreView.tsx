@@ -5,13 +5,14 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Globe2,
+  Globe,
   Building2,
   ChevronLeft,
   FileText,
   Hash,
   MapPin,
   MessageSquareText,
+  PenLine,
   Mic2,
   Newspaper,
   RefreshCw,
@@ -184,6 +185,8 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hasQuery = query.trim().length > 0;
+  // A search for exactly one hashtag invites the viewer to publish under it.
+  const singleTag = /^#([\p{L}\p{N}_]{2,64})$/u.exec(query.trim())?.[1];
 
   useEffect(() => {
     let cancelled = false;
@@ -273,7 +276,7 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
             <h1 className="text-[30px] lg:text-[34px] font-extrabold leading-tight text-foreground">کاوش</h1>
             <p className="mt-1.5 text-[13px] leading-[1.9] text-muted-foreground">میان روایت‌ها، میدان‌ها، کاربران و محتوای منتشرشده بگردید.</p>
           </div>
-          <span aria-hidden="true" className="reference-explore-emblem grid h-[54px] w-[54px] shrink-0 place-items-center rounded-[18px] text-white"><Globe2 className="h-7 w-7" /></span>
+          <span aria-hidden="true" className="reference-explore-emblem grid h-[54px] w-[54px] shrink-0 place-items-center rounded-[18px] text-white"><Globe className="h-7 w-7" /></span>
         </div>
 
         <label className="reference-explore-search flex h-[54px] items-center gap-2.5 rounded-full border border-border bg-surface-muted px-[18px] text-icon-muted transition">
@@ -336,6 +339,20 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
 
       {hasQuery ? (
         <main>
+          {singleTag ? (
+            <div className="flex items-center justify-between gap-3 border-b border-divider px-4 py-3.5" dir="rtl">
+              <p className="min-w-0 text-[13px] font-bold leading-6 text-foreground">
+                شما هم با <span className="text-danger" dir="auto">#{singleTag}</span> روایت منتشر کنید
+              </p>
+              <Link
+                href={`/compose?tag=${encodeURIComponent(singleTag)}` as Route}
+                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-brand px-4 text-xs font-black text-brand-foreground transition-opacity hover:opacity-90"
+              >
+                <PenLine className="h-3.5 w-3.5" />
+                نوشتن
+              </Link>
+            </div>
+          ) : null}
           <div className="flex min-h-11 items-center justify-between border-b border-divider px-4" dir="rtl">
             <p className="min-w-0 truncate text-[11px] font-bold text-muted-foreground">
               نتایج برای «{query.trim()}»

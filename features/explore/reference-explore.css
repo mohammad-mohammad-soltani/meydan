@@ -5,6 +5,8 @@
 .reference-explore-emblem { background:linear-gradient(145deg,#f0243a,#b50d22);box-shadow:0 10px 26px color-mix(in srgb,#e4152e 38%,transparent) }
 .reference-explore-search { margin:12px 14px 14px }
 .reference-explore-search:focus-within { border-color:#e4152e;box-shadow:0 0 0 4px color-mix(in srgb,#e4152e 16%,transparent);color:var(--m-tx) }
+.reference-explore-search input:focus-visible { border-color:transparent;box-shadow:none;outline:none }
+.reference-explore-search input { border-color:transparent;box-shadow:none }
 .reference-explore-tabs { position:sticky;top:0;z-index:15;background:var(--m-bg) }
 .reference-explore-sections > div { padding:22px 0 4px }
 .reference-explore-sections > div:last-child { padding:0 }

@@ -2,7 +2,7 @@
 
 import styles from "../reference.module.css";
 
-import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type TouchEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Bookmark, Hash, Image as ImageIcon, LoaderCircle, PenLine, Plus, Save, Send, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
@@ -13,6 +13,7 @@ import { mapQuotedNarrative, type ApiQuotedNarrative } from "@/features/feed/ser
 import type { QuotedPost } from "@/features/feed/types";
 import { ComposeMediaGrid } from "./ComposeMediaGrid";
 import { MAX_COMPOSE_MEDIA, useComposeMedia } from "../hooks/useComposeMedia";
+import { getCaretCoordinates } from "../caret";
 import { getHashtagSuggestions, type HashtagSuggestion } from "@/features/explore/hashtags";
 
 const MAX_CHARACTERS = 500;
@@ -36,6 +37,23 @@ function activeHashtagToken(text: string, caret: number): HashtagToken | null {
   return { start: caret - query.length - 1, query };
 }
 
+const HASHTAG_PATTERN = /(^|[\s،؛.,!?؟()[\]{}])(#[\p{L}\p{N}_]{0,64})/gu;
+
+/** The textarea's text with every `#tag` (even a bare `#` just typed) in red; mirrored under the transparent textarea. */
+function renderHighlighted(text: string) {
+  const nodes: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(HASHTAG_PATTERN)) {
+    const tagStart = (match.index ?? 0) + match[1].length;
+    if (tagStart > last) nodes.push(text.slice(last, tagStart));
+    nodes.push(<span key={tagStart} className="text-danger">{match[2]}</span>);
+    last = tagStart + match[2].length;
+  }
+  nodes.push(text.slice(last));
+  // A trailing newline would otherwise collapse and misalign the last line.
+  return [...nodes, "\u200b"];
+}
+
 type ViewerState = {
   /** `speaker` publishes as the user account behind it. */
   accountType: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official" | "";
@@ -57,13 +75,14 @@ type QuoteState =
   | { status: "failed" };
 
 /** `quoteId` is the narrative being quoted (`/compose?quote=ID`). */
-export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; workMode?: boolean }) {
+export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId?: string; workMode?: boolean; initialTag?: string }) {
   const router = useRouter();
   // A quote keeps its own draft so it never overwrites the plain-narrative one.
   const DRAFT_KEY = quoteId ? `${BASE_DRAFT_KEY}:quote:${quoteId}` : BASE_DRAFT_KEY;
   const [quote, setQuote] = useState<QuoteState>(quoteId ? { status: "loading" } : { status: "none" });
   const titleRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
@@ -81,6 +100,8 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   const [pickerAccept, setPickerAccept] = useState(MEDIA_ACCEPT);
   const [hashtagToken, setHashtagToken] = useState<HashtagToken | null>(null);
   const [hashtagSuggestions, setHashtagSuggestions] = useState<HashtagSuggestion[]>([]);
+  const [hashtagActive, setHashtagActive] = useState(0);
+  const [hashtagPos, setHashtagPos] = useState<{ top: number; left: number } | null>(null);
 
   const { media, notice, addFiles, remove, retry, reset, isUploading, hasUploadError, readyAttachments, isReady } =
     useComposeMedia();
@@ -103,11 +124,25 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           setText(stored);
         }
       }
+      if (initialTag && !quoteId) {
+        // Arrived from a tag page: make sure «#tag » is in the text, after any saved draft.
+        const hashtag = `#${initialTag}`;
+        setText((current) =>
+          new RegExp(`${hashtag}(?![\\p{L}\\p{N}_])`, "u").test(current)
+            ? current
+            : `${current}${current && !/\s$/.test(current) ? " " : ""}${hashtag} `,
+        );
+      }
       setDraftLoaded(true);
     });
-    const frame = window.requestAnimationFrame(() => textRef.current?.focus());
+    const frame = window.requestAnimationFrame(() => {
+      const area = textRef.current;
+      if (!area) return;
+      area.focus();
+      area.setSelectionRange(area.value.length, area.value.length);
+    });
     return () => { active = false; window.cancelAnimationFrame(frame); };
-  }, [workMode, DRAFT_KEY, quoteId]);
+  }, [workMode, DRAFT_KEY, quoteId, initialTag]);
 
   useEffect(() => {
     if (!draftLoaded) return;
@@ -142,19 +177,49 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   }, []);
 
   // Debounced «#» autocomplete: refetches as the token under the caret changes.
+  const hashtagQuery = hashtagToken?.query;
   useEffect(() => {
-    if (!hashtagToken) return;
+    if (hashtagQuery === undefined) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void getHashtagSuggestions(hashtagToken.query, controller.signal)
+      void getHashtagSuggestions(hashtagQuery, controller.signal)
         .then(setHashtagSuggestions)
         .catch(() => undefined);
-    }, 250);
+    }, 200);
     return () => {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [hashtagToken]);
+  }, [hashtagQuery]);
+
+  // What the popover shows: the last answer narrowed to the current query right
+  // away (so it tracks every keystroke instead of lagging a request behind),
+  // best match first — exact, then shortest, then busiest.
+  const hashtagOptions = useMemo(() => {
+    if (!hashtagToken) return [];
+    const query = hashtagToken.query;
+    return hashtagSuggestions
+      .filter((item) => item.tag.startsWith(query) && item.tag !== query)
+      .sort((a, b) => a.tag.length - b.tag.length || b.count - a.count)
+      .slice(0, 5);
+  }, [hashtagToken, hashtagSuggestions]);
+
+  // Keep the popover glued to the caret, like X's mention picker.
+  useLayoutEffect(() => {
+    const area = textRef.current;
+    if (!hashtagToken || !area || !hashtagOptions.length) {
+      setHashtagPos(null);
+      return;
+    }
+    const caret = getCaretCoordinates(area, hashtagToken.start + hashtagToken.query.length + 1);
+    const maxLeft = Math.max(0, area.offsetWidth - 240);
+    setHashtagPos({
+      top: area.offsetTop + caret.top + caret.height + 4,
+      left: Math.min(Math.max(0, area.offsetLeft + caret.left - 8), maxLeft),
+    });
+  }, [hashtagToken, hashtagOptions.length, text]);
+
+  useEffect(() => setHashtagActive(0), [hashtagQuery]);
 
   const body = quoteId ? text.trim() : [title.trim(), text.trim()].filter(Boolean).join("\n\n");
   const hasContent = body.length > 0 || media.length > 0;
@@ -258,15 +323,19 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   const syncHashtagToken = () => {
     const area = textRef.current;
     if (!area) return;
-    setHashtagToken(activeHashtagToken(area.value, area.selectionStart ?? area.value.length));
+    updateHashtagToken(activeHashtagToken(area.value, area.selectionStart ?? area.value.length));
   };
+
+  /** Keeps the same object when nothing changed, so a bare arrow-key keyup doesn't restart the fetch. */
+  const updateHashtagToken = (next: HashtagToken | null) =>
+    setHashtagToken((prev) => (prev && next && prev.start === next.start && prev.query === next.query ? prev : next));
 
   /** Replaces the active `#` token with the picked tag and a trailing space. */
   const applyHashtagSuggestion = (tag: string) => {
     const area = textRef.current;
     if (!hashtagToken || !area) return;
     const end = area.selectionStart ?? hashtagToken.start + hashtagToken.query.length + 1;
-    const insertion = `#${tag} `;
+    const insertion = `#${tag.replace(/\s+/g, "_")} `;
     const next = (text.slice(0, hashtagToken.start) + insertion + text.slice(end)).slice(0, MAX_CHARACTERS);
     setText(next);
     setHashtagToken(null);
@@ -393,7 +462,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           ) : null}
         </div>
 
-        <div className="pt-3">
+        <div className="relative pt-3">
           {!quoteId ? (
             <div className={`${styles.titleWrap} ${showTitle ? styles.titleOpen : ""}`} aria-hidden={!showTitle}>
               <div className={styles.titleInner}>
@@ -401,16 +470,35 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
               </div>
             </div>
           ) : null}
+          <div className="relative">
+          <div
+            aria-hidden="true"
+            className={`${styles.textarea} pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words text-foreground`}
+          >
+            <div ref={highlightRef}>{renderHighlighted(text)}</div>
+          </div>
           <textarea
             ref={textRef}
+            onScroll={(event) => {
+              if (highlightRef.current) highlightRef.current.style.transform = `translateY(${-event.currentTarget.scrollTop}px)`;
+            }}
+            style={{ color: "transparent", caretColor: "var(--m-tx, currentColor)", scrollbarWidth: "none" }}
             value={text}
             onChange={(event) => {
               setText(event.target.value);
-              setHashtagToken(activeHashtagToken(event.target.value, event.target.selectionStart ?? event.target.value.length));
+              updateHashtagToken(activeHashtagToken(event.target.value, event.target.selectionStart ?? event.target.value.length));
+            }}
+            onKeyDown={(event) => {
+              if (!hashtagToken || !hashtagOptions.length || event.nativeEvent.isComposing) return;
+              const count = hashtagOptions.length;
+              if (event.key === "ArrowDown") { event.preventDefault(); setHashtagActive((i) => (i + 1) % count); }
+              else if (event.key === "ArrowUp") { event.preventDefault(); setHashtagActive((i) => (i - 1 + count) % count); }
+              else if (event.key === "Tab" || event.key === "Enter") { event.preventDefault(); applyHashtagSuggestion(hashtagOptions[hashtagActive]?.tag ?? hashtagOptions[0].tag); }
+              else if (event.key === "Escape") { event.preventDefault(); setHashtagToken(null); }
             }}
             onClick={syncHashtagToken}
             onKeyUp={(event) => {
-              if (event.key === "Escape") { setHashtagToken(null); return; }
+              if (event.key === "Escape" || event.key === "Tab" || event.key === "Enter") return;
               syncHashtagToken();
             }}
             onBlur={() => window.setTimeout(() => setHashtagToken(null), 120)}
@@ -424,31 +512,45 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
             placeholder={quoteId ? "نظر خودت را دربارهٔ این روایت بنویس..." : "چه خبر؟ ماجرا یا شرح حال را بنویسید..."}
             rows={7}
             aria-label="شرح روایت"
-            className={`${styles.textarea} w-full resize-none border-0 bg-transparent text-foreground shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`}
+            className={`${styles.textarea} relative w-full resize-none border-0 bg-transparent text-foreground shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`}
           />
-          {hashtagToken && hashtagSuggestions.length ? (
+          {hashtagToken && hashtagOptions.length && hashtagPos ? (
             <div
               role="listbox"
               aria-label="پیشنهاد هشتگ"
-              className="mt-1.5 overflow-hidden rounded-2xl border border-border bg-surface shadow-dialog"
+              style={{ top: hashtagPos.top, left: hashtagPos.left }}
+              className="absolute z-30 w-60 max-w-full overflow-hidden rounded-2xl border border-border bg-surface py-1 shadow-dialog"
             >
-              {hashtagSuggestions.map((suggestion) => (
-                <button
-                  key={suggestion.tag}
-                  type="button"
-                  role="option"
-                  aria-selected={false}
-                  // A blur beats a click: fire before the textarea's onBlur closes the dropdown.
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => applyHashtagSuggestion(suggestion.tag)}
-                  className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-right text-xs transition-colors hover:bg-hover"
-                >
-                  <span className="font-bold text-danger">#{suggestion.tag}</span>
-                  <span className="shrink-0 text-[11px] text-muted-foreground">{suggestion.count.toLocaleString("fa-IR")} روایت</span>
-                </button>
-              ))}
+              {hashtagOptions.map((suggestion, index) => {
+                const typed = hashtagToken.query.length;
+                const active = index === hashtagActive;
+                return (
+                  <button
+                    key={suggestion.tag}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    // A blur beats a click: fire before the textarea's onBlur closes the dropdown.
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setHashtagActive(index)}
+                    onClick={() => applyHashtagSuggestion(suggestion.tag)}
+                    className={`flex w-full items-center justify-between gap-2 px-3.5 py-2 text-right text-sm transition-colors ${active ? "bg-hover" : ""}`}
+                  >
+                    <span dir="auto" className="min-w-0 truncate">
+                      <span className="text-muted-foreground">#{suggestion.tag.slice(0, typed)}</span>
+                      <span className="font-bold text-foreground">{suggestion.tag.slice(typed)}</span>
+                    </span>
+                    {active ? (
+                      <kbd className="shrink-0 rounded-md border border-border px-1.5 text-[10px] text-muted-foreground">Tab</kbd>
+                    ) : (
+                      <span className="shrink-0 text-[11px] text-muted-foreground">{suggestion.count.toLocaleString("fa-IR")}</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ) : null}
+          </div>
         </div>
 
         {quoteId ? (
