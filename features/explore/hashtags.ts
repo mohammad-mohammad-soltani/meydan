@@ -15,6 +15,12 @@ export async function getHashtagSuggestions(
   signal?: AbortSignal,
 ): Promise<HashtagSuggestion[]> {
   const q = prefix.replace(/^#/, "").trim();
+  // Note: the backend's `Cache-Control` on the empty-query reply never reaches
+  // the browser — every call here goes through app/api/meydan/[...path]/route.ts,
+  // which rebuilds response headers and forwards only content-type/x-request-id
+  // (true of every endpoint that sets `Response::cache`, not just this one). The
+  // actual protection against request bursts is the server-side transient plus
+  // the rate limit in ExploreController::hashtagSuggestions, not HTTP caching.
   const data = await meydanApi<{ items?: HashtagSuggestion[] }>(
     `/explore/hashtags?q=${encodeURIComponent(q)}`,
     { signal, suppressAuthRedirect: true },
