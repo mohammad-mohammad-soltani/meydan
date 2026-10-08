@@ -107,7 +107,7 @@ function trap(t, a, b, c2, d, v) {
   const t2 = Math.min(t, c2); s += v * (t2 - b); if (t <= c2) return s;
   const t3 = Math.min(t, d), q = t3 - c2; s += v * q - v * q * q / (2 * (d - c2)); return s;
 }
-const PAN_V = 400, PAN_D = LINE_END, PAN_C = PAN_D - 1.5, PAN_B = 40.6;
+const PAN_V = 380, PAN_D = LINE_END, PAN_C = PAN_D - 1.5, PAN_B = 40.6;
 const pan = t => trap(t, 39.5, PAN_B, PAN_C, PAN_D, PAN_V);
 
 function camAt(t) {
@@ -333,11 +333,6 @@ function caption(c, s, a) {
 
 // ── Scene 5 · the line of features
 const FEAT = [
-  { ic: 'mic', t: 'اعزام سخنران', s: ['سخنران مناسب، در لحظه'] },
-  { ic: 'phone', t: 'بیست‌کال', s: ['تماسِ یک‌به‌یک؛ دعوت به نقش‌آفرینی'] },
-  { ic: 'mega', t: 'پویش', s: ['یک پیام، برای همه'] },
-  { ic: 'note', t: 'یادداشت تحلیلی و سیاسی', s: ['تحلیل، شفاف و به‌روز'] },
-  { ic: 'audio', t: 'آوا و نوا', s: ['سخنرانی و مداحی، هر لحظه در گوش‌تان'] },
   { ic: 'quote', t: 'روایت', s: ['امروزِ ایران، به روایتِ خودِ مردم'] },
   { ic: 'help', t: 'کارها', s: ['تصمیمِ جمعی، کارِ واقعی؛ هر کس به قدر توانش', 'تعریف کن یا بپیوند؛ همه‌اش داوطلبانه'] },
   { ic: 'tv', t: 'پوشش رسانه‌ای', s: ['کارهای شما در قابِ رسانه‌های ملی؛', 'الگویی از کفِ ایران‌زمین'] },

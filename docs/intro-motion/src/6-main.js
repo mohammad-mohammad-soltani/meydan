@@ -54,6 +54,7 @@ const ui = {
   fs: document.getElementById('fs'), list: document.getElementById('chapters'), stage: document.querySelector('.stage'),
 };
 let playing = false, cur = 0, last = 0, ready = false;
+ui.bar.setAttribute('aria-valuemax', String(Math.round(DUR)));
 document.getElementById('meta').textContent = `موشن معرفی · ${fa(Math.round(DUR))} ثانیه · ${fa(1920)}×${fa(1080)}`;
 const clock = s => fa(`${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`);
 

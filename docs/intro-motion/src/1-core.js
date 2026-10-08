@@ -1,7 +1,7 @@
 'use strict';
 const W = 1920, H = 1080;
 // Section starts on the global clock. The feature line runs LINE_END - 37.9s; the hub and the end card follow it.
-const LINE_END = 56.9, HUB_S = LINE_END - 0.3, HUB_FADE = HUB_S + 12.0, FIN_S = HUB_FADE + 0.2, DUR = FIN_S + 4.6 + 1.0;
+const LINE_END = 48.5, HUB_S = LINE_END - 0.3, HUB_FADE = HUB_S + 12.0, FIN_S = HUB_FADE + 0.2, DUR = FIN_S + 4.6 + 1.0;
 const GEO = JSON.parse(document.getElementById('geo-data').textContent);
 const LOGO = new Path2D(document.getElementById('logo-d').textContent.trim());
 const FONT = "Vazirmatn, Tahoma, sans-serif";
