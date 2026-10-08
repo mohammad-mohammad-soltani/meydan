@@ -76,14 +76,14 @@ html { scrollbar-gutter: stable; }
 /* Desktop sidebars (reference layout, measured per theme). */
 :root {
   --sidebar-divider: oklch(.967 .003 264.542);
-  --sidebar-card: oklch(.984 .003 247.858);
+  --sidebar-card: #ffffff;
   --sidebar-card-border: #e8e8ec;
-  --rail-card: oklch(.984 .003 247.858);
+  --rail-card: #ffffff;
   --rail-card-border: oklch(.928 .006 264.531);
   --rail-card-divider: oklch(.967 .003 264.542);
   --rail-title: oklch(.278 .033 256.848);
   --rail-meta: oklch(.707 .022 261.325);
-  --rail-note: oklab(.984 -.00113 -.00278 / .8);
+  --rail-note: #ffffff;
   --rail-note-border: oklch(.928 .006 264.531);
   --rail-note-title: oklch(.278 .033 256.848);
   --theme-switch: oklch(.967 .003 264.542);
