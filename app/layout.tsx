@@ -105,7 +105,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             transition: "opacity 450ms ease, transform 450ms ease",
           }}
         >
-          <div id="meydan-splash-anim" style={{ width: "100%", height: "100%" }} />
+          {/*
+            Capped to the app's own content column (matches the offline
+            overlay's `max-w-xl`) instead of the raw viewport: on a wide
+            desktop window this keeps the portrait Lottie at a sane size
+            instead of "xMidYMid slice" (cover) crushing it down to a
+            crop of its vertical center to fill the whole wide screen.
+          */}
+          <div style={{ width: "100%", height: "100%", maxWidth: 576, margin: "0 auto" }}>
+            <div id="meydan-splash-anim" style={{ width: "100%", height: "100%" }} />
+          </div>
         </div>
         {/*
           Starts the ~0.5MB Lottie JSON download the instant the HTML is

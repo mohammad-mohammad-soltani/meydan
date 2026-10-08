@@ -87,9 +87,13 @@ export function SplashScreen() {
           loop: false,
           autoplay: true,
           animationData,
-          // Fills the full-viewport container edge to edge, like a native splash,
-          // instead of letterboxing the 360x640 composition inside it.
-          rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
+          // "meet" (contain, lottie-web's default) keeps the whole 360x640
+          // composition in frame at any viewport shape. "slice" (cover) was
+          // tried for an edge-to-edge look, but on a wide desktop window it
+          // crops down to a zoomed sliver of the vertical center, cutting off
+          // the logo and progress bar entirely — worse than a few pixels of
+          // letterboxing, which blends into the matching background color.
+          rendererSettings: { preserveAspectRatio: "xMidYMid meet" },
         });
 
         anim.addEventListener("complete", finish);
