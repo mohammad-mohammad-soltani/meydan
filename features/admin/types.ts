@@ -136,6 +136,78 @@ export type SquareUpdateInput = {
   baleChannel?: string;
 };
 
+/* ---------------------------------------------------------------- memorials */
+
+/** `MemorialService::POST_STATUSES`. A memorial has no approval workflow — just draft/publish. */
+export const MEMORIAL_STATUSES = ["draft", "publish"] as const;
+export type MemorialStatus = (typeof MEMORIAL_STATUSES)[number];
+export const MEMORIAL_STATUS_LABELS: Record<MemorialStatus, string> = {
+  draft: "پیش‌نویس",
+  publish: "منتشرشده",
+};
+
+/** One life event on a memorial's timeline, birth to death. */
+export type MemorialTimelineEvent = {
+  id: string;
+  /** Free text: a full date, a year, or any other period the family gave. */
+  date: string;
+  title: string;
+  description: string;
+  photoMediaId: number | null;
+  order: number;
+};
+
+/** One photo in a memorial's gallery ("قاب‌های ماندگار"). */
+export type MemorialFrame = {
+  mediaId: number;
+  order: number;
+  caption: string;
+  label: string;
+  url: string | null;
+};
+
+export type Memorial = {
+  id: number;
+  name: string;
+  handle: string;
+  avatarUrl: string | null;
+  coverUrl: string | null;
+  verified: boolean;
+  postStatus: MemorialStatus;
+  ownerUserId: number | null;
+  biography: string;
+  birthDate: string;
+  deathDate: string;
+  timeline: MemorialTimelineEvent[];
+  frames: MemorialFrame[];
+};
+
+export type MemorialFilters = { q: string };
+export const EMPTY_MEMORIAL_FILTERS: MemorialFilters = { q: "" };
+
+export type MemorialCreateInput = {
+  name: string;
+  handle: string;
+  biography: string;
+  birthDate: string;
+  deathDate: string;
+  avatarMediaId: number | null;
+  coverMediaId: number | null;
+  status: MemorialStatus;
+};
+
+export type MemorialUpdateInput = {
+  name?: string;
+  handle?: string;
+  biography?: string;
+  birthDate?: string;
+  deathDate?: string;
+  avatarMediaId?: number | null;
+  coverMediaId?: number | null;
+  status?: MemorialStatus;
+  verified?: boolean;
+};
+
 /* ----------------------------------------------------------------- speakers */
 
 export type GeoOption = { id: number; name: string };

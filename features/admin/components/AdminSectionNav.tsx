@@ -8,6 +8,7 @@ import {
   ArrowUpLeft,
   Bell,
   FolderKanban,
+  Flower2,
   Image,
   LayoutDashboard,
   Map,
@@ -62,13 +63,14 @@ const SECTIONS: Section[] = [
   { href: "/admin/feed", label: "فید", icon: ListFilter },
   { href: "/admin/content/banners", label: "بنرها", icon: Image },
   { href: "/admin/note-categories", label: "دسته‌بندی یادداشت‌ها", icon: ListFilter },
+  { href: "/admin/memorials", label: "یادبودها", icon: Flower2 },
 ];
 
 const GROUPS = [
   { label: "میز کار", items: [SECTIONS[0], SECTIONS[5], SECTIONS[6]] },
   {
     label: "افراد و میادین",
-    items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[4], SECTIONS[8], SECTIONS[14], SECTIONS[15]],
+    items: [SECTIONS[1], SECTIONS[2], SECTIONS[3], SECTIONS[4], SECTIONS[8], SECTIONS[14], SECTIONS[15], SECTIONS[22]],
   },
   { label: "محتوا", items: [SECTIONS[7], SECTIONS[17], SECTIONS[21]] },
   { label: "محتوا و رسانه", items: [SECTIONS[8], SECTIONS[10], SECTIONS[11]] },

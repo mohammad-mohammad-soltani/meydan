@@ -6,6 +6,8 @@ import type {
   InitiativeMember,
   LinkableUser,
   MediaOutlet,
+  Memorial,
+  MemorialFilters,
   FeedPreview,
   Program,
   Speaker,
@@ -62,6 +64,10 @@ import {
   getSquareMap as getSquareMapRaw,
   getSquares as getSquaresRaw,
 } from "./squares.service";
+import {
+  getMemorial as getMemorialRaw,
+  getMemorials as getMemorialsRaw,
+} from "./memorials.service";
 
 /**
  * The read side of the admin services, bound to the current session.
@@ -116,6 +122,18 @@ export async function getSquares(
   perPage = 20,
 ): Promise<AdminPage<Square>> {
   return getSquaresRaw(filters, page, perPage, await withAdminAuth());
+}
+
+export async function getMemorial(id: string): Promise<Memorial | null> {
+  return getMemorialRaw(id, await withAdminAuth());
+}
+
+export async function getMemorials(
+  filters: MemorialFilters,
+  page = 1,
+  perPage = 20,
+): Promise<AdminPage<Memorial>> {
+  return getMemorialsRaw(filters, page, perPage, await withAdminAuth());
 }
 
 export async function getSpeaker(id: string): Promise<Speaker | null> {
