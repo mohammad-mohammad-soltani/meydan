@@ -32,7 +32,6 @@ function render(t) {
   else if (t < HUB_S) drawMap(c, t);
   else if (t < HUB_S + 0.8) { drawMap(c, t); over((cc, tt) => drawContent(cc, tt - HUB_S), t, smooth(HUB_S, HUB_S + 0.8, t)); }
   else if (t < HUB_FADE) drawContent(c, t - HUB_S);
-  else if (t < PB0) { drawContent(c, t - HUB_S, 1 - smooth(HUB_FADE, HUB_FADE + 0.9, t)); drawFinale(c, t - FIN_S + 55.5); }
   else drawS8(c, t);
   c.restore();
 }
@@ -47,7 +46,7 @@ async function init() {
 
 const CHAPTERS = [
   [0, 'اجتماعی بودن'], [10, 'میدان و شبکه‌ی میدان'], [20, 'اتصال میدان‌ها'], [30, 'ایران و کره‌ی زمین'],
-  [38, 'خط قابلیت‌ها'], [HUB_S, 'بخش محتوا'], [FIN_S, 'نقش من'], [PB0, 'ثبت‌نام در نقش من'],
+  [38, 'خط قابلیت‌ها'], [HUB_S, 'بخش محتوا'], [S8, 'ثبت‌نام در نقش من'], [S8 + BRAND_AT, 'نقش من'],
 ];
 const ui = {
   big: document.getElementById('big'), play: document.getElementById('play'), restart: document.getElementById('restart'),

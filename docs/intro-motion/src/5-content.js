@@ -1,4 +1,4 @@
-// ───────── Content hub (HUB_S →) and the brand end card (FIN_S →)
+// ───────── Content hub (HUB_S →) and the brand end card (S8 →)
 const CC_W = 500, CC_H = 312;
 const COLX = [1250, 710, 170], ROWY = [262, 612, 962];
 const CCARDS = [
@@ -289,8 +289,7 @@ function buildFinale() {
   }
   const r = rng(55);
   PARTS = IRAN_PTS.map(tp => {
-    const col = COLX[(r() * 3) | 0], row = r() < 0.5 ? 262 : 612;
-    return { sx: col + r() * CC_W, sy: row + r() * CC_H, tx: tp[0], ty: tp[1], d: r() * 0.55, sw: (r() - 0.5) * 520, r: 1.4 + r() * 1.4, ph: r() * 6.28 };
+    return { sx: r() * W, sy: r() * H, tx: tp[0], ty: tp[1], d: r() * 0.55, sw: (r() - 0.5) * 520, r: 1.4 + r() * 1.4, ph: r() * 6.28 };
   });
   FCITIES = CITIES.filter(cy => cy.big).map((cy, i) => ({ p: irXY(cy.ll), d: i * 0.12 }));
   const rw = rng(8);

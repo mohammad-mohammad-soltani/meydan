@@ -1,5 +1,6 @@
-// ───────── Last scene: the end card turns out to be a screen; a woman at home signs up (PB0 →)
-const PB0 = FIN_S + 4.4;
+// ───────── Last sequence (S8 →): the sign-up page fills the frame, the camera pulls back to a woman at home, then pushes in to the brand card
+// t8 = seconds since the hub ends: sign-up page full frame → pull back to the room → push in to the brand card
+const Z_START = 2.5, Z_LEN = 2.3, BRAND_AT = 8.6, PUSH_LEN = 2.2, SEQ_LEN = 13.4;
 const SCR = { x: 800, y: 110, w: 960, h: 540 }, PC = [SCR.x + SCR.w / 2, SCR.y + SCR.h / 2];
 const SC = mk(W, H), SCC = SC.getContext('2d');
 const CAPTION = ['خانه‌ات هم یک میدان است؛', 'نقش خودت را همین‌جا بساز.'];
@@ -238,7 +239,7 @@ function womanShape(c, t8, bob, flat) {
 }
 
 function woman(c, t8) {
-  const typing = t8 > 3.0 && t8 < 7.0;
+  const typing = t8 > 2.6 && t8 < 5.8;
   const bob = typing ? Math.sin(t8 * 17) * 3 + Math.sin(t8 * 7.3) * 2 : 0;
   const br = Math.sin(t8 * 1.5) * 2;
   c.save(); c.translate(0, br);
@@ -249,45 +250,52 @@ function woman(c, t8) {
 }
 
 function drawS8(c, t) {
-  const t8 = t - PB0;
-  const loc = t - FIN_S + 55.5;
+  const t8 = t - S8, loc = 55.5 + (t8 - BRAND_AT);
   SCC.save();
-  if (t8 < 2.6) {
-    drawContent(SCC, t - HUB_S, 0); drawFinale(SCC, loc);
-    if (t8 > 2.35) { SCC.save(); SCC.globalAlpha = smooth(2.35, 2.6, t8); drawForm(SCC, t8 - 2.5); SCC.restore(); }
-  } else drawForm(SCC, t8 - 2.5);
+  if (t8 < 0.6) {
+    drawContent(SCC, t - HUB_S, 1 - smooth(0, 0.6, t8));
+    SCC.save(); SCC.globalAlpha = smooth(0, 0.6, t8); drawForm(SCC, t8 - 0.3); SCC.restore();
+  } else {
+    drawForm(SCC, t8 - 0.3);
+    if (t8 > BRAND_AT) { SCC.save(); SCC.globalAlpha = smooth(BRAND_AT, BRAND_AT + 0.5, t8); drawContent(SCC, 0, 0); drawFinale(SCC, loc); SCC.restore(); }
+  }
   SCC.restore();
-  const zi = E.io(inv(0, 2.3, t8)), drift = inv(2.3, 9.6, t8);
-  const Z = Math.exp(lerp(Math.log(2), 0, zi)) * (1 + 0.02 * drift), cx = lerp(W / 2, PC[0], zi) + 8 * drift, cy = lerp(H / 2, PC[1], zi) - 4 * drift;
-  c.save();
-  c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
-  c.translate(cx, cy); c.scale(Z, Z); c.translate(-PC[0], -PC[1]);
-  roomBackdrop(c, t8);
-  roomDesk(c, t8);
-  roomMonitor(c, t8);
-  c.save(); c.beginPath(); c.roundRect(SCR.x, SCR.y, SCR.w, SCR.h, 6); c.clip();
-  c.imageSmoothingQuality = 'high'; c.drawImage(SC, SCR.x, SCR.y, SCR.w, SCR.h);
-  c.restore();
-  c.save(); c.globalCompositeOperation = 'lighter';
-  const rg = c.createLinearGradient(SCR.x, SCR.y, SCR.x + SCR.w, SCR.y + SCR.h); rg.addColorStop(0, 'rgba(255,255,255,0.06)'); rg.addColorStop(0.45, 'rgba(255,255,255,0)'); rg.addColorStop(1, 'rgba(255,255,255,0.02)');
-  c.fillStyle = rg; c.fillRect(SCR.x, SCR.y, SCR.w, SCR.h); c.restore();
-  roomProps(c, t8);
-  woman(c, t8);
-  c.restore();
-  const ca = smooth(3.2, 3.9, t8) * (1 - smooth(9.0, 9.6, t8));
+  const pi = E.io(inv(BRAND_AT, BRAND_AT + PUSH_LEN, t8)), zk = E.io(inv(Z_START, Z_START + Z_LEN, t8)) * (1 - pi);
+  if (zk < 0.0005) c.drawImage(SC, 0, 0);
+  else {
+    const drift = inv(Z_START + Z_LEN, BRAND_AT, t8) * (1 - pi);
+    const Z = Math.exp(lerp(Math.log(2), 0, zk)) * (1 + 0.02 * drift), cx = lerp(W / 2, PC[0], zk) + 8 * drift, cy = lerp(H / 2, PC[1], zk) - 4 * drift;
+    c.save();
+    c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
+    c.translate(cx, cy); c.scale(Z, Z); c.translate(-PC[0], -PC[1]);
+    roomBackdrop(c, t8);
+    roomDesk(c, t8);
+    roomMonitor(c, t8);
+    c.save(); c.beginPath(); c.roundRect(SCR.x, SCR.y, SCR.w, SCR.h, 6); c.clip();
+    c.imageSmoothingQuality = 'high'; c.drawImage(SC, SCR.x, SCR.y, SCR.w, SCR.h);
+    c.restore();
+    c.save(); c.globalCompositeOperation = 'lighter';
+    const rg = c.createLinearGradient(SCR.x, SCR.y, SCR.x + SCR.w, SCR.y + SCR.h); rg.addColorStop(0, 'rgba(255,255,255,0.06)'); rg.addColorStop(0.45, 'rgba(255,255,255,0)'); rg.addColorStop(1, 'rgba(255,255,255,0.02)');
+    c.fillStyle = rg; c.fillRect(SCR.x, SCR.y, SCR.w, SCR.h); c.restore();
+    roomProps(c, t8);
+    woman(c, t8);
+    c.restore();
+    const vg = c.createRadialGradient(W / 2, H / 2, H * 0.38, W / 2, H / 2, H * 1.0);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(0,0,0,${0.5 * zk})`);
+    c.fillStyle = vg; c.fillRect(0, 0, W, H);
+  }
+  const ca = smooth(5.5, 6.2, t8) * (1 - smooth(8.3, 8.8, t8));
   if (ca > 0) {
     const g = c.createLinearGradient(0, H - 330, 0, H);
     g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${0.62 * ca})`);
     c.fillStyle = g; c.fillRect(0, H - 330, W, 330);
     CAPTION.forEach((ln, i) => {
-      const a = smooth(3.2 + i * 0.6, 3.9 + i * 0.6, t8) * (1 - smooth(9.0, 9.6, t8));
-      txt(c, ln, W - 110, H - 150 + i * 72 + (1 - E.out(inv(3.2 + i * 0.6, 4.1 + i * 0.6, t8))) * 18, { size: i ? 50 : 54, w: i ? 600 : 900, align: 'right', color: i ? C.goldHi : '#fff', alpha: a, glow: 'rgba(0,0,0,0.7)', blur: 20 });
+      const a = smooth(5.5 + i * 0.6, 6.2 + i * 0.6, t8) * (1 - smooth(8.3, 8.8, t8));
+      txt(c, ln, W - 110, H - 150 + i * 72 + (1 - E.out(inv(5.5 + i * 0.6, 6.4 + i * 0.6, t8))) * 18, { size: i ? 50 : 54, w: i ? 600 : 900, align: 'right', color: i ? C.goldHi : '#fff', alpha: a, glow: 'rgba(0,0,0,0.7)', blur: 20 });
     });
     c.save(); c.globalAlpha = ca; c.fillStyle = C.gold;
-    const lw = 130 * E.out(inv(4.0, 4.9, t8)); c.fillRect(W - 110 - lw, H - 150 + 118, lw, 3); c.restore();
-    txt(c, 'naghshman.ir', 110, H - 52, { size: 24, w: 500, color: 'rgba(255,255,255,0.65)', align: 'left', dir: 'ltr', alpha: smooth(5.6, 6.2, t8) * (1 - smooth(9.0, 9.6, t8)) });
+    const lw = 130 * E.out(inv(6.3, 7.2, t8)); c.fillRect(W - 110 - lw, H - 150 + 118, lw, 3); c.restore();
   }
-  finish(c, t8, 0.5);
-  const fo = smooth(8.9, 9.6, t8);
+  const fo = smooth(SEQ_LEN - 0.5, SEQ_LEN, t8);
   if (fo > 0) { c.fillStyle = `rgba(0,0,0,${fo})`; c.fillRect(0, 0, W, H); }
 }
