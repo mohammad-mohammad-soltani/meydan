@@ -78,6 +78,26 @@ test("offline fallback ships the Meydan font and a real offline icon", () => {
   assert.match(worker, /["']\/fonts\/IRANSansXV\.woff2["']/);
 });
 
+test("first-load splash plays the theme-matched Lottie once per tab and caches offline", () => {
+  assert.equal(existsSync(path.join(root, "public/splash/splash-light.json")), true);
+  assert.equal(existsSync(path.join(root, "public/splash/splash-dark.json")), true);
+
+  const layout = source("app/layout.tsx");
+  assert.match(layout, /id="meydan-splash"/);
+  assert.match(layout, /sessionStorage\.getItem\(\\"meydan-splash-shown\\"\)/);
+  assert.match(layout, /<SplashScreen \/>/);
+
+  const splash = source("components/pwa/SplashScreen.tsx");
+  assert.match(splash, /SPLASH_SESSION_KEY = "meydan-splash-shown"/);
+  assert.match(splash, /readStoredTheme\(\) === "light" \? "\/splash\/splash-light\.json" : "\/splash\/splash-dark\.json"/);
+  assert.match(splash, /renderer: "svg"/);
+  assert.match(splash, /sessionStorage\.setItem\(SPLASH_SESSION_KEY, "1"\)/);
+
+  const worker = source("public/sw.js");
+  assert.match(worker, /SPLASH_URLS = \["\/splash\/splash-light\.json", "\/splash\/splash-dark\.json"\]/);
+  assert.match(worker, /SPLASH_URLS\.includes\(url\.pathname\)/);
+});
+
 test("push permission prompt stays gone permanently after allow or close", () => {
   const enrollment = source("components/pwa/PushEnrollment.tsx");
   assert.match(enrollment, /PROMPT_HIDDEN_KEY\s*=\s*["']meydan-push-prompt-hidden["']/);

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { PwaRuntime } from "@/components/pwa/PwaRuntime";
+import { SplashScreen } from "@/components/pwa/SplashScreen";
 import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL, TWITTER_SITE_HANDLE } from "@/lib/seo";
 import "./globals.css";
 import "@/features/admin/admin-workspace.css";
@@ -73,7 +74,36 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: "(() => {\n  try {\n    const stored = window.localStorage.getItem(\"meydan-theme\");\n    const theme = stored === \"light\" || stored === \"black\" ? stored : \"dark\";\n    document.documentElement.classList.toggle(\"dark\", theme === \"dark\");\n    document.documentElement.classList.toggle(\"black\", theme === \"black\");\n    document.documentElement.style.colorScheme = theme === \"light\" ? \"light\" : \"dark\";\n  } catch {\n    document.documentElement.classList.add(\"dark\");\n    document.documentElement.classList.remove(\"black\");\n    document.documentElement.style.colorScheme = \"dark\";\n  }\n})();" }} />
       </head>
       <body className="min-h-dvh bg-background text-foreground transition-colors duration-150">
+        {/*
+          Rendered server-side so it covers the page before any script runs,
+          so there is no flash of app content on a real first load. The
+          bootstrap script right below removes it immediately on every load
+          that isn't a fresh tab/URL hit (sessionStorage already set); the
+          `SplashScreen` client component takes over from here on a real
+          first load, plays the Lottie, then removes it itself.
+        */}
+        <div
+          id="meydan-splash"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 2000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--background)",
+          }}
+        >
+          <div id="meydan-splash-anim" style={{ width: 220, height: 220 }} />
+        </div>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(() => {\n  try {\n    if (window.sessionStorage.getItem(\"meydan-splash-shown\")) {\n      document.getElementById(\"meydan-splash\")?.remove();\n    }\n  } catch {\n    document.getElementById(\"meydan-splash\")?.remove();\n  }\n})();",
+          }}
+        />
         <PwaRuntime />
+        <SplashScreen />
         {children}
       </body>
     </html>
