@@ -161,7 +161,7 @@ function phonePose(t, ox, br) {
 function mainPerson(c, ox, t, ph, zin) {
   const x = 560 + ox, br = Math.sin(t * 1.6) * 3;
   const pb = [700 + ox, 1110], pt = [726 + ox + Math.sin(t * 1.1) * 4, 128 + br * 0.5];
-  bigFlag(c, pt[0] + 2, pt[1] + 8, 470, 268, t, 1 + 0.4 * Math.sin(Math.PI * inv(4.6, 9.6, t)));
+  bigFlag(c, pt[0] + 2, pt[1] + 8, 470, 268, t, 1 + 0.4 * Math.sin(Math.PI * inv(4.6, 9.6 + S1_EXTRA, t)));
   c.save();
   c.lineCap = 'round';
   c.strokeStyle = '#140b0b'; c.lineWidth = 10;
@@ -336,7 +336,7 @@ const TOASTS = [
 ];
 function crowdToasts(c, t) {
   for (const n of TOASTS) {
-    const p = inv(n.at, n.at + 1.55, t);
+    const p = inv(n.at + S1_EXTRA, n.at + S1_EXTRA + 1.55, t);
     if (p <= 0 || p >= 1) continue;
     const a = smooth(0, 0.14, p) * (1 - smooth(0.78, 1, p)), rise = E.out(p) * 170, k = E.back(clamp(p / 0.25));
     const rw = measure(n.r, 27, 800), sw = measure(n.s, 25, 500), w = rw + sw + 104, h = 68;
@@ -360,12 +360,13 @@ function crowdToasts(c, t) {
   }
 }
 
-function drawS1(c, t) {
-  const u = inv(0, 10.3, t);
+function drawS1Core(c, t) {
+  const X = S1_EXTRA;
+  const u = inv(0, 10.3 + X, t);
   const cam = lerp(70, -70, E.sine(u));
-  const zb = lerp(1.0, 1.075, E.sine(inv(0, 7.2, t))) * lerp(1, 0.9, E.io(inv(7.3, 10.2, t)));
+  const zb = lerp(1.0, 1.075, E.sine(inv(0, 7.2 + X, t))) * lerp(1, 0.9, E.io(inv(7.3 + X, 10.2 + X, t)));
   const ox = cam * 1.18, br = Math.sin(t * 1.6) * 3, ph = phonePose(t, ox, br);
-  const zin = E.io(inv(3.15, 4.2, t)) * (1 - E.io(inv(7.1, 8.3, t)));
+  const zin = E.io(inv(3.15, 4.2, t)) * (1 - E.io(inv(7.1 + X, 8.3 + X, t)));
   const Z = Math.exp(lerp(Math.log(zb), Math.log(4.5), zin));
   const b0 = [W / 2 + (ph.x - W / 2) * zb, H * 0.62 + (ph.y - H * 0.62) * zb];
   const sp = [lerp(b0[0], W / 2, zin), lerp(b0[1], H / 2 + 8, zin)], rot = -ph.rot * zin;

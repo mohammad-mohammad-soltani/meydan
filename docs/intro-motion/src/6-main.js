@@ -17,12 +17,16 @@ function over(fn, t, a) {
 }
 function render(t) {
   t = clamp(t, 0, DUR - 1e-4);
-  const c = ctx;
+  const c = ctx, X = S1_EXTRA;
   c.save();
-  if (t < 10.25) {
+  if (t < 10.25 + X) {
     drawS1(c, t);
-    if (t > 9.7) over(drawS2A, t, smooth(9.7, 10.25, t));
-  } else if (t < 12.5) {
+    if (t > 9.7 + X) over((cc, tt) => drawS2A(cc, tt - X), t, smooth(9.7 + X, 10.25 + X, t));
+  } else render2(c, t - X);
+  c.restore();
+}
+function render2(c, t) {
+  if (t < 12.5) {
     drawS2A(c, t);
     if (t > 12.25) over(drawS2B, t, smooth(12.25, 12.5, t));
   }
@@ -33,7 +37,6 @@ function render(t) {
   else if (t < HUB_S + 0.8) { drawMap(c, t); over((cc, tt) => drawContent(cc, tt - HUB_S), t, smooth(HUB_S, HUB_S + 0.8, t)); }
   else if (t < HUB_FADE) drawContent(c, t - HUB_S);
   else drawS8(c, t);
-  c.restore();
 }
 
 async function init() {
@@ -45,8 +48,8 @@ async function init() {
 }
 
 const CHAPTERS = [
-  [0, 'اجتماعی بودن'], [10, 'میدان و شبکه‌ی میدان'], [20, 'اتصال میدان‌ها'], [30, 'ایران و کره‌ی زمین'],
-  [38, 'خط قابلیت‌ها'], [HUB_S, 'بخش محتوا'], [S8, 'ثبت‌نام در نقش من'], [S8 + BRAND_AT, 'نقش من'],
+  [0, 'اجتماعی بودن'], [10 + S1_EXTRA, 'میدان و شبکه‌ی میدان'], [20 + S1_EXTRA, 'اتصال میدان‌ها'], [30 + S1_EXTRA, 'ایران و کره‌ی زمین'],
+  [38 + S1_EXTRA, 'خط قابلیت‌ها'], [HUB_S + S1_EXTRA, 'بخش محتوا'], [S8 + S1_EXTRA, 'ثبت‌نام در نقش من'], [S8 + BRAND_AT + S1_EXTRA, 'نقش من'],
 ];
 const ui = {
   big: document.getElementById('big'), play: document.getElementById('play'), restart: document.getElementById('restart'),
