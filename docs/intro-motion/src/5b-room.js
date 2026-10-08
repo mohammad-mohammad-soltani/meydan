@@ -4,8 +4,9 @@ const Z_START = 2.5, Z_LEN = 2.3, BRAND_AT = 8.6, PUSH_LEN = 2.2, SEQ_LEN = 13.4
 const SCR = { x: 800, y: 110, w: 960, h: 540 }, PC = [SCR.x + SCR.w / 2, SCR.y + SCR.h / 2];
 const SC = mk(W, H), SCC = SC.getContext('2d');
 const CAPTION = ['خانه‌ات هم یک میدان است؛', 'نقش خودت را همین‌جا بساز.'];
-const FIELD_NAME = 'زهرا', FIELD_SQ = 'تهران · میدان آزادی';
-const CHIPS = ['روایتگر', 'یاور کارها', 'دعوت‌کننده'];
+const FIELD_NAME = 'زهرا', FIELD_CITY = 'میناب';
+const CHIPS = ['دانشجو', 'دانش‌آموز', 'طلبه', 'خانه‌دار', 'و…'], CHIP_SEL = 3;
+function chipRow(R) { let xr = R; return CHIPS.map(s => { const w = measure(s, 32, 700) + 64, cx = xr - w / 2; xr -= w + 16; return { s, w, cx }; }); }
 let LEAVES = [];
 
 function typed(s, p) { return s.slice(0, Math.floor(clamp(p) * s.length + 1e-6)); }
@@ -43,19 +44,18 @@ function drawForm(c, tf) {
       txt(c, val, R - 28, y + 67, { size: 40, w: 600, align: 'right' });
       if (caret) { const tw = measure(val, 40, 600); c.fillStyle = C.gold; c.fillRect(R - 28 - tw - 8, y + 41, 3, 50); }
     };
-    const f1 = tf > 0.4 && tf < 1.7, f2 = tf >= 1.7 && tf < 3.0;
+    const f1 = tf > 0.4 && tf < 1.7, f2 = tf >= 1.7 && tf < 2.9;
     field('نام', cy0 + 345, typed(FIELD_NAME, inv(0.5, 1.4, tf)), f1);
-    field('شهر و میدان', cy0 + 505, typed(FIELD_SQ, inv(1.8, 3.0, tf)), f2);
-    txt(c, 'نقش من چیست؟', R, cy0 + 665, { size: 28, w: 600, color: '#c9ccd3', align: 'right' });
-    let xr = R;
-    CHIPS.forEach((s, i) => {
-      const w = measure(s, 32, 700) + 64, on = tf > 3.55 && i === 0, pop = on ? E.back(inv(3.55, 3.85, tf)) : 0;
-      c.save(); c.translate(xr - w / 2, cy0 + 725); c.scale(1 + 0.04 * Math.sin(Math.PI * clamp(pop)), 1 + 0.04 * Math.sin(Math.PI * clamp(pop)));
+    field('شهر', cy0 + 505, typed(FIELD_CITY, inv(1.8, 2.6, tf)), f2);
+    txt(c, 'جایگاه من', R, cy0 + 665, { size: 28, w: 600, color: '#c9ccd3', align: 'right' });
+    const chips = chipRow(R);
+    chips.forEach(({ s, w, cx: chx }, i) => {
+      const on = tf > 3.55 && i === CHIP_SEL, pop = on ? E.back(inv(3.55, 3.85, tf)) : 0;
+      c.save(); c.translate(chx, cy0 + 725); c.scale(1 + 0.04 * Math.sin(Math.PI * clamp(pop)), 1 + 0.04 * Math.sin(Math.PI * clamp(pop)));
       c.fillStyle = on ? 'rgba(242,196,109,0.18)' : 'rgba(255,255,255,0.05)'; c.strokeStyle = on ? C.gold : 'rgba(255,255,255,0.14)'; c.lineWidth = on ? 3 : 2;
       c.beginPath(); c.roundRect(-w / 2, -34, w, 68, 34); c.fill(); c.stroke();
       txt(c, s, 0, 2, { size: 32, w: 700, color: on ? C.goldHi : '#d4d7de' });
       c.restore();
-      xr -= w + 16;
     });
     const bx = cx0 + 60, by = cy0 + 790, bw = cw - 120, bh = 84, press = Math.sin(Math.PI * inv(4.35, 4.6, tf));
     c.save(); c.translate(bx + bw / 2, by + bh / 2); c.scale(1 - 0.015 * press, 1 - 0.03 * press); c.translate(-bx - bw / 2, -by - bh / 2);
@@ -64,7 +64,7 @@ function drawForm(c, tf) {
     if (rp > 0 && rp < 1) { c.save(); c.beginPath(); c.roundRect(bx, by, bw, bh, 22); c.clip(); c.fillStyle = `rgba(255,255,255,${0.35 * (1 - rp)})`; c.beginPath(); c.arc(bx + bw / 2, by + bh / 2, 30 + rp * 600, 0, Math.PI * 2); c.fill(); c.restore(); }
     txt(c, 'ثبت‌نام در نقش من', bx + bw / 2, by + bh / 2 + 3, { size: 38, w: 800 });
     c.restore();
-    const path = [[0.0, [1240, 960]], [2.9, [1240, 960]], [3.5, [1330, 735 + cy0 - 90]], [3.62, [1330, 735 + cy0 - 90]], [4.3, [960, by + 60]], [4.7, [960, by + 60]]];
+    const path = [[0.0, [1240, 960]], [2.9, [1240, 960]], [3.5, [chips[CHIP_SEL].cx, cy0 + 725]], [3.62, [chips[CHIP_SEL].cx, cy0 + 725]], [4.3, [960, by + 60]], [4.7, [960, by + 60]]];
     let cur = path[0][1];
     for (let i = 1; i < path.length; i++) if (tf >= path[i - 1][0] && tf <= path[i][0]) { const u = E.io(inv(path[i - 1][0], path[i][0], tf)); cur = [lerp(path[i - 1][1][0], path[i][1][0], u), lerp(path[i - 1][1][1], path[i][1][1], u)]; }
     if (tf > path[path.length - 1][0]) cur = path[path.length - 1][1];

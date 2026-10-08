@@ -271,7 +271,7 @@ function drawContent(c, th, cardsA = 1) {
 
 // ── finale
 let PARTS = [], IRAN_PTS = [], FCITIES = [];
-const IR_K = 33, IR_CX = 960, IR_CY = 360;
+const IR_K = 36, IR_CX = 960, IR_CY = 372;
 const irXY = ([lon, lat]) => [IR_CX + (lon - 53.6) * IR_K * Math.cos(32.4 * Math.PI / 180), IR_CY - (lat - 32.4) * IR_K];
 
 function buildFinale() {
@@ -333,25 +333,27 @@ function drawFinale(c, t) {
       figure(c, fc.p[0], fc.p[1] - 6, 26, C.goldHi, a * fig);
     });
   }
-  const la = E.back(inv(56.5, 57.2, t)), lo = smooth(56.5, 56.8, t);
+  const LK_Y = 762, TILE = 140, GAP = 44, tw = measure('نقش من', 124, 900), gw = tw + GAP + TILE;
+  const tileX = W / 2 + gw / 2 - TILE / 2, textX = W / 2 - gw / 2 + tw / 2;
+  const lo = smooth(56.9, 57.25, t), la = E.back(inv(56.9, 57.6, t));
   if (lo > 0) {
-    glowDot(c, IR_CX, IR_CY + 8, 260, REDC, 0.45 * lo);
+    glowDot(c, tileX, LK_Y, 230, REDC, 0.4 * lo);
     c.save(); c.globalAlpha = lo;
-    c.translate(IR_CX, IR_CY + 8); c.scale(lerp(0.6, 1, la), lerp(0.6, 1, la));
-    c.shadowColor = 'rgba(220,38,38,0.6)'; c.shadowBlur = 50;
-    logoTile(c, 0, 0, 150);
+    c.translate(tileX, LK_Y); c.scale(lerp(0.6, 1, la), lerp(0.6, 1, la));
+    c.shadowColor = 'rgba(220,38,38,0.55)'; c.shadowBlur = 44;
+    logoTile(c, 0, 0, TILE);
     c.restore();
     const sh = inv(58.3, 59.0, t);
     if (sh > 0 && sh < 1) {
-      c.save(); c.beginPath(); c.roundRect(IR_CX - 75, IR_CY - 67, 150, 150, 34); c.clip();
-      const sx = lerp(IR_CX - 160, IR_CX + 160, sh);
+      c.save(); c.beginPath(); c.roundRect(tileX - TILE / 2, LK_Y - TILE / 2, TILE, TILE, TILE * 0.226); c.clip();
+      const sx = lerp(tileX - TILE, tileX + TILE, sh);
       const g = c.createLinearGradient(sx - 40, 0, sx + 40, 0);
       g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,0.35)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-      c.fillStyle = g; c.fillRect(IR_CX - 80, IR_CY - 70, 160, 160); c.restore();
+      c.fillStyle = g; c.fillRect(tileX - TILE / 2, LK_Y - TILE / 2, TILE, TILE); c.restore();
     }
   }
   const na = smooth(57.1, 57.7, t);
-  if (na > 0) txt(c, 'نقش من', W / 2, 760 + (1 - E.out(inv(57.1, 57.8, t))) * 26, { size: 124, w: 900, alpha: na, glow: 'rgba(242,196,109,0.35)', blur: 40 });
+  if (na > 0) txt(c, 'نقش من', textX, LK_Y + 4 + (1 - E.out(inv(57.1, 57.8, t))) * 26, { size: 124, w: 900, alpha: na, glow: 'rgba(242,196,109,0.35)', blur: 40 });
   const sa = smooth(57.75, 58.35, t);
   if (sa > 0) {
     txt(c, 'یک نقشه، هزاران نقش', W / 2, 872 + (1 - E.out(inv(57.75, 58.45, t))) * 18, { size: 46, w: 500, color: C.goldHi, alpha: sa });
