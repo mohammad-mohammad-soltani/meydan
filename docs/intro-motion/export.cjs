@@ -13,7 +13,7 @@ const FPS = +(fpsArg || 30), DUR = 60;
   await page.goto('file://' + local);
   await page.evaluate(() => window.NM.ready);
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', process.env.CRF || '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
   const N = Math.round(DUR * FPS), t0 = Date.now();
   for (let i = 0; i < N; i++) {
     const b64 = await page.evaluate(t => { window.NM.renderAt(t); return window.NM.canvas.toDataURL('image/jpeg', 0.95).split(',')[1]; }, i / FPS);

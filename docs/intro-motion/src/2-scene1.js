@@ -117,7 +117,6 @@ function miniFlag(c, x, y, w, h, t, ph) {
   for (let i = 0; i < N; i++) {
     const u = i / N, dy = Math.sin(ph + u * 3.2 - t * 6.5) * h * 0.24 * u;
     const sh = 0.85 + 0.15 * Math.cos(ph + u * 3.2 - t * 6.5);
-    c.globalAlpha = 1;
     c.fillStyle = `rgb(${29 * sh | 0},${112 * sh | 0},${62 * sh | 0})`; c.fillRect(x + u * w, y + dy, sw + 0.7, h / 3 + 0.5);
     c.fillStyle = `rgb(${236 * sh | 0},${221 * sh | 0},${200 * sh | 0})`; c.fillRect(x + u * w, y + dy + h / 3, sw + 0.7, h / 3 + 0.5);
     c.fillStyle = `rgb(${190 * sh | 0},${40 * sh | 0},${44 * sh | 0})`; c.fillRect(x + u * w, y + dy + (2 * h) / 3, sw + 0.7, h / 3);
@@ -125,14 +124,14 @@ function miniFlag(c, x, y, w, h, t, ph) {
 }
 
 const FT = mk(780, 560), FTC = FT.getContext('2d');
-function bigFlag(c, px, py, w, h, t) {
+function bigFlag(c, px, py, w, h, t, boost = 1) {
   FTC.clearRect(0, 0, 780, 560);
   FTC.imageSmoothingQuality = 'high';
   const N = 170, ox = 10, oy = 120, shade = [];
   const sway = 22 * (1 + 0.3 * Math.sin(t * 1.3));
   for (let i = 0; i < N; i++) {
     const u = i / N, ph = u * 6.6 - t * 4.4;
-    const amp = (8 + 44 * u) * Math.pow(u, 0.75);
+    const amp = (8 + 44 * u) * Math.pow(u, 0.75) * boost;
     const dy = Math.sin(ph) * amp + u * u * 30;
     const sc = 1 - 0.07 * u * Math.cos(ph);
     const dx = ox + u * w - u * u * sway;
@@ -155,7 +154,7 @@ function bigFlag(c, px, py, w, h, t) {
 function mainPerson(c, ox, t) {
   const x = 560 + ox, br = Math.sin(t * 1.6) * 3;
   const pb = [700 + ox, 1110], pt = [726 + ox + Math.sin(t * 1.1) * 4, 128 + br * 0.5];
-  bigFlag(c, pt[0] + 2, pt[1] + 8, 470, 268, t);
+  bigFlag(c, pt[0] + 2, pt[1] + 8, 470, 268, t, 1 + 0.4 * Math.sin(Math.PI * inv(5.5, 9.2, t)));
   c.save();
   c.lineCap = 'round';
   c.strokeStyle = '#140b0b'; c.lineWidth = 10;
@@ -190,7 +189,80 @@ function mainPerson(c, ox, t) {
     c.beginPath(); c.ellipse(x + 152, 568, 31, 40, -0.2, 0, Math.PI * 2); c.fill();
     c.restore();
   }
-  return [x + 262, 640 + br];
+  return [x - 100, 764 + br];
+}
+
+// the flag-bearer joins «نقش من» and receives the role «پرچمگردانی» (4.4 – 9.4s)
+function joinCard(c, t, ps) {
+  const a = smooth(4.4, 4.75, t) * (1 - smooth(9.0, 9.45, t));
+  if (a <= 0) return;
+  const x0 = 56, y0 = 372, w = 410, h = 266, x1 = x0 + w, R = x1 - 24, ax = x1 - 70, ay = y0 + h;
+  c.save();
+  c.globalAlpha = a;
+  c.strokeStyle = rgba(GOLD, 0.75); c.lineWidth = 2; c.setLineDash([4, 8]);
+  c.beginPath(); c.moveTo(ps[0], ps[1] - 76); c.quadraticCurveTo(ps[0] - 4, ay + 40, ax, ay); c.stroke();
+  c.setLineDash([]);
+  const k = E.back(inv(4.4, 4.95, t));
+  c.translate(ax, ay); c.scale(lerp(0.8, 1, k), lerp(0.8, 1, k)); c.translate(-ax, -ay);
+  c.shadowColor = 'rgba(0,0,0,0.55)'; c.shadowBlur = 44; c.shadowOffsetY = 14;
+  c.fillStyle = 'rgba(13,13,18,0.9)'; c.beginPath(); c.roundRect(x0, y0, w, h, 24); c.fill();
+  c.shadowColor = 'transparent';
+  c.strokeStyle = 'rgba(255,255,255,0.1)'; c.lineWidth = 1.5; c.stroke();
+  const tg = c.createLinearGradient(x0, 0, x1, 0);
+  tg.addColorStop(0, 'rgba(242,196,109,0)'); tg.addColorStop(0.5, 'rgba(242,196,109,0.85)'); tg.addColorStop(1, 'rgba(242,196,109,0)');
+  c.fillStyle = tg; c.fillRect(x0 + 30, y0, w - 60, 1.5);
+  logoTile(c, R - 18, y0 + 42, 36);
+  txt(c, 'نقش من', R - 48, y0 + 43, { size: 25, w: 800, align: 'right' });
+  const cw = measure('عضویت جدید', 16, 700) + 26;
+  c.fillStyle = 'rgba(242,196,109,0.14)'; c.strokeStyle = 'rgba(242,196,109,0.55)'; c.lineWidth = 1.2;
+  c.beginPath(); c.roundRect(x0 + 24, y0 + 27, cw, 32, 16); c.fill(); c.stroke();
+  txt(c, 'عضویت جدید', x0 + 24 + cw / 2, y0 + 44, { size: 16, w: 700, color: C.goldHi });
+  c.fillStyle = 'rgba(255,255,255,0.08)'; c.fillRect(x0 + 24, y0 + 78, w - 48, 1);
+  const r2 = smooth(4.8, 5.2, t);
+  if (r2 > 0) {
+    c.save(); c.globalAlpha *= r2; c.translate(0, (1 - r2) * 10);
+    const g = c.createLinearGradient(R - 56, y0 + 98, R, y0 + 154);
+    g.addColorStop(0, '#3a3f4a'); g.addColorStop(1, '#1a1d24');
+    c.fillStyle = g; c.beginPath(); c.arc(R - 28, y0 + 126, 28, 0, Math.PI * 2); c.fill();
+    icon(c, 'user', R - 28, y0 + 126, 30, '#e5e7eb', 1.8);
+    txt(c, 'عضو تازه‌ی میدان آزادی', R - 70, y0 + 112, { size: 21, w: 700, align: 'right' });
+    txt(c, 'تهران · همین حالا', R - 70, y0 + 142, { size: 16, color: C.mute, align: 'right' });
+    c.restore();
+  }
+  const r3 = smooth(5.25, 5.55, t), ry = y0 + 196;
+  if (r3 > 0) {
+    c.save(); c.globalAlpha *= r3;
+    txt(c, 'نقش شما:', R, ry + 1, { size: 18, color: '#c9ccd3', align: 'right' });
+    const lw = measure('نقش شما:', 18, 400), tw = measure('پرچمگردانی', 22, 800), pw = tw + 74, pr = R - lw - 14;
+    const kp = E.back(inv(5.45, 5.95, t));
+    if (kp > 0) {
+      const pcx = pr - pw / 2;
+      glowDot(c, pcx, ry, 150, GOLD, 0.7 * (1 - inv(5.6, 6.6, t)) + 0.15);
+      c.save();
+      c.translate(pcx, ry); c.scale(kp, kp); c.translate(-pcx, -ry);
+      const pg = c.createLinearGradient(pr - pw, 0, pr, 0);
+      pg.addColorStop(0, '#d9a441'); pg.addColorStop(1, '#f6d58e');
+      c.fillStyle = pg; c.beginPath(); c.roundRect(pr - pw, ry - 22, pw, 44, 22); c.fill();
+      miniFlag(c, pr - pw + 18, ry - 9, 28, 18, t, 0);
+      txt(c, 'پرچمگردانی', pr - 18, ry + 1, { size: 22, w: 800, color: '#1c1305', align: 'right' });
+      c.restore();
+    }
+    c.restore();
+  }
+  const r4 = inv(6.3, 6.75, t);
+  if (r4 > 0) {
+    const cy = y0 + 240;
+    c.save(); c.globalAlpha *= smooth(6.3, 6.5, t);
+    c.fillStyle = '#16a34a'; c.beginPath(); c.arc(R - 11, cy, 11, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 2.4; c.lineCap = 'round'; c.lineJoin = 'round';
+    const f = E.out(r4);
+    c.beginPath(); c.moveTo(R - 16, cy); c.lineTo(lerp(R - 16, R - 12, clamp(f * 2)), lerp(cy, cy + 4, clamp(f * 2)));
+    if (f > 0.5) c.lineTo(lerp(R - 12, R - 5, (f - 0.5) * 2), lerp(cy + 4, cy - 4, (f - 0.5) * 2));
+    c.stroke();
+    txt(c, 'عضویت تأیید شد', R - 32, cy + 1, { size: 17, w: 600, color: '#4ade80', align: 'right' });
+    c.restore();
+  }
+  c.restore();
 }
 
 function pin(c, x, y, s, t, a) {
@@ -296,17 +368,19 @@ function drawS1(c, t) {
   g.addColorStop(0, 'rgba(255,180,110,0)'); g.addColorStop(0.5, 'rgba(255,200,140,0.22)'); g.addColorStop(1, 'rgba(255,180,110,0)');
   c.fillStyle = g; c.fillRect(fx - 900, 728, 1800, 6);
   c.restore();
+  const ps = [W / 2 + (pinAt[0] - W / 2) * z, H * 0.62 + (pinAt[1] - H * 0.62) * z];
+  joinCard(c, t, ps);
   const pa = E.out(inv(3.0, 3.8, t)) * (1 - smooth(9.4, 10, t));
-  pin(c, pinAt[0], pinAt[1] - (1 - E.back(inv(3.0, 3.8, t))) * 40, 92, t, pa);
-  const ta = smooth(4.6, 5.4, t) * (1 - smooth(9.2, 9.8, t));
+  pin(c, ps[0], ps[1] - (1 - E.back(inv(3.0, 3.8, t))) * 40, 92, t, pa);
+  const ta = smooth(6.6, 7.3, t) * (1 - smooth(9.2, 9.8, t));
   if (ta > 0) {
     g = c.createLinearGradient(0, H - 300, 0, H);
     g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${0.6 * ta})`);
     c.fillStyle = g; c.fillRect(0, H - 300, W, 300);
-    const yy = H - 118 + (1 - E.out(inv(4.6, 5.6, t))) * 24;
+    const yy = H - 118 + (1 - E.out(inv(6.6, 7.5, t))) * 24;
     txt(c, 'هر حضور، یک نقش', W - 120, yy, { size: 46, w: 800, align: 'right', alpha: ta, glow: 'rgba(0,0,0,0.6)', blur: 18 });
     c.save(); c.globalAlpha = ta;
-    c.fillStyle = C.gold; c.fillRect(W - 120 - 120 * E.out(inv(4.9, 5.8, t)), yy + 44, 120 * E.out(inv(4.9, 5.8, t)), 3);
+    c.fillStyle = C.gold; c.fillRect(W - 120 - 120 * E.out(inv(6.9, 7.8, t)), yy + 44, 120 * E.out(inv(6.9, 7.8, t)), 3);
     c.restore();
   }
   finish(c, t, 0.55);
