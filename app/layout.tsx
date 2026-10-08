@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { PwaRuntime } from "@/components/pwa/PwaRuntime";
+import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL, TWITTER_SITE_HANDLE } from "@/lib/seo";
 import "./globals.css";
 import "@/features/admin/admin-workspace.css";
 import "@/features/media/viewer.css";
@@ -18,9 +19,50 @@ const iranSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "نقش من | شبکه سراسری میادین ایران",
-  description: "سامانه اجتماعی، رسانه‌ای و میدانی نقش من",
-  applicationName: "نقش من",
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_TITLE, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  generator: "Next.js",
+  keywords: ["نقش من", "میدان", "شبکه اجتماعی ایران", "روایت", "سخنرانان", "محتوا", "پادکست"],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon.ico" }],
+    apple: [{ url: "/apple-icon.png" }],
+  },
+  manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "fa_IR",
+    url: "/",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: "summary",
+    site: TWITTER_SITE_HANDLE,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE.url],
+  },
+  formatDetection: { telephone: false },
+  other: process.env.GOOGLE_SITE_VERIFICATION
+    ? { "google-site-verification": process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0b0b0c",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

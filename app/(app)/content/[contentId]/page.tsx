@@ -5,6 +5,7 @@ import {
   getContentDetailById,
   getContentDetailItems,
 } from "@/features/content/services/content.service";
+import { absoluteUrl, jsonLdScript, toDescription } from "@/lib/seo";
 
 type ContentDetailPageProps = {
   params: Promise<{ contentId: string }>;
@@ -18,9 +19,30 @@ export async function generateMetadata({
   const { contentId } = await params;
   const item = await getContentDetailById(contentId);
   if (!item) return { title: "محتوا پیدا نشد | میدان خیابان" };
+
+  const title = item.title;
+  const description = toDescription(item.description);
+  const url = absoluteUrl(`/content/${item.id}`);
+  const image = item.media.coverImage;
+  const isVideo = item.media.kind === "video";
+
   return {
-    title: `${item.title} | میدان خیابان`,
-    description: item.description,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: isVideo ? "video.other" : "article",
+      url,
+      title,
+      description,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
   };
 }
 
@@ -40,5 +62,21 @@ export default async function ContentDetailPage({
     )
     .slice(0, 3);
 
-  return <ContentDetailView item={item} relatedItems={relatedItems} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript({
+          "@context": "https://schema.org",
+          "@type": item.media.kind === "video" ? "VideoObject" : "CreativeWork",
+          name: item.title,
+          description: item.description,
+          url: absoluteUrl(`/content/${item.id}`),
+          thumbnailUrl: item.media.coverImage,
+          author: item.creator?.name ? { "@type": "Person", name: item.creator.name } : undefined,
+        })}
+      />
+      <ContentDetailView item={item} relatedItems={relatedItems} />
+    </>
+  );
 }

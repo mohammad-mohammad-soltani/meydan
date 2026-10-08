@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { MeydanApiError, isAuthApiError, meydanApi, meydanApiPage } from "@/lib/meydan-api";
 import { entityApiPath, isEntityKind, type ActorKind, type EntityKind } from "@/lib/profile-route";
 import { accessTokenHeader } from "@/lib/meydan-session";
@@ -235,7 +236,8 @@ export async function getProfileDetails(): Promise<ProfileDetails> {
   return profile;
 }
 
-export async function getPublicProfileDetails(
+/** Cached per request: the page and `generateMetadata` both need this. */
+export const getPublicProfileDetails = cache(async function getPublicProfileDetails(
   type: ActorKind,
   id: number,
 ): Promise<ProfileDetails | null> {
@@ -282,4 +284,4 @@ export async function getPublicProfileDetails(
   } catch {
     return null;
   }
-}
+});
