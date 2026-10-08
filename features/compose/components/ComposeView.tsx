@@ -149,7 +149,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
       void getHashtagSuggestions(hashtagToken.query, controller.signal)
         .then(setHashtagSuggestions)
         .catch(() => undefined);
-    }, 150);
+    }, 250);
     return () => {
       window.clearTimeout(timer);
       controller.abort();
