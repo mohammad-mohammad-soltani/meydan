@@ -272,6 +272,24 @@ export function useFeed(
     };
   }, [activeFilter, activeTab, initialFilter, initialNextCursor, initialPageReady, initialPosts, replacePosts, timelineKey]);
 
+  /** Pull-to-refresh: re-reads the first page of the open timeline and replaces what is shown. */
+  const refresh = useCallback(async () => {
+    const generation = ++generationRef.current;
+    loadMoreAbortRef.current?.abort();
+    loadMoreAbortRef.current = null;
+    loadMoreInFlightRef.current = false;
+
+    try {
+      const page = await getFeedPage({ mode: modeFor(activeTab), filter: filterFor(activeTab, activeFilter) });
+      if (generationRef.current !== generation) return;
+      timelineCacheRef.current.set(timelineKey, { posts: page.posts, cursor: page.nextCursor });
+      replacePosts(page.posts);
+      setPaging({ key: timelineKey, cursor: page.nextCursor, loading: false, failed: false });
+    } catch (reason) {
+      if (isAuthApiError(reason) && activeTab === "following") setFollowingRequiresAuth(true);
+    }
+  }, [activeFilter, activeTab, replacePosts, timelineKey]);
+
   const loadMore = useCallback(() => {
     if (isLoading || isLoadingMore || !nextCursor || loadMoreInFlightRef.current) return;
 
@@ -477,5 +495,6 @@ export function useFeed(
     isLoadingMore,
     loadMoreFailed,
     loadMore,
+    refresh,
   };
 }
