@@ -297,8 +297,8 @@ export default function AuthPage() {
     return () => window.clearInterval(interval);
   }, [resendAvailableAt]);
 
-  const armResendCooldown = () => {
-    setResendAvailableAt(Date.now() + RESEND_COOLDOWN_SECONDS * 1000);
+  const armResendCooldown = (seconds: number = RESEND_COOLDOWN_SECONDS) => {
+    setResendAvailableAt(Date.now() + seconds * 1000);
   };
 
   const submitPhone = async (event: FormEvent) => {
@@ -306,11 +306,23 @@ export default function AuthPage() {
     setPending(true);
     resetMessages();
     try {
-      const result = await api<{ challenge_id: string; dev_code?: string; delivery_status?: "sent" | "uncertain" }>("otp-request", { phone });
+      const result = await api<{ challenge_id: string; dev_code?: string; resend_after?: number; delivery_status?: "sent" | "uncertain" | "already_sent" }>("otp-request", { phone });
       setChallengeId(result.challenge_id);
-      setCode(result.dev_code ?? "");
-      setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : result.delivery_status === "uncertain" ? "ارسال کد در حال بررسی است؛ اگر پیامک را دریافت کرده‌اید همان کد را وارد کنید، در غیر این صورت کمی صبر کنید و دوباره ارسال کنید." : "");
-      armResendCooldown();
+      // "already_sent" means the server kept the earlier challenge alive instead
+      // of sending a new SMS (its resend window hasn't elapsed yet); the user
+      // still has that code, so clear the field for them to retype it rather
+      // than carrying over a stale dev_code.
+      setCode(result.delivery_status === "already_sent" ? "" : (result.dev_code ?? ""));
+      setNotice(
+        result.dev_code
+          ? `کد ورود لوکال: ${result.dev_code}`
+          : result.delivery_status === "uncertain"
+            ? "ارسال کد در حال بررسی است؛ اگر پیامک را دریافت کرده‌اید همان کد را وارد کنید، در غیر این صورت کمی صبر کنید و دوباره ارسال کنید."
+            : result.delivery_status === "already_sent"
+              ? "کد قبلی هنوز معتبر است؛ همان کدی که برای شما ارسال شده را وارد کنید."
+              : "",
+      );
+      armResendCooldown(result.resend_after ?? RESEND_COOLDOWN_SECONDS);
       setStep("code");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "خطا در ورود");
@@ -351,11 +363,19 @@ export default function AuthPage() {
     setPending(true);
     resetMessages();
     try {
-      const result = await api<{ challenge_id: string; dev_code?: string; delivery_status?: "sent" | "uncertain" }>("otp-request", { phone });
+      const result = await api<{ challenge_id: string; dev_code?: string; resend_after?: number; delivery_status?: "sent" | "uncertain" | "already_sent" }>("otp-request", { phone });
       setChallengeId(result.challenge_id);
-      setCode(result.dev_code ?? "");
-      setNotice(result.dev_code ? `کد ورود لوکال: ${result.dev_code}` : result.delivery_status === "uncertain" ? "وضعیت ارسال کد نامشخص است؛ اگر پیامک را دریافت کرده‌اید همان کد را وارد کنید." : "کد تأیید تازه ارسال شد.");
-      armResendCooldown();
+      setCode(result.delivery_status === "already_sent" ? "" : (result.dev_code ?? ""));
+      setNotice(
+        result.dev_code
+          ? `کد ورود لوکال: ${result.dev_code}`
+          : result.delivery_status === "uncertain"
+            ? "وضعیت ارسال کد نامشخص است؛ اگر پیامک را دریافت کرده‌اید همان کد را وارد کنید."
+            : result.delivery_status === "already_sent"
+              ? "کد قبلی هنوز معتبر است؛ همان کدی که برای شما ارسال شده را وارد کنید."
+              : "کد تأیید تازه ارسال شد.",
+      );
+      armResendCooldown(result.resend_after ?? RESEND_COOLDOWN_SECONDS);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "ارسال دوباره کد انجام نشد.");
       // A rate-limit rejection means the server's window is still open even
