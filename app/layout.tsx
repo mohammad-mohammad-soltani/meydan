@@ -76,19 +76,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-dvh bg-background text-foreground transition-colors duration-150">
         {/*
           Rendered server-side so it covers the page before any script runs,
-          so there is no flash of app content on a real first load. The
-          bootstrap script right below hides it immediately (`display: none`,
-          never `.remove()`) on every load that isn't a fresh tab/URL hit
-          (sessionStorage already set); the `SplashScreen` client component
-          takes over from here on a real first load, plays the Lottie, then
-          hides it the same way. It is never removed from the DOM: this node
-          is React's, and deleting it behind React's back would desync its
-          fiber tree from the real DOM, crashing the next reconciliation
-          (e.g. a client-side route change) with a `removeChild` error.
+          so there is no flash of app content on every real document load —
+          a typed URL, a new tab, or a refresh. Next.js never remounts the
+          root layout for a client-side navigation between pages, so this
+          effectively never reappears there; no "already shown" flag needed.
+          `SplashScreen` plays the Lottie, then hides this (`display: none`,
+          never `.remove()`): the node is React's, and deleting it behind
+          React's back would desync its fiber tree from the real DOM,
+          crashing the next reconciliation (e.g. a route change) with a
+          `removeChild` error.
         */}
         <div
           id="meydan-splash"
-          suppressHydrationWarning
           style={{
             position: "fixed",
             inset: 0,
@@ -104,13 +103,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/*
           Starts the ~0.5MB Lottie JSON download the instant the HTML is
           parsed (well before the JS bundle loads and SplashScreen mounts),
-          so the animation has as little to wait on as possible. Skipped
-          entirely when the overlay above is about to be removed.
+          so the animation has as little to wait on as possible.
         */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(() => {\n  const hide = () => {\n    const el = document.getElementById(\"meydan-splash\");\n    if (el) el.style.display = \"none\";\n  };\n  try {\n    if (window.sessionStorage.getItem(\"meydan-splash-shown\")) {\n      hide();\n      return;\n    }\n  } catch {\n    hide();\n    return;\n  }\n  try {\n    const theme = window.localStorage.getItem(\"meydan-theme\");\n    const src = theme === \"light\" ? \"/splash/splash-light.json\" : \"/splash/splash-dark.json\";\n    const link = document.createElement(\"link\");\n    link.rel = \"preload\";\n    link.as = \"fetch\";\n    link.href = src;\n    link.crossOrigin = \"anonymous\";\n    document.head.appendChild(link);\n  } catch {}\n})();",
+              "(() => {\n  try {\n    const theme = window.localStorage.getItem(\"meydan-theme\");\n    const src = theme === \"light\" ? \"/splash/splash-light.json\" : \"/splash/splash-dark.json\";\n    const link = document.createElement(\"link\");\n    link.rel = \"preload\";\n    link.as = \"fetch\";\n    link.href = src;\n    link.crossOrigin = \"anonymous\";\n    document.head.appendChild(link);\n  } catch {}\n})();",
           }}
         />
         <PwaRuntime />

@@ -78,20 +78,24 @@ test("offline fallback ships the Meydan font and a real offline icon", () => {
   assert.match(worker, /["']\/fonts\/IRANSansXV\.woff2["']/);
 });
 
-test("first-load splash plays the theme-matched Lottie once per tab and caches offline", () => {
+test("splash plays the theme-matched Lottie on every real document load and caches offline", () => {
   assert.equal(existsSync(path.join(root, "public/splash/splash-light.json")), true);
   assert.equal(existsSync(path.join(root, "public/splash/splash-dark.json")), true);
 
   const layout = source("app/layout.tsx");
   assert.match(layout, /id="meydan-splash"/);
-  assert.match(layout, /sessionStorage\.getItem\(\\"meydan-splash-shown\\"\)/);
   assert.match(layout, /<SplashScreen \/>/);
 
   const splash = source("components/pwa/SplashScreen.tsx");
-  assert.match(splash, /SPLASH_SESSION_KEY = "meydan-splash-shown"/);
   assert.match(splash, /readStoredTheme\(\) === "light" \? "\/splash\/splash-light\.json" : "\/splash\/splash-dark\.json"/);
   assert.match(splash, /renderer: "svg"/);
-  assert.match(splash, /sessionStorage\.setItem\(SPLASH_SESSION_KEY, "1"\)/);
+
+  // Showing it only on a real document load (not on in-app page navigation)
+  // relies on the root layout never remounting for a client-side route
+  // change, not on a "seen this tab/session already" flag — so a refresh
+  // must play it again just like a brand new tab does.
+  assert.doesNotMatch(layout, /sessionStorage/);
+  assert.doesNotMatch(splash, /sessionStorage/);
 
   const worker = source("public/sw.js");
   assert.match(worker, /SPLASH_URLS = \["\/splash\/splash-light\.json", "\/splash\/splash-dark\.json"\]/);
@@ -103,7 +107,6 @@ test("first-load splash plays the theme-matched Lottie once per tab and caches o
   // a `removeChild` error. It must only ever be hidden, never removed.
   assert.doesNotMatch(layout, /getElementById\("meydan-splash"\)\?\.remove\(\)/);
   assert.doesNotMatch(splash, /root\?\.remove\(\)|root\.remove\(\)/);
-  assert.match(layout, /el\.style\.display = \\"none\\"/);
   assert.match(splash, /root\.style\.display = "none"/);
 });
 

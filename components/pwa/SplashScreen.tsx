@@ -4,10 +4,9 @@ import { useEffect, useRef } from "react";
 import type { AnimationItem } from "lottie-web";
 import { readStoredTheme } from "@/lib/theme";
 
-/** Matches the inline bootstrap script's id/key in `app/layout.tsx`. */
+/** Matches the inline bootstrap script's id in `app/layout.tsx`. */
 const SPLASH_ROOT_ID = "meydan-splash";
 const SPLASH_ANIM_ID = "meydan-splash-anim";
-export const SPLASH_SESSION_KEY = "meydan-splash-shown";
 
 /** Hard cap so a slow/broken animation can never trap the user behind the overlay. */
 const FALLBACK_TIMEOUT_MS = 6000;
@@ -17,12 +16,7 @@ function splashSource(): string {
   return readStoredTheme() === "light" ? "/splash/splash-light.json" : "/splash/splash-dark.json";
 }
 
-function markShownAndHide(root: HTMLElement | null, anim: AnimationItem | null) {
-  try {
-    window.sessionStorage.setItem(SPLASH_SESSION_KEY, "1");
-  } catch {
-    // Storage can be unavailable (private mode); the overlay still gets hidden below.
-  }
+function hide(root: HTMLElement | null, anim: AnimationItem | null) {
   anim?.destroy();
   // Hidden, never removed: this node is rendered by React (in `app/layout.tsx`),
   // which persists across client-side navigations without re-rendering. Deleting
@@ -37,11 +31,14 @@ function markShownAndHide(root: HTMLElement | null, anim: AnimationItem | null) 
 }
 
 /**
- * Plays the first-load splash animation left in the DOM by the inline
- * bootstrap script in `app/layout.tsx`, then hides it so the rest of the
- * app (already rendering underneath) becomes visible. Does nothing on
- * in-app navigations or repeat tab loads, where that script already hid
- * the overlay before this component ever mounted.
+ * Plays the splash animation left in the DOM by the inline bootstrap script
+ * in `app/layout.tsx`, then hides it so the rest of the app (already
+ * rendering underneath) becomes visible.
+ *
+ * This mounts exactly once per real document load — a typed URL, a new tab,
+ * or a refresh — because Next.js's root layout isn't remounted on
+ * client-side navigation between pages. No "already shown" flag is needed to
+ * skip it on in-app navigation: that case simply never reaches this effect.
  */
 export function SplashScreen() {
   const finishedRef = useRef(false);
@@ -49,14 +46,14 @@ export function SplashScreen() {
   useEffect(() => {
     const root = document.getElementById(SPLASH_ROOT_ID);
     const container = document.getElementById(SPLASH_ANIM_ID);
-    if (!root || !container || root.style.display === "none") return;
+    if (!root || !container) return;
 
     let cancelled = false;
     let anim: AnimationItem | null = null;
     const finish = () => {
       if (finishedRef.current) return;
       finishedRef.current = true;
-      markShownAndHide(root, anim);
+      hide(root, anim);
     };
 
     const fallback = window.setTimeout(finish, FALLBACK_TIMEOUT_MS);
