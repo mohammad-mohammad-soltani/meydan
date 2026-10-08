@@ -166,7 +166,7 @@ export function AppShell({
           <div className={`${styles.navHeader} space-y-6`}>
             <Link href="/home" className="flex items-center gap-3 px-2">
               <AppLogo appearance="ring" priority className="h-12 w-12 rounded-[15px]" />
-              <span>
+              <span data-nav-label>
                 <span className="block text-lg font-black leading-[27px] text-foreground">
                   نقش من
                 </span>
@@ -184,32 +184,32 @@ export function AppShell({
                 <DesktopNavIndicator containerRef={desktopNavRef} />
                 <Link href="/home" {...desktopLink(pathname, "/home")}>
                   <Home className={navIcon} />
-                  خانه و روایت‌ها
+                  <span data-nav-label>خانه و روایت‌ها</span>
                 </Link>
                 <Link href="/content" {...desktopLink(pathname, "/content")}>
                   <FolderKanban className={navIcon} />
-                  بسته محتوا
+                  <span data-nav-label>بسته محتوا</span>
                 </Link>
                 <Link href="/videos" {...desktopLink(pathname, "/videos")}>
                   <SquarePlay className={navIcon} />
-                  چندرسانه‌ای
+                  <span data-nav-label>چندرسانه‌ای</span>
                 </Link>
                 <Link href="/speakers" {...desktopLink(pathname, "/speakers")}>
                   <Users className={navIcon} />
-                  اعزام سخنران
+                  <span data-nav-label>اعزام سخنران</span>
                 </Link>
                 <Link href="/map" {...desktopLink(pathname, "/map")}>
                   <MapPin className={navIcon} />
-                  نقشه زنده
+                  <span data-nav-label>نقشه زنده</span>
                 </Link>
                 <Link href="/chat" {...desktopLink(pathname, "/chat")}>
                   <MessageCircle className={navIcon} />
-                  گفتگو
+                  <span data-nav-label>گفتگو</span>
                   <NavBadge className="ms-auto" />
                 </Link>
                 <Link href="/explore" {...desktopLink(pathname, "/explore")}>
                   <Search className={navIcon} />
-                  کاوش و جستجو
+                  <span data-nav-label>کاوش و جستجو</span>
                 </Link>
                 {isAuthenticated ? (
                   <AdminNavLink
@@ -220,12 +220,12 @@ export function AppShell({
                 {isAuthenticated ? (
                   <Link href="/profile" {...desktopLink(pathname, "/profile")}>
                     <UserCheck className={navIcon} />
-                    نمایه
+                    <span data-nav-label>نمایه</span>
                   </Link>
                 ) : (
                   <Link href="/auth" {...desktopLink(pathname, "/auth")}>
                     <LogIn className={navIcon} />
-                    ورود
+                    <span data-nav-label>ورود</span>
                   </Link>
                 )}
               </nav>

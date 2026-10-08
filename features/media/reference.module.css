@@ -41,8 +41,9 @@
 .photoStage img { max-width:min(94vw,1100px); max-height:82dvh; border-radius:22px; object-fit:contain; box-shadow:0 30px 90px rgba(0,0,0,.55); }
 @keyframes sheetIn { from { transform:translateY(100%); } to { transform:none; } }
 @media(min-width:1024px) {
- .reels { position:fixed; inset:0 0 0 0; right:calc(max(0px,(100vw - 1280px)/2) + 280px + var(--ns,0px)); height:auto; z-index:80; padding:16px 0; --av:calc(100vw - max(0px,(100vw - 1280px)/2) - 280px - 32px - var(--ns,0px)); }
- .reels[data-overlay="true"] { right:0; --av:calc(100vw - 32px); }
+ /* Inline in the content column (the route-transition stage is a containing block for fixed boxes, so viewport offsets can't be trusted). */
+ .reels { position:relative; height:100dvh; z-index:auto; padding:16px 0; --av:calc(var(--col-w,100vw) - 34px); }
+ .reels[data-overlay="true"] { position:fixed; inset:0; height:auto; z-index:200; --av:calc(100vw - 32px); }
  .player { height:var(--rh); width:calc(var(--rw) + 70px); }
  .reels[data-wide="true"] { --rw:min(calc(var(--av) - 88px),950px); --vh:calc(var(--rw) * 9 / 16); --G:calc(var(--vh) + 128px); --vt:calc(50% - var(--G) / 2); }
  .reels[data-wide="true"] .videoCard { background:none!important; }

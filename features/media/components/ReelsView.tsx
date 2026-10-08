@@ -358,7 +358,7 @@ function ReelItem({
             onPause={(event) => setPaused(active && !event.currentTarget.ended)}
             onPlay={() => setPaused(false)}
             onError={() => setFailed(true)}
-            className={wide ? "absolute inset-x-0 top-1/2 h-auto w-full -translate-y-1/2 object-contain" : "absolute inset-0 h-full w-full object-cover"}
+            className={wide ? "absolute inset-x-0 top-1/2 h-auto w-full -translate-y-1/2 object-contain lg:translate-y-0" : "absolute inset-0 h-full w-full object-cover"}
           />
         ) : null}
         {near && !failed ? (
@@ -368,7 +368,7 @@ function ReelItem({
             onClick={(event) => { event.stopPropagation(); enterFullscreen(); }}
             aria-label="تمام‌صفحه"
             style={{ "--vb": `calc(50% + 50vw / ${ratio} - 48px)` } as React.CSSProperties}
-            className={`reel-glass absolute right-2.5 z-[5] grid h-9 w-9 place-items-center rounded-full text-white ${wide ? "top-[var(--vb)] lg:top-auto lg:bottom-4" : "top-[64px]"}`}
+            className={`reel-glass absolute right-2.5 z-[5] grid h-9 w-9 place-items-center rounded-full text-white ${wide ? "top-[var(--vb)] lg:top-[calc(var(--vt)+var(--vh)-48px)]" : "top-[64px]"}`}
           >
             <Maximize className="h-[18px] w-[18px]" />
           </button>

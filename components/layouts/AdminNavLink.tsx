@@ -33,7 +33,7 @@ export function AdminNavLink({
   return (
     <Link href={"/admin" as Route} className={className} aria-current={ariaCurrent} aria-label={iconOnly ? "پنل مدیریت" : undefined} title={iconOnly ? "پنل مدیریت" : undefined}>
       <ShieldCheck className={iconOnly ? "h-[18px] w-[18px] shrink-0" : "h-[22px] w-[22px] shrink-0 stroke-[1.8]"} />
-      {iconOnly ? null : "پنل مدیریت"}
+      {iconOnly ? null : <span data-nav-label>پنل مدیریت</span>}
     </Link>
   );
 }

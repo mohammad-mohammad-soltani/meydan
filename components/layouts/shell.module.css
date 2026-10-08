@@ -44,13 +44,20 @@
   .trends { width:310px; flex:0 0 310px; }
   .trends > * { zoom:1.1; }
   .navHeader { padding-top:6px; }
-  .wide .trends, .chat .trends { display:none; }
+  /* The rail collapses to icons on the chat route; every part eases together instead of snapping. */
+  .navigation { overflow-x:hidden; transition:width .35s cubic-bezier(.4,0,.2,1),flex-basis .35s cubic-bezier(.4,0,.2,1),min-width .35s cubic-bezier(.4,0,.2,1),padding-inline .35s cubic-bezier(.4,0,.2,1); }
+  .navigation [data-nav-label] { display:block; max-width:220px; overflow:hidden; white-space:nowrap; transition:max-width .35s cubic-bezier(.4,0,.2,1),opacity .25s; }
+  .nav a { white-space:nowrap; transition:gap .35s cubic-bezier(.4,0,.2,1),background-color .2s,color .2s; }
+  .trends { overflow-x:hidden; transition:width .35s cubic-bezier(.4,0,.2,1),flex-basis .35s cubic-bezier(.4,0,.2,1),padding-inline .35s cubic-bezier(.4,0,.2,1),opacity .25s,border-width .35s; }
+  .wide .trends { display:none; }
+  .chat .trends { width:0; flex-basis:0; padding-inline:0; opacity:0; border-width:0; pointer-events:none; }
   .wide .column,.chat .column { width:auto; max-width:none; flex:1 1 0; min-width:0; }
   .chat .navigation { width:80px; min-width:80px; flex-basis:80px; padding-inline:14px; }
-  .chat .nav a { width:52px; height:52px; justify-content:center; gap:0; padding:0; font-size:0; }
+  .chat .nav a { justify-content:center; gap:0; }
+  .chat .nav a > [aria-label] { display:none; }
   .chat .nav a > svg { width:24px; height:24px; }
-  .chat .navHeader > a { justify-content:center; padding:0; }
-  .chat .navHeader > a > span:last-child { display:none; }
+  .chat .navHeader > a { gap:0; }
+  .chat [data-nav-label] { max-width:0; opacity:0; }
   .chat .navigation a[href="/compose"] { width:52px; height:52px; min-height:52px; padding:0; font-size:0; gap:0; }
   .chat .navigation > div:last-child > div { padding:0; justify-content:center; }
   .chat .navigation > div:last-child > div > :not(:first-child) { display:none; }
@@ -65,7 +72,7 @@
 
 @media(min-width:1024px) {
   .chat .navigation { position:relative; z-index:20; }
-  .chat .column { position:fixed; z-index:5; top:0; bottom:0; left:max(0px,calc((100vw - 1280px)/2)); right:calc(max(0px,(100vw - 1280px)/2) + 88px + var(--ns,0px)); border-right:0; box-shadow:none; }
+  .chat .column { border-right:0; box-shadow:none; }
   .shell:global(.admin-route) { max-width:none; }
   .shell:global(.admin-route) .column { width:100%; max-width:none; flex:1; margin:0; }
 }
