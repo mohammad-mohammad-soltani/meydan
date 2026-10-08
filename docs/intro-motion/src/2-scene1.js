@@ -228,102 +228,92 @@ function mainPerson(c, ox, t, ph, zin) {
 const PLEDGE_LINES = ['نقش‌آفرینی برای ایران،', 'به یاد آقای شهید.'];
 function phoneUI(c, t) {
   const on = smooth(2.9, 3.25, t);
-  const bg = c.createLinearGradient(0, 0, 0, 740);
-  bg.addColorStop(0, '#12141b'); bg.addColorStop(1, '#08090c');
-  c.fillStyle = bg; c.fillRect(0, 0, 360, 740);
+  c.fillStyle = T.bg; c.fillRect(0, 0, 360, 740);
   const cd = smooth(3.85, 4.15, t);
-  if (cd > 0) { c.save(); c.globalAlpha *= cd; joinScreen(c, t); c.restore(); }
+  if (cd > 0) { c.save(); c.globalAlpha *= cd; c.scale(360 / 390, 360 / 390); appScreen(c, t); c.restore(); }
   const sp = 1 - smooth(3.75, 4.05, t);
   if (sp > 0) {
     c.save(); c.globalAlpha *= sp;
     c.fillStyle = C.red; c.fillRect(0, 0, 360, 740);
     mark(c, 180, 320, 132 * lerp(0.8, 1, E.back(inv(3.0, 3.5, t))), '#fff');
-    txt(c, 'نقش من', 180, 448, { size: 40, w: 900, color: '#fff' });
-    txt(c, 'یک نقشه، هزاران نقش', 180, 496, { size: 19, w: 500, color: '#ffe0cc' });
+    txt(c, 'نقش من', 180, 448, { size: 40, w: 900, color: '#fff', f: UIF });
+    txt(c, 'یک نقشه، هزاران نقش', 180, 496, { size: 19, w: 500, color: '#ffe0cc', f: UIF });
     c.restore();
   }
-  txt(c, '۲۰:۴۵', 28, 24, { size: 14, w: 700, align: 'left', dir: 'ltr' });
+  uit(c, fa('20:45'), 28, 24, { size: 13, w: 700, align: 'left', dir: 'ltr' });
   c.save(); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.strokeRect(312, 18, 24, 12); c.fillStyle = '#fff'; c.fillRect(315, 21, 17, 6); c.fillRect(337, 22, 2, 4); c.restore();
   if (on < 1) { c.fillStyle = `rgba(0,0,0,${1 - on})`; c.fillRect(0, 0, 360, 740); }
 }
 
-function joinScreen(c, t) {
-  logoTile(c, 316, 76, 42);
-  txt(c, 'نقش من', 286, 77, { size: 23, w: 800, align: 'right' });
-  const cw = measure('عضویت جدید', 14, 700) + 22;
-  c.fillStyle = 'rgba(242,196,109,0.14)'; c.strokeStyle = 'rgba(242,196,109,0.55)'; c.lineWidth = 1.2;
-  c.beginPath(); c.roundRect(20, 61, cw, 30, 15); c.fill(); c.stroke();
-  txt(c, 'عضویت جدید', 20 + cw / 2, 77, { size: 14, w: 700, color: C.goldHi });
-  c.fillStyle = 'rgba(255,255,255,0.08)'; c.fillRect(20, 110, 320, 1);
-  const av = E.back(inv(4.05, 4.4, t));
+// the welcome screen built from the app's own sign-up components (dark theme, 390px layout)
+function appScreen(c, t) {
+  const g1 = c.createRadialGradient(390, 0, 0, 390, 0, 300); g1.addColorStop(0, 'rgba(239,68,68,0.16)'); g1.addColorStop(1, 'rgba(239,68,68,0)');
+  c.fillStyle = g1; c.fillRect(0, 0, 390, 420);
+  const g2 = c.createRadialGradient(0, 800, 0, 0, 800, 320); g2.addColorStop(0, 'rgba(60,60,60,0.5)'); g2.addColorStop(1, 'rgba(60,60,60,0)');
+  c.fillStyle = g2; c.fillRect(0, 480, 390, 322);
+  appHeader(c, 195, 64, smooth(3.9, 4.25, t));
+  const px = 16, py = 100, pw = 358, ix = px + 20, iw = pw - 40, ir = ix + iw;
+  c.save(); c.globalAlpha *= smooth(3.9, 4.25, t); c.translate(0, (1 - E.out(inv(3.9, 4.3, t))) * 14);
+  panelCard(c, px, py, pw, 622);
+  stepper(c, ix, py + 20, iw, 3 * E.out(inv(4.05, 5.0, t)));
+  c.restore();
+  const av = E.back(inv(4.9, 5.35, t));
   if (av > 0) {
-    c.save(); c.translate(180, 170); c.scale(av, av);
-    const g = c.createLinearGradient(-44, -44, 44, 44);
-    g.addColorStop(0, '#3a3f4a'); g.addColorStop(1, '#1a1d24');
-    c.fillStyle = g; c.beginPath(); c.arc(0, 0, 44, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = rgba(GOLD, 0.8); c.lineWidth = 2; c.stroke();
-    icon(c, 'user', 0, 0, 46, '#e5e7eb', 1.7);
+    c.save(); c.translate(ir - 28, 218); c.scale(av, av);
+    iconTile(c, -28, -28, 56, 'uround');
+    c.restore();
+    uit(c, 'زهرا رضایی', ir - 70, 207, { size: 16, w: 900, align: 'right', alpha: smooth(5.0, 5.35, t) });
+    uit(c, '@zahra_minab', ir - 70, 229, { size: 11, color: T.mute, align: 'right', dir: 'ltr', alpha: smooth(5.05, 5.4, t) });
+    const ba = smooth(5.1, 5.5, t);
+    c.save(); c.globalAlpha *= ba;
+    box(c, ix, 206, 74, 24, 12, T.brandMuted, T.brandBorder, 1);
+    icon(c, 'sparkle', ix + 60, 218, 11, T.brand, 2);
+    uit(c, 'عضو تازه', ix + 30, 219, { size: 10, w: 900, color: T.brand });
     c.restore();
   }
-  const nm = smooth(4.2, 4.5, t);
-  txt(c, 'عضو تازه‌ی میدان آزادی', 180, 238, { size: 21, w: 800, alpha: nm });
-  txt(c, 'تهران · همین حالا', 180, 264, { size: 14, color: C.mute, alpha: nm });
-  txt(c, 'نقش شما', 180, 304, { size: 15, w: 600, color: '#c9ccd3', alpha: smooth(4.45, 4.7, t) });
-  const kp = E.back(inv(4.6, 5.05, t));
-  if (kp > 0) {
-    const tw = measure('برای ایران', 28, 800), pw = tw + 90, py = 346;
-    glowDot(c, 180, py, 170, GOLD, 0.75 * (1 - inv(4.75, 5.8, t)) + 0.18);
-    c.save(); c.translate(180, py); c.scale(kp, kp);
-    const pg = c.createLinearGradient(-pw / 2, 0, pw / 2, 0);
-    pg.addColorStop(0, '#d9a441'); pg.addColorStop(1, '#f6d58e');
-    c.fillStyle = pg; c.beginPath(); c.roundRect(-pw / 2, -27, pw, 54, 27); c.fill();
-    miniFlag(c, -pw / 2 + 20, -10, 32, 20, t, 0);
-    txt(c, 'برای ایران', pw / 2 - 22, 1, { size: 28, w: 800, color: '#1c1305', align: 'right' });
+  const ha = smooth(5.2, 5.6, t);
+  uit(c, 'خوش آمدی زهرا', ir, 296 + (1 - ha) * 8, { size: 24, w: 900, align: 'right', alpha: ha });
+  const sa = smooth(5.35, 5.75, t);
+  uit(c, 'حساب شما ساخته شد؛ از همین حالا', ir, 330, { size: 13, color: T.mute, align: 'right', alpha: sa });
+  uit(c, 'عضو تازه‌ی میدان آزادی (تهران) هستید.', ir, 354, { size: 13, color: T.mute, align: 'right', alpha: sa });
+  const ra = smooth(5.9, 6.3, t);
+  if (ra > 0) {
+    c.save(); c.globalAlpha *= ra; c.translate(0, (1 - E.out(inv(5.9, 6.4, t))) * 10);
+    uit(c, 'نقش شما', ir, 396, { size: 12, w: 900, color: T.fg2, align: 'right' });
+    const pop = E.back(inv(6.0, 6.5, t));
+    c.save(); c.translate(ix + iw / 2, 450); c.scale(lerp(0.94, 1, clamp(pop)), lerp(0.94, 1, clamp(pop))); c.translate(-ix - iw / 2, -450);
+    box(c, ix, 418, iw, 64, R_CARD, T.brandMuted, T.brand, 1.5);
+    box(c, ir - 14 - 40, 430, 40, 40, 12, T.brand);
+    icon(c, 'sparkle', ir - 14 - 20, 450, 20, '#fff', 2);
+    uit(c, 'برای ایران', ir - 68, 441, { size: 17, w: 900, align: 'right' });
+    uit(c, 'نقش‌آفرین، در میدان', ir - 68, 462, { size: 10, color: T.mute, align: 'right' });
+    miniFlag(c, ix + 16, 441, 34, 22, t, 0);
+    c.restore();
     c.restore();
   }
-  const bx = smooth(5.05, 5.3, t);
-  if (bx > 0) {
-    c.save(); c.globalAlpha *= bx;
-    c.fillStyle = 'rgba(255,255,255,0.045)'; c.strokeStyle = 'rgba(242,196,109,0.28)'; c.lineWidth = 1.2;
-    c.beginPath(); c.roundRect(20, 392, 320, 158, 18); c.fill(); c.stroke();
-    c.fillStyle = C.gold; c.fillRect(330, 408, 3, 126);
-    txt(c, 'عهد من', 318, 416, { size: 14, w: 700, color: C.gold, align: 'right' });
-    const words = PLEDGE_LINES.map(l => l.split(' '));
-    const total = words.reduce((a, w) => a + w.length, 0);
-    let shown = inv(5.2, 6.45, t) * total;
+  const pa = smooth(6.5, 6.9, t);
+  if (pa > 0) {
+    c.save(); c.globalAlpha *= pa;
+    uit(c, 'عهد من', ir, 508, { size: 12, w: 900, color: T.fg2, align: 'right' });
+    box(c, ix, 522, iw, 72, R_CARD, T.surfM, T.border, 1);
+    c.fillStyle = T.brand; c.beginPath(); c.roundRect(ir - 4, 534, 3, 48, 2); c.fill();
+    const words = PLEDGE_LINES.map(l => l.split(' ')), total = words.reduce((a, w) => a + w.length, 0);
+    let shown = inv(6.6, 7.6, t) * total;
     words.forEach((ws, li) => {
-      const y = 458 + li * 48, full = Math.min(ws.length, Math.floor(shown)), frac = clamp(shown - full);
-      if (full < ws.length && frac > 0) txt(c, ws.slice(0, full + 1).join(' '), 318, y, { size: 25, w: 700, align: 'right', alpha: frac });
-      if (full > 0) txt(c, ws.slice(0, full).join(' '), 318, y, { size: 25, w: 700, align: 'right' });
+      const y = 546 + li * 28, full = Math.min(ws.length, Math.floor(shown)), frac = clamp(shown - full);
+      if (full < ws.length && frac > 0) uit(c, ws.slice(0, full + 1).join(' '), ir - 16, y, { size: 15, w: 700, align: 'right', alpha: frac });
+      if (full > 0) uit(c, ws.slice(0, full).join(' '), ir - 16, y, { size: 15, w: 700, align: 'right' });
       shown -= ws.length;
     });
     c.restore();
   }
-  const ok = inv(6.45, 6.85, t);
-  if (ok > 0) {
-    const tw = measure('عضویت تأیید شد', 16, 700), cx = 180 + (tw + 30) / 2 - 11, cy = 584;
-    c.save(); c.globalAlpha *= smooth(6.45, 6.65, t);
-    c.fillStyle = '#16a34a'; c.beginPath(); c.arc(cx, cy, 11, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = '#fff'; c.lineWidth = 2.4; c.lineCap = 'round'; c.lineJoin = 'round';
-    const f = E.out(ok);
-    c.beginPath(); c.moveTo(cx - 5, cy); c.lineTo(lerp(cx - 5, cx - 1, clamp(f * 2)), lerp(cy, cy + 4, clamp(f * 2)));
-    if (f > 0.5) c.lineTo(lerp(cx - 1, cx + 6, (f - 0.5) * 2), lerp(cy + 4, cy - 4, (f - 0.5) * 2));
-    c.stroke();
-    txt(c, 'عضویت تأیید شد', cx - 19, cy + 1, { size: 16, w: 700, color: '#4ade80', align: 'right' });
+  successAlert(c, ix, 608, iw, 'عضویت شما تأیید شد', smooth(7.65, 7.95, t));
+  const ba2 = smooth(7.2, 7.6, t);
+  if (ba2 > 0) {
+    c.save(); c.globalAlpha *= ba2;
+    primaryButton(c, ix, 660, iw, 'ورود برای نقش‌آفرینی', { press: Math.sin(Math.PI * inv(8.0, 8.3, t)), ripple: inv(8.05, 8.6, t) });
     c.restore();
   }
-  const btn = smooth(5.4, 5.7, t);
-  if (btn > 0) {
-    const press = Math.sin(Math.PI * inv(6.75, 7.05, t));
-    c.save(); c.globalAlpha *= btn;
-    c.translate(180, 646); c.scale(1 - press * 0.04, 1 - press * 0.04);
-    c.fillStyle = C.red; c.beginPath(); c.roundRect(-160, -27, 320, 54, 16); c.fill();
-    const rp = inv(6.8, 7.3, t);
-    if (rp > 0 && rp < 1) { c.save(); c.beginPath(); c.roundRect(-160, -27, 320, 54, 16); c.clip(); c.fillStyle = `rgba(255,255,255,${0.35 * (1 - rp)})`; c.beginPath(); c.arc(30, 0, 20 + rp * 200, 0, Math.PI * 2); c.fill(); c.restore(); }
-    txt(c, 'ورود برای نقش‌آفرینی', 0, 1, { size: 20, w: 800 });
-    c.restore();
-  }
-  c.fillStyle = 'rgba(255,255,255,0.45)'; c.beginPath(); c.roundRect(120, 722, 120, 5, 3); c.fill();
 }
 
 // Other members' roles rise out of the crowd as notifications while the camera pulls back.

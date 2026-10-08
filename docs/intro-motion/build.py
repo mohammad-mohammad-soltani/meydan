@@ -10,6 +10,9 @@ for w in (400, 500, 700, 800, 900):
     b = base64.b64encode((PUB / 'fonts' / f'Vazirmatn-{w}.ttf').read_bytes()).decode()
     fonts.append(f"@font-face{{font-family:'Vazirmatn';font-weight:{w};font-display:block;src:url(data:font/ttf;base64,{b}) format('truetype');}}")
 
+iran = base64.b64encode((PUB / 'fonts' / 'IRANSansXV.woff2').read_bytes()).decode()
+fonts.append(f"@font-face{{font-family:'IRANSansX';font-weight:100 900;font-display:block;src:url(data:font/woff2;base64,{iran}) format('woff2');}}")
+
 logo_svg = (PUB / 'images/logo/meydan-mark.svg').read_text()
 logo_d = re.search(r'<path[^>]*\sd="([^"]+)"', logo_svg).group(1)
 logo_inline = f'<svg viewBox="0 0 531 536" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" fill-rule="evenodd" d="{logo_d}"/></svg>'

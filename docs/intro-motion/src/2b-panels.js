@@ -1,6 +1,6 @@
 // ───────── Scene 1 · at 4.0s the frame splits in four; four people sign up at the same moment
 // right to left: 1 professor · 2 the flag-bearer (the existing phone close-up) · 3 seminary student · 4 university student
-const SPLIT_T0 = 4.0, MERGE_T0 = 7.8, PANEL_W = 480;
+const SPLIT_T0 = 4.0, MERGE_T0 = 8.6, PANEL_W = 480;
 const splitK = t => E.io(inv(SPLIT_T0, SPLIT_T0 + 0.55, t)) * (1 - E.io(inv(MERGE_T0, MERGE_T0 + 0.6, t)));
 
 function sil(c, rims, fn, body) {

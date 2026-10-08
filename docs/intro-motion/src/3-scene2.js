@@ -307,7 +307,7 @@ const RISE = [null, 15.15, 15.5, 15.85, 16.2, 16.55, 16.9, 17.25];
 
 function layoutPosts() {
   for (const p of POSTS) {
-    p.lines = wrap(p.tx, 27, 400, CW - PAD * 2);
+    FONT_OVERRIDE = UIF; p.lines = wrap(p.tx, 27, 400, CW - PAD * 2); FONT_OVERRIDE = null;
     let h = PAD + 58 + 18 + p.lines.length * 44;
     if (p.img) { p.imgY = h + 8; h += 8 + (CW - PAD * 2) * 9 / 16; }
     h += 26 + 30 + PAD;
@@ -344,13 +344,14 @@ function buildThumbs() {
   c.fillRect(0, 500, 936, 27);
 }
 
-function postCard(c, p, x, y, a, photoRect) {
+function postCard(c, p, x, y, a, photoRect) { FONT_OVERRIDE = UIF; try { postCardImpl(c, p, x, y, a, photoRect); } finally { FONT_OVERRIDE = null; } }
+function postCardImpl(c, p, x, y, a, photoRect) {
   const w = CW, h = p.hh;
   c.save();
   c.globalAlpha = a;
-  c.fillStyle = 'rgba(12,13,18,0.94)';
+  c.fillStyle = T.surf;
   c.beginPath(); c.roundRect(x, y, w, h, 26); c.fill();
-  c.strokeStyle = 'rgba(255,255,255,0.09)'; c.lineWidth = 1.5; c.stroke();
+  c.strokeStyle = T.border; c.lineWidth = 1.5; c.stroke();
   const ax = x + w - PAD - 28, ay = y + PAD + 28;
   c.fillStyle = C.red; c.beginPath(); c.arc(ax, ay, 28, 0, Math.PI * 2); c.fill();
   mark(c, ax, ay, 34, '#fff');

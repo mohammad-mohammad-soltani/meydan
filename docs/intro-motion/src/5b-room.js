@@ -4,11 +4,9 @@ const Z_START = 2.5, Z_LEN = 2.3, BRAND_AT = 8.6, PUSH_LEN = 2.2;
 const SCR = { x: 800, y: 110, w: 960, h: 540 }, PC = [SCR.x + SCR.w / 2, SCR.y + SCR.h / 2];
 const SC = mk(W, H), SCC = SC.getContext('2d');
 const CAPTION = ['خانه‌ات هم یک میدان است؛', 'نقش خودت را همین‌جا بساز.'];
-const FIELD_NAME = 'زهرا', FIELD_CITY = 'میناب';
-const CHIPS = ['دانشجو', 'دانش‌آموز', 'طلبه', 'خانه‌دار', 'و…'], CHIP_SEL = 1;
-function chipRow(R) { let xr = R; return CHIPS.map(s => { const w = measure(s, 32, 700) + 64, cx = xr - w / 2; xr -= w + 16; return { s, w, cx }; }); }
+const F_NAME = 'زهرا رضایی', F_HANDLE = 'zahra_minab', F_PROV = 'هرمزگان', F_CITY = 'میناب';
+const KINDS = ['دانشجو', 'دانش‌آموز', 'طلبه', 'سایر'], KIND_SEL = 1, CITY_ITEMS = ['بندرعباس', 'میناب', 'جاسک'];
 let LEAVES = [];
-
 function typed(s, p) { return s.slice(0, Math.floor(clamp(p) * s.length + 1e-6)); }
 
 // ── the sign-up page shown on her screen (drawn at 1920×1080, scaled down by the room camera)
@@ -18,80 +16,100 @@ function cursorArrow(c, x, y) {
   c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 44); c.lineTo(11, 34); c.lineTo(20, 54); c.lineTo(29, 50); c.lineTo(20, 31); c.lineTo(34, 31); c.closePath(); c.fill(); c.stroke();
   c.restore();
 }
+// the app's own desktop sign-up page (features/auth/components/AuthPage.tsx), 1440×810 layout scaled to the 1920×1080 screen
+function brandSection(c) {
+  c.fillStyle = 'rgba(28,28,28,0.88)'; c.fillRect(692, -100, 604, 1300);
+  c.fillStyle = T.border; c.fillRect(692, -100, 1, 1300);
+  const xr = 1240;
+  logoTile(c, xr - 24, 80, 48);
+  uit(c, 'نقش من', xr - 62, 72, { size: 18, w: 900, align: 'right' });
+  uit(c, 'شبکه سراسری میادین ایران', xr - 62, 94, { size: 11, w: 700, color: T.mute, align: 'right' });
+  const cw = uiW('ورود یکپارچه و امن', 11, 900) + 44;
+  box(c, xr - cw, 168, cw, 30, 15, T.brandMuted, T.brandBorder, 1);
+  icon(c, 'sparkle', xr - 18, 183, 14, T.brand, 2);
+  uit(c, 'ورود یکپارچه و امن', xr - 32, 184, { size: 11, w: 900, color: T.brand, align: 'right' });
+  uit(c, 'روایت، ارتباط و حضور میدانی؛', xr, 252, { size: 36, w: 900, align: 'right' });
+  uit(c, 'در یک حساب.', xr, 304, { size: 36, w: 900, align: 'right' });
+  wrap('با شماره همراه وارد شوید. اگر اولین حضور شماست، بعد از تأیید شماره در چند قدم کوتاه حساب شخصی یا میدان خود را می‌سازید.', 14, 400, 448, UIF)
+    .forEach((ln, i) => uit(c, ln, xr, 360 + i * 32, { size: 14, color: T.fg2, align: 'right' }));
+  [['chatMore', 'دسترسی سریع', 'ورود بدون رمز عبور با کد یک‌بارمصرف'], ['shield', 'هویت مطمئن', 'شماره همراه شما مبنای تأیید و بازیابی حساب است'], ['pin', 'متصل به میدان', 'امکان ساخت حساب شخصی یا ثبت یک میدان محلی']].forEach(([ic, t1, t2], i) => {
+    const y = 456 + i * 86;
+    box(c, 748, y, 492, 74, R_CARD, T.surf, T.border, 1);
+    box(c, xr - 14 - 36, y + 19, 36, 36, 12, T.brandMuted);
+    icon(c, ic, xr - 14 - 18, y + 37, 18, T.brand, 2);
+    uit(c, t1, xr - 64, y + 28, { size: 12, w: 900, align: 'right' });
+    uit(c, t2, xr - 64, y + 50, { size: 11, color: T.mute, align: 'right' });
+  });
+  uit(c, 'برای امنیت حساب، کد تأیید را در اختیار دیگران قرار ندهید.', xr, 780, { size: 10, color: T.mute, align: 'right' });
+}
+
 function drawForm(c, tf) {
-  c.fillStyle = '#090a0f'; c.fillRect(0, 0, W, H);
-  const r = rng(12);
-  for (let i = 0; i < 220; i++) { c.fillStyle = `rgba(242,196,109,${0.03 + r() * 0.05})`; c.fillRect(r() * W, r() * H, 2, 2); }
-  glowDot(c, W / 2, 100, 700, [150, 40, 30], 0.3);
-  const cx0 = 410, cy0 = 90, cw = 1100, ch = 900, R = cx0 + cw - 60;
-  c.fillStyle = '#12141b'; c.beginPath(); c.roundRect(cx0, cy0, cw, ch, 44); c.fill();
-  c.strokeStyle = 'rgba(255,255,255,0.1)'; c.lineWidth = 2; c.stroke();
-  logoTile(c, R - 42, cy0 + 90, 84);
-  txt(c, 'نقش من', R - 104, cy0 + 92, { size: 54, w: 900, align: 'right' });
-  const cw2 = measure('ثبت‌نام', 28, 700) + 44;
-  c.fillStyle = 'rgba(242,196,109,0.14)'; c.strokeStyle = 'rgba(242,196,109,0.5)'; c.lineWidth = 2;
-  c.beginPath(); c.roundRect(cx0 + 60, cy0 + 70, cw2, 56, 28); c.fill(); c.stroke();
-  txt(c, 'ثبت‌نام', cx0 + 60 + cw2 / 2, cy0 + 99, { size: 28, w: 700, color: C.goldHi });
-  const done = inv(4.55, 5.1, tf);
+  c.fillStyle = T.bg; c.fillRect(0, 0, W, H);
+  const done = inv(4.8, 5.3, tf);
+  const scroll = 232 * E.io(inv(2.3, 3.1, tf)) * (1 - E.io(inv(4.8, 5.4, tf)));
+  c.save(); c.scale(4 / 3, 4 / 3);
+  const g1 = c.createRadialGradient(1344, 0, 0, 1344, 0, 340); g1.addColorStop(0, 'rgba(239,68,68,0.16)'); g1.addColorStop(1, 'rgba(239,68,68,0)'); c.fillStyle = g1; c.fillRect(1000, 0, 440, 400);
+  const g2 = c.createRadialGradient(96, 810, 0, 96, 810, 360); g2.addColorStop(0, 'rgba(70,70,70,0.45)'); g2.addColorStop(1, 'rgba(70,70,70,0)'); c.fillStyle = g2; c.fillRect(0, 450, 460, 360);
+  c.translate(0, -scroll);
+  brandSection(c);
+  const cx = 194, cy = 84, cwid = 448, ix = cx + 28, iw = 392, ir = ix + iw;
+  panelCard(c, cx, cy, cwid, done > 0 ? 640 : 932);
+  const st = done > 0 ? 2 + E.out(done) : 2;
+  stepper(c, ix, cy + 28, iw, st);
   if (done <= 0) {
-    txt(c, 'به نقش من خوش آمدید', R, cy0 + 205, { size: 62, w: 900, align: 'right' });
-    txt(c, 'نقش خودت را بساز؛ از همین‌جا.', R, cy0 + 268, { size: 32, color: C.mute, align: 'right' });
-    const field = (label, y, val, focus) => {
-      txt(c, label, R, y, { size: 28, w: 600, color: '#c9ccd3', align: 'right' });
-      c.fillStyle = '#0b0c11'; c.beginPath(); c.roundRect(cx0 + 60, y + 24, cw - 120, 84, 20); c.fill();
-      c.strokeStyle = focus ? C.gold : 'rgba(255,255,255,0.12)'; c.lineWidth = focus ? 3 : 2; c.stroke();
-      const caret = focus && Math.floor(tf * 2.2) % 2 === 0;
-      txt(c, val, R - 28, y + 67, { size: 40, w: 600, align: 'right' });
-      if (caret) { const tw = measure(val, 40, 600); c.fillStyle = C.gold; c.fillRect(R - 28 - tw - 8, y + 41, 3, 50); }
-    };
-    const f1 = tf > 0.4 && tf < 1.7, f2 = tf >= 1.7 && tf < 2.9;
-    field('نام', cy0 + 345, typed(FIELD_NAME, inv(0.5, 1.4, tf)), f1);
-    field('شهر', cy0 + 505, typed(FIELD_CITY, inv(1.8, 2.6, tf)), f2);
-    txt(c, 'جایگاه من', R, cy0 + 665, { size: 28, w: 600, color: '#c9ccd3', align: 'right' });
-    const chips = chipRow(R);
-    chips.forEach(({ s, w, cx: chx }, i) => {
-      const on = tf > 3.55 && i === CHIP_SEL, pop = on ? E.back(inv(3.55, 3.85, tf)) : 0;
-      c.save(); c.translate(chx, cy0 + 725); c.scale(1 + 0.04 * Math.sin(Math.PI * clamp(pop)), 1 + 0.04 * Math.sin(Math.PI * clamp(pop)));
-      c.fillStyle = on ? 'rgba(242,196,109,0.18)' : 'rgba(255,255,255,0.05)'; c.strokeStyle = on ? C.gold : 'rgba(255,255,255,0.14)'; c.lineWidth = on ? 3 : 2;
-      c.beginPath(); c.roundRect(-w / 2, -34, w, 68, 34); c.fill(); c.stroke();
-      txt(c, s, 0, 2, { size: 32, w: 700, color: on ? C.goldHi : '#d4d7de' });
-      c.restore();
-    });
-    const bx = cx0 + 60, by = cy0 + 790, bw = cw - 120, bh = 84, press = Math.sin(Math.PI * inv(4.35, 4.6, tf));
-    c.save(); c.translate(bx + bw / 2, by + bh / 2); c.scale(1 - 0.015 * press, 1 - 0.03 * press); c.translate(-bx - bw / 2, -by - bh / 2);
-    c.fillStyle = C.red; c.beginPath(); c.roundRect(bx, by, bw, bh, 22); c.fill();
-    const rp = inv(4.4, 4.95, tf);
-    if (rp > 0 && rp < 1) { c.save(); c.beginPath(); c.roundRect(bx, by, bw, bh, 22); c.clip(); c.fillStyle = `rgba(255,255,255,${0.35 * (1 - rp)})`; c.beginPath(); c.arc(bx + bw / 2, by + bh / 2, 30 + rp * 600, 0, Math.PI * 2); c.fill(); c.restore(); }
-    txt(c, 'ثبت‌نام در نقش من', bx + bw / 2, by + bh / 2 + 3, { size: 38, w: 800 });
-    c.restore();
-    const path = [[0.0, [1240, 960]], [2.9, [1240, 960]], [3.5, [chips[CHIP_SEL].cx, cy0 + 725]], [3.62, [chips[CHIP_SEL].cx, cy0 + 725]], [4.3, [960, by + 60]], [4.7, [960, by + 60]]];
+    iconTile(c, ir - 48, cy + 96, 48, 'uround');
+    uit(c, 'حساب خود را کامل کنید', ir, cy + 178, { size: 24, w: 900, align: 'right' });
+    uit(c, 'شماره شما تأیید شد. فقط اطلاعات اصلی را وارد کنید تا', ir, cy + 214, { size: 14, color: T.mute, align: 'right' });
+    uit(c, 'وارد میدان شوید.', ir, cy + 242, { size: 14, color: T.mute, align: 'right' });
+    uit(c, 'نوع حساب', ir, cy + 288, { size: 12, w: 900, color: T.fg2, align: 'right' });
+    choiceCard(c, ix + 200, cy + 304, 192, 118, true, 'uround', 'حساب شخصی', 'برای حضور و فعالیت فردی');
+    choiceCard(c, ix, cy + 304, 192, 118, false, 'uroundS', 'میدان یا مجموعه هستم', 'میدان، مجموعه، رسانه یا سازمان');
+    const nameT = typed(F_NAME, inv(0.4, 1.3, tf)), hT = typed(F_HANDLE, inv(1.35, 2.25, tf));
+    field(c, ix, cy + 462, iw, 'نام و نام خانوادگی', '', nameT, { focus: tf > 0.35 && tf < 1.35, caret: Math.floor(tf * 2.4) % 2 === 0, placeholder: 'نام کامل شما' });
+    field(c, ix, cy + 560, iw, 'شناسه کاربری', 'در همه‌جا با @ نمایش داده می‌شود', hT, { focus: tf >= 1.35 && tf < 2.4, caret: Math.floor(tf * 2.4) % 2 === 0, ltr: true, at: true, placeholder: 'reza_salehi' });
+    uit(c, 'فقط حروف انگلیسی، عدد و _ (۳ تا ۳۰ نویسه)؛ بعداً هم قابل تغییر است.', ir, cy + 638, { size: 10, color: T.mute, align: 'right' });
+    const pv = tf > 3.1 ? F_PROV : '', ct = tf > 3.75 ? F_CITY : '';
+    field(c, ix + 202, cy + 678, 190, 'استان', '', pv, { chevron: true, placeholder: 'انتخاب استان', focus: tf > 2.95 && tf < 3.3 });
+    field(c, ix, cy + 678, 190, 'شهر', '', ct, { chevron: true, placeholder: pv ? 'انتخاب شهر' : 'ابتدا استان را انتخاب کنید', focus: tf > 3.3 && tf < 3.75 });
+    uit(c, 'جایگاه من', ir, cy + 776, { size: 12, w: 900, color: T.fg2, align: 'right' });
+    uit(c, 'اختیاری', ix, cy + 776, { size: 10, color: T.mute, align: 'left' });
+    optionPills(c, ix, cy + 788, iw, KINDS, tf > 3.95 ? KIND_SEL : -1, E.out(inv(3.95, 4.2, tf)));
+    const ready = tf > 3.95;
+    primaryButton(c, ix, cy + 856, iw, 'تکمیل ثبت‌نام و ورود', { enabled: ready, press: Math.sin(Math.PI * inv(4.5, 4.8, tf)), ripple: inv(4.52, 5.1, tf) });
+    if (tf > 3.25 && tf < 3.78) {
+      const ox = ix, oy = cy + 744 - 12, ow = 190;
+      c.save(); c.shadowColor = 'rgba(0,0,0,0.5)'; c.shadowBlur = 24; c.shadowOffsetY = 8;
+      box(c, ox, oy + 16, ow, 128, R_CARD, '#2a2a2a', T.borderS, 1); c.restore();
+      CITY_ITEMS.forEach((s, i) => {
+        const hot = tf > 3.5 && i === 1;
+        if (hot) box(c, ox + 6, oy + 22 + i * 40, ow - 12, 36, 10, 'rgba(255,255,255,0.09)');
+        uit(c, s, ox + ow - 18, oy + 41 + i * 40, { size: 13, w: hot ? 900 : 500, color: hot ? T.fg : T.fg2, align: 'right' });
+      });
+    }
+    const path = [[0, [560, 700]], [2.9, [560, 700]], [3.05, [ix + 297, cy + 756]], [3.22, [ix + 297, cy + 756]], [3.42, [ix + 95, cy + 756]], [3.62, [ix + 95, cy + 840]], [3.78, [ix + 95, cy + 840]], [3.98, [ix + 392 - 2 * 92 - 8 - 46, cy + 808]], [4.08, [ix + 392 - 2 * 92 - 8 - 46, cy + 808]], [4.45, [ix + 196, cy + 884]], [4.9, [ix + 196, cy + 884]]];
     let cur = path[0][1];
     for (let i = 1; i < path.length; i++) if (tf >= path[i - 1][0] && tf <= path[i][0]) { const u = E.io(inv(path[i - 1][0], path[i][0], tf)); cur = [lerp(path[i - 1][1][0], path[i][1][0], u), lerp(path[i - 1][1][1], path[i][1][1], u)]; }
     if (tf > path[path.length - 1][0]) cur = path[path.length - 1][1];
     if (tf > 2.9) cursorArrow(c, cur[0], cur[1]);
-  }
-  if (done > 0) {
+  } else {
     c.save(); c.globalAlpha = smooth(0, 1, done);
-    const k = E.back(inv(4.55, 5.2, tf)), ccx = 960, ccy = cy0 + 390;
-    glowDot(c, ccx, ccy, 360, [34, 197, 94], 0.35 * k);
-    c.save(); c.translate(ccx, ccy); c.scale(k, k);
-    c.fillStyle = '#16a34a'; c.beginPath(); c.arc(0, 0, 118, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = '#fff'; c.lineWidth = 17; c.lineCap = 'round'; c.lineJoin = 'round';
-    const f = E.out(inv(4.8, 5.4, tf));
-    c.beginPath(); c.moveTo(-52, 4); c.lineTo(lerp(-52, -14, clamp(f * 2)), lerp(4, 44, clamp(f * 2)));
-    if (f > 0.5) c.lineTo(lerp(-14, 56, (f - 0.5) * 2), lerp(44, -38, (f - 0.5) * 2));
-    c.stroke();
+    const k = E.back(inv(4.8, 5.3, tf));
+    c.save(); c.translate(ir - 24, cy + 124); c.scale(k, k);
+    box(c, -24, -24, 48, 48, 16, T.okSurf, T.okBorder, 1); icon(c, 'check', 0, 0, 24, T.okFg, 2.4);
     c.restore();
-    txt(c, 'عضویت شما تأیید شد', 960, cy0 + 595, { size: 70, w: 900, alpha: smooth(5.0, 5.4, tf) });
-    txt(c, 'خوش آمدی؛ از امروز، نقشِ تو روی این نقشه است.', 960, cy0 + 668, { size: 36, color: C.goldHi, alpha: smooth(5.2, 5.6, tf) });
+    uit(c, 'عضویت شما تأیید شد', ir, cy + 194, { size: 24, w: 900, align: 'right', alpha: smooth(5.0, 5.4, tf) });
+    uit(c, 'خوش آمدی زهرا؛ از امروز، نقشِ تو روی این نقشه است.', ir, cy + 230, { size: 14, color: T.mute, align: 'right', alpha: smooth(5.15, 5.55, tf) });
+    successAlert(c, ix, cy + 270, iw, 'حساب شما در میناب ساخته شد', smooth(5.3, 5.7, tf));
     for (let i = 0; i < 7; i++) {
-      const a = smooth(5.5 + i * 0.1, 5.8 + i * 0.1, tf), x = 960 + (i - 3) * 78;
-      glowDot(c, x, cy0 + 770, 34, GOLD, 0.5 * a);
-      figure(c, x, cy0 + 770, 56, i === 3 ? '#fff' : C.goldHi, a);
+      const a = smooth(5.45 + i * 0.08, 5.75 + i * 0.08, tf), fx = ix + iw / 2 + (i - 3) * 52;
+      glowDot(c, fx, cy + 366, 26, GOLD, 0.45 * a);
+      figure(c, fx, cy + 366, 40, i === 3 ? '#fff' : C.goldHi, a);
     }
+    primaryButton(c, ix, cy + 430, iw, 'ورود برای نقش‌آفرینی', { enabled: true });
     c.restore();
   }
-  finish(c, tf, 0.35);
+  c.restore();
+  finish(c, tf, 0.3);
 }
 
 function buildRoom() {

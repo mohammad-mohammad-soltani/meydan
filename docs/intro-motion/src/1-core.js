@@ -1,11 +1,13 @@
 'use strict';
 const W = 1920, H = 1080;
 // Section starts on the global clock. The feature line runs LINE_END - 37.9s; the hub and the end card follow it.
-const S1_EXTRA = 1.0; // seconds added to the opening scene for the four-frame moment; every later scene is shifted by it
+const S1_EXTRA = 1.6; // seconds added to the opening scene for the four-frame moment; every later scene is shifted by it
 const LINE_END = 48.5, HUB_S = LINE_END - 0.3, HUB_FADE = HUB_S + 12.0, S8 = HUB_FADE, SEQ_LEN = 17.6, DUR = S8 + SEQ_LEN + S1_EXTRA;
 const GEO = JSON.parse(document.getElementById('geo-data').textContent);
 const LOGO = new Path2D(document.getElementById('logo-d').textContent.trim());
 const FONT = "Vazirmatn, Tahoma, sans-serif";
+let FONT_OVERRIDE = null;
+const UIF = "IRANSansX, Vazirmatn, Tahoma, sans-serif";
 const C = {
   bg: '#05060a', gold: '#f2c46d', goldHi: '#ffe3a3', goldSoft: '#e8cf98', red: '#dc2626', redHi: '#ef4444',
   ink: '#f5f5f7', mute: '#9aa0ab', card: '#0f1116', line: 'rgba(255,255,255,0.08)', green: '#22c55e',
@@ -52,7 +54,7 @@ function txt(c, s, x, y, o = {}) {
     return;
   }
   c.save();
-  c.font = `${o.w || 400} ${o.size || 32}px ${FONT}`;
+  c.font = `${o.w || 400} ${o.size || 32}px ${o.f || FONT_OVERRIDE || FONT}`;
   c.fillStyle = o.color || C.ink;
   c.textAlign = o.align || 'center';
   c.textBaseline = o.base || 'middle';
@@ -63,13 +65,13 @@ function txt(c, s, x, y, o = {}) {
   c.restore();
 }
 const MCTX = mk(4, 4).getContext('2d');
-function measure(s, size, w) { MCTX.font = `${w || 400} ${size}px ${FONT}`; MCTX.direction = 'rtl'; return MCTX.measureText(s).width; }
-function wrap(s, size, w, maxW) {
+function measure(s, size, w, f) { MCTX.font = `${w || 400} ${size}px ${f || FONT_OVERRIDE || FONT}`; MCTX.direction = 'rtl'; return MCTX.measureText(s).width; }
+function wrap(s, size, w, maxW, f) {
   const words = s.split(' '), lines = [];
   let cur = '';
   for (const wd of words) {
     const test = cur ? cur + ' ' + wd : wd;
-    if (measure(test, size, w) > maxW && cur) { lines.push(cur); cur = wd; } else cur = test;
+    if (measure(test, size, w, f) > maxW && cur) { lines.push(cur); cur = wd; } else cur = test;
   }
   if (cur) lines.push(cur);
   return lines;
@@ -102,6 +104,15 @@ const IC = {
   quote: ['M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z', 'M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z'],
   send: ['M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z', 'm21.854 2.147-10.94 10.939'],
   play: ['M6 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L7.5 3.64A1 1 0 0 0 6 4.5z'],
+  uround: ['M20 21a8 8 0 0 0-16 0', circ(12, 8, 5)],
+  uroundS: ['M18 21a8 8 0 0 0-16 0', circ(10, 8, 5), 'M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3'],
+  check: ['M20 6 9 17l-5-5'],
+  chevd: ['m6 9 6 6 6-6'],
+  arrowL: ['m12 19-7-7 7-7', 'M19 12H5'],
+  shield: ['M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z', 'm9 12 2 2 4-4'],
+  chatMore: ['M7.9 20A9 9 0 1 0 4 16.1L2 22Z', 'M8 12h.01', 'M12 12h.01', 'M16 12h.01'],
+  sparkle: ['M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z', 'M20 3v4', 'M22 5h-4', 'M4 17v2', 'M5 18H3'],
+  at: [circ(12, 12, 4), 'M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8'],
   brief: ['M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', 'M4 6h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z'],
 };
 const IP = {};

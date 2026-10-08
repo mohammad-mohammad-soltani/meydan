@@ -219,7 +219,8 @@ function cardChat(c, x, y, w, R, lt) {
   txt(c, 'دوستان و عزیزان، از سراسر کشور', x + w / 2, y + 298, { size: 16, color: C.mute, alpha: smooth(1.6, 2.2, lt) });
 }
 
-function contentCard(c, cd, th, t) {
+function contentCard(c, cd, th, t) { FONT_OVERRIDE = UIF; try { contentCardImpl(c, cd, th, t); } finally { FONT_OVERRIDE = null; } }
+function contentCardImpl(c, cd, th, t) {
   const k = E.out(inv(cd.at, cd.at + 0.65, th));
   if (k <= 0) return;
   const lt = th - cd.at, x = cd.x, y = cd.y + (1 - k) * 40, w = CC_W, h = CC_H, R = x + w - 30;
@@ -227,9 +228,9 @@ function contentCard(c, cd, th, t) {
   c.globalAlpha *= smooth(cd.at, cd.at + 0.4, th);
   c.translate(x + w / 2, y + h / 2); c.scale(lerp(0.94, 1, k), lerp(0.94, 1, k)); c.translate(-x - w / 2, -y - h / 2);
   const bg = c.createLinearGradient(0, y, 0, y + h);
-  bg.addColorStop(0, '#14161d'); bg.addColorStop(1, '#0c0d12');
+  bg.addColorStop(0, T.surfM); bg.addColorStop(1, T.surf);
   c.fillStyle = bg; c.beginPath(); c.roundRect(x, y, w, h, 26); c.fill();
-  c.strokeStyle = 'rgba(255,255,255,0.09)'; c.lineWidth = 1.5; c.stroke();
+  c.strokeStyle = T.border; c.lineWidth = 1.5; c.stroke();
   c.fillStyle = 'rgba(242,196,109,0.12)'; c.beginPath(); c.arc(R - 28, y + 58, 28, 0, Math.PI * 2); c.fill();
   icon(c, cd.ic, R - 28, y + 58, 28, C.gold, 2);
   txt(c, cd.t, R - 72, y + 58, { size: cd.t.length > 14 ? 28 : 32, w: 800, align: 'right' });

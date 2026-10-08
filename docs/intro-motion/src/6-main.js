@@ -44,6 +44,7 @@ async function init() {
   FLAG = mk(630, 360);
   FLAG.getContext('2d').drawImage(img, 0, 0, 630, 360);
   await Promise.all(['400', '500', '600', '700', '800', '900'].map(w => document.fonts.load(`${w} 40px Vazirmatn`, 'نقش من')));
+  await Promise.all(['400', '500', '700', '900'].map(w => document.fonts.load(`${w} 40px IRANSansX`, 'نقش من ۱۲۳')));
   buildGrain(); buildCrowd(); buildPlaza(); buildCity(); buildSkyline(); layoutPosts(); buildThumbs(); buildMapData(); buildFinale(); buildRoom();
 }
 
