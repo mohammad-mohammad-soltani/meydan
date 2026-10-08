@@ -225,7 +225,7 @@ function mainPerson(c, ox, t, ph, zin) {
   }
 }
 
-const PLEDGE_LINES = ['آمده‌ام برای ایران؛', 'هر شب، تا سپیده،', 'در میدان می‌مانم.'];
+const PLEDGE_LINES = ['نقش‌آفرینی برای ایران،', 'به یاد آقای شهید.'];
 function phoneUI(c, t) {
   const on = smooth(2.9, 3.25, t);
   const bg = c.createLinearGradient(0, 0, 0, 740);
@@ -271,14 +271,14 @@ function joinScreen(c, t) {
   txt(c, 'نقش شما', 180, 304, { size: 15, w: 600, color: '#c9ccd3', alpha: smooth(4.45, 4.7, t) });
   const kp = E.back(inv(4.6, 5.05, t));
   if (kp > 0) {
-    const tw = measure('پرچمگردانی', 26, 800), pw = tw + 86, py = 346;
+    const tw = measure('برای ایران', 28, 800), pw = tw + 90, py = 346;
     glowDot(c, 180, py, 170, GOLD, 0.75 * (1 - inv(4.75, 5.8, t)) + 0.18);
     c.save(); c.translate(180, py); c.scale(kp, kp);
     const pg = c.createLinearGradient(-pw / 2, 0, pw / 2, 0);
     pg.addColorStop(0, '#d9a441'); pg.addColorStop(1, '#f6d58e');
     c.fillStyle = pg; c.beginPath(); c.roundRect(-pw / 2, -27, pw, 54, 27); c.fill();
     miniFlag(c, -pw / 2 + 20, -10, 32, 20, t, 0);
-    txt(c, 'پرچمگردانی', pw / 2 - 20, 1, { size: 26, w: 800, color: '#1c1305', align: 'right' });
+    txt(c, 'برای ایران', pw / 2 - 22, 1, { size: 28, w: 800, color: '#1c1305', align: 'right' });
     c.restore();
   }
   const bx = smooth(5.05, 5.3, t);
@@ -292,9 +292,9 @@ function joinScreen(c, t) {
     const total = words.reduce((a, w) => a + w.length, 0);
     let shown = inv(5.2, 6.45, t) * total;
     words.forEach((ws, li) => {
-      const y = 450 + li * 36, full = Math.min(ws.length, Math.floor(shown)), frac = clamp(shown - full);
-      if (full < ws.length && frac > 0) txt(c, ws.slice(0, full + 1).join(' '), 318, y, { size: 23, w: 700, align: 'right', alpha: frac });
-      if (full > 0) txt(c, ws.slice(0, full).join(' '), 318, y, { size: 23, w: 700, align: 'right' });
+      const y = 458 + li * 48, full = Math.min(ws.length, Math.floor(shown)), frac = clamp(shown - full);
+      if (full < ws.length && frac > 0) txt(c, ws.slice(0, full + 1).join(' '), 318, y, { size: 25, w: 700, align: 'right', alpha: frac });
+      if (full > 0) txt(c, ws.slice(0, full).join(' '), 318, y, { size: 25, w: 700, align: 'right' });
       shown -= ws.length;
     });
     c.restore();
@@ -320,7 +320,7 @@ function joinScreen(c, t) {
     c.fillStyle = C.red; c.beginPath(); c.roundRect(-160, -27, 320, 54, 16); c.fill();
     const rp = inv(6.8, 7.3, t);
     if (rp > 0 && rp < 1) { c.save(); c.beginPath(); c.roundRect(-160, -27, 320, 54, 16); c.clip(); c.fillStyle = `rgba(255,255,255,${0.35 * (1 - rp)})`; c.beginPath(); c.arc(30, 0, 20 + rp * 200, 0, Math.PI * 2); c.fill(); c.restore(); }
-    txt(c, 'ورود به میدان', 0, 1, { size: 20, w: 800 });
+    txt(c, 'ورود برای نقش‌آفرینی', 0, 1, { size: 20, w: 800 });
     c.restore();
   }
   c.fillStyle = 'rgba(255,255,255,0.45)'; c.beginPath(); c.roundRect(120, 722, 120, 5, 3); c.fill();

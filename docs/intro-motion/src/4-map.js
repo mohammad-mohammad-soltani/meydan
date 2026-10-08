@@ -107,7 +107,8 @@ function trap(t, a, b, c2, d, v) {
   const t2 = Math.min(t, c2); s += v * (t2 - b); if (t <= c2) return s;
   const t3 = Math.min(t, d), q = t3 - c2; s += v * q - v * q * q / (2 * (d - c2)); return s;
 }
-const pan = t => trap(t, 39.5, 40.6, 48.4, 49.9, 360);
+const PAN_V = 400, PAN_D = LINE_END, PAN_C = PAN_D - 1.5, PAN_B = 40.6;
+const pan = t => trap(t, 39.5, PAN_B, PAN_C, PAN_D, PAN_V);
 
 function camAt(t) {
   let R, L = TEH, cx = W / 2, cy = H / 2 + 10, tilt = 1;
@@ -126,7 +127,7 @@ function camAt(t) {
     R = logLerp(3069, 360, E.io(inv(34.4, 37.8, t)));
     L = IRC;
   }
-  if (t > 34.4) L = [IRC[0] - 9 * inv(34.4, 50, t), IRC[1] - 4 * E.io(inv(34.4, 38, t))];
+  if (t > 34.4) L = [IRC[0] - 9 * inv(34.4, LINE_END, t), IRC[1] - 4 * E.io(inv(34.4, 38, t))];
   const m = E.io(inv(37.6, 39.3, t));
   if (m > 0) { R *= lerp(1, 0.78, m); cx = lerp(cx, 1500, m) + pan(t); cy = lerp(cy, 540, m); }
   return { L, R, cx, cy, tilt };
@@ -332,18 +333,23 @@ function caption(c, s, a) {
 
 // ── Scene 5 · the line of features
 const FEAT = [
-  { ic: 'mic', t: 'اعزام سخنران', s: 'سخنران مناسب، در لحظه' },
-  { ic: 'phone', t: 'بیست‌کال', s: 'در تماس، همیشه در دسترس' },
-  { ic: 'mega', t: 'پویش', s: 'یک پیام، برای همه' },
-  { ic: 'note', t: 'یادداشت تحلیلی و سیاسی', s: 'تحلیل، شفاف و به‌روز' },
-  { ic: 'audio', t: 'آوا و نوا', s: 'سخنرانی و مداحی، هر لحظه در گوش‌تان' },
+  { ic: 'mic', t: 'اعزام سخنران', s: ['سخنران مناسب، در لحظه'] },
+  { ic: 'phone', t: 'بیست‌کال', s: ['تماسِ یک‌به‌یک؛ دعوت به نقش‌آفرینی'] },
+  { ic: 'mega', t: 'پویش', s: ['یک پیام، برای همه'] },
+  { ic: 'note', t: 'یادداشت تحلیلی و سیاسی', s: ['تحلیل، شفاف و به‌روز'] },
+  { ic: 'audio', t: 'آوا و نوا', s: ['سخنرانی و مداحی، هر لحظه در گوش‌تان'] },
+  { ic: 'quote', t: 'روایت', s: ['امروزِ ایران، به روایتِ خودِ مردم'] },
+  { ic: 'help', t: 'کارها', s: ['تصمیمِ جمعی، کارِ واقعی؛ هر کس به قدر توانش', 'تعریف کن یا بپیوند؛ همه‌اش داوطلبانه'] },
+  { ic: 'tv', t: 'پوشش رسانه‌ای', s: ['کارهای شما در قابِ رسانه‌های ملی؛', 'الگویی از کفِ ایران‌زمین'] },
+  { ic: 'pin', t: 'نقشه‌ی زنده', s: ['میدان‌ها و کارهای ایران، زنده و شفاف'] },
+  { ic: 'chats', t: 'گفتگو و تعامل', s: ['با مردمِ سراسرِ ایران و عزیزانتان؛ تا راه ادامه یابد'] },
 ];
-const FX0 = 860, FSP = 760;
+const FX0 = 860, FSP = 700;
 const waveY = xw => 590 + 52 * Math.sin((FX0 - xw) / 340);
 function headX(t, tx) {
   if (t < 39.4) return lerp(tx, 520, E.out(inv(38.15, 39.4, t)));
-  if (t < 48.6) return 520;
-  return lerp(520, -260, E.in(inv(48.6, 49.7, t)));
+  if (t < LINE_END - 1.3) return 520;
+  return lerp(520, -260, E.in(inv(LINE_END - 1.3, LINE_END - 0.2, t)));
 }
 function drawFeatureLine(c, t, k) {
   const p = pan(t), tp = scr(TEH), hx = headX(t, tp[0]);
@@ -387,7 +393,8 @@ function featNode(c, f, i, x, y, prog, t) {
   const tp = E.out(clamp((prog - 0.3) * 1.8));
   if (tp > 0) {
     const below = i % 2 === 0, ty = below ? y + 135 : y - 172;
-    txt(c, f.t, x, ty + (1 - tp) * 18, { size: 50, w: 800, alpha: tp, glow: 'rgba(0,0,0,0.8)', blur: 14 });
-    txt(c, f.s, x, ty + 58 + (1 - tp) * 18, { size: 30, color: C.goldSoft, alpha: tp * 0.95 });
+    const up = !below && f.s.length > 1 ? (f.s.length - 1) * 42 : 0;
+    txt(c, f.t, x, ty - up + (1 - tp) * 18, { size: 50, w: 800, alpha: tp, glow: 'rgba(0,0,0,0.8)', blur: 14 });
+    f.s.forEach((ln, k) => txt(c, ln, x, ty - up + 58 + k * 42 + (1 - tp) * 18, { size: 30, color: C.goldSoft, alpha: tp * 0.95 }));
   }
 }

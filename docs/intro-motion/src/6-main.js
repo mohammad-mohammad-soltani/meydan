@@ -29,10 +29,10 @@ function render(t) {
   else if (t < 14.02) drawS2B(c, t);
   else if (t < 19.9) { feedBg(c, t, 1); drawFeed(c, t, null); }
   else if (t < 22.3) { drawMap(c, t); feedBg(c, t, 1 - E.io(inv(19.9, 21.0, t))); drawFeed(c, t, flightFn(t)); }
-  else if (t < 49.6) drawMap(c, t);
-  else if (t < 50.4) { drawMap(c, t); over(drawContent, t, smooth(49.6, 50.4, t)); }
-  else if (t < 55.4) drawContent(c, t);
-  else { drawContent(c, t, 1 - smooth(55.4, 56.3, t)); drawFinale(c, t); }
+  else if (t < HUB_S) drawMap(c, t);
+  else if (t < HUB_S + 0.8) { drawMap(c, t); over((cc, tt) => drawContent(cc, tt - HUB_S), t, smooth(HUB_S, HUB_S + 0.8, t)); }
+  else if (t < HUB_FADE) drawContent(c, t - HUB_S);
+  else { drawContent(c, t - HUB_S, 1 - smooth(HUB_FADE, HUB_FADE + 0.9, t)); drawFinale(c, t - FIN_S + 55.5); }
   c.restore();
 }
 
@@ -46,7 +46,7 @@ async function init() {
 
 const CHAPTERS = [
   [0, 'اجتماعی بودن'], [10, 'میدان و شبکه‌ی میدان'], [20, 'اتصال میدان‌ها'], [30, 'ایران و کره‌ی زمین'],
-  [38, 'خط قابلیت‌ها'], [50, 'بخش محتوا'], [55.5, 'نقش من'],
+  [38, 'خط قابلیت‌ها'], [HUB_S, 'بخش محتوا'], [FIN_S, 'نقش من'],
 ];
 const ui = {
   big: document.getElementById('big'), play: document.getElementById('play'), restart: document.getElementById('restart'),
@@ -54,6 +54,7 @@ const ui = {
   fs: document.getElementById('fs'), list: document.getElementById('chapters'), stage: document.querySelector('.stage'),
 };
 let playing = false, cur = 0, last = 0, ready = false;
+document.getElementById('meta').textContent = `موشن معرفی · ${fa(Math.round(DUR))} ثانیه · ${fa(1920)}×${fa(1080)}`;
 const clock = s => fa(`${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`);
 
 function updateUI() {
@@ -120,7 +121,7 @@ CHAPTERS.forEach(([s, name]) => {
 
 const READY = init().then(() => {
   ready = true;
-  cur = 59.6;
+  cur = DUR - 0.4;
   render(cur);
   cur = 0;
   updateUI();
@@ -130,4 +131,4 @@ const READY = init().then(() => {
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   txt(ctx, 'بارگذاری موشن ناموفق بود؛ صفحه را دوباره باز کنید.', W / 2, H / 2, { size: 40 });
 });
-window.NM = { ready: READY, renderAt: t => render(t), canvas: cv };
+window.NM = { DUR, ready: READY, renderAt: t => render(t), canvas: cv };
