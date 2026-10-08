@@ -59,6 +59,8 @@ function configuredUploadPatterns(): RemoteImagePatterns {
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   typedRoutes: true,
+  /** Self-contained `.next/standalone` build for the Docker image (see `Dockerfile`). */
+  output: "standalone",
   async headers() {
     return [
       {
