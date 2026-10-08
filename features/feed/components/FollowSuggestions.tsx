@@ -59,7 +59,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
                     </span>
                     <span className="min-w-0">
                       <span className="flex items-center gap-1">
-                        <span className="truncate text-xs font-bold text-foreground">{suggestion.name}</span>
+                        <span className="line-clamp-2 text-xs font-bold text-foreground">{suggestion.name}</span>
                         <AccountBadges verified={suggestion.verified} kind={suggestion.actorType} size="sm" />
                       </span>
                       <span className="latin-digits block truncate text-[10px] text-muted-foreground" dir="ltr">@{suggestion.handle}</span>
