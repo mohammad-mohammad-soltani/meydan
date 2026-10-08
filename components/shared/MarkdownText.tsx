@@ -1,16 +1,32 @@
 "use client";
 
 import { Children, isValidElement, type AnchorHTMLAttributes, type ReactNode } from "react";
+import NextLink from "next/link";
+import type { Route } from "next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { ArrowUpRight, Link2 } from "lucide-react";
+import { HASHTAG_LINK_PREFIX, hashtagHref } from "@/features/explore/hashtags";
 
 // IRANSans intentionally has no color-emoji glyphs. Turn the Iran flag into a
 // local SVG before Markdown is parsed so posts never fall back to the letters
 // "IR" on platforms without a flag emoji font.
 function withIranFlag(body: string): string {
   return body.replaceAll("🇮🇷", "![پرچم ایران](/images/iran-flag.svg)");
+}
+
+/**
+ * `#برچسب` tokens become links to the explore tab filtered on that tag, like
+ * `[#برچسب](/explore?q=%23برچسب)`. Only a `#` at the start of the text or
+ * right after whitespace/punctuation counts, so a URL fragment such as
+ * `example.com/page#section` is left alone.
+ */
+function linkifyHashtags(body: string): string {
+  return body.replace(
+    /(^|[\s،؛.,!?؟()[\]{}])#([\p{L}\p{N}_]{2,64})/gu,
+    (_match, lead: string, tag: string) => `${lead}[#${tag}](${hashtagHref(tag)})`,
+  );
 }
 
 /** Characters of host + path an inline link keeps before it is cut with an ellipsis. */
@@ -57,9 +73,18 @@ type AnchorProps = Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "title
 
 function MarkdownLink({ href, title, children }: AnchorProps) {
   const label = textOf(children);
-  const parts = href && isBareLink(href, label) ? linkParts(href) : null;
   // The timeline card is itself a link; a tap on an inner link must not also open the post.
   const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
+
+  if (href && href.startsWith(HASHTAG_LINK_PREFIX)) {
+    return (
+      <NextLink href={href as Route} title={title} onClick={stop} className="font-bold text-danger hover:underline">
+        {children}
+      </NextLink>
+    );
+  }
+
+  const parts = href && isBareLink(href, label) ? linkParts(href) : null;
 
   if (!parts) {
     return (
@@ -119,7 +144,7 @@ export function MarkdownText({ body, className = "" }: { body: string; className
         rehypePlugins={[rehypeSanitize]}
         components={{ a: MarkdownLink, p: MarkdownParagraph }}
       >
-        {withIranFlag(body)}
+        {linkifyHashtags(withIranFlag(body))}
       </ReactMarkdown>
     </div>
   );

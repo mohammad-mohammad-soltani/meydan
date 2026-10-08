@@ -6,7 +6,7 @@ const KEY = "nm_pin";
 export const PIN_OPTIONS: Array<{ id: FeedFilter | "campaign"; label: string; soon?: boolean }> = [
   { id: "initiatives", label: "کار" },
   { id: "campaign", label: "پویش", soon: true },
-  { id: "reflected", label: "پویش رسانه‌ای" },
+  { id: "reflected", label: "پوشش رسانه‌ای" },
   { id: "narratives", label: "روایت" },
 ];
 

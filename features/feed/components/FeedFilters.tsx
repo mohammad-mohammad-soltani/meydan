@@ -18,7 +18,7 @@ const filters: Array<FilterItem | { id: null; label: string; icon: LucideIcon }>
   { id: "all", label: "روایت" },
   { id: "initiatives", label: "کار", icon: Sparkles },
   { id: null, label: "پویش", icon: Send },
-  { id: "reflected", label: "پویش رسانه‌ای", icon: Video },
+  { id: "reflected", label: "پوشش رسانه‌ای", icon: Video },
 ];
 
 export function FeedFilters({

@@ -13,11 +13,28 @@ import { mapQuotedNarrative, type ApiQuotedNarrative } from "@/features/feed/ser
 import type { QuotedPost } from "@/features/feed/types";
 import { ComposeMediaGrid } from "./ComposeMediaGrid";
 import { MAX_COMPOSE_MEDIA, useComposeMedia } from "../hooks/useComposeMedia";
+import { getHashtagSuggestions, type HashtagSuggestion } from "@/features/explore/hashtags";
 
 const MAX_CHARACTERS = 500;
 const BASE_DRAFT_KEY = "meydan-compose-draft";
 /** One picker for everything; the composer sorts the files by type. */
 const MEDIA_ACCEPT = "image/*,video/*,audio/*";
+
+type HashtagToken = { start: number; query: string };
+
+/**
+ * The `#` token the caret currently sits inside, if any: a `#` that starts
+ * the text or follows whitespace/punctuation, with only tag characters
+ * between it and the caret. Mirrors the hashtag pattern posts are linkified
+ * with, so what autocompletes here is exactly what turns red later.
+ */
+function activeHashtagToken(text: string, caret: number): HashtagToken | null {
+  const before = text.slice(0, caret);
+  const match = before.match(/(?:^|[\s،؛.,!?؟()[\]{}])#([\p{L}\p{N}_]{0,64})$/u);
+  if (!match) return null;
+  const query = match[1];
+  return { start: caret - query.length - 1, query };
+}
 
 type ViewerState = {
   /** `speaker` publishes as the user account behind it. */
@@ -62,6 +79,8 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
   const [showTitle, setShowTitle] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [pickerAccept, setPickerAccept] = useState(MEDIA_ACCEPT);
+  const [hashtagToken, setHashtagToken] = useState<HashtagToken | null>(null);
+  const [hashtagSuggestions, setHashtagSuggestions] = useState<HashtagSuggestion[]>([]);
 
   const { media, notice, addFiles, remove, retry, reset, isUploading, hasUploadError, readyAttachments, isReady } =
     useComposeMedia();
@@ -121,6 +140,21 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
       })
       .catch(() => undefined);
   }, []);
+
+  // Debounced «#» autocomplete: refetches as the token under the caret changes.
+  useEffect(() => {
+    if (!hashtagToken) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void getHashtagSuggestions(hashtagToken.query, controller.signal)
+        .then(setHashtagSuggestions)
+        .catch(() => undefined);
+    }, 150);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [hashtagToken]);
 
   const body = quoteId ? text.trim() : [title.trim(), text.trim()].filter(Boolean).join("\n\n");
   const hasContent = body.length > 0 || media.length > 0;
@@ -220,6 +254,29 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
     });
   };
 
+  /** Re-reads the `#` token under the caret after every keystroke or click. */
+  const syncHashtagToken = () => {
+    const area = textRef.current;
+    if (!area) return;
+    setHashtagToken(activeHashtagToken(area.value, area.selectionStart ?? area.value.length));
+  };
+
+  /** Replaces the active `#` token with the picked tag and a trailing space. */
+  const applyHashtagSuggestion = (tag: string) => {
+    const area = textRef.current;
+    if (!hashtagToken || !area) return;
+    const end = area.selectionStart ?? hashtagToken.start + hashtagToken.query.length + 1;
+    const insertion = `#${tag} `;
+    const next = (text.slice(0, hashtagToken.start) + insertion + text.slice(end)).slice(0, MAX_CHARACTERS);
+    setText(next);
+    setHashtagToken(null);
+    const caret = hashtagToken.start + insertion.length;
+    window.requestAnimationFrame(() => {
+      area.focus();
+      area.setSelectionRange(caret, caret);
+    });
+  };
+
   const publish = async () => {
     if (!canPublish) return;
     setIsPublishing(true);
@@ -310,7 +367,7 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
             </button>
           ))}
           {/* In the reference; publishing a پویش from here has no backend yet. */}
-          {(showCampaignTabs ? [["پویش", Send], ["پویش رسانه‌ای", Video]] as const : []).map(([label, Icon]) => (
+          {(showCampaignTabs ? [["پویش", Send], ["پوشش رسانه‌ای", Video]] as const : []).map(([label, Icon]) => (
             <span key={label} role="tab" aria-selected="false" aria-disabled="true" title="به‌زودی" className="inline-flex cursor-default items-center justify-center gap-1.5 whitespace-nowrap rounded-[14px] px-1 py-2.5 text-xs font-bold text-muted-foreground">
               <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
               {label}
@@ -347,7 +404,16 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
           <textarea
             ref={textRef}
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => {
+              setText(event.target.value);
+              setHashtagToken(activeHashtagToken(event.target.value, event.target.selectionStart ?? event.target.value.length));
+            }}
+            onClick={syncHashtagToken}
+            onKeyUp={(event) => {
+              if (event.key === "Escape") { setHashtagToken(null); return; }
+              syncHashtagToken();
+            }}
+            onBlur={() => window.setTimeout(() => setHashtagToken(null), 120)}
             onPaste={(event) => {
               const files = Array.from(event.clipboardData?.files ?? []);
               if (!files.length) return;
@@ -360,6 +426,29 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
             aria-label="شرح روایت"
             className={`${styles.textarea} w-full resize-none border-0 bg-transparent text-foreground shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`}
           />
+          {hashtagToken && hashtagSuggestions.length ? (
+            <div
+              role="listbox"
+              aria-label="پیشنهاد هشتگ"
+              className="mt-1.5 overflow-hidden rounded-2xl border border-border bg-surface shadow-dialog"
+            >
+              {hashtagSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion.tag}
+                  type="button"
+                  role="option"
+                  aria-selected={false}
+                  // A blur beats a click: fire before the textarea's onBlur closes the dropdown.
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => applyHashtagSuggestion(suggestion.tag)}
+                  className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-right text-xs transition-colors hover:bg-hover"
+                >
+                  <span className="font-bold text-danger">#{suggestion.tag}</span>
+                  <span className="shrink-0 text-[11px] text-muted-foreground">{suggestion.count.toLocaleString("fa-IR")} روایت</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {quoteId ? (
@@ -438,7 +527,17 @@ export function ComposeView({ quoteId, workMode = false }: { quoteId?: string; w
             <button type="button" disabled={atCapacity} onClick={() => openPicker("image/*")} aria-label="افزودن عکس" className="transition-opacity hover:opacity-70 disabled:opacity-30"><ImageIcon className="h-[22px] w-[22px]" /></button>
             <button type="button" disabled={atCapacity} onClick={() => openPicker("video/*")} aria-label="افزودن ویدیو" className="transition-opacity hover:opacity-70 disabled:opacity-30"><Video className="h-[22px] w-[22px]" /></button>
             <button type="button" disabled={atCapacity} onClick={() => openPicker("audio/*")} aria-label="افزودن صوت" className="transition-opacity hover:opacity-70 disabled:opacity-30"><Volume2 className="h-[22px] w-[22px]" /></button>
-            <button type="button" onClick={() => insertText("#")} aria-label="افزودن هشتگ" className="transition-opacity hover:opacity-70"><Hash className="h-[22px] w-[22px]" /></button>
+            <button
+              type="button"
+              onClick={() => {
+                insertText("#");
+                window.requestAnimationFrame(syncHashtagToken);
+              }}
+              aria-label="افزودن هشتگ"
+              className="transition-opacity hover:opacity-70"
+            >
+              <Hash className="h-[22px] w-[22px]" />
+            </button>
             <button type="button" onClick={() => setEmojiOpen((value) => !value)} aria-label="شکلک" aria-expanded={emojiOpen} className="transition-opacity hover:opacity-70"><Smile className="h-[22px] w-[22px]" /></button>
           </div>
           <div className={`${styles.meter} flex items-center gap-2`}>
