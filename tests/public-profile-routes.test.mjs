@@ -16,7 +16,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const source = (relative) => readFileSync(path.join(root, relative), "utf8");
 
 test("every public profile lives at /{handle}, whatever its kind", () => {
-  for (const kind of ["user", "square", "media", "collective", "organization"]) {
+  for (const kind of ["user", "square", "media", "collective", "organization", "memorial"]) {
     assert.equal(publicProfileHref(kind, 7, "@Reza_S"), "/reza_s");
   }
 });

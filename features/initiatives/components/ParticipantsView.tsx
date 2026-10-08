@@ -15,6 +15,7 @@ const typeLabels: Record<InitiativeParticipant["type"], string> = {
   media: "رسانه",
   collective: "مجموعه",
   organization: "سازمان",
+  memorial: "یادبود",
 };
 
 function ParticipantRow({ participant }: { participant: InitiativeParticipant }) {

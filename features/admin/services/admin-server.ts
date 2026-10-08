@@ -19,6 +19,7 @@ import type {
   SquareStatus,
 } from "../types";
 import { withAdminAuth } from "./admin-request";
+import { getSpeakerApplications as getSpeakerApplicationsRaw, type SpeakerApplicationStatus } from "./speaker-applications.service";
 import { getNoteCategories as getNoteCategoriesRaw } from "./note-categories.service";
 import { getUsers as getUsersRaw, getUser as getUserRaw, getUserRoles as getUserRolesRaw, type UserFilters } from "./users.service";
 import type { AdminUser, AdminUserRole } from "./users.service";
@@ -231,4 +232,8 @@ export async function previewFeed(userId: number, limit = 20): Promise<FeedPrevi
 
 export async function getNoteCategoriesServer() {
   return getNoteCategoriesRaw(await withAdminAuth());
+}
+
+export async function getSpeakerApplications(status: SpeakerApplicationStatus | "" = "") {
+  return getSpeakerApplicationsRaw(status, await withAdminAuth());
 }

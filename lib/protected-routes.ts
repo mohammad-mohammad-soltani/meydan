@@ -14,6 +14,7 @@
  */
 export const PROTECTED_ROUTE_PREFIXES = [
   "/speaker-invitations",
+  "/speaker-signup",
   "/compose",
   "/chat",
   "/works",

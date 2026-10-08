@@ -127,7 +127,7 @@ export function AdminMemorialDetailView({ memorial: initial }: { memorial: Memor
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const save = async () => {
+  const save = async (status?: MemorialStatus) => {
     if (saving || uploadBusy) return;
     setFieldErrors({});
     setFormError(null);
@@ -141,10 +141,10 @@ export function AdminMemorialDetailView({ memorial: initial }: { memorial: Memor
 
     setSaving(true);
     try {
-      const updated = await updateMemorial(String(memorial.id), buildUpdate(form));
+      const updated = await updateMemorial(String(memorial.id), buildUpdate(status ? { ...form, status } : form));
       setMemorial(updated);
       setForm(toFormState(updated));
-      setSaved({ id: Date.now(), message: "تغییرات ذخیره شد." });
+      setSaved({ id: Date.now(), message: status === "publish" ? "یادبود منتشر شد." : status === "draft" ? "یادبود به پیش‌نویس برگشت." : "تغییرات ذخیره شد." });
     } catch (reason) {
       const fields =
         reason && typeof reason === "object" && "fields" in reason
@@ -360,6 +360,14 @@ export function AdminMemorialDetailView({ memorial: initial }: { memorial: Memor
           <button type="button" onClick={() => void save()} disabled={saving || uploadBusy} className={primaryButtonClass}>
             {saving ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Save aria-hidden="true" className="h-4 w-4" />}
             {saving ? "در حال ذخیره…" : "ذخیره تغییرات"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void save(memorial.postStatus === "publish" ? "draft" : "publish")}
+            disabled={saving || uploadBusy}
+            className={secondaryButtonClass}
+          >
+            {memorial.postStatus === "publish" ? "بازگشت به پیش‌نویس" : "انتشار یادبود"}
           </button>
           <Link href={"/admin/memorials" as Route} className={secondaryButtonClass}>
             بازگشت به فهرست

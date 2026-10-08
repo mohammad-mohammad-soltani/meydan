@@ -175,8 +175,9 @@ export function memorialUpdateBody(input: MemorialUpdateInput): Record<string, u
   if (input.biography !== undefined) body.biography = input.biography;
   if (input.birthDate !== undefined) body.birth_date = input.birthDate.trim();
   if (input.deathDate !== undefined) body.death_date = input.deathDate.trim();
-  if (input.avatarMediaId !== undefined) body.avatar_media_id = input.avatarMediaId ?? 0;
-  if (input.coverMediaId !== undefined) body.cover_media_id = input.coverMediaId ?? 0;
+  // No new upload selected (null) means keep the current image: only a chosen file is sent.
+  if (input.avatarMediaId) body.avatar_media_id = input.avatarMediaId;
+  if (input.coverMediaId) body.cover_media_id = input.coverMediaId;
   if (input.status !== undefined) body.status = input.status;
   if (input.verified !== undefined) body.verified = input.verified;
   return body;

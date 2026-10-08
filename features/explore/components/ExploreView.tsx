@@ -86,6 +86,7 @@ const kindMeta: Record<
   media: { label: "رسانه", icon: Newspaper },
   collective: { label: "مجموعه", icon: Users },
   organization: { label: "سازمان", icon: Building2 },
+  memorial: { label: "یادبود", icon: UserRound },
   creator: { label: "سخنران", icon: Mic2 },
   content: { label: "محتوا", icon: FileText },
   user: { label: "کاربر", icon: UserRound },

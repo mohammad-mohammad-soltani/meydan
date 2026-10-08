@@ -46,7 +46,7 @@
  .player { height:var(--rh); width:calc(var(--rw) + 70px); }
  .reels[data-wide="true"] { --rw:min(calc(var(--av) - 88px),950px); --vh:calc(var(--rw) * 9 / 16); --G:calc(var(--vh) + 128px); --vt:calc(50% - var(--G) / 2); }
  .reels[data-wide="true"] .videoCard { background:none!important; }
- .reels[data-wide="true"] .videoCard > video { top:var(--vt); height:var(--vh); transform:none; border-radius:18px; object-fit:cover; }
+ .reels[data-wide="true"] .videoCard > video { top:var(--vt); height:var(--vh); transform:none; translate:none; border-radius:18px; object-fit:cover; }
  .reels[data-wide="true"] .scrim { top:var(--vt); bottom:auto; height:var(--vh); border-radius:18px; background:linear-gradient(transparent 75%,rgba(0,0,0,.45)); }
  .reels[data-wide="true"] .pauseIndicator { top:var(--vt); bottom:auto; height:var(--vh); }
  .reels[data-wide="true"] .topbar { top:var(--vt); border-radius:18px 18px 0 0; }

@@ -4,6 +4,7 @@ export type ExploreResultKind =
   | "media"
   | "collective"
   | "organization"
+  | "memorial"
   | "creator"
   | "content"
   | "user"

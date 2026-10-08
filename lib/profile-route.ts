@@ -9,7 +9,7 @@
 export const RESERVED_HANDLES: readonly string[] = [
   "admin", "administrator", "root", "support", "help", "meydan", "official", "system",
   "api", "www", "null", "undefined", "me", "user", "users", "square", "speaker", "works",
-  "squares", "media", "collective", "collectives", "organization", "organizations", "entities", "profiles",
+  "squares", "media", "collective", "collectives", "organization", "organizations", "memorial", "memorials", "entities", "profiles",
   "home", "explore", "chat", "compose", "content", "initiatives", "map", "podcasts", "posts", "post",
   "profile", "speakers", "auth", "direct", "login", "logout", "register", "signup", "settings",
   "notifications", "search", "images", "maps", "fonts", "static", "assets", "offline", "favicon",
@@ -17,13 +17,13 @@ export const RESERVED_HANDLES: readonly string[] = [
 ];
 
 /** Every kind of public actor. Media, collectives and organizations are entities of their own. */
-export const ACTOR_KINDS = ["user", "square", "media", "collective", "organization"] as const;
+export const ACTOR_KINDS = ["user", "square", "media", "collective", "organization", "memorial"] as const;
 export type ActorKind = (typeof ACTOR_KINDS)[number];
 /** Kept for existing imports. */
 export type PublicProfileActorType = ActorKind;
 
 /** The kinds that own an entity profile (everything except a plain user). */
-export const ENTITY_KINDS = ["square", "media", "collective", "organization"] as const;
+export const ENTITY_KINDS = ["square", "media", "collective", "organization", "memorial"] as const;
 export type EntityKind = (typeof ENTITY_KINDS)[number];
 
 export const ENTITY_KIND_LABELS: Record<EntityKind, string> = {
@@ -31,6 +31,7 @@ export const ENTITY_KIND_LABELS: Record<EntityKind, string> = {
   media: "رسانه",
   collective: "مجموعه",
   organization: "سازمان",
+  memorial: "یادبود",
 };
 
 export function isActorKind(value: unknown): value is ActorKind {
@@ -93,7 +94,7 @@ export function publicProfileHref(
  */
 export function canonicalPublicProfileHref(href: string): string {
   const value = href.trim();
-  const legacy = value.match(/^\/(?:users|profile)\/(user|square|media|collective|organization)\/(\d+)([?#].*)?$/);
+  const legacy = value.match(/^\/(?:users|profile)\/(user|square|media|collective|organization|memorial)\/(\d+)([?#].*)?$/);
   if (legacy) return `/users/${legacy[1]}/${legacy[2]}${legacy[3] || ""}`;
   const square = value.match(/^\/square\/(\d+)([?#].*)?$/);
   if (square) return `/users/square/${square[1]}${square[2] || ""}`;

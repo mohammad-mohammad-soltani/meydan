@@ -80,7 +80,7 @@ test("profile lists show reposts, labelled as reposted", () => {
 
 test("media, collectives and organizations are separate public entities, not squares", () => {
   const route = read("lib/profile-route.ts");
-  assert.match(route, /ACTOR_KINDS = \["user", "square", "media", "collective", "organization"\]/);
+  assert.match(route, /ACTOR_KINDS = \["user", "square", "media", "collective", "organization", "memorial"\]/);
   assert.match(route, /entityApiPath/);
   assert.match(read("lib/meydan-follow.ts"), /export type ActorType = ActorKind;/);
   const service = read("features/profile/services/profile.service.ts");

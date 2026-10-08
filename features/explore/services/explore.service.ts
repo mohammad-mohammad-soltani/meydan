@@ -224,6 +224,23 @@ function mapContent(item: ApiContent): ExploreResult {
 
 function mapUser(item: ApiActor): ExploreResult {
   const id = actorNumericId(item.id);
+  const actorKind = actorKindOf(item.type);
+
+  // A memorial arrives in the users section but is an entity profile.
+  if (isEntityKind(actorKind)) {
+    const label = ENTITY_KIND_LABELS[actorKind];
+    return {
+      id: `${actorKind}-${item.id}`,
+      entityId: String(id || item.id),
+      kind: "user",
+      title: item.display_name || label,
+      subtitle: label,
+      href: id ? publicProfileHref(actorKind, id, item.handle) : "/explore",
+      avatarUrl: item.avatar_url,
+      verified: Boolean(item.verified),
+      meta: label,
+    };
+  }
 
   return {
     id: `user-${item.id}`,

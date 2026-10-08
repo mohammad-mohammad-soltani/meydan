@@ -117,3 +117,10 @@ export function VerifiedBadge({ verified }: { verified: boolean }) {
     </Badge>
   );
 }
+
+const APPLICATION_TONES = { pending: "warning", approved: "success", rejected: "danger" } as const;
+const APPLICATION_LABELS = { pending: "در انتظار بررسی", approved: "تأییدشده", rejected: "ردشده" } as const;
+
+export function SpeakerApplicationStatusBadge({ status }: { status: keyof typeof APPLICATION_TONES }) {
+  return <Badge tone={APPLICATION_TONES[status]}>{APPLICATION_LABELS[status]}</Badge>;
+}
