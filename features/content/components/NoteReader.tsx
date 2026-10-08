@@ -6,7 +6,7 @@ import { Bookmark, Heart, Share2, X } from "lucide-react";
 import { useShare } from "@/features/share/ShareProvider";
 import { useState } from "react";
 import { useAuthGate } from "@/components/providers/AuthGateProvider";
-import { meydanApi } from "@/lib/meydan-api";
+import { meydanApi, stripMarkdown } from "@/lib/meydan-api";
 import { VideoPlayer } from "@/features/media/components/VideoPlayer";
 import type { ContentDetailItem } from "../types";
 import { AudioMediaStage } from "./AudioMediaStage";
@@ -14,6 +14,20 @@ import { useViewerStates } from "../hooks/use-viewer-states";
 import { NoteMeta, NoteQuote, noteBackground } from "./note-ui";
 
 const fa = new Intl.NumberFormat("fa-IR");
+
+const flat = (value: string) => stripMarkdown(value).replace(/\s+/g, " ").trim();
+
+/**
+ * The lead under the byline. `description` falls back to the whole body when a
+ * note has no subtitle or excerpt, so a lead that just restates the start of
+ * the body is dropped instead of showing the text twice.
+ */
+function leadOf(item: ContentDetailItem): string {
+  const lead = item.subtitle || item.description;
+  if (!lead) return "";
+  const text = flat(lead);
+  return flat(item.body.join(" ")).startsWith(text) ? "" : lead;
+}
 
 /** A note as the reference's reader: hero, category, title, byline, lead, body, then like / save. */
 export function NoteReader({ item }: { item: ContentDetailItem }) {
@@ -28,7 +42,7 @@ export function NoteReader({ item }: { item: ContentDetailItem }) {
   const likes = Math.max(0, (item.likeCount ?? 0) + likeDelta);
   const [playing, setPlaying] = useState(false);
   const cover = item.media.coverImage;
-  const lead = item.subtitle || item.description;
+  const lead = leadOf(item);
 
   async function toggle(kind: "like" | "bookmark") {
     if (!requireAuth(`/content/${item.id}`)) return;
