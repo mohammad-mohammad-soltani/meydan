@@ -1,35 +1,28 @@
 import { getContentBanners } from "@/features/content/services/banners.service";
-import { AvaView } from "@/features/content/components/AvaView";
-import { ContentHubTabs, type HubTab } from "@/features/content/components/ContentHubTabs";
-import { HubSwipe } from "@/features/content/components/HubSwipe";
-import { ContentView } from "@/features/content/components/ContentView";
-import { NotesView } from "@/features/content/components/NotesView";
+import { ContentHubPager, type HubPayload } from "@/features/content/components/ContentHubPager";
+import type { HubTab } from "@/features/content/components/ContentHubTabs";
 import { getMusicVideoContentPage, getSpeechContentPage } from "@/features/content/services/content.service";
 import { getAudioHub, getNotesHub } from "@/features/content/services/hub.service";
 import { getReportDays } from "@/features/content/services/report-days.service";
 
 export const dynamic = "force-dynamic";
 
-export default async function ContentPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const requested = (await searchParams).tab;
-  const tab: HubTab = requested === "ava" || requested === "notes" ? requested : "top";
-
+async function loadTab(tab: HubTab): Promise<HubPayload> {
   if (tab === "ava") {
     const hub = await getAudioHub().catch(() => ({ featured: [], series: [], faces: [], squares: [], latest: [] }));
-    return <><ContentHubTabs active="ava" /><HubSwipe active="ava"><AvaView initial={hub} /></HubSwipe></>;
+    return { tab: "ava", data: hub };
   }
   if (tab === "notes") {
     const hub = await getNotesHub().catch(() => ({ categories: [], featured: [], latest: [] }));
-    return <><ContentHubTabs active="notes" /><HubSwipe active="notes"><NotesView initial={hub} /></HubSwipe></>;
+    return { tab: "notes", data: hub };
   }
-
   const [banners, speeches, musicVideos, reportDays] = await Promise.all([getContentBanners(), getSpeechContentPage(), getMusicVideoContentPage(), getReportDays()]);
-  return (
-    <>
-      <ContentHubTabs active="top" />
-      <HubSwipe active="top">
-        <ContentView banners={banners} speeches={speeches.items} musicVideos={musicVideos.items} reportDays={reportDays} todayNight={reportDays.length} />
-      </HubSwipe>
-    </>
-  );
+  return { tab: "top", data: { banners, speeches: speeches.items, musicVideos: musicVideos.items, reportDays } };
+}
+
+export default async function ContentPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const requested = (await searchParams).tab;
+  const tab: HubTab = requested === "ava" || requested === "notes" ? requested : "top";
+  const initial = await loadTab(tab);
+  return <ContentHubPager active={tab} initial={initial} />;
 }

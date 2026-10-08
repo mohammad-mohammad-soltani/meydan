@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
+import { forwardRef, type RefObject } from "react";
 
 export type HubTab = "top" | "ava" | "notes";
 
@@ -9,10 +10,16 @@ const TABS: Array<{ id: HubTab; label: string; href: string }> = [
   { id: "notes", label: "یادداشت", href: "/content?tab=notes" },
 ];
 
+type ContentHubTabsProps = {
+  active: HubTab;
+  /** Handed to the pager, which moves the underline with the finger through a direct style write. */
+  indicatorRef?: RefObject<HTMLSpanElement | null>;
+};
+
 /** The three tabs of «بسته محتوا». Each is a link, so a tab survives refresh and sharing. */
-export function ContentHubTabs({ active }: { active: HubTab }) {
+export const ContentHubTabs = forwardRef<HTMLElement, ContentHubTabsProps>(function ContentHubTabs({ active, indicatorRef }, ref) {
   return (
-    <nav aria-label="بخش‌های بسته محتوا" className="sticky top-0 z-20 box-border grid h-[50px] grid-cols-3 border-b border-divider bg-background">
+    <nav ref={ref} aria-label="بخش‌های بسته محتوا" className="sticky top-0 z-20 box-border grid h-[50px] grid-cols-3 border-b border-divider bg-background">
       {TABS.map((tab) => {
         const on = tab.id === active;
         return (
@@ -30,10 +37,11 @@ export function ContentHubTabs({ active }: { active: HubTab }) {
       })}
       {/* One underline that slides between the tabs (the strip reads right to left). */}
       <span
+        ref={indicatorRef}
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 right-0 h-[3px] w-1/3 transition-transform duration-300 ease-out after:absolute after:inset-x-1/4 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-brand after:content-['']"
         style={{ transform: `translateX(${-TABS.findIndex((tab) => tab.id === active) * 100}%)` }}
       />
     </nav>
   );
-}
+});
