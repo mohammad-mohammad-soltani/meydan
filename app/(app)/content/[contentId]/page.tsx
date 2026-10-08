@@ -5,7 +5,7 @@ import {
   getContentDetailById,
   getContentDetailItems,
 } from "@/features/content/services/content.service";
-import { absoluteUrl, jsonLdScript, toDescription } from "@/lib/seo";
+import { absoluteUrl, breadcrumbJsonLd, jsonLdScript, toDescription } from "@/lib/seo";
 
 type ContentDetailPageProps = {
   params: Promise<{ contentId: string }>;
@@ -75,6 +75,16 @@ export default async function ContentDetailPage({
           thumbnailUrl: item.media.coverImage,
           author: item.creator?.name ? { "@type": "Person", name: item.creator.name } : undefined,
         })}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          breadcrumbJsonLd([
+            { name: "خانه", path: "/home" },
+            { name: "محتوا", path: "/content" },
+            { name: item.title, path: `/content/${item.id}` },
+          ]),
+        )}
       />
       <ContentDetailView item={item} relatedItems={relatedItems} />
     </>

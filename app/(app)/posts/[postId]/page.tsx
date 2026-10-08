@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PostView } from "@/features/posts/components/PostView";
 import { getPostById } from "@/features/posts/services/posts.service";
 import { accessTokenHeader } from "@/lib/meydan-session";
-import { absoluteUrl, jsonLdScript, toDescription } from "@/lib/seo";
+import { absoluteUrl, breadcrumbJsonLd, jsonLdScript, toDescription } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +62,15 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
             { "@type": "InteractionCounter", interactionType: "https://schema.org/CommentAction", userInteractionCount: post.commentsCount },
           ],
         })}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          breadcrumbJsonLd([
+            { name: "خانه", path: "/home" },
+            { name: `روایت ${post.author.name}`, path: `/posts/${post.id}` },
+          ]),
+        )}
       />
       <PostView post={post} />
     </>

@@ -31,3 +31,17 @@ export function jsonLdScript(data: unknown) {
     __html: JSON.stringify(data).replace(/</g, "\\u003c"),
   };
 }
+
+/** `BreadcrumbList` JSON-LD for a trail of `{ name, path }` crumbs (paths relative to the site root). */
+export function breadcrumbJsonLd(crumbs: Array<{ name: string; path: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: absoluteUrl(crumb.path),
+    })),
+  };
+}

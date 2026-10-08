@@ -6,7 +6,7 @@ import { getPublicProfileDetails } from "@/features/profile/services/profile.ser
 import { meydanApi, MeydanApiError } from "@/lib/meydan-api";
 import { redirectToProfileById } from "@/lib/profile-redirect";
 import { actorKindOf, cleanHandle, isPublicProfilePath } from "@/lib/profile-route";
-import { absoluteUrl, jsonLdScript, toDescription } from "@/lib/seo";
+import { absoluteUrl, breadcrumbJsonLd, jsonLdScript, toDescription } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -94,6 +94,17 @@ export default async function ProfileByHandlePage({ params }: Props) {
             image: profile.identity.avatar,
             description: profile.about || profile.identity.subtitle || undefined,
           })}
+        />
+      ) : null}
+      {profile ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={jsonLdScript(
+            breadcrumbJsonLd([
+              { name: "خانه", path: "/home" },
+              { name: profile.identity.name, path: `/${clean}` },
+            ]),
+          )}
         />
       ) : null}
       <PublicProfileRoute type={actorKindOf(resolved.actor_type)} id={String(resolved.id)} />

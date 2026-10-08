@@ -26,7 +26,9 @@ export const metadata: Metadata = {
   generator: "Next.js",
   keywords: ["نقش من", "میدان", "شبکه اجتماعی ایران", "روایت", "سخنرانان", "محتوا", "پادکست"],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
-  alternates: { canonical: "/" },
+  // No blanket canonical here: Next.js metadata is inherited by any page that
+  // doesn't set its own, so a fixed "/" would wrongly claim every page as a
+  // duplicate of the homepage. Each indexable page sets its own canonical.
   robots: {
     index: true,
     follow: true,
@@ -40,7 +42,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fa_IR",
-    url: "/",
     siteName: SITE_NAME,
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,

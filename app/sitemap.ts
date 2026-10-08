@@ -4,8 +4,8 @@ import { getContentItems } from "@/features/content/services/content.service";
 import { getSpeakerPage } from "@/features/speakers/services/speakers.service";
 
 const STATIC_ROUTES: Array<{ path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }> = [
-  { path: "/", priority: 1, changeFrequency: "daily" },
-  { path: "/home", priority: 0.9, changeFrequency: "hourly" },
+  // `/` permanently redirects to `/home`; list the destination, not the redirect, as canonical.
+  { path: "/home", priority: 1, changeFrequency: "hourly" },
   { path: "/explore", priority: 0.8, changeFrequency: "hourly" },
   { path: "/map", priority: 0.6, changeFrequency: "daily" },
   { path: "/speakers", priority: 0.7, changeFrequency: "daily" },

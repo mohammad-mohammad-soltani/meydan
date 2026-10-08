@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
 export default function RootPage() {
-  redirect("/home");
+  // Permanent (308): search engines should index `/home`, not `/`, as the canonical landing page.
+  permanentRedirect("/home");
 }
