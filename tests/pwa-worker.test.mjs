@@ -108,6 +108,13 @@ test("splash plays the theme-matched Lottie on every real document load and cach
   assert.doesNotMatch(layout, /getElementById\("meydan-splash"\)\?\.remove\(\)/);
   assert.doesNotMatch(splash, /root\?\.remove\(\)|root\.remove\(\)/);
   assert.match(splash, /root\.style\.display = "none"/);
+
+  // Ends with a fade, not a hard cut: opacity/scale transition out first,
+  // `display: none` only lands after that transition has had time to finish.
+  assert.match(layout, /transition: "opacity 450ms ease, transform 450ms ease"/);
+  assert.match(splash, /FADE_OUT_MS = 450/);
+  assert.match(splash, /root\.style\.opacity = "0"/);
+  assert.match(splash, /window\.setTimeout\(\(\) => \{\s*root\.style\.display = "none";\s*\}, FADE_OUT_MS\)/);
 });
 
 test("push permission prompt stays gone permanently after allow or close", () => {

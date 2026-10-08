@@ -11,6 +11,9 @@ const SPLASH_ANIM_ID = "meydan-splash-anim";
 /** Hard cap so a slow/broken animation can never trap the user behind the overlay. */
 const FALLBACK_TIMEOUT_MS = 6000;
 
+/** Matches the `transition` duration set on `#meydan-splash` in `app/layout.tsx`. */
+const FADE_OUT_MS = 450;
+
 function splashSource(): string {
   // Only a light and a dark Lottie exist; the "black" theme reads closest to dark.
   return readStoredTheme() === "light" ? "/splash/splash-light.json" : "/splash/splash-dark.json";
@@ -18,16 +21,25 @@ function splashSource(): string {
 
 function hide(root: HTMLElement | null, anim: AnimationItem | null) {
   anim?.destroy();
+  if (!root) return;
+
+  // Fades + settles out instead of cutting straight to `display: none`, which
+  // read as an abrupt jump cut once the animation itself finished.
+  root.setAttribute("aria-hidden", "true");
+  root.style.pointerEvents = "none";
+  root.style.opacity = "0";
+  root.style.transform = "scale(1.03)";
+
   // Hidden, never removed: this node is rendered by React (in `app/layout.tsx`),
   // which persists across client-side navigations without re-rendering. Deleting
   // it with `.remove()` desyncs React's fiber tree from the real DOM, so the next
   // time React touches `<body>` (e.g. a route change) it throws trying to clean
-  // up a child that is no longer there. Toggling a style React never sets itself
-  // (it only sets position/inset/z-index/flex/background) is safe indefinitely.
-  if (root) {
+  // up a child that is no longer there. Toggling styles React never sets itself
+  // (it only sets position/inset/z-index/flex/background/transition) is safe
+  // indefinitely, same as the `display` flip below once the fade settles.
+  window.setTimeout(() => {
     root.style.display = "none";
-    root.setAttribute("aria-hidden", "true");
-  }
+  }, FADE_OUT_MS);
 }
 
 /**

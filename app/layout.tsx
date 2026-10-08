@@ -80,11 +80,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           a typed URL, a new tab, or a refresh. Next.js never remounts the
           root layout for a client-side navigation between pages, so this
           effectively never reappears there; no "already shown" flag needed.
-          `SplashScreen` plays the Lottie, then hides this (`display: none`,
-          never `.remove()`): the node is React's, and deleting it behind
-          React's back would desync its fiber tree from the real DOM,
-          crashing the next reconciliation (e.g. a route change) with a
-          `removeChild` error.
+          `SplashScreen` plays the Lottie, then fades this out (opacity +
+          a slight scale-up, over 450ms — see `FADE_OUT_MS` in
+          SplashScreen.tsx) before setting `display: none`, never
+          `.remove()`: the node is React's, and deleting it behind React's
+          back would desync its fiber tree from the real DOM, crashing the
+          next reconciliation (e.g. a route change) with a `removeChild`
+          error.
         */}
         <div
           id="meydan-splash"
@@ -96,6 +98,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             alignItems: "center",
             justifyContent: "center",
             background: "var(--background)",
+            // Only `transition` is set here, never `opacity`/`transform` themselves
+            // (those stay at their CSS initial values, 1 and none) — SplashScreen
+            // sets those directly via the DOM when fading out, and this way React
+            // never has a stale value of its own to reassert over that fade.
+            transition: "opacity 450ms ease, transform 450ms ease",
           }}
         >
           <div id="meydan-splash-anim" style={{ width: "100%", height: "100%" }} />
