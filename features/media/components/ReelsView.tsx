@@ -10,7 +10,6 @@ import {
   Eye,
   Heart,
   LoaderCircle,
-  Maximize,
   MessageCircle,
   FastForward,
   Pause,
@@ -148,7 +147,6 @@ function ReelItem({
   const captionExpanded = captionOpen && active;
   const [wide, setWide] = useState(Boolean(entry.item.width && entry.item.height && entry.item.width > entry.item.height * 1.1));
   const [failed, setFailed] = useState(false);
-  const [ratio, setRatio] = useState(entry.item.width && entry.item.height ? entry.item.width / entry.item.height : 16 / 9);
   const card = useRef<HTMLDivElement>(null);
   const tainted = useRef(false);
   const lastSample = useRef(0);
@@ -192,14 +190,6 @@ function ReelItem({
     const colors = sampleEdgeColors(element);
     if (!colors) { tainted.current = true; return; }
     paintBackdrop(colors);
-  };
-
-  const enterFullscreen = () => {
-    const element = video.current;
-    if (!element) return;
-    const anyElement = element as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
-    if (element.requestFullscreen) void element.requestFullscreen().catch(() => anyElement.webkitEnterFullscreen?.());
-    else anyElement.webkitEnterFullscreen?.();
   };
 
   const toggle = () => {
@@ -301,8 +291,17 @@ function ReelItem({
       data-reel={index}
       onPointerDown={onPointerDown}
       onClick={(event) => {
+        const target = event.target as HTMLElement;
         // Any tap outside the open caption folds it back.
-        if (captionExpanded && !(event.target as HTMLElement).closest("[data-caption]")) setCaptionOpen(false);
+        if (captionExpanded && !target.closest("[data-caption]")) {
+          setCaptionOpen(false);
+          return;
+        }
+        // A tap in the middle of the frame plays / pauses; the sides stay free for the double-tap seek.
+        if (target.closest("button, a, input, form, [data-reel-ui], [data-caption]") || Date.now() - held.current < 400) return;
+        const rect = (card.current ?? event.currentTarget).getBoundingClientRect();
+        const fraction = (event.clientX - rect.left) / rect.width;
+        if (fraction >= 0.34 && fraction <= 0.66) toggle();
       }}
       onDoubleClick={(event) => {
         if ((event.target as HTMLElement).closest("button, a, input, form, [data-reel-ui]") || Date.now() - held.current < 400) return;
@@ -316,7 +315,7 @@ function ReelItem({
         } else if (element && fraction > 0.66) {
           element.currentTime = Math.min(element.duration || Infinity, element.currentTime + 10);
           setFlash({ text: "forward", key: Date.now() });
-        } else toggle();
+        }
       }}
       className="relative h-full snap-start snap-always select-none overflow-hidden [touch-action:pan-y] lg:overflow-visible"
     >
@@ -340,7 +339,7 @@ function ReelItem({
             preload={active ? "auto" : "metadata"}
             onLoadedMetadata={(event) => {
               const { videoWidth, videoHeight } = event.currentTarget;
-              if (videoWidth && videoHeight) { setRatio(videoWidth / videoHeight); const landscape = videoWidth > videoHeight * 1.1; setWide(landscape); onWide(landscape); }
+              if (videoWidth && videoHeight) { const landscape = videoWidth > videoHeight * 1.1; setWide(landscape); onWide(landscape); }
             }}
             onLoadedData={(event) => sampleFrame(event.currentTarget)}
             onEnded={(event) => {
@@ -360,18 +359,6 @@ function ReelItem({
             onError={() => setFailed(true)}
             className={wide ? "absolute inset-x-0 top-1/2 h-auto w-full -translate-y-1/2 object-contain lg:translate-y-0" : "absolute inset-0 h-full w-full object-cover"}
           />
-        ) : null}
-        {near && !failed ? (
-          <button
-            type="button"
-            data-reel-ui
-            onClick={(event) => { event.stopPropagation(); enterFullscreen(); }}
-            aria-label="تمام‌صفحه"
-            style={{ "--vb": `calc(50% + 50vw / ${ratio} - 48px)` } as React.CSSProperties}
-            className={`reel-glass absolute right-2.5 z-[5] grid h-9 w-9 place-items-center rounded-full text-white ${wide ? "top-[var(--vb)] lg:top-[calc(var(--vt)+var(--vh)-48px)]" : "top-[64px]"}`}
-          >
-            <Maximize className="h-[18px] w-[18px]" />
-          </button>
         ) : null}
         {failed ? (
           <div className="absolute inset-0 grid place-items-center text-center text-sm text-white/70">
