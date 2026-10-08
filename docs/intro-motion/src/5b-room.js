@@ -1,6 +1,6 @@
 // ───────── Last sequence (S8 →): the sign-up page fills the frame, the camera pulls back to a woman at home, then pushes in to the brand card
 // t8 = seconds since the hub ends: sign-up page full frame → pull back to the room → push in to the brand card
-const Z_START = 2.5, Z_LEN = 2.3, BRAND_AT = 8.6, PUSH_LEN = 2.2, SEQ_LEN = 13.4;
+const Z_START = 2.5, Z_LEN = 2.3, BRAND_AT = 8.6, PUSH_LEN = 2.2;
 const SCR = { x: 800, y: 110, w: 960, h: 540 }, PC = [SCR.x + SCR.w / 2, SCR.y + SCR.h / 2];
 const SC = mk(W, H), SCC = SC.getContext('2d');
 const CAPTION = ['خانه‌ات هم یک میدان است؛', 'نقش خودت را همین‌جا بساز.'];

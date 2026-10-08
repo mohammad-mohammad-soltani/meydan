@@ -2,7 +2,7 @@
 const W = 1920, H = 1080;
 // Section starts on the global clock. The feature line runs LINE_END - 37.9s; the hub and the end card follow it.
 const S1_EXTRA = 1.0; // seconds added to the opening scene for the four-frame moment; every later scene is shifted by it
-const LINE_END = 48.5, HUB_S = LINE_END - 0.3, HUB_FADE = HUB_S + 12.0, S8 = HUB_FADE, DUR = S8 + 13.4 + S1_EXTRA;
+const LINE_END = 48.5, HUB_S = LINE_END - 0.3, HUB_FADE = HUB_S + 12.0, S8 = HUB_FADE, SEQ_LEN = 17.6, DUR = S8 + SEQ_LEN + S1_EXTRA;
 const GEO = JSON.parse(document.getElementById('geo-data').textContent);
 const LOGO = new Path2D(document.getElementById('logo-d').textContent.trim());
 const FONT = "Vazirmatn, Tahoma, sans-serif";

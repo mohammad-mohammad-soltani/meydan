@@ -269,10 +269,36 @@ function drawContent(c, th, cardsA = 1) {
   finish(c, th, 0.5);
 }
 
-// ── finale
-let PARTS = [], IRAN_PTS = [], FCITIES = [];
-const IR_K = 36, IR_CX = 960, IR_CY = 372;
-const irXY = ([lon, lat]) => [IR_CX + (lon - 53.6) * IR_K * Math.cos(32.4 * Math.PI / 180), IR_CY - (lat - 32.4) * IR_K];
+// ── finale: the brand block (map, name, slogan, address) slides right and the app-download panel opens on the left
+const BRAND = JSON.parse(document.getElementById('brand-assets').textContent);
+const SLOGAN_PATHS = BRAND.slogan.map(d => new Path2D(d));
+const ICON_ANDROID = new Path2D(BRAND.android), ICON_APPLE = new Path2D(BRAND.apple);
+let PARTS = [], IRAN_PTS = [], FCITIES = [], SEA = null;
+const IR_K = 30, IR_CX = 960, IR_CY = 326, IR_COS = Math.cos(32.4 * Math.PI / 180);
+const irXY = ([lon, lat]) => [IR_CX + (lon - 53.6) * IR_K * IR_COS, IR_CY - (lat - 32.4) * IR_K];
+const SEAS = [
+  { n: 'دریای خزر', at: [51.0, 40.4], mask: [51.2, 39.3, 4.6, 3.1] },
+  { n: 'خلیج فارس', at: [51.0, 26.9], mask: [52.4, 27.0, 6.6, 4.0] },
+  { n: 'دریای عمان', at: [58.7, 24.3], mask: [59.6, 24.4, 4.4, 2.6] },
+];
+
+function buildSea() {
+  SEA = mk(W, H);
+  const c = SEA.getContext('2d'), land = new Path2D();
+  for (const poly of GEO.landHi.coordinates) for (const ring of poly) {
+    ring.forEach((ll, i) => { const [x, y] = irXY(ll); if (i) land.lineTo(x, y); else land.moveTo(x, y); });
+    land.closePath();
+  }
+  c.strokeStyle = '#fff'; c.lineWidth = 2.6; c.lineJoin = 'round'; c.stroke(land);
+  const m = mk(W, H), mc = m.getContext('2d');
+  for (const sea of SEAS) {
+    const [lon, lat, rx, ry] = sea.mask, [x, y] = irXY([lon, lat]), px = rx * IR_K * IR_COS, py = ry * IR_K;
+    mc.save(); mc.translate(x, y); mc.scale(1, py / px);
+    const g = mc.createRadialGradient(0, 0, px * 0.5, 0, 0, px); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    mc.fillStyle = g; mc.fillRect(-px, -px, px * 2, px * 2); mc.restore();
+  }
+  c.globalCompositeOperation = 'destination-in'; c.drawImage(m, 0, 0);
+}
 
 function buildFinale() {
   const main = IRAN_RINGS.reduce((a, b) => (b.length > a.length ? b : a));
@@ -288,16 +314,77 @@ function buildFinale() {
     IRAN_PTS.push([lerp(pts[i][0], pts[i + 1][0], f), lerp(pts[i][1], pts[i + 1][1], f)]);
   }
   const r = rng(55);
-  PARTS = IRAN_PTS.map(tp => {
-    return { sx: r() * W, sy: r() * H, tx: tp[0], ty: tp[1], d: r() * 0.55, sw: (r() - 0.5) * 520, r: 1.4 + r() * 1.4, ph: r() * 6.28 };
-  });
+  PARTS = IRAN_PTS.map(tp => ({ sx: r() * W, sy: r() * H, tx: tp[0], ty: tp[1], d: r() * 0.55, sw: (r() - 0.5) * 520, r: 1.3 + r() * 1.2, ph: r() * 6.28 }));
   FCITIES = CITIES.filter(cy => cy.big).map((cy, i) => ({ p: irXY(cy.ll), d: i * 0.12 }));
   const rw = rng(8);
   WAVE = Array.from({ length: 46 }, (_, j) => 0.25 + 0.75 * Math.abs(Math.sin(j * 0.55) * 0.6 + (rw() - 0.5) * 0.7));
+  buildSea();
+}
+
+function sloganArt(c, cx, cy, width, a, reveal) {
+  if (a <= 0 || reveal <= 0) return;
+  const s = width / 160.8;
+  c.save(); c.translate(cx - 80.4 * s, cy - 12.6 * s); c.scale(s, s);
+  c.beginPath(); c.rect(160.8 * (1 - reveal) - 2, -6, 160.8 * reveal + 6, 40); c.clip();
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const [lw, al, col] of [[7, 0.1, GOLD], [3, 0.22, GOLD], [1.35, 1, GOLDHI]]) {
+    c.globalAlpha = a * al; c.lineWidth = lw; c.strokeStyle = rgba(col, 1);
+    for (const p of SLOGAN_PATHS) c.stroke(p);
+  }
+  c.restore();
+}
+
+function qrCode(c, key, x, y, size) {
+  const q = BRAND.qr[key], n = q.n, pad = 20, m = (size - pad * 2) / n;
+  c.fillStyle = '#fff'; c.beginPath(); c.roundRect(x, y, size, size, 20); c.fill();
+  c.fillStyle = '#0a0a0c';
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.rows[r][k] === '1') c.fillRect(Math.round(x + pad + k * m), Math.round(y + pad + r * m), Math.ceil(m) + 0.5, Math.ceil(m) + 0.5);
+}
+
+const QR_ROWS = [
+  { k: 'android', t: 'اپلیکیشن اندروید', sub: '', logo: 'android' },
+  { k: 'ios', t: 'اپلیکیشن آی‌او‌اس', sub: '', logo: 'apple' },
+  { k: 'web', t: 'وب‌سایت نقش من', sub: 'naghshman.ir', logo: 'tile' },
+];
+function qrPanel(c, t) {
+  const a0 = inv(59.9, 60.6, t);
+  if (a0 <= 0) return;
+  const x0 = 110, w = 620, e = E.out(inv(59.9, 60.9, t));
+  c.save(); c.globalAlpha = smooth(0, 1, a0); c.translate((1 - e) * -80, 0);
+  c.fillStyle = 'rgba(255,255,255,0.04)'; c.strokeStyle = 'rgba(255,255,255,0.1)'; c.lineWidth = 2;
+  c.beginPath(); c.roundRect(x0 - 40, 56, w + 80, 968, 44); c.fill(); c.stroke();
+  txt(c, 'برنامه را دریافت کنید', x0 + w, 146, { size: 50, w: 900, align: 'right' });
+  txt(c, 'با دوربین گوشی اسکن کنید', x0 + w, 200, { size: 28, color: C.goldSoft, align: 'right' });
+  QR_ROWS.forEach((row, i) => {
+    const ra = smooth(60.1 + i * 0.14, 60.5 + i * 0.14, t), y = 250 + i * 252;
+    if (ra <= 0) return;
+    c.save(); c.globalAlpha *= ra; c.translate(0, (1 - ra) * 24);
+    c.fillStyle = 'rgba(255,255,255,0.05)'; c.beginPath(); c.roundRect(x0, y, w, 232, 30); c.fill();
+    qrCode(c, row.k, x0 + w - 21 - 190, y + 21, 190);
+    const xr = x0 + w - 21 - 190 - 28, ly = y + 76;
+    if (row.logo === 'tile') logoTile(c, xr - 36, ly, 72);
+    else {
+      c.save(); c.translate(xr - 72, ly - 36); c.scale(3, 3); c.fillStyle = row.logo === 'android' ? '#3ddc84' : '#f5f5f7'; c.fill(row.logo === 'android' ? ICON_ANDROID : ICON_APPLE); c.restore();
+    }
+    txt(c, row.t, xr, y + 152, { size: 34, w: 800, align: 'right' });
+    if (row.sub) txt(c, row.sub, xr, y + 196, { size: 26, color: C.mute, align: 'right', dir: 'ltr' });
+    c.restore();
+  });
+  c.restore();
 }
 
 function drawFinale(c, t) {
   const pT0 = 55.5;
+  const shift = 370 * E.io(inv(59.8, 60.7, t));
+  c.save(); c.translate(shift, 0);
+  const sea = smooth(57.0, 58.4, t);
+  if (sea > 0) {
+    c.save(); c.globalAlpha = 0.9 * sea; c.drawImage(SEA, 0, 0); c.restore();
+    for (const sn of SEAS) {
+      const [x, y] = irXY(sn.at);
+      txt(c, sn.n, x, y, { size: 24, w: 600, color: 'rgba(255,255,255,0.9)', alpha: smooth(57.6, 58.6, t), glow: 'rgba(0,0,0,0.85)', blur: 8 });
+    }
+  }
   c.save();
   c.globalCompositeOperation = 'lighter';
   for (const p of PARTS) {
@@ -328,16 +415,16 @@ function drawFinale(c, t) {
     FCITIES.forEach(fc => {
       const a = smooth(57.1 + fc.d, 57.4 + fc.d, t);
       const fig = Math.sin(Math.PI * inv(57.2 + fc.d, 58.4 + fc.d, t));
-      glowDot(c, fc.p[0], fc.p[1], 22, GOLD, a * 0.6);
-      c.save(); c.globalAlpha = a * (1 - fig); c.fillStyle = C.goldHi; c.beginPath(); c.arc(fc.p[0], fc.p[1], 4, 0, Math.PI * 2); c.fill(); c.restore();
-      figure(c, fc.p[0], fc.p[1] - 6, 26, C.goldHi, a * fig);
+      glowDot(c, fc.p[0], fc.p[1], 20, GOLD, a * 0.6);
+      c.save(); c.globalAlpha = a * (1 - fig); c.fillStyle = C.goldHi; c.beginPath(); c.arc(fc.p[0], fc.p[1], 3.6, 0, Math.PI * 2); c.fill(); c.restore();
+      figure(c, fc.p[0], fc.p[1] - 5, 23, C.goldHi, a * fig);
     });
   }
-  const LK_Y = 762, TILE = 140, GAP = 44, tw = measure('نقش من', 124, 900), gw = tw + GAP + TILE;
-  const tileX = W / 2 + gw / 2 - TILE / 2, textX = W / 2 - gw / 2 + tw / 2;
+  const LK_Y = 730, TILE = 130, GAP = 40, tw = measure('نقش من', 116, 900), gw = tw + GAP + TILE;
+  const tileX = IR_CX + gw / 2 - TILE / 2, textX = IR_CX - gw / 2 + tw / 2;
   const lo = smooth(56.9, 57.25, t), la = E.back(inv(56.9, 57.6, t));
   if (lo > 0) {
-    glowDot(c, tileX, LK_Y, 230, REDC, 0.4 * lo);
+    glowDot(c, tileX, LK_Y, 220, REDC, 0.4 * lo);
     c.save(); c.globalAlpha = lo;
     c.translate(tileX, LK_Y); c.scale(lerp(0.6, 1, la), lerp(0.6, 1, la));
     c.shadowColor = 'rgba(220,38,38,0.55)'; c.shadowBlur = 44;
@@ -353,13 +440,10 @@ function drawFinale(c, t) {
     }
   }
   const na = smooth(57.1, 57.7, t);
-  if (na > 0) txt(c, 'نقش من', textX, LK_Y + 4 + (1 - E.out(inv(57.1, 57.8, t))) * 26, { size: 124, w: 900, alpha: na, glow: 'rgba(242,196,109,0.35)', blur: 40 });
-  const sa = smooth(57.75, 58.35, t);
-  if (sa > 0) {
-    txt(c, 'یک نقشه، هزاران نقش', W / 2, 872 + (1 - E.out(inv(57.75, 58.45, t))) * 18, { size: 46, w: 500, color: C.goldHi, alpha: sa });
-    const lw = 360 * E.out(inv(58.0, 58.9, t));
-    c.save(); c.globalAlpha = sa; c.fillStyle = rgba(GOLD, 0.8); c.fillRect(W / 2 - lw / 2, 918, lw, 2); c.restore();
-  }
+  if (na > 0) txt(c, 'نقش من', textX, LK_Y + 4 + (1 - E.out(inv(57.1, 57.8, t))) * 26, { size: 116, w: 900, alpha: na, glow: 'rgba(242,196,109,0.35)', blur: 40 });
+  sloganArt(c, IR_CX, 858, 560, smooth(57.75, 58.2, t), E.io(inv(57.8, 59.0, t)));
   const ua = smooth(58.6, 59.2, t);
-  if (ua > 0) txt(c, 'naghshman.ir', W / 2, 990, { size: 24, w: 500, color: C.mute, alpha: ua, dir: 'ltr' });
+  if (ua > 0) txt(c, 'naghshman.ir', IR_CX, 976 + (1 - E.out(inv(58.6, 59.3, t))) * 14, { size: 52, w: 700, color: '#f5f5f7', alpha: ua, dir: 'ltr', glow: 'rgba(242,196,109,0.25)', blur: 24 });
+  c.restore();
+  qrPanel(c, t);
 }
