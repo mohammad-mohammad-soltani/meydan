@@ -96,6 +96,15 @@ test("first-load splash plays the theme-matched Lottie once per tab and caches o
   const worker = source("public/sw.js");
   assert.match(worker, /SPLASH_URLS = \["\/splash\/splash-light\.json", "\/splash\/splash-dark\.json"\]/);
   assert.match(worker, /SPLASH_URLS\.includes\(url\.pathname\)/);
+
+  // The overlay is a React-rendered node (in app/layout.tsx): deleting it with
+  // `.remove()` from outside React desyncs React's fiber tree from the real DOM
+  // and crashes the next reconciliation (e.g. a client-side route change) with
+  // a `removeChild` error. It must only ever be hidden, never removed.
+  assert.doesNotMatch(layout, /getElementById\("meydan-splash"\)\?\.remove\(\)/);
+  assert.doesNotMatch(splash, /root\?\.remove\(\)|root\.remove\(\)/);
+  assert.match(layout, /el\.style\.display = \\"none\\"/);
+  assert.match(splash, /root\.style\.display = "none"/);
 });
 
 test("push permission prompt stays gone permanently after allow or close", () => {
