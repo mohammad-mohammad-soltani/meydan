@@ -51,7 +51,13 @@ export function SplashScreen() {
 
     (async () => {
       try {
-        const { default: lottie } = await import("lottie-web");
+        // Both load in parallel (the JSON fetch reuses the <link rel="preload">
+        // the layout's bootstrap script already started), so the animation
+        // starts as soon as whichever one is slower finishes, not both in series.
+        const [{ default: lottie }, animationData] = await Promise.all([
+          import("lottie-web"),
+          fetch(splashSource(), { cache: "force-cache" }).then((response) => response.json()),
+        ]);
         if (cancelled) return;
 
         const anim = lottie.loadAnimation({
@@ -59,7 +65,10 @@ export function SplashScreen() {
           renderer: "svg",
           loop: false,
           autoplay: true,
-          path: splashSource(),
+          animationData,
+          // Fills the full-viewport container edge to edge, like a native splash,
+          // instead of letterboxing the 360x640 composition inside it.
+          rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
         });
 
         anim.addEventListener("complete", finish);

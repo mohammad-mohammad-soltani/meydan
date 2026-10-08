@@ -94,12 +94,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             background: "var(--background)",
           }}
         >
-          <div id="meydan-splash-anim" style={{ width: 220, height: 220 }} />
+          <div id="meydan-splash-anim" style={{ width: "100%", height: "100%" }} />
         </div>
+        {/*
+          Starts the ~0.5MB Lottie JSON download the instant the HTML is
+          parsed (well before the JS bundle loads and SplashScreen mounts),
+          so the animation has as little to wait on as possible. Skipped
+          entirely when the overlay above is about to be removed.
+        */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(() => {\n  try {\n    if (window.sessionStorage.getItem(\"meydan-splash-shown\")) {\n      document.getElementById(\"meydan-splash\")?.remove();\n    }\n  } catch {\n    document.getElementById(\"meydan-splash\")?.remove();\n  }\n})();",
+              "(() => {\n  try {\n    if (window.sessionStorage.getItem(\"meydan-splash-shown\")) {\n      document.getElementById(\"meydan-splash\")?.remove();\n      return;\n    }\n  } catch {\n    document.getElementById(\"meydan-splash\")?.remove();\n    return;\n  }\n  try {\n    const theme = window.localStorage.getItem(\"meydan-theme\");\n    const src = theme === \"light\" ? \"/splash/splash-light.json\" : \"/splash/splash-dark.json\";\n    const link = document.createElement(\"link\");\n    link.rel = \"preload\";\n    link.as = \"fetch\";\n    link.href = src;\n    link.crossOrigin = \"anonymous\";\n    document.head.appendChild(link);\n  } catch {}\n})();",
           }}
         />
         <PwaRuntime />
