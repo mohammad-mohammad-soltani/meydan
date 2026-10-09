@@ -119,6 +119,7 @@ export function notificationKind(type?: string | null): ChatNotificationKind {
     case "comment_reply":
       return "comment";
     case "mention":
+    case "comment_mention":
       return "mention";
     case "follow":
       return "follow";
@@ -202,6 +203,7 @@ const NOTIFICATION_PHRASES: Record<string, string> = {
   comment: "{actor} روی روایت شما نظر گذاشت",
   comment_reply: "{actor} به نظر شما پاسخ داد",
   mention: "{actor} شما را در یک روایت نام برد",
+  comment_mention: "{actor} شما را در یک نظر نام برد",
   initiative_join: "{actor} به کار شما ملحق شد",
   initiative_update: "کاری که در آن عضو هستید به‌روزرسانی شد",
   initiative_join_confirmed: "عضویت شما در کار ثبت شد",

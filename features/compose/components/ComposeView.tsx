@@ -4,7 +4,7 @@ import styles from "../reference.module.css";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type TouchEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, Hash, Image as ImageIcon, LoaderCircle, PenLine, Plus, Save, Send, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
+import { AtSign, Bookmark, Hash, Image as ImageIcon, LoaderCircle, PenLine, Plus, Save, Send, Smile, Sparkles, Trash2, UploadCloud, Video, Volume2, X } from "lucide-react";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { getMe } from "@/lib/me-client";
@@ -14,6 +14,8 @@ import type { QuotedPost } from "@/features/feed/types";
 import { ComposeMediaGrid } from "./ComposeMediaGrid";
 import { MAX_COMPOSE_MEDIA, useComposeMedia } from "../hooks/useComposeMedia";
 import { getCaretCoordinates } from "../caret";
+import { useMentionAutocomplete } from "@/features/mentions/hooks/useMentionAutocomplete";
+import { MentionPopover } from "@/features/mentions/components/MentionPopover";
 import { getHashtagSuggestions, type HashtagSuggestion } from "@/features/explore/hashtags";
 
 const MAX_CHARACTERS = 500;
@@ -37,16 +39,16 @@ function activeHashtagToken(text: string, caret: number): HashtagToken | null {
   return { start: caret - query.length - 1, query };
 }
 
-const HASHTAG_PATTERN = /(^|[\s،؛.,!?؟()[\]{}])(#[\p{L}\p{N}_]{0,64})/gu;
+const HASHTAG_PATTERN = /(^|[\s،؛.,!?؟()[\]{}])(#[\p{L}\p{N}_]{0,64}|@[A-Za-z0-9_]{0,30})/gu;
 
-/** The textarea's text with every `#tag` (even a bare `#` just typed) in red; mirrored under the transparent textarea. */
+/** The textarea's text with every `#tag` and `@handle` (even a bare `#`/`@` just typed) in red; mirrored under the transparent textarea. */
 function renderHighlighted(text: string) {
   const nodes: ReactNode[] = [];
   let last = 0;
   for (const match of text.matchAll(HASHTAG_PATTERN)) {
     const tagStart = (match.index ?? 0) + match[1].length;
     if (tagStart > last) nodes.push(text.slice(last, tagStart));
-    nodes.push(<span key={tagStart} className="text-danger">{match[2]}</span>);
+    nodes.push(<span key={tagStart} className={match[2].startsWith("@") ? "rounded-md bg-danger/10 text-danger" : "text-danger"}>{match[2]}</span>);
     last = tagStart + match[2].length;
   }
   nodes.push(text.slice(last));
@@ -102,6 +104,8 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
   const [hashtagSuggestions, setHashtagSuggestions] = useState<HashtagSuggestion[]>([]);
   const [hashtagActive, setHashtagActive] = useState(0);
   const [hashtagPos, setHashtagPos] = useState<{ top: number; left: number } | null>(null);
+
+  const mention = useMentionAutocomplete({ areaRef: textRef, text, setText, maxLength: MAX_CHARACTERS });
 
   const { media, notice, addFiles, remove, retry, reset, isUploading, hasUploadError, readyAttachments, isReady } =
     useComposeMedia();
@@ -486,9 +490,12 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
             value={text}
             onChange={(event) => {
               setText(event.target.value);
-              updateHashtagToken(activeHashtagToken(event.target.value, event.target.selectionStart ?? event.target.value.length));
+              const caret = event.target.selectionStart ?? event.target.value.length;
+              updateHashtagToken(activeHashtagToken(event.target.value, caret));
+              mention.update(event.target.value, caret);
             }}
             onKeyDown={(event) => {
+              if (mention.onKeyDown(event)) return;
               if (!hashtagToken || !hashtagOptions.length || event.nativeEvent.isComposing) return;
               const count = hashtagOptions.length;
               if (event.key === "ArrowDown") { event.preventDefault(); setHashtagActive((i) => (i + 1) % count); }
@@ -496,12 +503,13 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
               else if (event.key === "Tab" || event.key === "Enter") { event.preventDefault(); applyHashtagSuggestion(hashtagOptions[hashtagActive]?.tag ?? hashtagOptions[0].tag); }
               else if (event.key === "Escape") { event.preventDefault(); setHashtagToken(null); }
             }}
-            onClick={syncHashtagToken}
+            onClick={() => { syncHashtagToken(); mention.sync(); }}
             onKeyUp={(event) => {
               if (event.key === "Escape" || event.key === "Tab" || event.key === "Enter") return;
               syncHashtagToken();
+              mention.sync();
             }}
-            onBlur={() => window.setTimeout(() => setHashtagToken(null), 120)}
+            onBlur={() => window.setTimeout(() => { setHashtagToken(null); mention.close(); }, 120)}
             onPaste={(event) => {
               const files = Array.from(event.clipboardData?.files ?? []);
               if (!files.length) return;
@@ -514,6 +522,18 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
             aria-label="شرح روایت"
             className={`${styles.textarea} relative w-full resize-none border-0 bg-transparent text-foreground shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`}
           />
+          {mention.open && mention.position ? (
+            <MentionPopover
+              items={mention.items}
+              loading={mention.loading}
+              query={mention.query}
+              active={mention.active}
+              onActive={mention.setActive}
+              onPick={mention.pick}
+              style={{ top: mention.position.top, left: mention.position.left }}
+              className="absolute"
+            />
+          ) : null}
           {hashtagToken && hashtagOptions.length && hashtagPos ? (
             <div
               role="listbox"
@@ -639,6 +659,17 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
               className="transition-opacity hover:opacity-70"
             >
               <Hash className="h-[22px] w-[22px]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                insertText("@");
+                window.requestAnimationFrame(mention.sync);
+              }}
+              aria-label="اشاره به کاربر"
+              className="transition-opacity hover:opacity-70"
+            >
+              <AtSign className="h-[22px] w-[22px]" />
             </button>
             <button type="button" onClick={() => setEmojiOpen((value) => !value)} aria-label="شکلک" aria-expanded={emojiOpen} className="transition-opacity hover:opacity-70"><Smile className="h-[22px] w-[22px]" /></button>
           </div>

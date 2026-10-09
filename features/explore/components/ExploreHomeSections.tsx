@@ -9,6 +9,7 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { BookmarkButton } from "@/features/feed/components/BookmarkButton";
 import { hueOf } from "@/lib/relative-fa";
 import type { ExploreAccount, ExploreHome, ExploreHotNarrative } from "../services/explore-home.service";
+import { MentionText } from "@/features/mentions/components/MentionText";
 
 const fa = new Intl.NumberFormat("fa-IR");
 const compact = new Intl.NumberFormat("fa-IR", { notation: "compact", maximumFractionDigits: 1 });
@@ -100,7 +101,7 @@ function HotRow({ item, rank }: { item: ExploreHotNarrative; rank: number }) {
           <AccountBadges verified={item.verified} speaker={item.speaker} official={item.official} kind={item.kind} size="sm" />
           {item.growth != null && item.growth > 0 ? <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-success-surface px-2 py-0.5 text-[10px] font-bold text-success"><TrendingUp aria-hidden="true" className="h-3 w-3" />{fa.format(item.growth)}٪</span> : null}
         </span>
-        <p className="mt-1.5 line-clamp-2 text-sm leading-[1.95] text-foreground-secondary">{item.body}</p>
+        <p className="mt-1.5 line-clamp-2 text-sm leading-[1.95] text-foreground-secondary"><MentionText text={item.body} interactive={false} /></p>
         <span className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground"><Eye aria-hidden="true" className="h-3.5 w-3.5" />{compact.format(item.views)} بازدید</span>
       </Link>
       <BookmarkButton postId={item.id} bookmarked={item.bookmarked} className="self-start" />

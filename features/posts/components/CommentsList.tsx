@@ -6,6 +6,7 @@ import type { PostComment } from "../types";
 import { publicProfileHref } from "@/lib/profile-route";
 import { AccountBadges } from "@/components/shared/AccountBadges";
 import { CommentLikeButton } from "./CommentLikeButton";
+import { MentionText } from "@/features/mentions/components/MentionText";
 
 export function CommentsList({
   comments,
@@ -100,7 +101,7 @@ export function CommentsList({
                   </div>
 
                   <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-6 text-foreground-secondary">
-                    {comment.content}
+                    <MentionText text={comment.content} />
                   </p>
                 </div>
                 <CommentLikeButton commentId={comment.id} postId={postId} likes={comment.likes ?? 0} liked={Boolean(comment.liked)} />

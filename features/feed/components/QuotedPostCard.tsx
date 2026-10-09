@@ -9,6 +9,7 @@ import { Play, Quote } from "lucide-react";
 import { MEDIA_THUMB_QUALITY } from "@/features/media/media-utils";
 import type { QuotedPost } from "../types";
 import { AccountBadges } from "@/components/shared/AccountBadges";
+import { MentionText } from "@/features/mentions/components/MentionText";
 
 type QuotedPostCardProps = {
   quote: QuotedPost;
@@ -46,7 +47,7 @@ export function QuotedPostCard({ quote, preview = false, className = "" }: Quote
       </span>
 
       {quote.body ? (
-        <span className={`${styles.quoteBody} text-foreground`}><span className="whitespace-pre-line break-words">{quote.body}</span></span>
+        <span className={`${styles.quoteBody} text-foreground`}><span className="whitespace-pre-line break-words"><MentionText text={quote.body} interactive={false} /></span></span>
       ) : null}
 
       {thumb ? (

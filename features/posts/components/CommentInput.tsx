@@ -9,6 +9,8 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { useMentionAutocomplete } from "@/features/mentions/hooks/useMentionAutocomplete";
+import { MentionPopover } from "@/features/mentions/components/MentionPopover";
 
 type CommentInputProps = {
   value: string;
@@ -18,6 +20,7 @@ type CommentInputProps = {
 };
 
 const MAX_HEIGHT = 132;
+const MAX_CHARACTERS = 1000;
 
 type Position = {
   left: number;
@@ -31,6 +34,8 @@ export function CommentInput({
 }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const composerRef = useRef<HTMLDivElement>(null);
+
+  const mention = useMentionAutocomplete({ areaRef: textareaRef, text: value, setText: onChange, maxLength: MAX_CHARACTERS });
 
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState<Position | null>(null);
@@ -149,6 +154,8 @@ export function CommentInput({
   const handleKeyDown = (
     event: KeyboardEvent<HTMLTextAreaElement>,
   ) => {
+    if (mention.onKeyDown(event)) return;
+
     /*
      * مثل X:
      * Enter = خط جدید
@@ -189,6 +196,19 @@ export function CommentInput({
         supports-[backdrop-filter]:bg-background/85
       "
     >
+      {mention.open ? (
+        <MentionPopover
+          up
+          items={mention.items}
+          loading={mention.loading}
+          query={mention.query}
+          active={mention.active}
+          onActive={mention.setActive}
+          onPick={mention.pick}
+          className="absolute bottom-full right-3 mb-2 sm:right-4"
+        />
+      ) : null}
+
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -234,10 +254,20 @@ export function CommentInput({
             dir="rtl"
             aria-label="نوشتن پاسخ"
             placeholder="پاسخ خود را بنویسید..."
-            onChange={(event) =>
-              onChange(event.target.value)
-            }
+            onChange={(event) => {
+              onChange(event.target.value);
+              mention.update(
+                event.target.value,
+                event.target.selectionStart ?? event.target.value.length,
+              );
+            }}
             onKeyDown={handleKeyDown}
+            onClick={mention.sync}
+            onKeyUp={(event) => {
+              if (event.key === "Escape" || event.key === "Tab" || event.key === "Enter") return;
+              mention.sync();
+            }}
+            onBlur={() => window.setTimeout(mention.close, 120)}
             className="
               min-h-10
               max-h-[132px]

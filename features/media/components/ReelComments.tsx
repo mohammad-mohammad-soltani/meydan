@@ -11,6 +11,7 @@ import { useAuthGate } from "@/components/providers/AuthGateProvider";
 import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { AccountBadges } from "@/components/shared/AccountBadges";
 import { ViewerAvatar } from "./ViewerAvatar";
+import { MentionText } from "@/features/mentions/components/MentionText";
 import { relativeFa } from "@/lib/relative-fa";
 import { listComments, listReplies, postComment, setCommentLike, type ReelComment } from "../comments.service";
 
@@ -49,7 +50,7 @@ function CommentRow({
             <b className="flex min-w-0 items-center gap-1 font-black text-white"><span className="truncate">{comment.name}</span><AccountBadges verified={comment.verified} speaker={comment.verifiedSpeaker} official={comment.verifiedOfficial} kind={comment.authorType} variant="reel" /></b>
             <span className="shrink-0 text-white/50">{comment.mine ? "همین الان · شما" : relativeFa(comment.createdAt)}</span>
           </div>
-          <p className={`${styles.commentText} whitespace-pre-wrap break-words`}>{comment.body}</p>
+          <p className={`${styles.commentText} whitespace-pre-wrap break-words`}><MentionText text={comment.body} /></p>
           <button type="button" onClick={() => onReply(comment)} className={`${styles.commentReply} mt-0.5 font-bold hover:text-white`}>پاسخ</button>
         </div>
         <button

@@ -35,6 +35,7 @@ import { scanVideoPages, videoFeedQuery, type VideoFeedEntry, type VideoPageStat
 import { ReelComments } from "./ReelComments";
 import { ViewerAvatar } from "./ViewerAvatar";
 import { mediaThumbnailSrc, sampleEdgeColors } from "../media-utils";
+import { MentionText } from "@/features/mentions/components/MentionText";
 
 const fa = new Intl.NumberFormat("fa-IR");
 const short = (value: number) => (value >= 1000 ? `${fa.format(Math.round(value / 100) / 10)}k` : fa.format(value));
@@ -278,7 +279,7 @@ function ReelItem({
             intro={
               <div className={`${styles.panelIntro} space-y-3`}>
                 <AuthorRow entry={entry} state={state} />
-                {entry.body ? <p className="line-clamp-4 text-[13px] leading-[1.9] text-white/90">{entry.body}</p> : null}
+                {entry.body ? <p className="line-clamp-4 text-[13px] leading-[1.9] text-white/90"><MentionText text={entry.body} /></p> : null}
               </div>
             }
           />,
@@ -438,7 +439,7 @@ function ReelItem({
               onClick={captionLong || captionExpanded ? () => setCaptionOpen((open) => !open) : undefined}
               className={`mt-2.5 whitespace-pre-wrap break-words text-[13.5px] leading-[1.9] ${captionExpanded ? "max-h-[38dvh] overflow-y-auto overscroll-contain pe-1 [touch-action:pan-y] [scrollbar-width:none]" : "line-clamp-2"} ${captionLong || captionExpanded ? "cursor-pointer" : ""}`}
             >
-              {entry.body}
+              <MentionText text={entry.body} />
             </p>
           ) : null}
         </div>

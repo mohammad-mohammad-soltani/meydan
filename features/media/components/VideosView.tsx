@@ -6,6 +6,7 @@ import { getFeedPage } from "@/features/feed/services/feed.service";
 import { scanVideoPages, videoFeedQuery, type VideoFeedEntry, type VideoPageState } from "../video-feed-queue";
 import { useVideoFeed } from "./VideoFeedProvider";
 import { VideosGridSkeleton } from "./VideosGridSkeleton";
+import { MentionText } from "@/features/mentions/components/MentionText";
 
 /**
  * «چندرسانه‌ای»: every video narrative in a grid; a tap opens the full-screen
@@ -91,7 +92,7 @@ export function VideosView() {
               </span>
               <span className="absolute inset-x-2.5 bottom-2.5 text-white">
                 <b className="block truncate text-xs font-black">{entry.author}</b>
-                {entry.body ? <span className="mt-0.5 line-clamp-2 block text-[11px] leading-5 text-white/85">{entry.body}</span> : null}
+                {entry.body ? <span className="mt-0.5 line-clamp-2 block text-[11px] leading-5 text-white/85"><MentionText text={entry.body} interactive={false} /></span> : null}
               </span>
             </button>
           ))}

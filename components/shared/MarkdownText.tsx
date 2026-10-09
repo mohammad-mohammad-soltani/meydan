@@ -8,6 +8,8 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { ArrowUpRight, Link2 } from "lucide-react";
 import { HASHTAG_LINK_PREFIX, hashtagHref } from "@/features/explore/hashtags";
+import { mentionHref, mentionPattern } from "@/features/mentions/mentions";
+import { isPublicProfilePath } from "@/lib/profile-route";
 
 // IRANSans intentionally has no color-emoji glyphs. Turn the Iran flag into a
 // local SVG before Markdown is parsed so posts never fall back to the letters
@@ -27,6 +29,22 @@ function linkifyHashtags(body: string): string {
     /(^|[\s،؛.,!?؟()[\]{}])#([\p{L}\p{N}_]{2,64})/gu,
     (_match, lead: string, tag: string) => `${lead}[#${tag}](${hashtagHref(tag)})`,
   );
+}
+
+/**
+ * `@handle` tokens become links to that account's profile, like
+ * `[@handle](/handle)`. Only an `@` at the start of the text or right after
+ * whitespace/punctuation counts, so an email address is left alone.
+ */
+function linkifyMentions(body: string): string {
+  return body.replace(mentionPattern(), (match, lead: string, handle: string) =>
+    isPublicProfilePath(`/${handle}`) ? `${lead}[@${handle}](${mentionHref(handle)})` : match,
+  );
+}
+
+/** A link this module produced for a mention: its label is `@handle` and it points at `/handle`. */
+function isMentionLink(href: string | undefined, label: string): boolean {
+  return Boolean(href) && /^@[A-Za-z0-9_]{3,30}$/.test(label) && href === mentionHref(label.slice(1));
 }
 
 /** Characters of host + path an inline link keeps before it is cut with an ellipsis. */
@@ -77,6 +95,14 @@ function MarkdownLink({ href, title, children }: AnchorProps) {
   const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
 
   if (href && href.startsWith(HASHTAG_LINK_PREFIX)) {
+    return (
+      <NextLink href={href as Route} title={title} onClick={stop} className="font-bold text-danger hover:underline">
+        {children}
+      </NextLink>
+    );
+  }
+
+  if (href && isMentionLink(href, label)) {
     return (
       <NextLink href={href as Route} title={title} onClick={stop} className="font-bold text-danger hover:underline">
         {children}
@@ -144,7 +170,7 @@ export function MarkdownText({ body, className = "" }: { body: string; className
         rehypePlugins={[rehypeSanitize]}
         components={{ a: MarkdownLink, p: MarkdownParagraph }}
       >
-        {linkifyHashtags(withIranFlag(body))}
+        {linkifyMentions(linkifyHashtags(withIranFlag(body)))}
       </ReactMarkdown>
     </div>
   );
