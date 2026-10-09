@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { DragScroll } from "@/components/shared/DragScroll";
 import { PwaRuntime } from "@/components/pwa/PwaRuntime";
 import { SplashScreen } from "@/components/pwa/SplashScreen";
 import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL, TWITTER_SITE_HANDLE } from "@/lib/seo";
@@ -130,6 +131,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               "(() => {\n  try {\n    if (window.matchMedia(\"(min-width: 1024px)\").matches) return;\n    const theme = window.localStorage.getItem(\"meydan-theme\");\n    const src = theme === \"light\" ? \"/splash/splash-light.json\" : \"/splash/splash-dark.json\";\n    const link = document.createElement(\"link\");\n    link.rel = \"preload\";\n    link.as = \"fetch\";\n    link.href = src;\n    link.crossOrigin = \"anonymous\";\n    document.head.appendChild(link);\n  } catch {}\n})();",
           }}
         />
+        <DragScroll />
         <PwaRuntime />
         <SplashScreen />
         {children}

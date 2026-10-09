@@ -38,6 +38,7 @@ export function ChatAvatar({
     return (
       <OptimizedAvatar
         src={participant.avatarUrl}
+        kind={participant.profileType}
         alt=""
         width={176}
         height={176}

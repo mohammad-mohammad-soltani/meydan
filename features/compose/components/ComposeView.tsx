@@ -9,8 +9,9 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { MeydanApiError, meydanApi } from "@/lib/meydan-api";
 import { getMe } from "@/lib/me-client";
 import { QuotedPostCard } from "@/features/feed/components/QuotedPostCard";
+import { TributeCard } from "@/features/feed/components/TributeCard";
 import { mapQuotedNarrative, type ApiQuotedNarrative } from "@/features/feed/services/quote-mapper";
-import type { QuotedPost } from "@/features/feed/types";
+import type { QuotedPost, TributeTarget } from "@/features/feed/types";
 import { ComposeMediaGrid } from "./ComposeMediaGrid";
 import { MAX_COMPOSE_MEDIA, useComposeMedia } from "../hooks/useComposeMedia";
 import { getCaretCoordinates } from "../caret";
@@ -76,12 +77,25 @@ type QuoteState =
   | { status: "ready"; post: QuotedPost }
   | { status: "failed" };
 
-/** `quoteId` is the narrative being quoted (`/compose?quote=ID`). */
-export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId?: string; workMode?: boolean; initialTag?: string }) {
+type TributeState =
+  | { status: "none" }
+  | { status: "loading" }
+  | { status: "ready"; target: TributeTarget }
+  | { status: "failed" };
+
+/**
+ * `quoteId` is the narrative being quoted (`/compose?quote=ID`); `tributeId` is
+ * the memorial being honoured (`/compose?tribute=ID`), which turns this into a
+ * «ادای احترام» post: the memorial's card is part of it and cannot be removed.
+ */
+export function ComposeView({ quoteId, tributeId, workMode = false, initialTag }: { quoteId?: string; tributeId?: string; workMode?: boolean; initialTag?: string }) {
   const router = useRouter();
   // A quote keeps its own draft so it never overwrites the plain-narrative one.
-  const DRAFT_KEY = quoteId ? `${BASE_DRAFT_KEY}:quote:${quoteId}` : BASE_DRAFT_KEY;
+  const DRAFT_KEY = quoteId ? `${BASE_DRAFT_KEY}:quote:${quoteId}` : tributeId ? `${BASE_DRAFT_KEY}:tribute:${tributeId}` : BASE_DRAFT_KEY;
+  // A quote or a tribute has no روایت / کار choice and no title: just the words and the card above them.
+  const embedded = Boolean(quoteId || tributeId);
   const [quote, setQuote] = useState<QuoteState>(quoteId ? { status: "loading" } : { status: "none" });
+  const [tribute, setTribute] = useState<TributeState>(tributeId ? { status: "loading" } : { status: "none" });
   const titleRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -128,7 +142,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
           setText(stored);
         }
       }
-      if (initialTag && !quoteId) {
+      if (initialTag && !embedded) {
         // Arrived from a tag page: make sure «#tag » is in the text, after any saved draft.
         const hashtag = `#${initialTag}`;
         setText((current) =>
@@ -146,17 +160,17 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
       area.setSelectionRange(area.value.length, area.value.length);
     });
     return () => { active = false; window.cancelAnimationFrame(frame); };
-  }, [workMode, DRAFT_KEY, quoteId, initialTag]);
+  }, [workMode, DRAFT_KEY, embedded, initialTag]);
 
   useEffect(() => {
     if (!draftLoaded) return;
-    const hasDraft = (!quoteId && title.trim().length > 0) || text.trim().length > 0 || isEcho;
+    const hasDraft = (!embedded && title.trim().length > 0) || text.trim().length > 0 || isEcho;
     if (hasDraft) {
       window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, text, isEcho } satisfies ComposeDraft));
     } else {
       window.localStorage.removeItem(DRAFT_KEY);
     }
-  }, [DRAFT_KEY, draftLoaded, quoteId, title, text, isEcho]);
+  }, [DRAFT_KEY, draftLoaded, embedded, title, text, isEcho]);
 
   useEffect(() => {
     if (!quoteId) return;
@@ -171,6 +185,21 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
       });
     return () => { active = false; };
   }, [quoteId]);
+
+  useEffect(() => {
+    if (!tributeId) return;
+    let active = true;
+    void meydanApi<{ id: number; name?: string; handle?: string; avatar_url?: string; position?: string; death_date?: string }>(`/entities/memorial/${tributeId}`)
+      .then((item) => {
+        if (active) setTribute({ status: "ready", target: { memorialId: Number(item.id), unavailable: false, name: item.name || "", handle: item.handle || "", avatarUrl: item.avatar_url || undefined, position: item.position || undefined, deathDate: item.death_date || undefined } });
+      })
+      .catch(() => {
+        if (active) setTribute({ status: "failed" });
+      });
+    return () => {
+      active = false;
+    };
+  }, [tributeId]);
 
   useEffect(() => {
     void getMe<{ account_type: "user" | "square" | "media" | "collective" | "organization" | "speaker" | "official"; media_outlet_id?: number | null; profile?: { avatar_url?: string }; entity?: { avatar_url?: string } | null }>()
@@ -225,10 +254,10 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
 
   useEffect(() => setHashtagActive(0), [hashtagQuery]);
 
-  const body = quoteId ? text.trim() : [title.trim(), text.trim()].filter(Boolean).join("\n\n");
+  const body = embedded ? text.trim() : [title.trim(), text.trim()].filter(Boolean).join("\n\n");
   const hasContent = body.length > 0 || media.length > 0;
   const atCapacity = media.length >= MAX_COMPOSE_MEDIA;
-  const quoteReady = !quoteId || quote.status === "ready";
+  const quoteReady = (!quoteId || quote.status === "ready") && (!tributeId || tribute.status === "ready");
   // Swiping the page pulls the روایت / کار indicator along with the finger and switches on release.
   const typesRef = useRef<HTMLDivElement>(null);
   const swipe = useRef<{ x: number; y: number; t: number; lastX: number; lastT: number; v: number; axis: "?" | "x" | "y"; width: number } | null>(null);
@@ -241,7 +270,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
   const onSwipeMove = (event: TouchEvent) => {
     const g = swipe.current;
     const indicator = typesRef.current?.querySelector<HTMLElement>("[data-indicator]");
-    if (!g || g.axis === "y" || quoteId) return;
+    if (!g || g.axis === "y" || embedded) return;
     const { clientX, clientY } = event.touches[0];
     const dx = clientX - g.x;
     const dy = clientY - g.y;
@@ -266,7 +295,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
     const g = swipe.current;
     swipe.current = null;
     const indicator = typesRef.current?.querySelector<HTMLElement>("[data-indicator]");
-    if (!g || g.axis !== "x" || quoteId) return;
+    if (!g || g.axis !== "x" || embedded) return;
     const dx = event.changedTouches[0].clientX - g.x;
     if (indicator) {
       indicator.style.transition = "";
@@ -363,6 +392,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
           is_echo: isEcho,
           attachments: readyAttachments,
           ...(quoteId ? { quoted_narrative_id: Number(quoteId) } : {}),
+          ...(tributeId ? { tribute_memorial_id: Number(tributeId) } : {}),
           ...(quoteId && viewer.mediaOutletId ? { media_reflection: fileAsReflection } : {}),
         }),
       });
@@ -373,7 +403,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
       reset();
       // «کار جدید» lands in the freshly created work room; everything else keeps its old destination.
       const workId = workMode ? created?.initiative?.work_id : null;
-      router.push(workId ? `/chat/work/${workId}` : quoteId && created?.id ? `/posts/${created.id}` : "/home");
+      router.push(workId ? `/chat/work/${workId}` : (quoteId || tributeId) && created?.id ? `/posts/${created.id}` : "/home");
       router.refresh();
     } catch (error) {
       const message =
@@ -391,7 +421,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
   return (
     <section
       dir="rtl"
-      aria-label={quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}
+      aria-label={tributeId ? "ادای احترام" : quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}
       className={`${styles.composer} relative flex flex-1 flex-col text-foreground`}
       onDragEnter={(event) => {
         if (event.dataTransfer?.types?.includes("Files")) setDragging(true);
@@ -411,7 +441,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
           <X aria-hidden="true" className="h-5 w-5" />
           انصراف
         </button>
-        <h1 className="sr-only">{quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}</h1>
+        <h1 className="sr-only">{tributeId ? "ادای احترام" : quoteId ? "نقل‌قول روایت" : "ثبت روایت یا ایده جدید"}</h1>
         <div className="flex items-center gap-2">
           {/* The draft is saved automatically on this device; this keeps it and leaves. */}
           <button type="button" onClick={goBack} disabled={!hasContent} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3.5 py-2 text-xs font-bold text-foreground-secondary transition-colors hover:text-foreground disabled:opacity-50">
@@ -431,7 +461,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
       </div>
 
       <div className={`${styles.body} flex flex-col`} onTouchStart={onSwipeStart} onTouchMove={onSwipeMove} onTouchEnd={onSwipeEnd} onTouchCancel={onSwipeEnd}>
-        {!quoteId ? <div ref={typesRef} role="tablist" aria-label="نوع روایت" style={{ "--n": showCampaignTabs ? 4 : 2 } as React.CSSProperties} className={`${styles.types} ${showCampaignTabs ? "" : styles.typesTwo} grid gap-1 border`}>
+        {!embedded ? <div ref={typesRef} role="tablist" aria-label="نوع روایت" style={{ "--n": showCampaignTabs ? 4 : 2 } as React.CSSProperties} className={`${styles.types} ${showCampaignTabs ? "" : styles.typesTwo} grid gap-1 border`}>
           <i data-indicator aria-hidden="true" className={styles.indicator} style={{ transform: indicatorShift(isEcho ? 1 : 0) }} />
           {([[false, "روایت", PenLine], [true, "کار", Sparkles]] as const).map(([echo, label, Icon]) => (
             <button key={label} type="button" role="tab" aria-selected={isEcho === echo} onClick={() => setIsEcho(echo)} className={`inline-flex items-center justify-center gap-1.5 rounded-[14px] px-2 py-2.5 text-xs font-bold transition-colors ${isEcho === echo ? "text-emphasis-foreground" : "text-muted-foreground hover:text-foreground"}`}>
@@ -454,11 +484,11 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
               {viewer.avatarUrl ? <OptimizedAvatar src={viewer.avatarUrl} alt="" width={44} className="h-full w-full object-cover" /> : "من"}
             </span>
             <span className="min-w-0">
-              <strong className="block truncate text-xs font-black text-foreground">{quoteId ? "نقل‌قول روایت" : isEcho ? "ثبت کار یا ایده" : "ارسال مطلب جدید"}</strong>
+              <strong className="block truncate text-xs font-black text-foreground">{tributeId ? "ادای احترام" : quoteId ? "نقل‌قول روایت" : isEcho ? "ثبت کار یا ایده" : "ارسال مطلب جدید"}</strong>
               <span className="block truncate text-[10px] text-muted-foreground">انتشار در شبکه مردمی</span>
             </span>
           </div>
-          {!quoteId && !showTitle ? (
+          {!embedded && !showTitle ? (
             <button type="button" onClick={() => { setShowTitle(true); window.setTimeout(() => titleRef.current?.focus({ preventScroll: true }), 120); }} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:bg-hover">
               <Plus aria-hidden="true" className="h-3.5 w-3.5" />
               افزودن عنوان (اختیاری)
@@ -466,8 +496,26 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
           ) : null}
         </div>
 
+        {tributeId ? (
+          <div className="mt-3">
+            {tribute.status === "loading" ? (
+              <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface p-4 text-xs text-muted-foreground">
+                <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
+                در حال دریافت یادبود…
+              </div>
+            ) : tribute.status === "ready" ? (
+              // Part of the post itself: there is deliberately no way to remove it here.
+              <TributeCard tribute={tribute.target} preview />
+            ) : (
+              <p role="alert" className="rounded-2xl border border-danger-border bg-danger-surface p-4 text-xs font-bold leading-6 text-danger">
+                این یادبود در دسترس نیست و ادای احترام به آن ممکن نیست.
+              </p>
+            )}
+          </div>
+        ) : null}
+
         <div className="relative pt-3">
-          {!quoteId ? (
+          {!embedded ? (
             <div className={`${styles.titleWrap} ${showTitle ? styles.titleOpen : ""}`} aria-hidden={!showTitle}>
               <div className={styles.titleInner}>
                 <input ref={titleRef} type="text" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="عنوان (اختیاری)" aria-label="تیتر روایت" tabIndex={showTitle ? 0 : -1} className={`${styles.title} w-full text-foreground shadow-none outline-none ring-0 placeholder:text-placeholder focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`} />
@@ -517,7 +565,7 @@ export function ComposeView({ quoteId, workMode = false, initialTag }: { quoteId
               addFiles(files);
             }}
             maxLength={MAX_CHARACTERS}
-            placeholder={quoteId ? "نظر خودت را دربارهٔ این روایت بنویس..." : "چه خبر؟ ماجرا یا شرح حال را بنویسید..."}
+            placeholder={tributeId ? "برای این عزیز بنویس..." : quoteId ? "نظر خودت را دربارهٔ این روایت بنویس..." : "چه خبر؟ ماجرا یا شرح حال را بنویسید..."}
             rows={7}
             aria-label="شرح روایت"
             className={`${styles.textarea} relative w-full resize-none border-0 bg-transparent text-foreground shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0`}

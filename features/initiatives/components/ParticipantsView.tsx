@@ -27,6 +27,7 @@ function ParticipantRow({ participant }: { participant: InitiativeParticipant })
       {participant.avatarUrl ? (
         <OptimizedAvatar
           src={participant.avatarUrl}
+          kind={participant.type}
           alt=""
           width={44}
           height={44}

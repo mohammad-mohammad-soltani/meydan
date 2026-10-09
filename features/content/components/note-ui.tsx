@@ -66,7 +66,7 @@ export function NoteMeta({ author, date, minutes, children }: { author: NoteAuth
   );
   return (
     <div className="nv-meta">
-      <i className="nv-av">{author.avatar ? <OptimizedAvatar src={author.avatar} alt="" width={44} height={44} /> : initials(author.name)}</i>
+      <i className="nv-av">{author.avatar ? <OptimizedAvatar src={author.avatar} kind={author.kind} alt="" width={44} height={44} /> : initials(author.name)}</i>
       {author.href ? (
         <Link href={author.href as Route} className="nv-au">
           {name}

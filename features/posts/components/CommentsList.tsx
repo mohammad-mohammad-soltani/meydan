@@ -41,6 +41,7 @@ export function CommentsList({
             const avatar = comment.avatarUrl ? (
               <OptimizedAvatar
                 src={comment.avatarUrl}
+                kind={comment.authorType}
                 alt=""
                 width={42}
                 height={42}

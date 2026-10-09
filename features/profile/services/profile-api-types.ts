@@ -1,4 +1,5 @@
 import type { ApiQuotedNarrative } from "@/features/feed/services/quote-mapper";
+import type { ApiTribute } from "@/features/feed/services/tribute-mapper";
 import type { ProfileStat } from "../types";
 import type { ActorKind } from "@/lib/profile-route";
 
@@ -43,6 +44,14 @@ export type ApiSquare = {
   start_date?: string | null;
   handle_locked_until?: string | null;
   stats?: { active_nights?: number; narratives?: number };
+  /** Memorial-only fields (`kind === "memorial"`). */
+  biography?: string;
+  birth_date?: string;
+  death_date?: string;
+  position?: string;
+  office?: string;
+  timeline?: Array<{ id?: string; date?: string; title?: string; place?: string; description?: string; photo_url?: string | null }>;
+  frames?: Array<{ media_id: number; caption?: string; label?: string; url?: string | null }>;
 };
 
 export type ApiUserProfile = {
@@ -193,6 +202,8 @@ export type ApiNarrative = {
   };
 
   quoted_narrative?: ApiQuotedNarrative;
+
+  tribute?: ApiTribute;
 
   /** Set when the profile owner reposted this narrative rather than wrote it. */
   reposted_at?: string;

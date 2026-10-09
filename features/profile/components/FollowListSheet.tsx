@@ -106,7 +106,7 @@ export function FollowListSheet({ type, id, name, handle, initialTab = "follower
                 <li key={row.key} className="flex items-start gap-3 px-4 py-3.5">
                   <Link href={row.href as Route} onClick={onClose} className="flex min-w-0 flex-1 items-center gap-3">
                     <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-sm font-extrabold text-foreground">
-                      {row.avatarUrl ? <OptimizedAvatar src={row.avatarUrl} alt="" width={48} className="h-full w-full object-cover" /> : row.name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word.charAt(0)).join("")}
+                      {row.avatarUrl ? <OptimizedAvatar src={row.avatarUrl} kind={row.type} alt="" width={48} className="h-full w-full object-cover" /> : row.name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word.charAt(0)).join("")}
                     </span>
                     <span className="min-w-0">
                       <b className="flex items-center gap-1 text-[14.5px] font-extrabold"><span className="truncate">{row.name}</span><AccountBadges verified={row.verified} speaker={row.speaker} official={row.official} kind={row.type} size="sm" /></b>

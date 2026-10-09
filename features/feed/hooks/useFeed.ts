@@ -16,11 +16,13 @@ function matchesFilter(post: FeedPost, filter: FeedFilter): boolean {
     case "all":
       return true;
     case "narratives":
-      return !post.initiativeId;
+      return !post.initiativeId && !post.tribute;
     case "initiatives":
       return Boolean(post.initiativeId);
     case "reflected":
       return Boolean(post.mediaReflection);
+    case "tributes":
+      return Boolean(post.tribute);
   }
 }
 

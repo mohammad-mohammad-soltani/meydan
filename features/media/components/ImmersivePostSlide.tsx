@@ -162,6 +162,7 @@ export function ImmersivePostSlide({
       {entry.post?.author.avatarUrl ? (
         <OptimizedAvatar
           src={entry.post.author.avatarUrl}
+          kind={entry.post.author.type}
           alt=""
           width={42}
           className="viewer-avatar"

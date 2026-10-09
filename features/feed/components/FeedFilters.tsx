@@ -1,5 +1,5 @@
 import styles from "../reference.module.css";
-import { Send, Sparkles, Video, type LucideIcon } from "lucide-react";
+import { Flame, Send, Sparkles, Video, type LucideIcon } from "lucide-react";
 import type { FeedFilter } from "../types";
 
 type FeedFiltersProps = {
@@ -19,6 +19,7 @@ const filters: Array<FilterItem | { id: null; label: string; icon: LucideIcon }>
   { id: "initiatives", label: "کار", icon: Sparkles },
   { id: null, label: "پویش", icon: Send },
   { id: "reflected", label: "پوشش رسانه‌ای", icon: Video },
+  { id: "tributes", label: "ادای احترام", icon: Flame },
 ];
 
 export function FeedFilters({

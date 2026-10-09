@@ -437,7 +437,7 @@ export function MapFrame({
             onFocus={() => setSearchFocused(true)}
             onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
             placeholder="جستجوی زندهٔ میادین…"
-            className="min-w-0 flex-1 border-0 bg-transparent text-[13.5px] text-white outline-none placeholder:text-white/55"
+            className="min-w-0 flex-1 border-0 bg-transparent text-[13.5px] outline-none"
             dir="rtl"
             aria-label="جست‌وجوی استان، شهر یا میدان روی نقشه"
           />
@@ -456,17 +456,17 @@ export function MapFrame({
                   type="button"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectSearchResult(aggregate)}
-                  className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-right text-[11px] font-bold text-white/90 transition hover:bg-white/[0.08]"
+                  className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-right text-[11px] font-bold text-foreground transition hover:bg-hover"
                   dir="rtl"
                 >
                   <span className="truncate">{aggregate.name}</span>
-                  <span className="shrink-0 text-[10px] tabular-nums text-white/45">
+                  <span className="shrink-0 text-[10px] tabular-nums text-foreground-secondary">
                     {aggregate.label}
                   </span>
                 </button>
               ))
             ) : (
-              <div className="px-3 py-3 text-center text-[10px] text-white/45">
+              <div className="px-3 py-3 text-center text-[10px] text-foreground-secondary">
                 نتیجه‌ای پیدا نشد
               </div>
             )}

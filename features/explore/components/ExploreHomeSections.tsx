@@ -26,14 +26,14 @@ function Head({ icon: Icon, title, hint }: { icon: typeof Hash; title: string; h
   );
 }
 
-function Avatar({ account, size }: { account: Pick<ExploreAccount, "name" | "avatarUrl">; size: number }) {
+function Avatar({ account, size }: { account: Pick<ExploreAccount, "name" | "avatarUrl"> & Partial<Pick<ExploreAccount, "type">>; size: number }) {
   const hue = hueOf(account.name);
   return (
     <span
       className="grid shrink-0 place-items-center overflow-hidden rounded-full font-black"
       style={{ width: size, height: size, fontSize: size * 0.4, background: account.avatarUrl ? undefined : `hsl(${hue} 88% 82%)`, color: `hsl(${hue} 50% 27%)`, boxShadow: `0 0 0 3px var(--m-bg), 0 0 0 5px hsl(${hue} 85% 68%)` }}
     >
-      {account.avatarUrl ? <OptimizedAvatar src={account.avatarUrl} alt="" width={size} className="h-full w-full object-cover" /> : account.name.replace(/^(حجت‌الاسلام|میدان)\s*/, "").charAt(0)}
+      {account.avatarUrl ? <OptimizedAvatar src={account.avatarUrl} kind={account.type} alt="" width={size} className="h-full w-full object-cover" /> : account.name.replace(/^(حجت‌الاسلام|میدان)\s*/, "").charAt(0)}
     </span>
   );
 }

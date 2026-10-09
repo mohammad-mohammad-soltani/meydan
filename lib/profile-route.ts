@@ -34,6 +34,9 @@ export const ENTITY_KIND_LABELS: Record<EntityKind, string> = {
   memorial: "یادبود",
 };
 
+/** Memorials get their own profile design, so callers branch on this rather than comparing strings. */
+export const isMemorialKind = (value: unknown): value is "memorial" => value === "memorial";
+
 export function isActorKind(value: unknown): value is ActorKind {
   return typeof value === "string" && (ACTOR_KINDS as readonly string[]).includes(value);
 }

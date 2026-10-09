@@ -190,6 +190,7 @@ export function FeedView({
         renderPane={renderPane}
         topBoundaryRef={tabsRef}
         getIndicator={() => indicatorRef.current}
+        getLabels={() => tabsRef.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? null}
       >
         {activePane}
       </FeedSwipePager>

@@ -7,6 +7,7 @@ export const PIN_OPTIONS: Array<{ id: FeedFilter | "campaign"; label: string; so
   { id: "initiatives", label: "کار" },
   { id: "campaign", label: "پویش", soon: true },
   { id: "reflected", label: "پوشش رسانه‌ای" },
+  { id: "tributes", label: "ادای احترام" },
   { id: "narratives", label: "روایت" },
 ];
 

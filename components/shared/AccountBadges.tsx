@@ -1,3 +1,4 @@
+import { MemorialBadge } from "@/components/shared/MemorialBadge";
 import { OfficialBadge } from "@/components/shared/OfficialBadge";
 import { SpeakerBadge } from "@/components/shared/SpeakerBadge";
 
@@ -28,9 +29,12 @@ export type AccountBadgeProps = {
 /**
  * Every tick an account carries, in one place. Any surface that shows a name
  * renders this so a ticked account is never shown without its tick: the blue
- * account tick, the red speaker tick and the grey official tick.
+ * account tick, the red speaker tick and the grey official tick. A memorial
+ * (`kind="memorial"`) gets its own mark in their place.
  */
 export function AccountBadges({ verified, speaker, official, kind, size = "sm", className = "", variant = "plain" }: AccountBadgeProps & { variant?: "plain" | "reel" }) {
+  // A memorial carries its own mark instead of any tick, wherever its name is shown.
+  if (kind === "memorial") return <MemorialBadge size={size} className={className} />;
   if (!verified && !speaker && !official) return null;
 
   const label = (kind && KIND_LABELS[kind]) || "حساب تأییدشده";

@@ -38,6 +38,7 @@ type ApiTimelineEvent = {
   id: string;
   date?: string | null;
   title?: string | null;
+  place?: string | null;
   description?: string | null;
   photo_media_id?: number | null;
   order?: number | null;
@@ -55,6 +56,9 @@ type ApiMemorial = {
   biography?: string | null;
   birth_date?: string | null;
   death_date?: string | null;
+  position?: string | null;
+  office?: string | null;
+  tagline?: string | null;
   timeline?: ApiTimelineEvent[] | null;
   frames?: ApiFrame[] | null;
 };
@@ -76,6 +80,7 @@ function mapTimelineEvent(row: ApiTimelineEvent): MemorialTimelineEvent {
     id: String(row.id),
     date: String(row.date ?? ""),
     title: String(row.title ?? ""),
+    place: String(row.place ?? ""),
     description: String(row.description ?? ""),
     photoMediaId: row.photo_media_id ? Number(row.photo_media_id) : null,
     order: Number(row.order ?? 0),
@@ -95,6 +100,9 @@ export function mapMemorial(row: ApiMemorial): Memorial {
     biography: String(row.biography ?? ""),
     birthDate: String(row.birth_date ?? ""),
     deathDate: String(row.death_date ?? ""),
+    position: String(row.position ?? ""),
+    office: String(row.office ?? ""),
+    tagline: String(row.tagline ?? ""),
     timeline: (row.timeline ?? []).map(mapTimelineEvent).sort((a, b) => a.order - b.order),
     frames: (row.frames ?? []).map(mapFrame).sort((a, b) => a.order - b.order),
   };
@@ -154,6 +162,9 @@ export function memorialCreateBody(input: MemorialCreateInput): Record<string, u
     biography: input.biography,
     birth_date: input.birthDate.trim(),
     death_date: input.deathDate.trim(),
+    position: input.position.trim(),
+    office: input.office.trim(),
+    tagline: input.tagline.trim(),
     avatar_media_id: input.avatarMediaId ?? 0,
     cover_media_id: input.coverMediaId ?? 0,
     status: input.status,
@@ -175,6 +186,9 @@ export function memorialUpdateBody(input: MemorialUpdateInput): Record<string, u
   if (input.biography !== undefined) body.biography = input.biography;
   if (input.birthDate !== undefined) body.birth_date = input.birthDate.trim();
   if (input.deathDate !== undefined) body.death_date = input.deathDate.trim();
+  if (input.position !== undefined) body.position = input.position.trim();
+  if (input.office !== undefined) body.office = input.office.trim();
+  if (input.tagline !== undefined) body.tagline = input.tagline.trim();
   // No new upload selected (null) means keep the current image: only a chosen file is sent.
   if (input.avatarMediaId) body.avatar_media_id = input.avatarMediaId;
   if (input.coverMediaId) body.cover_media_id = input.coverMediaId;
@@ -209,6 +223,7 @@ export async function setMemorialTimeline(
       id: event.id,
       date: event.date,
       title: event.title,
+      place: event.place,
       description: event.description,
       photo_media_id: event.photoMediaId ?? 0,
     })),

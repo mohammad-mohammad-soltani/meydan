@@ -1,6 +1,7 @@
 import { meydanApi, meydanApiPage, plainText } from "@/lib/meydan-api";
 import type { FeedAttachment, FeedPost, FollowSuggestion } from "../types";
 import { mapQuotedNarrative, type ApiQuotedNarrative } from "./quote-mapper";
+import { mapTribute, type ApiTribute } from "./tribute-mapper";
 import { type ActorKind, actorKindOf } from "@/lib/profile-route";
 
 type ApiActor = {
@@ -46,6 +47,7 @@ type ApiNarrative = {
   media_reflections?: Array<{ outlet: string; title: string; url?: string }>;
   stats?: { likes?: number; comments?: number; reposts?: number; quotes?: number; views?: number };
   quoted_narrative?: ApiQuotedNarrative;
+  tribute?: ApiTribute;
   viewer_state?: { liked?: boolean; reposted?: boolean; bookmarked?: boolean; can_delete?: boolean } | null;
 };
 
@@ -158,7 +160,7 @@ function mapNarrative(item: ApiNarrative): FeedPost {
     handle: item.author?.handle || item.author?.id || "meydan",
     timeAgo: relativeFa(item.published_at),
     city: cityFromAddress(item.author?.location_address),
-    badge: item.tags?.[0] || "روایت",
+    badge: item.tribute ? "ادای احترام" : item.tags?.[0] || "روایت",
     title: item.author?.display_name || "روایت میدان",
     body: plainText(item.body || ""),
     attachments: (item.attachments || []).map((attachment) => ({
@@ -198,6 +200,7 @@ function mapNarrative(item: ApiNarrative): FeedPost {
       views: item.stats?.views || 0,
     },
     quote: mapQuotedNarrative(item.quoted_narrative),
+    tribute: mapTribute(item.tribute),
     callToAction: item.initiative?.cta_label || undefined,
   };
 }

@@ -36,6 +36,26 @@ export type ProfileNarrative = ProfileActivity;
 
 export type ProfileReply = { id: string; narrativeId: string; content: string; timeLabel: string };
 
+/** One moment of a memorial's life story. */
+export type MemorialTimelineItem = { id: string; date: string; title: string; place: string; description: string; photoUrl?: string };
+/** One photo of a memorial's gallery («قاب‌های ماندگار»). */
+export type MemorialFrameItem = { id: string; url: string; caption: string; label: string };
+
+/** What only a یادبود (memorial) profile carries on top of the entity fields. */
+export type ProfileMemorial = {
+  /** One line under the name (the account headline); empty when none was written. */
+  tagline: string;
+  biography: string;
+  birthDate: string;
+  deathDate: string;
+  /** سمت, e.g. «رئیس دانشگاه آزاد اسلامی». */
+  position: string;
+  /** منصب: the person's field or standing. */
+  office: string;
+  timeline: MemorialTimelineItem[];
+  frames: MemorialFrameItem[];
+};
+
 export type ProfileDetails = {
   actorId: number;
   chatUserId?: number;
@@ -69,6 +89,8 @@ export type ProfileDetails = {
   handleLockedUntil?: string | null;
   /** Follower/following counts and join date (reference-design header). */
   social?: ProfileSocial;
+  /** Present only for `kind === "memorial"`; such profiles render through `MemorialProfileView`. */
+  memorial?: ProfileMemorial;
   /** The account's pinned narrative, shown above its posts. */
   pinnedPost?: import("@/features/feed/types").FeedPost | null;
 };

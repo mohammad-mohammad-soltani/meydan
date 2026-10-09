@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject } from "react";
+import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject } from "react";
 
 /**
  * Finger-tracked pager for the timeline tabs.
@@ -71,6 +71,80 @@ function resetLayer(layer: HTMLElement | null, pane: HTMLElement | null) {
   }
 }
 
+/**
+ * A horizontally scrolling rail inside a pane (banners, cards, chips) has its
+ * own `touch-action`, so the browser hands it every sideways pan and cancels
+ * our pointer stream — the pager would be dead under half the page. A rail
+ * can only use a pan in the directions it still has content to scroll to, so
+ * the opposite direction is withheld from it and falls through to the pager.
+ * `pan-left`/`pan-right` are what the browser has to be told *before* the
+ * touch starts, hence this is kept up to date from scroll events rather than
+ * decided mid-gesture.
+ */
+function syncRailTouchAction(rail: HTMLElement) {
+  const max = rail.scrollWidth - rail.clientWidth;
+  if (max <= 1) return;
+  const rtl = getComputedStyle(rail).direction === "rtl";
+  // Distance from the physical left edge, regardless of the scroll origin.
+  const fromLeft = rtl ? rail.scrollLeft + max : rail.scrollLeft;
+  const actions = ["pan-y"];
+  // The keywords name the direction the *viewport* pans, not the finger.
+  if (fromLeft > 1) actions.push("pan-left"); // finger moves right: reveals content on the left
+  if (fromLeft < max - 1) actions.push("pan-right"); // finger moves left: reveals content on the right
+  rail.style.touchAction = actions.join(" ");
+}
+
+function isRail(node: HTMLElement) {
+  if (node.scrollWidth <= node.clientWidth + 1) return false;
+  const overflowX = getComputedStyle(node).overflowX;
+  return overflowX === "auto" || overflowX === "scroll";
+}
+
+/** Weight of a tab's label for a pager position that can sit between two panes: 1 on its own pane, fading to 0 a pane away. */
+const labelWeight = (tab: number, position: number) => Math.max(0, 1 - Math.abs(tab - position));
+
+/**
+ * Blends a label from its resting colour to its active one by `weight`, so the
+ * title darkens and lightens in step with the finger instead of flipping once
+ * the pane has landed.
+ */
+function paintLabels(labels: ArrayLike<HTMLElement> | null, position: number) {
+  if (!labels) return;
+  for (let tab = 0; tab < labels.length; tab++) {
+    const weight = labelWeight(tab, position);
+    labels[tab].style.color = `color-mix(in srgb, var(--foreground) ${(weight * 100).toFixed(1)}%, var(--muted-foreground))`;
+    // Tabs that grow an icon read the same weight through this property.
+    labels[tab].style.setProperty("--tab-w", weight.toFixed(3));
+    // A tab may carry its own underline that grows with the same weight.
+    const rule = labels[tab].querySelector<HTMLElement>("[data-tab-rule]");
+    if (rule) rule.style.scale = `${weight.toFixed(3)} 1`;
+  }
+}
+
+function setLabelTransition(labels: ArrayLike<HTMLElement> | null, transition: string) {
+  if (!labels) return;
+  for (let tab = 0; tab < labels.length; tab++) {
+    // `--tab-w` is a registered number (see globals.css), so it eases like any other property.
+    labels[tab].style.transition = transition === "none" ? transition : `${transition}, --tab-w ${transition.split(" ")[1]} ${transition.split(" ").slice(2).join(" ")}`;
+    const rule = labels[tab].querySelector<HTMLElement>("[data-tab-rule]");
+    if (rule) rule.style.transition = transition.replace(/^color/, "scale");
+  }
+}
+
+function clearLabels(labels: ArrayLike<HTMLElement> | null) {
+  if (!labels) return;
+  for (let tab = 0; tab < labels.length; tab++) {
+    labels[tab].style.color = "";
+    labels[tab].style.transition = "";
+    labels[tab].style.removeProperty("--tab-w");
+    const rule = labels[tab].querySelector<HTMLElement>("[data-tab-rule]");
+    if (rule) {
+      rule.style.scale = "";
+      rule.style.transition = "";
+    }
+  }
+}
+
 type Gesture = {
   pointerId: number;
   startX: number;
@@ -94,6 +168,8 @@ type FeedSwipePagerProps = {
   topBoundaryRef: RefObject<HTMLElement | null>;
   /** Resolves the tab underline, which is moved in step with the finger. */
   getIndicator?: () => HTMLElement | null;
+  /** Resolves the tab titles in pane order; their colour is blended with the drag. */
+  getLabels?: () => ArrayLike<HTMLElement> | null;
   children: ReactNode;
 };
 
@@ -104,6 +180,7 @@ export function FeedSwipePager({
   renderPane,
   topBoundaryRef,
   getIndicator,
+  getLabels,
   children,
 }: FeedSwipePagerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -116,6 +193,37 @@ export function FeedSwipePager({
   const rightPaneRef = useRef<HTMLDivElement>(null);
   const gestureRef = useRef<Gesture | null>(null);
   const settleTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    let frame = 0;
+    const syncAll = () => {
+      frame = 0;
+      for (const node of track.querySelectorAll<HTMLElement>("*")) {
+        if (isRail(node)) syncRailTouchAction(node);
+      }
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(syncAll);
+    };
+    const onScroll = (event: Event) => {
+      const node = event.target;
+      if (node instanceof HTMLElement && node !== track && isRail(node)) syncRailTouchAction(node);
+    };
+    schedule();
+    const observer = new MutationObserver(schedule);
+    observer.observe(track, { childList: true, subtree: true });
+    window.addEventListener("resize", schedule);
+    // `scroll` doesn't bubble, but it does capture.
+    track.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", schedule);
+      track.removeEventListener("scroll", onScroll, { capture: true });
+    };
+  }, []);
 
   const sideOf = (target: number) => (target > index ? -1 : 1);
 
@@ -163,9 +271,10 @@ export function FeedSwipePager({
       const progress = target === null ? 0 : (Math.abs(offset) / width) * (target - index);
       indicator.style.transform = `translateX(${-(index + progress) * 100}%)`;
     }
+    paintLabels(getLabels?.() ?? null, index + (target === null ? 0 : (Math.abs(offset) / width) * (target - index)));
     // `sideOf` only reads the render-scoped `index`, which paint already depends on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getIndicator, index]);
+  }, [getIndicator, getLabels, index]);
 
   const release = useCallback(() => {
     if (trackRef.current) {
@@ -180,7 +289,9 @@ export function FeedSwipePager({
     // a drag is released without committing.
     const indicator = getIndicator?.() ?? null;
     if (indicator) indicator.style.transition = "";
-  }, [getIndicator]);
+    // The committed tab's own classes take over from here; both resolve to the same colour.
+    clearLabels(getLabels?.() ?? null);
+  }, [getIndicator, getLabels]);
 
   const settle = useCallback((offset: number, target: number | null, commit: boolean, velocity: number, width: number) => {
     const side = target === null ? 0 : sideOf(target);
@@ -194,6 +305,7 @@ export function FeedSwipePager({
     if (target !== null && side === 1 && rightPaneRef.current) rightPaneRef.current.style.transition = easing;
     const indicator = getIndicator?.() ?? null;
     if (indicator) indicator.style.transition = easing;
+    setLabelTransition(getLabels?.() ?? null, `color ${duration}ms ${SETTLE_EASING}`);
 
     // The drag already painted the start value in an earlier frame, so the
     // destination can be applied straight away and still animate.
@@ -208,7 +320,7 @@ export function FeedSwipePager({
     }, duration + 20);
     // `sideOf` only reads the render-scoped `index`, which settle already depends on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [alignToPaneTop, getIndicator, index, onIndexChange, paint, release]);
+  }, [alignToPaneTop, getIndicator, getLabels, index, onIndexChange, paint, release]);
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" || !event.isPrimary) return;
@@ -256,6 +368,7 @@ export function FeedSwipePager({
       gesture.lastTime = event.timeStamp;
       const indicator = getIndicator?.() ?? null;
       if (indicator) indicator.style.transition = "none";
+      setLabelTransition(getLabels?.() ?? null, "none");
     }
 
     const elapsed = event.timeStamp - gesture.lastTime;
@@ -329,12 +442,12 @@ function SlidingLayer({
     <div
       ref={layerRef}
       aria-hidden="true"
-      className="pointer-events-none fixed z-20 overflow-hidden"
+      className="pointer-events-none fixed z-20 overflow-clip"
       style={{ visibility: "hidden", contain: "paint" }}
     >
       {/* Only the sliding pane is opaque — the layer itself stays transparent
           so the outgoing timeline shows sliding away underneath it. */}
-      <div ref={paneRef} className="h-full w-full overflow-hidden bg-background">
+      <div ref={paneRef} className="h-full w-full flow-root overflow-clip bg-background">
         {children}
       </div>
     </div>

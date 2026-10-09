@@ -12,9 +12,18 @@ import { SquareLocationCard } from "./SquareLocationCard";
 import { SquareSchedule } from "./SquareSchedule";
 import { useProfile } from "../hooks/useProfile";
 import type { ProfileDetails } from "../types";
-import { ENTITY_KIND_LABELS, isEntityKind } from "@/lib/profile-route";
+import { ENTITY_KIND_LABELS, isEntityKind, isMemorialKind } from "@/lib/profile-route";
+import { MemorialProfileView } from "../memorial/MemorialProfileView";
 
-export function ProfileView({ initialProfile, canManage = true, canInvite = false, inviteVenue = "" }: { initialProfile: ProfileDetails; canManage?: boolean; /** Viewer is a square account allowed to invite this speaker. */ canInvite?: boolean; /** The inviting square's own venue, previewed in the composer. */ inviteVenue?: string }) {
+type ProfileViewProps = { initialProfile: ProfileDetails; canManage?: boolean; /** Viewer is a square account allowed to invite this speaker. */ canInvite?: boolean; /** The inviting square's own venue, previewed in the composer. */ inviteVenue?: string };
+
+/** Memorials are a profile of their own, with their own layout and styles. */
+export function ProfileView(props: ProfileViewProps) {
+  if (isMemorialKind(props.initialProfile.kind)) return <MemorialProfileView initialProfile={props.initialProfile} />;
+  return <StandardProfileView {...props} />;
+}
+
+function StandardProfileView({ initialProfile, canManage = true, canInvite = false, inviteVenue = "" }: { initialProfile: ProfileDetails; canManage?: boolean; /** Viewer is a square account allowed to invite this speaker. */ canInvite?: boolean; /** The inviting square's own venue, previewed in the composer. */ inviteVenue?: string }) {
   const profile = useProfile(initialProfile, canManage);
   const isSquare = profile.selectedTab === "square";
   // Location and schedule belong to squares only; media, collectives and organizations have neither.

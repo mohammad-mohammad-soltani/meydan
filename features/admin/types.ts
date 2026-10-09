@@ -152,6 +152,8 @@ export type MemorialTimelineEvent = {
   /** Free text: a full date, a year, or any other period the family gave. */
   date: string;
   title: string;
+  /** Organisation or city shown under the title. */
+  place: string;
   description: string;
   photoMediaId: number | null;
   order: number;
@@ -178,6 +180,12 @@ export type Memorial = {
   biography: string;
   birthDate: string;
   deathDate: string;
+  /** سمت */
+  position: string;
+  /** منصب */
+  office: string;
+  /** One line under the name on the public page. */
+  tagline: string;
   timeline: MemorialTimelineEvent[];
   frames: MemorialFrame[];
 };
@@ -191,6 +199,9 @@ export type MemorialCreateInput = {
   biography: string;
   birthDate: string;
   deathDate: string;
+  position: string;
+  office: string;
+  tagline: string;
   avatarMediaId: number | null;
   coverMediaId: number | null;
   status: MemorialStatus;
@@ -202,6 +213,9 @@ export type MemorialUpdateInput = {
   biography?: string;
   birthDate?: string;
   deathDate?: string;
+  position?: string;
+  office?: string;
+  tagline?: string;
   avatarMediaId?: number | null;
   coverMediaId?: number | null;
   status?: MemorialStatus;

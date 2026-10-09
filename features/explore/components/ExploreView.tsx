@@ -27,6 +27,7 @@ import { OptimizedAvatar } from "@/components/shared/OptimizedAvatar";
 import { searchExplore } from "../services/explore.service";
 import { getExploreHome, type ExploreHome } from "../services/explore-home.service";
 import { useFollowSet } from "../hooks/useFollowSet";
+import { FeedSwipePager } from "@/features/feed/components/FeedSwipePager";
 import { ExploreSections, type ExploreSection } from "./ExploreHomeSections";
 import type {
   ExploreFilter,
@@ -101,6 +102,7 @@ function ResultAvatar({ item }: { item: ExploreResult }) {
     return (
       <OptimizedAvatar
         src={item.avatarUrl}
+        kind={item.kind}
         alt=""
         width={44}
         height={44}
@@ -183,6 +185,8 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
   const [searchRetry, setSearchRetry] = useState(0);
   const [landingRetry, setLandingRetry] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const tabsRef = useRef<HTMLElement>(null);
+  const indicatorRef = useRef<HTMLSpanElement>(null);
 
   const hasQuery = query.trim().length > 0;
   // A search for exactly one hashtag invites the viewer to publish under it.
@@ -265,6 +269,33 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
     inputRef.current?.focus();
   };
 
+  /** One tab's body; neighbours are rendered the same way so a swipe previews real content. */
+  const renderHome = (forTab: ExploreTab) => (
+    <>
+          {home.status === "loading" ? <HomeSkeleton /> : null}
+          {home.status === "error" ? (
+            <div className="px-4 py-12 text-center">
+              <p className="text-xs text-muted-foreground">پیشنهادهای کاوش دریافت نشدند؛ جست‌وجوی بالا همچنان قابل استفاده است.</p>
+              <button type="button" onClick={() => setLandingRetry((value) => value + 1)} className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-surface-muted px-4 text-[11px] font-black text-foreground">
+                <RefreshCw className="h-3.5 w-3.5" />
+                بارگذاری دوباره
+              </button>
+            </div>
+          ) : null}
+          {home.status === "ready" && home.data ? (
+            <ExploreSections
+              sections={TAB_SECTIONS[forTab]}
+              home={home.data}
+              follow={follow}
+              onPickTag={(tag) => {
+                setQuery(tag);
+                setActiveFilter("all");
+              }}
+            />
+          ) : null}
+    </>
+  );
+
   return (
     <section
       className="reference-explore min-h-full bg-background pb-[110px] text-foreground"
@@ -320,7 +351,7 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
             })}
           </div>
         ) : (
-          <nav className="reference-explore-tabs grid grid-cols-4 border-b border-divider" aria-label="بخش‌های کاوش">
+          <nav ref={tabsRef} className="reference-explore-tabs relative grid grid-cols-4 border-b border-divider" aria-label="بخش‌های کاوش">
             {TABS.map((entry) => (
               <button
                 key={entry.id}
@@ -330,9 +361,15 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
                 className={`relative h-[50px] text-sm font-bold transition-colors ${tab === entry.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {entry.label}
-                <span aria-hidden="true" className={`absolute inset-x-[25%] bottom-0 h-[3px] rounded-full bg-brand transition-opacity ${tab === entry.id ? "opacity-100" : "opacity-0"}`} />
               </button>
             ))}
+            {/* One underline that follows the finger while swiping (the strip reads right to left). */}
+            <span
+              ref={indicatorRef}
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-0 right-0 h-[3px] w-1/4 transition-transform duration-300 ease-out after:absolute after:inset-x-1/4 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-brand after:content-['']"
+              style={{ transform: `translateX(${-TABS.findIndex((entry) => entry.id === tab) * 100}%)` }}
+            />
           </nav>
         )}
       </header>
@@ -412,27 +449,17 @@ export function ExploreView({ initialQuery = "" }: { initialQuery?: string }) {
         </main>
       ) : (
         <main>
-          {home.status === "loading" ? <HomeSkeleton /> : null}
-          {home.status === "error" ? (
-            <div className="px-4 py-12 text-center">
-              <p className="text-xs text-muted-foreground">پیشنهادهای کاوش دریافت نشدند؛ جست‌وجوی بالا همچنان قابل استفاده است.</p>
-              <button type="button" onClick={() => setLandingRetry((value) => value + 1)} className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-surface-muted px-4 text-[11px] font-black text-foreground">
-                <RefreshCw className="h-3.5 w-3.5" />
-                بارگذاری دوباره
-              </button>
-            </div>
-          ) : null}
-          {home.status === "ready" && home.data ? (
-            <ExploreSections
-              sections={TAB_SECTIONS[tab]}
-              home={home.data}
-              follow={follow}
-              onPickTag={(tag) => {
-                setQuery(tag);
-                setActiveFilter("all");
-              }}
-            />
-          ) : null}
+          <FeedSwipePager
+            index={TABS.findIndex((entry) => entry.id === tab)}
+            count={TABS.length}
+            onIndexChange={(next) => setTab(TABS[next].id)}
+            renderPane={(paneIndex) => renderHome(TABS[paneIndex].id)}
+            topBoundaryRef={tabsRef}
+            getIndicator={() => indicatorRef.current}
+            getLabels={() => tabsRef.current?.querySelectorAll<HTMLElement>("button") ?? null}
+          >
+            {renderHome(tab)}
+          </FeedSwipePager>
         </main>
       )}
     </section>

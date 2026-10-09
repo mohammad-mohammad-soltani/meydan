@@ -159,6 +159,8 @@ function toFeedPost(
 
     quote: post.quote,
 
+    tribute: post.tribute,
+
     callToAction:
       initiative?.label,
   };

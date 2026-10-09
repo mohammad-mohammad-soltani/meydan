@@ -232,7 +232,7 @@ function mapUser(item: ApiActor): ExploreResult {
     return {
       id: `${actorKind}-${item.id}`,
       entityId: String(id || item.id),
-      kind: "user",
+      kind: actorKind,
       title: item.display_name || label,
       subtitle: label,
       href: id ? publicProfileHref(actorKind, id, item.handle) : "/explore",

@@ -447,6 +447,13 @@ html.dark {
   }
 }
 
+/* How far a tab is "selected" (0–1); a swipe animates it so icons grow with the finger. */
+@property --tab-w {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 @keyframes route-transition-enter-keyframes {
   from {
     opacity: 0;
@@ -785,3 +792,23 @@ html.dark {
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.15); }
 }
 
+
+/*
+ * A memorial's avatar, everywhere it appears: a rounded square with the
+ * infinity mark on its bottom-right corner (drawn by OptimizedAvatar when it is
+ * given `kind="memorial"`). Parents that only hold the avatar are un-clipped
+ * and re-shaped so a round, overflow-hidden holder cannot cut the mark off.
+ */
+.memorial-avatar { position: relative; display: inline-block; flex-shrink: 0; line-height: 0; border-radius: 28%; }
+.memorial-avatar > img { display: block; border-radius: 28%; }
+.memorial-avatar-mark {
+  position: absolute; right: -6%; bottom: -6%; width: 38%; height: 38%; min-width: 11px; min-height: 11px;
+  display: grid; place-items: center; border-radius: 999px;
+  background: var(--foreground); box-shadow: 0 0 0 max(1.5px, 4%) var(--background);
+}
+.memorial-avatar-mark::after {
+  content: ""; width: 68%; height: 68%; background: var(--background);
+  -webkit-mask: var(--mm-infinity) center / contain no-repeat; mask: var(--mm-infinity) center / contain no-repeat;
+}
+:root { --mm-infinity: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 0 0 0 8'/%3E%3C/svg%3E"); }
+:has(> .memorial-avatar:only-child) { overflow: visible !important; border-radius: 28% !important; }

@@ -57,7 +57,7 @@ export function MentionPopover({ items, loading, query, active, onActive, onPick
             >
               <span className={`${styles.ring} grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-sm font-black text-foreground transition-shadow`}>
                 {item.avatar_url ? (
-                  <OptimizedAvatar src={item.avatar_url} alt="" width={40} className="h-full w-full object-cover" />
+                  <OptimizedAvatar src={item.avatar_url} kind={item.account_type} alt="" width={40} className="h-full w-full object-cover" />
                 ) : (
                   (item.display_name || item.handle).charAt(0)
                 )}

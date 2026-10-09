@@ -1,0 +1,113 @@
+/*
+ * Memorial («یادبود») profiles have a design of their own, separate from the
+ * user / square profile (`reference-profile.css`). Everything lives under
+ * `.memorial-profile` and its own tokens, so nothing here can leak into — or be
+ * overridden by — the regular profile styles. Restyle a memorial by changing
+ * the tokens below; the markup in `MemorialProfileView.tsx` stays put.
+ */
+.memorial-profile {
+  --mm-accent: #b9a06a;
+  --mm-accent-soft: color-mix(in srgb, var(--mm-accent) 16%, transparent);
+  --mm-accent-line: color-mix(in srgb, var(--mm-accent) 45%, transparent);
+  --mm-ink: var(--foreground);
+  --mm-ink-soft: var(--muted-foreground);
+  --mm-ground: var(--background);
+  --mm-card: color-mix(in srgb, var(--foreground) 4%, var(--background));
+  background: var(--mm-ground);
+  color: var(--mm-ink);
+}
+
+/*
+ * Header: a dark cover with the office chip, a rounded-square portrait on the
+ * start side carrying the infinity mark, the single «ادای احترام» action on the
+ * end side, then name · @handle · mark, the headline and the facts row.
+ */
+.memorial-hero { position: relative; isolation: isolate; padding-bottom: 6px; }
+.memorial-hero-cover { position: absolute; inset: 0 0 auto 0; height: 168px; z-index: -1; overflow: hidden; background: var(--surface-elevated, #111); }
+/* The cover is shown as uploaded: no tint, a faint shade under the buttons and a fade into the page along its lower edge. */
+.memorial-hero-cover img { object-fit: cover; }
+.memorial-hero-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.28), transparent 30%, transparent 48%, color-mix(in srgb, var(--mm-ground) 55%, transparent) 76%, var(--mm-ground) 100%); }
+.memorial-hero-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 14px 0; }
+.memorial-hero-bar button { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; color: #fff; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(12px); }
+.memorial-office-chip { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 5px 11px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; background: rgba(8,8,10,.7); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(12px); }
+.memorial-office-chip svg { flex-shrink: 0; width: 13px; height: 13px; }
+
+.memorial-id-row { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 20px; margin-top: 30px; }
+.memorial-portrait { position: relative; flex-shrink: 0; width: 96px; height: 96px; border-radius: 28px; border: 4px solid var(--mm-ink); background: var(--mm-ground); }
+.memorial-portrait > span, .memorial-portrait > button { position: relative; display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; border-radius: 24px; background: var(--mm-card); font-size: 36px; font-weight: 900; }
+.memorial-portrait img { filter: grayscale(.2); }
+.memorial-eternal { position: absolute; right: -6px; bottom: -6px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; color: var(--mm-ink); background: var(--mm-ground); border: 2px solid var(--mm-ink); }
+.memorial-eternal svg { width: 15px; height: 15px; }
+.memorial-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.memorial-share { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 999px; color: var(--mm-ink); background: color-mix(in srgb, var(--mm-ink) 12%, transparent); border: 1px solid color-mix(in srgb, var(--mm-ink) 32%, transparent); transition: background .15s, transform .15s; }
+.memorial-share:hover { background: color-mix(in srgb, var(--mm-ink) 22%, transparent); }
+.memorial-share:active { transform: scale(.94); }
+.memorial-share svg { width: 16px; height: 16px; stroke-width: 2.1; }
+.memorial-respect { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 16px; border-radius: 999px; font-size: 12px; font-weight: 800; background: var(--mm-ink); color: var(--mm-ground); transition: opacity .15s; }
+.memorial-respect[data-on="true"] { background: transparent; color: var(--mm-ink); border: 1px solid var(--mm-accent-line); }
+.memorial-respect:disabled { opacity: .65; cursor: wait; }
+
+.memorial-head { padding: 14px 20px 0; }
+.memorial-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; font-size: 24px; font-weight: 900; line-height: 1.6; }
+.memorial-name .badge { align-self: center; display: inline-flex; }
+.memorial-handle { font-size: 13px; font-weight: 500; color: var(--mm-ink-soft); }
+.memorial-tagline { margin-top: 6px; font-size: 14px; line-height: 2; color: var(--mm-ink-soft); }
+.memorial-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; font-size: 13px; color: var(--mm-ink-soft); }
+.memorial-facts span { display: inline-flex; align-items: center; gap: 6px; }
+.memorial-facts svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+/* Sections share one rhythm: a gold-ruled heading over soft content. */
+.memorial-section { padding: 26px 20px 0; }
+.memorial-section > h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 900; color: var(--mm-ink); }
+.memorial-section > h2 svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--brand); }
+/* The rule after each heading is in the app's brand colour. */
+.memorial-section > h2::after { content: ""; flex: 1; height: 2px; margin-inline-start: 4px; border-radius: 2px; background: var(--brand); }
+.memorial-bio { margin-top: 14px; white-space: pre-wrap; font-size: 14px; line-height: 2.1; color: color-mix(in srgb, var(--mm-ink) 88%, transparent); }
+
+.memorial-timeline { position: relative; margin-top: 18px; padding-right: 22px; list-style: none; }
+.memorial-timeline::before { content: ""; position: absolute; top: 6px; bottom: 6px; right: 5px; width: 1px; background: var(--mm-accent-line); }
+.memorial-timeline li { position: relative; padding-bottom: 22px; }
+.memorial-timeline li::before { content: ""; position: absolute; top: 7px; right: -22px; width: 11px; height: 11px; border-radius: 999px; background: var(--mm-ground); border: 2px solid var(--mm-accent); }
+.memorial-timeline time { display: block; font-size: 12px; font-weight: 800; color: var(--mm-accent); }
+.memorial-timeline h3 { margin-top: 2px; font-size: 14px; font-weight: 800; }
+.memorial-timeline p { margin-top: 4px; font-size: 13px; line-height: 1.95; color: var(--mm-ink-soft); }
+.memorial-timeline figure { position: relative; margin-top: 10px; height: 168px; overflow: hidden; border-radius: 16px; }
+.memorial-timeline figure img { object-fit: cover; }
+
+.memorial-frames { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
+.memorial-frame { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 16px; background: var(--mm-card); box-shadow: inset 0 0 0 1px var(--mm-accent-line); }
+.memorial-frame img { object-fit: cover; transition: transform .3s; }
+.memorial-frame:hover img { transform: scale(1.04); }
+.memorial-frame span { position: absolute; inset: auto 0 0 0; padding: 22px 12px 10px; font-size: 11.5px; font-weight: 700; color: #fff; text-align: right; background: linear-gradient(180deg, transparent, rgba(0,0,0,.72)); }
+
+.memorial-memories { padding-top: 26px; }
+.memorial-memories > h2 { padding: 0 20px 6px; }
+
+/* «گاه‌شمار حیات علمی و تجربیات»: a card with the events on a vertical rail. */
+.mm-timeline { padding-top: 22px; }
+.mm-timeline-card { padding: 16px 16px 14px; border-radius: 28px; background: var(--mm-card); border: 1px solid color-mix(in srgb, var(--mm-ink) 12%, transparent); }
+.mm-timeline-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--mm-ink) 10%, transparent); }
+.mm-timeline-head h2 { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 900; line-height: 1.7; }
+.mm-timeline-head h2 svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--mm-ink-soft); }
+.mm-timeline-head span { flex-shrink: 0; font-size: 11.5px; color: var(--mm-ink-soft); }
+
+.mm-timeline-fold { position: relative; overflow: hidden; transition: max-height .45s cubic-bezier(.22, .61, .36, 1); }
+/* Collapsed, the second event dissolves into the button below. */
+.mm-timeline-fold[data-collapsible="true"][data-open="false"] { -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent); mask-image: linear-gradient(180deg, #000 55%, transparent); }
+.mm-timeline-list { position: relative; list-style: none; padding: 16px 28px 4px 0; }
+.mm-timeline-list::before { content: ""; position: absolute; top: 22px; bottom: 6px; right: 7px; width: 2px; border-radius: 2px; background: color-mix(in srgb, var(--mm-ink) 16%, transparent); }
+.mm-timeline-list li { position: relative; padding-bottom: 20px; }
+.mm-timeline-list li::before { content: ""; position: absolute; top: 5px; right: -28px; width: 16px; height: 16px; box-sizing: border-box; border-radius: 999px; background: var(--mm-ground); border: 4px solid color-mix(in srgb, var(--mm-ink) 55%, transparent); }
+.mm-timeline-list li[data-first="true"]::before { background: var(--mm-ink); border-color: var(--mm-ink); }
+.mm-timeline-line { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.mm-timeline-line h3 { font-size: 14.5px; font-weight: 800; line-height: 1.8; }
+.mm-timeline-line time { flex-shrink: 0; padding: 2px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; color: var(--mm-ink-soft); background: color-mix(in srgb, var(--mm-ink) 9%, transparent); border: 1px solid color-mix(in srgb, var(--mm-ink) 12%, transparent); }
+.mm-timeline-place { margin-top: 1px; font-size: 12.5px; color: var(--mm-ink-soft); }
+.mm-timeline-text { margin-top: 6px; font-size: 13.5px; line-height: 2; color: color-mix(in srgb, var(--mm-ink) 82%, transparent); }
+.mm-timeline-list figure { position: relative; margin-top: 10px; height: 160px; overflow: hidden; border-radius: 16px; }
+.mm-timeline-list figure img { object-fit: cover; }
+
+.mm-timeline-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 44px; margin-top: 4px; border-radius: 999px; font-size: 13px; font-weight: 800; color: var(--mm-ink); background: color-mix(in srgb, var(--mm-ink) 6%, transparent); border: 1px solid color-mix(in srgb, var(--mm-ink) 14%, transparent); transition: background .15s; }
+.mm-timeline-toggle:hover { background: color-mix(in srgb, var(--mm-ink) 11%, transparent); }
+.mm-timeline-toggle svg { width: 16px; height: 16px; }
+@media (prefers-reduced-motion: reduce) { .mm-timeline-fold { transition: none; } }

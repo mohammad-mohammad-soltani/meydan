@@ -1,8 +1,8 @@
 import type { ActorKind } from "@/lib/profile-route";
 export type FeedTab = "for-you" | "following";
-export type FeedFilter = "all" | "narratives" | "initiatives" | "reflected";
+export type FeedFilter = "all" | "narratives" | "initiatives" | "reflected" | "tributes";
 
-export const FEED_FILTERS: readonly FeedFilter[] = ["all", "narratives", "initiatives", "reflected"];
+export const FEED_FILTERS: readonly FeedFilter[] = ["all", "narratives", "initiatives", "reflected", "tributes"];
 export type PostKind = "ideas" | "media";
 
 export type FeedAttachment = {
@@ -38,6 +38,17 @@ export type QuotedPost = {
   attachments?: FeedAttachment[];
 };
 
+/** The memorial a «ادای احترام» post is addressed to. `unavailable` once that memorial is gone. */
+export type TributeTarget = {
+  memorialId: number;
+  unavailable: boolean;
+  name: string;
+  handle: string;
+  avatarUrl?: string;
+  position?: string;
+  deathDate?: string;
+};
+
 export type FeedPost = {
   id: string;
   author: { id: number; type: ActorKind; handle?: string; avatarUrl?: string; verified?: boolean; verifiedSpeaker?: boolean; verifiedOfficial?: boolean };
@@ -68,6 +79,8 @@ export type FeedPost = {
   repostedAt?: string;
   /** Set when this post quotes another narrative. */
   quote?: QuotedPost;
+  /** Set on a «ادای احترام» post: the memorial it honours. */
+  tribute?: TributeTarget;
   callToAction?: string;
 };
 

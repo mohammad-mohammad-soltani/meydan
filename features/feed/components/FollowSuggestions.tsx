@@ -55,7 +55,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
                 <div className={styles.suggestionHead}>
                   <Link href={profileHref} className={`${styles.suggestionIdentity} flex min-w-0 items-center gap-2`} aria-label={`پروفایل ${suggestion.name}`}>
                     <span className={`${styles.suggestionAvatar} grid shrink-0 place-items-center overflow-hidden rounded-full border bg-surface-elevated text-xs font-black text-foreground`}>
-                      {suggestion.avatarUrl ? <OptimizedAvatar src={suggestion.avatarUrl} alt="" width={64} className="h-full w-full object-cover" /> : suggestion.name.slice(0, 1)}
+                      {suggestion.avatarUrl ? <OptimizedAvatar src={suggestion.avatarUrl} kind={suggestion.actorType} alt="" width={64} className="h-full w-full object-cover" /> : suggestion.name.slice(0, 1)}
                     </span>
                     <span className="min-w-0">
                       <span className="flex items-center gap-1">
@@ -114,7 +114,7 @@ export function FollowSuggestions({ suggestions, followedActorKeys, pendingFollo
             <article key={key} className="group min-w-0 overflow-hidden rounded-card border border-border bg-card p-4 text-card-foreground shadow-xs transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-brand-border hover:shadow-sm">
               <div className="flex min-w-0 items-start gap-3">
                 <Link href={profileHref} className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-muted text-sm font-black text-brand" aria-label={`پروفایل ${suggestion.name}`}>
-                  {suggestion.avatarUrl ? <OptimizedAvatar src={suggestion.avatarUrl} alt={suggestion.name} width={48} className="h-full w-full object-cover" /> : suggestion.name.slice(0, 1)}
+                  {suggestion.avatarUrl ? <OptimizedAvatar src={suggestion.avatarUrl} kind={suggestion.actorType} alt={suggestion.name} width={48} className="h-full w-full object-cover" /> : suggestion.name.slice(0, 1)}
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link href={profileHref} className="flex max-w-full min-w-0 items-center gap-1 font-black text-foreground hover:text-brand">

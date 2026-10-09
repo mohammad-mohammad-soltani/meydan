@@ -1,5 +1,5 @@
 import { compactFa, plainText } from "@/lib/meydan-api";
-import type { ProfileDetails, ProfileStat } from "../types";
+import type { ProfileDetails, ProfileMemorial, ProfileStat } from "../types";
 import type { ApiComment, ApiNarrative, ApiSquare } from "./profile-api-types";
 import {
   emptyActivity,
@@ -14,7 +14,30 @@ const KIND_SUBTITLE: Record<string, string> = {
   collective: "مجموعه‌ی فعال در میدان",
   media: "رسانه‌ی فعال در میدان",
   organization: "سازمان فعال در میدان",
+  memorial: "یادبود",
 };
+
+function mapMemorial(square: ApiSquare): ProfileMemorial {
+  return {
+    tagline: plainText(square.subtitle ?? square.profile_about ?? ""),
+    biography: plainText(square.biography ?? ""),
+    birthDate: square.birth_date ?? "",
+    deathDate: square.death_date ?? "",
+    position: square.position ?? "",
+    office: square.office ?? "",
+    timeline: (square.timeline ?? []).map((event, index) => ({
+      id: event.id || String(index),
+      date: event.date ?? "",
+      title: event.title ?? "",
+      place: event.place ?? "",
+      description: event.description ?? "",
+      photoUrl: event.photo_url || undefined,
+    })),
+    frames: (square.frames ?? [])
+      .filter((frame) => Boolean(frame.url))
+      .map((frame) => ({ id: String(frame.media_id), url: frame.url!, caption: frame.caption ?? "", label: frame.label ?? "" })),
+  };
+}
 
 function toFiniteNumber(value: unknown): number | undefined {
   const number = Number(value);
@@ -144,5 +167,7 @@ export function mapSquare(
     handleLockedUntil: square.handle_locked_until ?? null,
 
     skills: square.profile_skills || [],
+
+    ...(square.kind === "memorial" ? { memorial: mapMemorial(square) } : {}),
   };
 }

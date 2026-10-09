@@ -3,6 +3,7 @@ import type { FeedAttachment, FeedPost } from "@/features/feed/types";
 import type { ProfileDetails, ProfileNarrative, ProfileReply } from "../types";
 import type { ApiComment, ApiNarrative } from "./profile-api-types";
 import { mapQuotedNarrative } from "@/features/feed/services/quote-mapper";
+import { mapTribute } from "@/features/feed/services/tribute-mapper";
 import { actorKindOf } from "@/lib/profile-route";
 
 export function timeFa(value: string): string {
@@ -233,7 +234,7 @@ export function mapNarrativePost(
 
     city: identity.location,
 
-    badge: item.tags?.[0] || "روایت",
+    badge: item.tribute ? "ادای احترام" : item.tags?.[0] || "روایت",
 
     title: item.author?.display_name || identity.name,
 
@@ -265,6 +266,8 @@ export function mapNarrativePost(
     repostedAt: item.reposted_at,
 
     quote: mapQuotedNarrative(item.quoted_narrative),
+
+    tribute: mapTribute(item.tribute),
 
     callToAction: item.initiative?.cta_label || undefined,
   };

@@ -59,6 +59,9 @@ type ProfileFormState = {
   biography: string;
   birthDate: string;
   deathDate: string;
+  position: string;
+  office: string;
+  tagline: string;
   status: MemorialStatus;
   verified: boolean;
   avatarMediaId: number | null;
@@ -72,6 +75,9 @@ function toFormState(memorial: Memorial): ProfileFormState {
     biography: memorial.biography,
     birthDate: memorial.birthDate,
     deathDate: memorial.deathDate,
+    position: memorial.position,
+    office: memorial.office,
+    tagline: memorial.tagline,
     status: memorial.postStatus,
     verified: memorial.verified,
     avatarMediaId: null,
@@ -86,6 +92,9 @@ function buildUpdate(form: ProfileFormState): MemorialUpdateInput {
     biography: form.biography,
     birthDate: form.birthDate,
     deathDate: form.deathDate,
+    position: form.position,
+    office: form.office,
+    tagline: form.tagline,
     status: form.status,
     verified: form.verified,
     avatarMediaId: form.avatarMediaId,
@@ -162,7 +171,7 @@ export function AdminMemorialDetailView({ memorial: initial }: { memorial: Memor
   const addTimelineEvent = () => {
     setTimeline((current) => [
       ...current,
-      { id: newLocalId(), date: "", title: "", description: "", photoMediaId: null, order: current.length + 1 },
+      { id: newLocalId(), date: "", title: "", place: "", description: "", photoMediaId: null, order: current.length + 1 },
     ]);
   };
 
@@ -329,6 +338,18 @@ export function AdminMemorialDetailView({ memorial: initial }: { memorial: Memor
             </AdminField>
           </div>
 
+          <AdminField label="توضیح کوتاه زیر نام" htmlFor="detail-memorial-tagline" error={fieldErrors.tagline} hint="یک خط زیر نام در بالای صفحه، مثلاً «فیزیکدان نظری و رئیس دانشگاه…».">
+            <input id="detail-memorial-tagline" value={form.tagline} onChange={(event) => setForm({ ...form, tagline: event.target.value })} className={fieldClass} />
+          </AdminField>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <AdminField label="سمت" htmlFor="detail-memorial-position" error={fieldErrors.position} hint="مثلاً «رئیس دانشگاه آزاد اسلامی».">
+              <input id="detail-memorial-position" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} className={fieldClass} />
+            </AdminField>
+            <AdminField label="منصب" htmlFor="detail-memorial-office" error={fieldErrors.office} hint="در چیپ بالای کاور نمایش داده می‌شود.">
+              <input id="detail-memorial-office" value={form.office} onChange={(event) => setForm({ ...form, office: event.target.value })} className={fieldClass} />
+            </AdminField>
+          </div>
+
           <AdminField label="وضعیت انتشار" htmlFor="detail-memorial-status">
             <select id="detail-memorial-status" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as MemorialStatus })} className={fieldClass}>
               {MEMORIAL_STATUSES.map((value) => (
@@ -432,6 +453,9 @@ export function AdminMemorialDetailView({ memorial: initial }: { memorial: Memor
                       <input id={`timeline-title-${event.id}`} value={event.title} onChange={(e) => updateTimelineEvent(event.id, { title: e.target.value })} className={fieldClass} />
                     </AdminField>
                   </div>
+                  <AdminField label="سازمان یا شهر" htmlFor={`timeline-place-${event.id}`} hint="زیر عنوان نمایش داده می‌شود، مثلاً «دانشگاه آزاد اسلامی» یا «تهران».">
+                    <input id={`timeline-place-${event.id}`} value={event.place} onChange={(e) => updateTimelineEvent(event.id, { place: e.target.value })} className={fieldClass} />
+                  </AdminField>
                   <AdminField label="توضیح" htmlFor={`timeline-desc-${event.id}`}>
                     <textarea id={`timeline-desc-${event.id}`} value={event.description} rows={2} onChange={(e) => updateTimelineEvent(event.id, { description: e.target.value })} className={`${fieldClass} resize-none`} />
                   </AdminField>

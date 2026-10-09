@@ -59,7 +59,7 @@ function Avatar({ entry, size }: { entry: VideoFeedEntry; size: number }) {
       className="grid shrink-0 place-items-center overflow-hidden rounded-full font-black"
       style={{ width: size, height: size, fontSize: size * 0.4, background: `hsl(${hue} 85% 82%)`, color: `hsl(${hue} 45% 22%)` }}
     >
-      {url ? <OptimizedAvatar src={url} alt="" width={size} className="h-full w-full object-cover" /> : entry.author.charAt(0)}
+      {url ? <OptimizedAvatar src={url} kind={entry.post?.author.type} alt="" width={size} className="h-full w-full object-cover" /> : entry.author.charAt(0)}
     </span>
   );
 }

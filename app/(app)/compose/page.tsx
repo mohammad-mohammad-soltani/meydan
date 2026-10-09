@@ -6,7 +6,7 @@ import { isAuthenticated } from "@/lib/meydan-session";
 export default async function ComposePage({
   searchParams,
 }: {
-  searchParams: Promise<{ quote?: string | string[]; mode?: string; tag?: string | string[] }>;
+  searchParams: Promise<{ quote?: string | string[]; tribute?: string | string[]; mode?: string; tag?: string | string[] }>;
 }) {
   const query = await searchParams;
   const requested = query.quote;
@@ -16,6 +16,9 @@ export default async function ComposePage({
       ? requested
       : undefined;
 
+  // `/compose?tribute=ID` is the «ادای احترام» composer, addressed to that memorial.
+  const tributeId = typeof query.tribute === "string" && /^\d{1,12}$/.test(query.tribute) ? query.tribute : undefined;
+
   // `/compose?tag=برچسب` opens the composer with «#برچسب» already typed.
   const requestedTag = typeof query.tag === "string" ? query.tag.replace(/^#/, "") : "";
   const tag = /^[\p{L}\p{N}_]{2,64}$/u.test(requestedTag) ? requestedTag : undefined;
@@ -24,12 +27,15 @@ export default async function ComposePage({
     redirect(
       quoteId
         ? loginHref(`/compose?quote=${quoteId}`)
-        : loginHref(tag ? `/compose?tag=${encodeURIComponent(tag)}` : "/compose"),
+        : tributeId
+          ? loginHref(`/compose?tribute=${tributeId}`)
+          : loginHref(tag ? `/compose?tag=${encodeURIComponent(tag)}` : "/compose"),
     );
   return (
     <ComposeView
-      key={quoteId ?? `new:${tag ?? ""}`}
+      key={quoteId ?? (tributeId ? `tribute:${tributeId}` : `new:${tag ?? ""}`)}
       quoteId={quoteId}
+      tributeId={tributeId}
       initialTag={tag}
       workMode={query.mode === "work"}
     />

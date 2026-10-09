@@ -52,6 +52,9 @@ export function AdminMemorialCreateForm() {
   const [biography, setBiography] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [deathDate, setDeathDate] = useState("");
+  const [position, setPosition] = useState("");
+  const [office, setOffice] = useState("");
+  const [tagline, setTagline] = useState("");
   const [avatarMediaId, setAvatarMediaId] = useState<number | null>(null);
   const [coverMediaId, setCoverMediaId] = useState<number | null>(null);
   const [status, setStatus] = useState<MemorialStatus>(DEFAULT_STATUS);
@@ -63,8 +66,8 @@ export function AdminMemorialCreateForm() {
   const [created, setCreated] = useState<{ id: number; name: string } | null>(null);
 
   const input: MemorialCreateInput = useMemo(
-    () => ({ name, handle, biography, birthDate, deathDate, avatarMediaId, coverMediaId, status }),
-    [name, handle, biography, birthDate, deathDate, avatarMediaId, coverMediaId, status],
+    () => ({ name, handle, biography, birthDate, deathDate, position, office, tagline, avatarMediaId, coverMediaId, status }),
+    [name, handle, biography, birthDate, deathDate, position, office, tagline, avatarMediaId, coverMediaId, status],
   );
 
   const submit = async () => {
@@ -167,6 +170,18 @@ export function AdminMemorialCreateForm() {
             </AdminField>
             <AdminField label="تاریخ درگذشت" htmlFor="memorial-death" error={fieldErrors.death_date}>
               <input id="memorial-death" dir="ltr" value={deathDate} onChange={(event) => setDeathDate(event.target.value)} className={`${fieldClass} text-left`} />
+            </AdminField>
+          </div>
+
+          <AdminField label="توضیح کوتاه زیر نام" htmlFor="memorial-tagline" error={fieldErrors.tagline} hint="یک خط زیر نام در بالای صفحه.">
+            <input id="memorial-tagline" value={tagline} onChange={(event) => setTagline(event.target.value)} className={fieldClass} />
+          </AdminField>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <AdminField label="سمت" htmlFor="memorial-position" error={fieldErrors.position} hint="مثلاً «رئیس دانشگاه آزاد اسلامی».">
+              <input id="memorial-position" value={position} onChange={(event) => setPosition(event.target.value)} className={fieldClass} />
+            </AdminField>
+            <AdminField label="منصب" htmlFor="memorial-office" error={fieldErrors.office} hint="در چیپ بالای کاور نمایش داده می‌شود.">
+              <input id="memorial-office" value={office} onChange={(event) => setOffice(event.target.value)} className={fieldClass} />
             </AdminField>
           </div>
 

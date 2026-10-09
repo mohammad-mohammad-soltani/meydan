@@ -46,6 +46,7 @@ function ActorAvatar({ actor }: { actor: InvitationActor | null }) {
     return (
       <OptimizedAvatar
         src={actor.avatarUrl}
+        kind={actor.type}
         alt=""
         width={44}
         height={44}

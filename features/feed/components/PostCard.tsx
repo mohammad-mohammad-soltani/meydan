@@ -14,6 +14,7 @@ import { FollowPill } from "./FollowPill";
 import { PostMoreMenu } from "./PostMoreMenu";
 import { PostShareButton } from "./PostShareButton";
 import { QuotedPostCard } from "./QuotedPostCard";
+import { TributeCard } from "./TributeCard";
 import { PostLinkPreview } from "./PostLinkPreview";
 import { extractPostLink } from "../post-link";
 import { repostTotal } from "../post-counts";
@@ -148,6 +149,7 @@ export function PostCard({
             {post.author.avatarUrl ? (
               <OptimizedAvatar
                 src={post.author.avatarUrl}
+                kind={post.author.type}
                 alt=""
                 width={44}
                 height={44}
@@ -193,6 +195,8 @@ export function PostCard({
             {!hideActions ? <PostShareButton onShare={onShare} size="md" /> : null}
           </div>
         </div>
+
+        {post.tribute ? <TributeCard tribute={post.tribute} className="relative z-10 mt-3" /> : null}
 
         {/* Text */}
         <div className="mt-3" dir="rtl">
@@ -333,6 +337,7 @@ export function PostCard({
               {post.author.avatarUrl ? (
                 <OptimizedAvatar
                   src={post.author.avatarUrl}
+                  kind={post.author.type}
                   alt=""
                   width={40}
                   height={40}
@@ -375,6 +380,8 @@ export function PostCard({
             ) : null}
           </div>
         </div>
+
+        {post.tribute ? <TributeCard tribute={post.tribute} className="pointer-events-auto relative z-10 mt-2.5" /> : null}
 
         <div dir="rtl" className="mt-2.5 text-[15.5px] leading-relaxed">
           {bodyTitle ? <p className={`${styles.title} mb-1 font-bold text-foreground`}>{bodyTitle}</p> : null}

@@ -1,4 +1,4 @@
-import type { QuotedPost } from "@/features/feed/types";
+import type { QuotedPost, TributeTarget } from "@/features/feed/types";
 import type { ActorKind } from "@/lib/profile-route";
 
 export type PostMediaKind = "image" | "video" | "microphone" | "article";
@@ -75,6 +75,8 @@ export type PostDetail = {
   quotes: number;
   /** The narrative this post quotes, when it is a quote. */
   quote?: QuotedPost;
+  /** The memorial this post honours, when it is a «ادای احترام» post. */
+  tribute?: TributeTarget;
   views: number;
   commentsCount: number;
   comments: PostComment[];

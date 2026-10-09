@@ -140,6 +140,7 @@ export function ContentHubPager({ active, initial }: { active: HubTab; initial: 
         renderPane={renderPane}
         topBoundaryRef={tabsRef}
         getIndicator={() => indicatorRef.current}
+        getLabels={() => tabsRef.current?.querySelectorAll<HTMLElement>("a") ?? null}
       >
         {activePane}
       </FeedSwipePager>

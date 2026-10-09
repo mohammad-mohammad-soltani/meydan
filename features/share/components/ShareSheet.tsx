@@ -30,7 +30,7 @@ const MESSENGERS: Messenger[] = [
   { id: "x", label: "X", logo: "/images/messengers/x.svg", href: (url, text) => `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}` },
 ];
 
-type ApiConversation = { id: number | string; participant?: { name?: string; avatar_url?: string | null } | null };
+type ApiConversation = { id: number | string; participant?: { name?: string; avatar_url?: string | null; profile_type?: string | null } | null };
 
 /** The reference design's share sheet. Opening it costs at most two small reads (recent chats, saved state), both for signed-in viewers only. */
 export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => void }) {
@@ -70,7 +70,7 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
       setDragY(0);
     }
   };
-  const [contacts, setContacts] = useState<Array<{ id: string; name: string; avatarUrl?: string }> | null>(isAuthenticated ? null : []);
+  const [contacts, setContacts] = useState<Array<{ id: string; name: string; avatarUrl?: string; kind?: string }> | null>(isAuthenticated ? null : []);
   const [contactsError, setContactsError] = useState(false);
   const [sent, setSent] = useState<Record<string, "sending" | "sent" | "failed">>({});
   const [saved, setSaved] = useState<boolean | null>(null);
@@ -107,6 +107,7 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
             id: String(row.id),
             name: row.participant?.name || "گفتگو",
             avatarUrl: row.participant?.avatar_url || undefined,
+            kind: row.participant?.profile_type || undefined,
           })),
         );
       })
@@ -270,7 +271,7 @@ export function ShareSheet({ post, onClose }: { post: SharePost; onClose: () => 
                   return (
                     <button key={contact.id} type="button" onClick={() => void sendTo(contact.id)} className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center">
                       <span className={styles.contactAvatar}>
-                        {contact.avatarUrl ? <OptimizedAvatar src={contact.avatarUrl} alt="" width={56} className="h-full w-full object-cover" /> : contact.name.charAt(0)}
+                        {contact.avatarUrl ? <OptimizedAvatar src={contact.avatarUrl} kind={contact.kind} alt="" width={56} className="h-full w-full object-cover" /> : contact.name.charAt(0)}
                         {state ? (
                           <span className="absolute inset-0 grid place-items-center bg-black/55 text-white">
                             {state === "sending" ? <LoaderCircle className="h-5 w-5 animate-spin" /> : state === "sent" ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
