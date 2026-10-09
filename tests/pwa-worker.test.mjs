@@ -117,6 +117,18 @@ test("splash plays the theme-matched Lottie on every real document load and cach
   assert.match(splash, /window\.setTimeout\(\(\) => \{\s*root\.style\.display = "none";\s*\}, FADE_OUT_MS\)/);
 });
 
+test("splash is mobile-only: hidden by CSS, never fetched or played on desktop", () => {
+  const css = source("app/globals.css");
+  assert.match(css, /@media \(min-width: 1024px\) \{\s*#meydan-splash \{\s*display: none !important;/);
+
+  const layout = source("app/layout.tsx");
+  assert.match(layout, /window\.matchMedia\(\\"\(min-width: 1024px\)\\"\)\.matches\) return;/);
+
+  const splash = source("components/pwa/SplashScreen.tsx");
+  assert.match(splash, /DESKTOP_QUERY = "\(min-width: 1024px\)"/);
+  assert.match(splash, /if \(window\.matchMedia\(DESKTOP_QUERY\)\.matches\) return;/);
+});
+
 test("push permission prompt stays gone permanently after allow or close", () => {
   const enrollment = source("components/pwa/PushEnrollment.tsx");
   assert.match(enrollment, /PROMPT_HIDDEN_KEY\s*=\s*["']meydan-push-prompt-hidden["']/);

@@ -8,6 +8,9 @@ import { readStoredTheme } from "@/lib/theme";
 const SPLASH_ROOT_ID = "meydan-splash";
 const SPLASH_ANIM_ID = "meydan-splash-anim";
 
+/** The app's `lg` breakpoint: from here up the layout is the desktop one, which has no splash. */
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
 /** Hard cap so a slow/broken animation can never trap the user behind the overlay. */
 const FALLBACK_TIMEOUT_MS = 6000;
 
@@ -56,6 +59,10 @@ export function SplashScreen() {
   const finishedRef = useRef(false);
 
   useEffect(() => {
+    // Mobile only. Desktop is already hidden by a CSS rule in globals.css, so
+    // there is nothing to play, fade or fetch.
+    if (window.matchMedia(DESKTOP_QUERY).matches) return;
+
     const root = document.getElementById(SPLASH_ROOT_ID);
     const container = document.getElementById(SPLASH_ANIM_ID);
     if (!root || !container) return;

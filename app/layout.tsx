@@ -80,6 +80,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           a typed URL, a new tab, or a refresh. Next.js never remounts the
           root layout for a client-side navigation between pages, so this
           effectively never reappears there; no "already shown" flag needed.
+          Mobile only: below the app's `lg` breakpoint (1024px). A CSS rule in
+          globals.css hides it on desktop before first paint, and neither the
+          preload below nor `SplashScreen` fetches the Lottie there.
           `SplashScreen` plays the Lottie, then fades this out (opacity +
           a slight scale-up, over 450ms — see `FADE_OUT_MS` in
           SplashScreen.tsx) before setting `display: none`, never
@@ -124,7 +127,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(() => {\n  try {\n    const theme = window.localStorage.getItem(\"meydan-theme\");\n    const src = theme === \"light\" ? \"/splash/splash-light.json\" : \"/splash/splash-dark.json\";\n    const link = document.createElement(\"link\");\n    link.rel = \"preload\";\n    link.as = \"fetch\";\n    link.href = src;\n    link.crossOrigin = \"anonymous\";\n    document.head.appendChild(link);\n  } catch {}\n})();",
+              "(() => {\n  try {\n    if (window.matchMedia(\"(min-width: 1024px)\").matches) return;\n    const theme = window.localStorage.getItem(\"meydan-theme\");\n    const src = theme === \"light\" ? \"/splash/splash-light.json\" : \"/splash/splash-dark.json\";\n    const link = document.createElement(\"link\");\n    link.rel = \"preload\";\n    link.as = \"fetch\";\n    link.href = src;\n    link.crossOrigin = \"anonymous\";\n    document.head.appendChild(link);\n  } catch {}\n})();",
           }}
         />
         <PwaRuntime />
