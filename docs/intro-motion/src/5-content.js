@@ -278,7 +278,7 @@ let PARTS = [], IRAN_PTS = [], FCITIES = [], SEA = null;
 const IR_K = 30, IR_CX = 960, IR_CY = 326, IR_COS = Math.cos(32.4 * Math.PI / 180);
 const irXY = ([lon, lat]) => [IR_CX + (lon - 53.6) * IR_K * IR_COS, IR_CY - (lat - 32.4) * IR_K];
 const SEAS = [
-  { n: 'دریای خزر', at: [51.0, 40.4], mask: [51.2, 39.3, 4.6, 3.1] },
+  { n: 'دریای خزر', at: [51.4, 39.1], mask: [51.2, 39.3, 4.6, 3.1] },
   { n: 'خلیج فارس', at: [51.0, 26.9], mask: [52.4, 27.0, 6.6, 4.0] },
   { n: 'دریای عمان', at: [58.7, 24.3], mask: [59.6, 24.4, 4.4, 2.6] },
 ];
@@ -383,7 +383,7 @@ function drawFinale(c, t) {
     c.save(); c.globalAlpha = 0.9 * sea; c.drawImage(SEA, 0, 0); c.restore();
     for (const sn of SEAS) {
       const [x, y] = irXY(sn.at);
-      txt(c, sn.n, x, y, { size: 24, w: 600, color: 'rgba(255,255,255,0.9)', alpha: smooth(57.6, 58.6, t), glow: 'rgba(0,0,0,0.85)', blur: 8 });
+      txt(c, sn.n, x, y, { size: 17, w: 600, color: 'rgba(255,255,255,0.9)', alpha: smooth(57.6, 58.6, t), glow: 'rgba(0,0,0,0.85)', blur: 8 });
     }
   }
   c.save();

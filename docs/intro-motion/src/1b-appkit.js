@@ -16,13 +16,13 @@ function box(c, x, y, w, h, r, fill, stroke, lw = 1) {
 }
 
 function appHeader(c, cx, cy, a = 1) {
-  const nameW = uiW('شبکه سراسری میادین ایران', 9, 700), gw = 40 + 10 + Math.max(nameW, 50), x0 = cx - gw / 2;
+  const nameW = uiW('همه پای کار ایران', 9, 700), gw = 40 + 10 + Math.max(nameW, 50), x0 = cx - gw / 2;
   c.save(); c.globalAlpha *= a;
   c.shadowColor = 'rgba(0,0,0,0.3)'; c.shadowBlur = 14; c.shadowOffsetY = 4;
   logoTile(c, x0 + gw - 20, cy, 40);
   c.shadowColor = 'transparent';
   uit(c, 'نقش من', x0 + gw - 50, cy - 8, { size: 14, w: 900, align: 'right' });
-  uit(c, 'شبکه سراسری میادین ایران', x0 + gw - 50, cy + 10, { size: 9, w: 700, color: T.mute, align: 'right' });
+  uit(c, 'همه پای کار ایران', x0 + gw - 50, cy + 10, { size: 9, w: 700, color: T.mute, align: 'right' });
   c.restore();
 }
 

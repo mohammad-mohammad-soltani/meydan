@@ -107,8 +107,10 @@ function trap(t, a, b, c2, d, v) {
   const t2 = Math.min(t, c2); s += v * (t2 - b); if (t <= c2) return s;
   const t3 = Math.min(t, d), q = t3 - c2; s += v * q - v * q * q / (2 * (d - c2)); return s;
 }
-const PAN_V = 380, PAN_D = LINE_END, PAN_C = PAN_D - 1.5, PAN_B = 40.6;
-const pan = t => trap(t, 39.5, PAN_B, PAN_C, PAN_D, PAN_V);
+// the feature line eases off while the long "collective work" text is on screen: HOLD seconds are spent there
+const PAN_HOLD = 1.8, PAN_H0 = 41.0, PAN_H1 = 44.6;
+const PAN_V = 336, PAN_D = LINE_END - PAN_HOLD, PAN_C = PAN_D - 1.5, PAN_B = 40.6;
+const pan = t => trap(t - PAN_HOLD * E.io(inv(PAN_H0, PAN_H1, t)), 39.5, PAN_B, PAN_C, PAN_D, PAN_V);
 
 function camAt(t) {
   let R, L = TEH, cx = W / 2, cy = H / 2 + 10, tilt = 1;
@@ -333,10 +335,12 @@ function caption(c, s, a) {
 
 // ── Scene 5 · the line of features
 const FEAT = [
-  { ic: 'quote', t: 'روایت', s: ['امروزِ ایران، به روایتِ خودِ مردم'] },
-  { ic: 'help', t: 'کارها', s: ['تصمیمِ جمعی، کارِ واقعی؛ هر کس به قدر توانش', 'تعریف کن یا بپیوند؛ همه‌اش داوطلبانه'] },
-  { ic: 'tv', t: 'پوشش رسانه‌ای', s: ['کارهای شما در قابِ رسانه‌های ملی؛', 'الگویی از کفِ ایران‌زمین'] },
-  { ic: 'pin', t: 'نقشه‌ی زنده', s: ['میدان‌ها و کارهای ایران، زنده و شفاف'] },
+  { ic: 'quote', t: 'روایت', s: ['ایران از قابِ شما؛', 'روایتِ ایران با هزاران نگاهِ متفاوت'] },
+  { ic: 'uroundS', t: 'کارِ جمعی', long: 1,
+    s: ['از دغدغه تا اقدام برای ایران؛ به فعالیت‌های سازنده بپیوندید یا ایده‌ای تازه برای حل مسائل کشور مطرح کنید. هرکس می‌تواند با توان، تخصص یا زمان خود سهمی داشته باشد؛ هیچ تلاشی کوچک نیست.'] },
+  { ic: 'mega', t: 'پویش‌های ملی', s: ['بستری برای هم‌صدایی مردم؛ تبدیل مطالباتِ جمعی', 'به مطالبه‌ای مؤثر برای اثرگذاری و تغییر'] },
+  { ic: 'pin', t: 'نقشه‌ی زنده', s: ['گزارشی برخط و در لحظه از میدان‌ها', 'و کارها بر روی نقشه'] },
+  { ic: 'tv', t: 'پوشش رسانه‌ای', s: ['رسانه‌های ملی', 'در رسانه‌ها'] },
   { ic: 'chats', t: 'گفتگو و تعامل', s: ['با مردمِ سراسرِ ایران و عزیزانتان؛ تا راه ادامه یابد'] },
 ];
 const FX0 = 860, FSP = 700;
@@ -387,9 +391,11 @@ function featNode(c, f, i, x, y, prog, t) {
   if (ia > 0) icon(c, f.ic, x, y, 54 * E.back(ia), C.goldHi, 1.7);
   const tp = E.out(clamp((prog - 0.3) * 1.8));
   if (tp > 0) {
-    const below = i % 2 === 0, ty = below ? y + 135 : y - 172;
-    const up = !below && f.s.length > 1 ? (f.s.length - 1) * 42 : 0;
+    const below = i % 2 === 1, ty = below ? y + 135 : y - 172;
+    const sz = f.long ? 27 : 30, lh = f.long ? 39 : 42;
+    const lines = f.s.flatMap(ln => (f.long ? wrap(ln, sz, 400, 640) : [ln]));
+    const up = !below && lines.length > 1 ? (lines.length - 1) * lh : 0;
     txt(c, f.t, x, ty - up + (1 - tp) * 18, { size: 50, w: 800, alpha: tp, glow: 'rgba(0,0,0,0.8)', blur: 14 });
-    f.s.forEach((ln, k) => txt(c, ln, x, ty - up + 58 + k * 42 + (1 - tp) * 18, { size: 30, color: C.goldSoft, alpha: tp * 0.95 }));
+    lines.forEach((ln, k) => txt(c, ln, x, ty - up + 58 + k * lh + (1 - tp) * 18, { size: sz, color: C.goldSoft, alpha: tp * 0.95 }));
   }
 }

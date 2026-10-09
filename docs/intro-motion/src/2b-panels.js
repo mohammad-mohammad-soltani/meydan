@@ -10,17 +10,17 @@ function sil(c, rims, fn, body) {
 
 function mention(c, cx, y, ic, l1, l2, a) {
   if (a <= 0.01) return;
-  const w = 420, h = 116, up = (1 - E.out(clamp(a))) * 42;
-  c.save(); c.globalAlpha = clamp(a); c.translate(cx, y + up);
+  const w = 420, sub = wrap(l2, 20, 500, 310), extra = (sub.length - 1) * 26, h = 116 + extra, up = (1 - E.out(clamp(a))) * 42;
+  c.save(); c.globalAlpha = clamp(a); c.translate(cx, y + up + extra / 2);
   c.shadowColor = 'rgba(0,0,0,0.55)'; c.shadowBlur = 26; c.shadowOffsetY = 10;
   c.fillStyle = 'rgba(14,14,20,0.93)'; c.beginPath(); c.roundRect(-w / 2, -h / 2, w, h, 30); c.fill();
   c.shadowColor = 'transparent';
   c.strokeStyle = 'rgba(242,196,109,0.42)'; c.lineWidth = 1.5; c.stroke();
-  const xr = w / 2;
+  const xr = w / 2, top = -extra / 2;
   c.fillStyle = 'rgba(242,196,109,0.16)'; c.beginPath(); c.arc(xr - 46, 0, 30, 0, Math.PI * 2); c.fill();
   icon(c, ic, xr - 46, 0, 32, C.goldHi, 2);
-  txt(c, l1, xr - 92, -17, { size: 31, w: 800, align: 'right' });
-  txt(c, l2, xr - 92, 24, { size: 22, w: 500, color: C.goldSoft, align: 'right' });
+  txt(c, l1, xr - 92, top - 17, { size: 31, w: 800, align: 'right' });
+  sub.forEach((ln, i) => txt(c, ln, xr - 92, top + 24 + i * 26, { size: sub.length > 1 ? 20 : 22, w: 500, color: C.goldSoft, align: 'right' }));
   c.restore();
 }
 
@@ -102,7 +102,7 @@ function panelProf(c, s) {
   sil(c, [[-3, -2, 'rgba(255,170,100,0.95)'], [3, -2, 'rgba(200,225,255,0.5)']], pose, '#0f0a0c');
   const g = c.createLinearGradient(0, 0, 0, 1080); g.addColorStop(0, 'rgba(0,0,0,0.25)'); g.addColorStop(1, 'rgba(0,0,0,0.3)'); c.fillStyle = g; c.fillRect(0, 0, 480, 1080);
   okBadge(c, 150, 800, inv(3.0, 3.4, s));
-  mention(c, 240, 130, 'note', 'من استادم؛', 'دانشم را برای ایران می‌دهم', smooth(2.2, 2.8, s));
+  mention(c, 240, 130, 'note', 'من استادم؛', 'در مقابل خردکشی و کشتار دانشمندان می‌ایستم', smooth(2.2, 2.8, s));
 }
 
 // ── panel 3 · a seminary student signs up inside the hawza
@@ -157,7 +157,7 @@ function panelHawza(c, s) {
   c.restore();
   const gg = c.createLinearGradient(0, 0, 0, 1080); gg.addColorStop(0, 'rgba(0,0,0,0.2)'); gg.addColorStop(1, 'rgba(0,0,0,0.3)'); c.fillStyle = gg; c.fillRect(0, 0, 480, 1080);
   okBadge(c, 372, 830, inv(3.2, 3.6, s));
-  mention(c, 240, 130, 'book', 'من طلبه‌ام؛', 'از حوزه تا میدان', smooth(1.9, 2.5, s));
+  mention(c, 240, 130, 'book', 'من طلبه‌ام؛', 'از حوزه تا اجتماع', smooth(1.9, 2.5, s));
 }
 
 // ── panel 4 · a university student signs up between the shelves of a library
