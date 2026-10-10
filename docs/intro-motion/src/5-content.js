@@ -1,6 +1,6 @@
 // ───────── Content hub (HUB_S →) and the brand end card (S8 →)
 const CC_W = 500, CC_H = 312;
-const COLX = [1250, 710, 170], ROWY = [262, 612, 962];
+const COLX = [1250, 710, 170], ROWY = [262, 612, 962, 1312];
 const CCARDS = [
   { k: 'speaker', ic: 'mic', t: 'اعزام سخنران', col: 0, row: 0, at: 0.8 },
   { k: 'call', ic: 'phone', t: 'بیست‌کال', col: 1, row: 0, at: 1.0 },
@@ -11,9 +11,10 @@ const CCARDS = [
   { k: 'screen', ic: 'film', t: 'اکران فیلم و مستند', col: 0, row: 2, at: 6.6 },
   { k: 'story', ic: 'book', t: 'قصه‌ی آقا', col: 1, row: 2, at: 6.82 },
   { k: 'chat', ic: 'chats', t: 'گفتگو و تعامل', col: 2, row: 2, at: 7.04 },
+  { k: 'radio', ic: 'radio', t: 'رادیو نقش من', col: 1, row: 3, at: 9.5 },
 ];
 CCARDS.forEach(cd => { cd.x = COLX[cd.col]; cd.y = ROWY[cd.row]; });
-const SCROLL = th => -350 * E.io(inv(6.0, 7.3, th));
+const SCROLL = th => -350 * E.io(inv(6.0, 7.3, th)) - 350 * E.io(inv(8.7, 10.0, th));
 let WAVE = [];
 
 function chip(c, s, xr, y, on) {
@@ -62,7 +63,7 @@ function cardCall(c, x, y, w, R, lt, t) {
   ag.addColorStop(0, '#f59e0b'); ag.addColorStop(1, '#b45309');
   c.fillStyle = ag; c.beginPath(); c.arc(ax, ay, 31, 0, Math.PI * 2); c.fill();
   icon(c, 'user', ax, ay, 32, 'rgba(255,255,255,0.95)', 1.9);
-  txt(c, 'تماس با مریم · مشهد', ax - 46, ay - 14, { size: 24, w: 800, align: 'right' });
+  txt(c, 'تماس با محسن · مشهد', ax - 46, ay - 14, { size: 24, w: 800, align: 'right' });
   const pu = 0.5 + 0.5 * Math.sin(t * 5);
   glowDot(c, ax - 54, ay + 20, 16, [34, 197, 94], 0.5 * pu + 0.2);
   c.fillStyle = C.green; c.beginPath(); c.arc(ax - 54, ay + 20, 6, 0, Math.PI * 2); c.fill();
@@ -147,6 +148,25 @@ function cardNarr(c, x, y, w, R, lt) {
     rx -= 150;
   });
   icon(c, 'share', x + 40, y + 282, 22, C.mute, 2);
+}
+
+function cardRadio(c, x, y, w, R, lt, t) {
+  const w1 = chip(c, 'پخش زنده', R, y + 118, true);
+  chip(c, 'صدای میدان‌ها', R - w1 - 8, y + 118, false);
+  const pu = 0.5 + 0.5 * Math.sin(t * 5);
+  glowDot(c, R - 14, y + 118, 14, [239, 68, 68], 0.3 + 0.3 * pu);
+  const px = R - 30, py = y + 190;
+  c.fillStyle = C.gold; c.beginPath(); c.arc(px, py, 30, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#14100a';
+  c.beginPath(); c.roundRect(px - 9, py - 11, 6, 22, 2); c.roundRect(px + 3, py - 11, 6, 22, 2); c.fill();
+  const n = 34, x1 = R - 76, x0 = x + 30, step = (x1 - x0) / n;
+  for (let j = 0; j < n; j++) {
+    const amp = 0.25 + 0.75 * Math.abs(Math.sin(t * 6 + j * 0.7) * Math.cos(t * 2.3 + j * 0.31));
+    c.fillStyle = j < n * 0.7 ? C.gold : 'rgba(255,255,255,0.2)';
+    c.beginPath(); c.roundRect(x1 - j * step - 2.5, py - amp * 26, 5, Math.max(4, amp * 52), 2.5); c.fill();
+  }
+  txt(c, 'برنامه‌ی امشب: صدای میدان‌های ایران', R, y + 252, { size: 22, w: 700, align: 'right' });
+  txt(c, `${fa(Math.round(1240 + 60 * E.out(inv(0, 2.5, lt))).toLocaleString('en-US').replace(/,/g, '٬'))} شنونده‌ی زنده`, R, y + 284, { size: 17, color: C.mute, align: 'right' });
 }
 
 function cardScreen(c, x, y, w, R, lt, t) {
@@ -240,6 +260,7 @@ function contentCardImpl(c, cd, th, t) {
   else if (cd.k === 'note') cardNote(c, x, y, w, R);
   else if (cd.k === 'audio') cardAudio(c, x, y, w, R, lt, t);
   else if (cd.k === 'narr') cardNarr(c, x, y, w, R, lt);
+  else if (cd.k === 'radio') cardRadio(c, x, y, w, R, lt, t);
   else if (cd.k === 'screen') cardScreen(c, x, y, w, R, lt, t);
   else if (cd.k === 'story') cardStory(c, x, y, w, R, lt, t);
   else cardChat(c, x, y, w, R, lt);
